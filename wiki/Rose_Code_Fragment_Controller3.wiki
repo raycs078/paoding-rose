@@ -1,0 +1,111 @@
+本页面主要展示一些常用的控制器类代码片段，以期能够通过这些案例了解控制器的编写要领
+
+<wiki:toc max_depth="3" />
+
+= 1、返回json =
+http://127.0.0.1/user/json?id=1<br>
+http://127.0.0.1/user/json?id=2
+
+{{{
+public class UserController {
+
+    public Object json(@Param("id") String id) {
+        JSONObject json = new JSONObject();
+        json.put("id", id);
+        json.put("name", "rose");
+        json.put("text", "可以有中文");
+        // rose将调用json.toString()渲染
+        return json;
+    }
+
+    // 把JSONObject放到方法中，Rose将帮忙创建实例
+    public Object json2(JSONObject json, @Param("id") String id) {
+        json.put("id", id);
+        json.put("name", "rose");
+        json.put("text", "可以有中文");
+        // rose将调用json.toString()渲染
+        return json;
+    }
+}
+}}}
+
+= 2、返回xml =
+http://127.0.0.1/user/xml<br>
+
+
+{{{
+public class UserController {
+
+    public Object xml(Invocation inv) {
+        User user = new User();
+        user.setId(1);
+        user.setName("rose");
+        inv.addModel("user", user);
+        // rose将调用user-xml.xml或.vm或.jsp渲染页面(按字母升序顺序优先: jsp, vm, xml)
+        // 使用user-xml.xml的，默认contentType是text/xml;charset=UTF-8，语法同velocity
+        // 使用user-xml.jsp或user-xml.vm的可在本方法中标注@HttpFeatures(contentType="xxx")改变
+        // jsp的也可通过<%@ page contentType="text/html;charset=UTF-8" %>改变
+        return "user-xml";
+    }
+
+
+}
+}}}
+*views/user-xml.xml*
+{{{
+<?xml version="1.0" encoding="UTF-8"?>
+<user>
+    <id>$user.id</id>
+    <name>$user.name</name>
+</user>
+}}}
+如果是使用DOM构建xml的，则建议在所在的controllers下创建DocumentInterceptor拦截器，<br>
+控制器直接返回Document对象，
+
+http://127.0.0.1/user/xml2<br>
+{{{
+package com.xiaonei.rose.usage.controllers;
+
+public class DocumentInterceptor extends ControllerInterceptorAdapter {
+    @Override
+    public Object after(Invocation inv, Object instruction) throws Exception {
+        if (instruction instanceof Documenet) {
+            Docuement doc = (Docuement) instruction;
+            HttpServletResponse response = inv.getResponse();
+            if (response.getContentType() == null) {
+                response.setContentType("text/xml;charset=UTF-8");
+            }
+            document.write(response.getWriter());
+            return ""; // 返回空串给Rose，让其不用再管render的事情了
+        }
+        return instruction; 
+    }
+}
+
+}}}
+{{{
+import org.dom4j.Document;
+import org.dom4j.DocumentHelper;
+import org.dom4j.DomDocument;
+import org.dom4j.Element;
+
+public class UserController {
+
+    public Object xml2(Invocation inv) {
+        Document doc = new DomDocument();
+        Element listElement = doc.addElement("user-list");
+  
+        Element user1Element = listElement.addElement("user");
+        user1Element.addAttribute("id", "1");
+        user1Element.addAttribute("name", "paoding");
+
+        Element user2Element = listElement.addElement("user");
+        user1Element.addAttribute("id", "2");
+        user1Element.addAttribute("name", "rose");
+
+        return doc;
+    }
+
+
+}
+}}}

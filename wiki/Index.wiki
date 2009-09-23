@@ -1,0 +1,16 @@
+#labels Featured,Phase-Implementation
+<wiki:comment>
+Wiki主页，不要含有具体的内容，这里只是放目录
+</wiki:comment>
+
+
+
+这个wiki将介绍Rose有关的 *开发指南、架构原理* 等信息，希望对您有所帮助。<p>
+通过这个wiki，您能够了解Rose，评估或使用Rose开发自己的web程序，并了解其内部运作原理。
+
+
+ * [Rose_Download 下载指南]
+ * [Rose_Environment 开发和运行环境]
+ * [Rose_Philosophy Rose的哲学]
+ * [Rose_Code_Fragment_Controller 开发指南]
+ * [Rose_Architect Rose原理]

@@ -1,0 +1,5 @@
+===依赖图===
+包含了直接依赖和间接依赖的jar包<br>
+(servlet-api不在图中)<p>
+
+http://webrose.googlecode.com/issues/attachment?aid=-348660265519432352&name=rose-web-dependencies-version.PNG

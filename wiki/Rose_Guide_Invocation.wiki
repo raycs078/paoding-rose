@@ -1,0 +1,16 @@
+#Invocation对象使用说明
+
+===Invocation在哪里使用？===
+
+每一个action方法都可以声明一个Invocation inv参数，通常我们会把这个参数作为action方法的第一个参数。Rose调用action方法之前会准备好一个非空的Invocation对象给action方法调用。
+
+===Invocation是====
+
+在Rose框架下，接收web请求进行处理的单元是action方法。action方法是一个Java方法，由Rose调用。Rose在调用action方法前，就必须准备好相关的工作：方法识别、参数解析
+
+= Details =
+
+Add your content here.  Format your content with:
+  * Text in *bold* or _italic_
+  * Headings, paragraphs, and lists
+  * Automatic links to other wiki pages
