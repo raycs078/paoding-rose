@@ -34,6 +34,7 @@ import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.context.annotation.CommonAnnotationBeanPostProcessor;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
+import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.context.ConfigurableWebApplicationContext;
@@ -46,6 +47,14 @@ import org.springframework.web.context.support.XmlWebApplicationContext;
  * @author 王志亮 [qieqie.wang@gmail.com]
  */
 public class ContextLoader {
+
+    private static final String PERSISTENCE_ANNOTATION_PROCESSOR_CLASS_NAME = // NL
+    "org.springframework.orm.jpa.support.PersistenceAnnotationBeanPostProcessor";
+
+    private static final boolean jpaPresent = ClassUtils.isPresent(
+            "javax.persistence.EntityManagerFactory", ContextLoader.class.getClassLoader())
+            && ClassUtils.isPresent(PERSISTENCE_ANNOTATION_PROCESSOR_CLASS_NAME,
+                    ContextLoader.class.getClassLoader());
 
     private static final Log logger = LogFactory.getLog(ContextLoader.class);
 
@@ -144,23 +153,11 @@ public class ContextLoader {
 
     }
 
+    // org.springframework.context.annotation.AnnotationConfigUtils有相似的处理，但通过它不可行
     private static void addBeanPostProcessors(XmlWebApplicationContext context) {
         boolean autowiredAnnotationBeanPostProcessorDefined = false;
         boolean commonAnnotationBeanPostProcessorDefined = false;
         boolean persistenceAnnotationBeanPostProcessorDefined = false;
-        // 为何不直接使用PersistenceAnnotationBeanPostProcessor判断？==>这让程序可以选择不依赖于jpa，如果程序员觉得不需要的话
-        Class<?> persistenceAnnotationBeanPostProcessorClass = null;
-        try {
-            Class.forName("javax.persistence.EntityManager");
-            try {
-                persistenceAnnotationBeanPostProcessorClass = Class
-                        .forName("org.springframework.orm.jpa.support.PersistenceAnnotationBeanPostProcessor");
-            } catch (ClassNotFoundException e1) {
-                logger.error("is spring too old: " + e1.getMessage(), e1);
-            }
-        } catch (ClassNotFoundException e) {
-            // 找不到jpa的类，表示不用使用persistenceAnnotationBeanPostProcessor
-        }
 
         String[] beanDefinitionNames = context.getBeanFactory().getBeanDefinitionNames();
         for (String beanDefinitionName : beanDefinitionNames) {
@@ -176,10 +173,10 @@ public class ContextLoader {
                             CommonAnnotationBeanPostProcessor.class.getName())) {
                 commonAnnotationBeanPostProcessorDefined = true;
             }
-            if (persistenceAnnotationBeanPostProcessorClass != null
+            if (jpaPresent
                     && !persistenceAnnotationBeanPostProcessorDefined
                     && beanDefinition.getBeanClassName().equals(
-                            persistenceAnnotationBeanPostProcessorClass.getName())) {
+                            PERSISTENCE_ANNOTATION_PROCESSOR_CLASS_NAME)) {
                 persistenceAnnotationBeanPostProcessorDefined = true;
             }
         }
@@ -189,10 +186,8 @@ public class ContextLoader {
         if (!commonAnnotationBeanPostProcessorDefined) {
             addCommonAnnotationBeanPostProcessor(context);
         }
-        if (persistenceAnnotationBeanPostProcessorClass != null
-                && !persistenceAnnotationBeanPostProcessorDefined) {
-            addPersistenceAnnotationBeanPostProcessor(context,
-                    persistenceAnnotationBeanPostProcessorClass);
+        if (!persistenceAnnotationBeanPostProcessorDefined) {
+            addPersistenceAnnotationBeanPostProcessor(context);
         }
     }
 
@@ -212,8 +207,15 @@ public class ContextLoader {
                 + ": add commonAnnotationBeanPostProcessor");
     }
 
-    private static void addPersistenceAnnotationBeanPostProcessor(XmlWebApplicationContext context,
-            Class<?> persistenceAnnotationBeanPostProcessorClass) {
+    private static void addPersistenceAnnotationBeanPostProcessor(XmlWebApplicationContext context) {
+        Class<?> persistenceAnnotationBeanPostProcessorClass = null;
+        try {
+            persistenceAnnotationBeanPostProcessorClass = ClassUtils.forName(
+                    PERSISTENCE_ANNOTATION_PROCESSOR_CLASS_NAME, ContextLoader.class
+                            .getClassLoader());
+        } catch (Throwable e) {
+            throw new Error("", e);
+        }
         // 
         BeanPostProcessor persistenceAnnotationBeanPostProcessor = (BeanPostProcessor) BeanUtils
                 .instantiateClass(persistenceAnnotationBeanPostProcessorClass);
