@@ -1,0 +1,116 @@
+/*
+ * Copyright 2007-2009 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package net.paoding.rose.web.portal.impl;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.Writer;
+
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletResponseWrapper;
+
+import net.paoding.rose.web.portal.Window;
+
+/**
+ * 
+ * @author 王志亮 [qieqie.wang@gmail.com]
+ * 
+ */
+public class PortalResponse extends HttpServletResponseWrapper {
+
+    private Window window;
+
+    private PrintWriter writer;
+
+    public PortalResponse(Window window) {
+        super(window.getPortal().getResponse());
+        this.window = window;
+        this.writer = new PrintWriter(new Writer() {
+
+            @Override
+            public void close() throws IOException {
+
+            }
+
+            @Override
+            public void flush() throws IOException {
+            }
+
+            @Override
+            public void write(char[] cbuf, int offset, int len) throws IOException {
+                PortalResponse.this.window.appendContent(cbuf, offset, len);
+            }
+        });
+    }
+
+    public Window getWindow() {
+        return window;
+    }
+
+    @Override
+    public ServletOutputStream getOutputStream() throws IOException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public PrintWriter getWriter() throws IOException {
+        return writer;
+    }
+
+    @Override
+    public void flushBuffer() throws IOException {
+    }
+
+    @Override
+    public void sendError(int sc) throws IOException {
+        sendError(sc, "error:" + sc);
+    }
+
+    @Override
+    public void sendError(int sc, String msg) throws IOException {
+        window.setStatus(sc, msg);
+        getWriter().append(msg);
+    }
+
+    @Override
+    public void setStatus(int sc) {
+        window.setStatus(sc);
+    }
+
+    @Override
+    public void setStatus(int sc, String sm) {
+        window.setStatus(sc, sm);
+    }
+
+    @Override
+    public void sendRedirect(String location) throws IOException {
+        throw new UnsupportedOperationException("sendRedirect");
+    }
+
+    @Override
+    public void setBufferSize(int size) {
+
+    }
+
+    @Override
+    public void setCharacterEncoding(String charset) {
+    }
+
+    @Override
+    public void setContentType(String type) {
+    }
+
+}
