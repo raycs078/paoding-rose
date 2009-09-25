@@ -142,22 +142,25 @@ public class RoseEngine implements Engine {
         final RequestPath requestPath = inv.getRequestPath();
 
         // 从moduleMappings中按顺序判断本请求是否应该由该模块处理
-        final MatchResult<ModuleEngine> moduleMatchResult = searchModule(requestPath);
+        final List<MatchResult<ModuleEngine>> moduleMatchResults = searchModule(requestPath);
 
-        if (moduleMatchResult == null) {
+        if (moduleMatchResults.size() == 0) {
             // 没有从moduleMappings找到这个请求地址的模块，向上返回CONTINUE表示该请求不应由Rose处理
             return false;
         }
 
-        // 这个请求由这个module来尝试处理!
-        inv.setModuleMatchResult(moduleMatchResult);
-        final ModuleEngine moduleEngine = moduleMatchResult.getMapping().getTarget();
+        for (MatchResult<ModuleEngine> moduleMatchResult : moduleMatchResults) {
+            requestPath.setModulePath(moduleMatchResult.getMatchedString());
+            // 这个请求由这个module来尝试处理!
+            inv.setModuleMatchResult(moduleMatchResult);
+            final ModuleEngine moduleEngine = moduleMatchResult.getMapping().getTarget();
 
-        if (!moduleEngine.match(inv)) {
-            // 没有在匹配的模块中找到相应的控制器或控制器方法，很不幸!
-            return false;
+            if (moduleEngine.match(inv)) {
+                return true;
+            }
         }
-        return true;
+        // 没有在匹配的模块中找到相应的控制器或控制器方法，很不幸!
+        return false;
     }
 
     /**
@@ -224,21 +227,24 @@ public class RoseEngine implements Engine {
      * @param requestPath
      * @return
      */
-    private MatchResult<ModuleEngine> searchModule(final RequestPath requestPath) {
+    private List<MatchResult<ModuleEngine>> searchModule(final RequestPath requestPath) {
+        List<MatchResult<ModuleEngine>> list = new ArrayList<MatchResult<ModuleEngine>>(3);
         for (Mapping<ModuleEngine> moduleMapping : moduleMappings) {
+            if (list.size() > 0
+                    && (moduleMapping.getParameterCount() > 0 || moduleMapping.getPath().length() == 0)) {
+                break;
+            }
             MatchResult<ModuleEngine> moduleMatchResult = moduleMapping.match(//NL
                     requestPath.getPathInfo(), requestPath.getMethod());
             if (moduleMatchResult != null) {
+                list.add(moduleMatchResult);
                 // !!found!!
-                requestPath.setModulePath(moduleMatchResult.getMatchedString());
                 if (logger.isDebugEnabled()) {
                     logger.debug("found module mapping: " + requestPath.getUri() + " -> "
                             + moduleMatchResult.getMapping().getTarget());
                 }
-                return moduleMatchResult;
             }
         }
-        return null;
+        return list;
     }
-
 }
