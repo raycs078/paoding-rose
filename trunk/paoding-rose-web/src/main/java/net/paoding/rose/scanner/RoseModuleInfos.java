@@ -54,7 +54,7 @@ public class RoseModuleInfos {
         Log4jConfigurer.initLogging("src/test/java/log4j.properties");
         List<ModuleInfo> moduleInfos = new RoseModuleInfos().findModuleInfos();
         System.out.println("context resource="
-                + Arrays.toString(moduleInfos.toArray(new Resource[0])));
+                + Arrays.toString(moduleInfos.toArray(new ModuleInfo[0])));
     }
 
     protected Log logger = LogFactory.getLog(RoseModuleInfos.class);
@@ -147,7 +147,7 @@ public class RoseModuleInfos {
 
             // 如果controllers=ignored，则...
             String ignored = p.getProperty(CONF_MODULE_IGNORED, "false").trim();
-            if ("true".equalsIgnoreCase(ignored)) {
+            if ("true".equalsIgnoreCase(ignored) || "1".equalsIgnoreCase(ignored)) {
                 if (logger.isDebugEnabled()) {
                     logger.info("ignored controllers " + thisFolder.getName());
                 }
@@ -286,7 +286,8 @@ public class RoseModuleInfos {
                     && moduleInfo.getModuleClasses().size() == 0) {
                 moduleInfoList.remove(moduleInfo);
                 if (logger.isDebugEnabled()) {
-                    logger.debug("remove empty module '" + moduleInfo.getMappingPath() + "'");
+                    logger.debug("remove empty module '" + moduleInfo.getMappingPath() + "' "
+                            + moduleInfo.getModuleUrl());
                 }
             }
         }

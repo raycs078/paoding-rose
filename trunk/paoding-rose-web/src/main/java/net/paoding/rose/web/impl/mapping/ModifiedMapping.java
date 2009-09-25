@@ -56,6 +56,16 @@ public class ModifiedMapping<S, N> implements Mapping<N> {
     }
 
     @Override
+    public int getConstantCount() {
+        return src.getConstantCount();
+    }
+
+    @Override
+    public int getParameterCount() {
+        return src.getParameterCount();
+    }
+
+    @Override
     public MatchResult<N> match(String path, String requestMethod) {
         return MatchResult.changeMapping(src.match(path, requestMethod), this);
     }

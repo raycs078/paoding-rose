@@ -206,6 +206,16 @@ public class MappingImpl<T> extends AbstractMapping<T> {
     }
 
     @Override
+    public int getConstantCount() {
+        return this.constants.length;
+    }
+
+    @Override
+    public int getParameterCount() {
+        return this.paramNames.length;
+    }
+
+    @Override
     public int compareTo(Mapping<?> o) {
         if (!(o instanceof MappingImpl)) {
             return -o.compareTo(this);

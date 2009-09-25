@@ -172,29 +172,19 @@ public class RoseFilter extends GenericFilterBean {
             // controller类应该放到package为xxx.controllers或其直接子package下(并以Controller结尾，请参考RoseConstaints.CONTROLLER_SUFFIXES)
             // 按照这样的约定，Rose就能自动“挑”出他们出来。
             List<ModuleInfo> moduleInfos = new RoseModuleInfos().findModuleInfos();
-            Set<String> modulePaths = new HashSet<String>();
-            Iterator<ModuleInfo> moduleIter = moduleInfos.iterator();
-            while (moduleIter.hasNext()) {
-                ModuleInfo module = moduleIter.next();
-                if (modulePaths.contains(module.getMappingPath())) {
-                    moduleIter.remove();
-                    logger.warn("", new Exception("remove replicated module: ["
-                            + module.getMappingPath() + "] " + module.getModuleUrl()));
-                } else {
-                    modulePaths.add(module.getMappingPath());
-                }
-            }
             modules = new ModulesBuilder().build(rootContext, moduleInfos);
             engine = new RoseEngine(modules);
             if (logger.isInfoEnabled()) {
                 final StringBuilder sb = new StringBuilder(4096);
                 dumpModules(modules, sb);
-                logger.info(sb.toString());
+                String strModuleInfos = sb.toString();
+                logger.info(strModuleInfos);
+                getServletContext().log(strModuleInfos);
             }
-            // 控制台提示
-            System.out.println(String.format("Rose Initiated (version=%s)", RoseVersion
-                    .getVersion()));
             logger.info(String.format("Rose Initiated (version=%s)", RoseVersion.getVersion()));
+            // 控制台提示
+            getServletContext().log(
+                    String.format("Rose Initiated (version=%s)", RoseVersion.getVersion()));
         } catch (final Exception e) {
             logger.error("", e);
             throw new NestedServletException(e.getMessage(), e);

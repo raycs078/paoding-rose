@@ -45,6 +45,18 @@ public interface Mapping<T> extends Comparable<Mapping<?>> {
     public String getPath();
 
     /**
+     * 
+     * @return
+     */
+    public int getConstantCount();
+
+    /**
+     * 
+     * @return
+     */
+    public int getParameterCount();
+
+    /**
      * 返回定义给该匹配的请求方法
      * 
      * @return
