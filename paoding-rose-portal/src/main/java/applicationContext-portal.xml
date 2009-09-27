@@ -19,6 +19,9 @@ http://www.springframework.org/schema/aop http://www.springframework.org/schema/
 		<property name="portalFactory" ref="portalFactory" />
 	</bean>
 
+	<bean id="portalWaitInterceptor" class="net.paoding.rose.web.portal.impl.PortalWaitInterceptor">
+	</bean>
+
 	<bean id="windowResolver" class="net.paoding.rose.web.portal.impl.WindowResolver" />
 
 	<bean id="portalFactory" class="net.paoding.rose.web.portal.impl.PortalFactoryImpl">
@@ -28,6 +31,7 @@ http://www.springframework.org/schema/aop http://www.springframework.org/schema/
 
 	<bean id="portalExecutor"
 		class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
+		<!--- <property name="corePoolSize" value="100"/> -->
 	</bean>
 
 	<bean id="portalListeners" class="net.paoding.rose.web.portal.PortalListeners">

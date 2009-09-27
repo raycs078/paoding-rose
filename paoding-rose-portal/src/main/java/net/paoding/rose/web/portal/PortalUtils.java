@@ -13,29 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.paoding.rose.web.portal.impl;
+package net.paoding.rose.web.portal;
 
 import net.paoding.rose.web.Invocation;
-import net.paoding.rose.web.annotation.Param;
-import net.paoding.rose.web.paramresolver.ParamResolverBean;
-import net.paoding.rose.web.portal.PortalUtils;
-import net.paoding.rose.web.portal.Window;
 
 /**
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
-public class WindowResolver implements ParamResolverBean {
+public class PortalUtils {
 
-    @Override
-    public boolean supports(Class<?> parameterType) {
-        return Window.class == parameterType;
+    public static Window getWindow(Invocation inv) {
+        return (Window) inv.getRequest().getAttribute("$$paoding-rose-portal.window");
     }
 
-    @Override
-    public Object resolve(Class<?> parameterType, int replicatedCount, int indexOfReplicated,
-            Invocation inv, String parameterName, Param paramAnnotation) throws Exception {
-        return PortalUtils.getWindow(inv);
+    public static Portal getPortal(Invocation inv) {
+        return (Portal) inv.getAttribute("$$paoding-rose-portal.portal");
     }
 }

@@ -56,10 +56,10 @@ public class PortalResolver implements ParamResolverBean {
 
     @Override
     public Portal resolve(Class<?> parameterType, int replicatedCount, int indexOfReplicated,
-            Invocation inc, String parameterName, Param paramAnnotation) throws Exception {
-        Portal portal = portalFactory.createPortal(inc);
+            Invocation inv, String parameterName, Param paramAnnotation) throws Exception {
+        Portal portal = portalFactory.createPortal(inv);
         long timeout = this.defaultTimeout;
-        PortalSetting portalSetting = inc.getMethod().getAnnotation(PortalSetting.class);
+        PortalSetting portalSetting = inv.getMethod().getAnnotation(PortalSetting.class);
         if (portalSetting != null && portalSetting.timeout() >= 0) {
             long annotationTimeout = portalSetting.timeUnit().toMillis(portalSetting.timeout());
             // < 0的情况，是PortalSetting的默认设置，即如果PortalSetting没有设置有效的timeout，则使用defaultTimeout策略
@@ -71,6 +71,7 @@ public class PortalResolver implements ParamResolverBean {
         if (timeout > 0) {
             portal.setTimeout(timeout);
         }
+        inv.setAttribute("$$paoding-rose-portal.portal", portal);
         return portal;
     }
 

@@ -72,7 +72,7 @@ public class PortalLoggerListener implements PortalListener {
 
     @Override
     public void onWindowError(WindowTask task, Window window) {
-        logger.info("onWindowError [" + task.getPortal().getInvocation().getRequestPath().getUri()
+        logger.error("onWindowError [" + task.getPortal().getInvocation().getRequestPath().getUri()
                 + "]: " + task.getName(), window.getThrowable());
     }
 
@@ -87,11 +87,9 @@ public class PortalLoggerListener implements PortalListener {
 
     @Override
     public void onWindowTimeout(WindowTask task, Window window) {
-        if (logger.isWarnEnabled()) {
-            logger.warn("onWindowTimeout ["
-                    + task.getPortal().getInvocation().getRequestPath().getUri() + "]: "
-                    + task.getName() + "; timeout="
-                    + (System.currentTimeMillis() - window.getStartTime()));
-        }
+        logger.error("onWindowTimeout ["
+                + task.getPortal().getInvocation().getRequestPath().getUri() + "]: "
+                + task.getName() + "; timeout="
+                + (System.currentTimeMillis() - window.getStartTime()));
     }
 }

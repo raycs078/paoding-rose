@@ -16,20 +16,15 @@
 package net.paoding.rose.web.portal.impl;
 
 import java.lang.reflect.Method;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
-import java.util.concurrent.TimeoutException;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import net.paoding.rose.web.AfterInterceptors;
 import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.RequestPath;
 import net.paoding.rose.web.portal.Portal;
@@ -49,7 +44,7 @@ import org.springframework.web.context.WebApplicationContext;
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
-class PortalImpl implements Portal, PortalListener, AfterInterceptors {
+class PortalImpl implements Portal, PortalListener {
 
     private static final Log logger = LogFactory.getLog(PortalImpl.class);
 
@@ -97,11 +92,16 @@ class PortalImpl implements Portal, PortalListener, AfterInterceptors {
         return invocation;
     }
 
+    public List<WindowTaskImpl> getTasks() {
+        return tasks;
+    }
+
     @Override
     public WindowTask addWindow(String name, String windowPath) {
         //
         Window window = new Window(this, name, windowPath);
         WindowTaskImpl task = new WindowTaskImpl(window);
+        window.setTask(task);
         tasks.add(task);
         //
         addModel(name, window);
@@ -111,50 +111,6 @@ class PortalImpl implements Portal, PortalListener, AfterInterceptors {
         executor.execute(task);
         //
         return task;
-    }
-
-    @Override
-    public Object doAfterInterceptors(Invocation inc, Object instruction) {
-        long deadline;
-        if (this.timeout > 0) {
-            deadline = System.currentTimeMillis() + timeout;
-        } else {
-            deadline = 0;
-        }
-        if (logger.isDebugEnabled()) {
-            logger.debug(this + " timeout=" + timeout + "; deadline="
-                    + new SimpleDateFormat("HH:dd:ss SSS").format(new Date(deadline)));
-        }
-        for (WindowTaskImpl task : tasks) {
-            if (!task.forRender() || task.isDone() || task.isCancelled()) {
-                continue;
-            }
-            try {
-                if (deadline > 0) {
-                    long awaitTime = deadline - System.currentTimeMillis();
-                    if (logger.isDebugEnabled()) {
-                        logger.debug(this + ".window[" + task.getName() + "].awaitTime="
-                                + awaitTime);
-                    }
-                    task.await(awaitTime);
-                } else {
-                    task.await();
-                }
-            } catch (InterruptedException e) {
-                Thread.interrupted();
-            } catch (ExecutionException e) {
-                task.getWindow().setThrowable(e);
-                this.onWindowError(task, task.getWindow());
-            } catch (TimeoutException e) {
-                this.onWindowTimeout(task, task.getWindow());
-                task.cancel(true);
-            }
-        }
-        if (logger.isDebugEnabled()) {
-            logger.debug(this + " is about to render");
-        }
-        onPortalReady(this);
-        return instruction;
     }
 
     @Override
