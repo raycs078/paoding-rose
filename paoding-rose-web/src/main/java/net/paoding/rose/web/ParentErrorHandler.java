@@ -21,6 +21,12 @@ package net.paoding.rose.web;
  * @author zhiliang.wang
  * 
  */
-public interface ParentErrorHandler extends ControllerErrorHandler {
+public interface ParentErrorHandler {
 
+    /**
+     * 
+     * @param ex
+     * @return
+     */
+    public Object onError(Invocation inv, Throwable ex) throws Throwable;
 }

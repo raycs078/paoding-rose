@@ -30,7 +30,7 @@ import net.paoding.rose.web.Invocation;
  * @author zhiliang.wang
  * 
  */
-public class ErrorHanlderDispatcher implements ControllerErrorHandler {
+public class ErrorHandlerDispatcher implements ControllerErrorHandler {
 
     private static final int INVOCATION_INDEX = 0;
 
@@ -40,7 +40,7 @@ public class ErrorHanlderDispatcher implements ControllerErrorHandler {
 
     private List<ErrorHandlerDelegate> delegates = new ArrayList<ErrorHandlerDelegate>(8);
 
-    public ErrorHanlderDispatcher(ControllerErrorHandler errorHandler) {
+    public ErrorHandlerDispatcher(ControllerErrorHandler errorHandler) {
         this.errorHandler = errorHandler;
         Method[] methods = this.errorHandler.getClass().getMethods();
         for (final Method method : methods) {
@@ -63,7 +63,7 @@ public class ErrorHanlderDispatcher implements ControllerErrorHandler {
                         @Override
                         public Object onError(Invocation inv, Throwable ex) throws Throwable {
                             Object[] args = new Object[] { inv, ex };
-                            return method.invoke(ErrorHanlderDispatcher.this.errorHandler, args);
+                            return method.invoke(ErrorHandlerDispatcher.this.errorHandler, args);
                         }
                     });
                 }

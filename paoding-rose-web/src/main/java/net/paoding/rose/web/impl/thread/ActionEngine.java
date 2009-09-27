@@ -358,7 +358,7 @@ public final class ActionEngine implements Engine {
             bitSet.set(intercetporIndex);
 
             if (logger.isDebugEnabled()) {
-                logger.debug("intercepted and return '" + instruction + "': "
+                logger.debug("intercepted(before) and return '" + instruction + "': "
                         + interceptor.getName() + "=" //
                         + ClassUtils.getUserClass(interceptor.getInterceptor()).getName());
             }
@@ -412,6 +412,11 @@ public final class ActionEngine implements Engine {
                 continue;
             }
             instruction = interceptors[i].after(inv, instruction);
+            if (logger.isDebugEnabled()) {
+                logger.debug("intercepted(after) and return '" + instruction + "': "
+                        + interceptors[i].getName() + "=" //
+                        + ClassUtils.getUserClass(interceptors[i].getInterceptor()).getName());
+            }
             // 拦截器返回null的，要恢复为原instruction
             // 这个功能非常有用!!
             if (instruction == null) {
