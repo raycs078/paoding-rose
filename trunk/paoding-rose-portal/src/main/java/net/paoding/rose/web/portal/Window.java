@@ -45,6 +45,8 @@ public class Window {
 
     private Portal portal;
 
+    private WindowTask task;
+
     public Window(Portal portal, String name, String windowPath) {
         this.portal = portal;
         this.name = name;
@@ -53,6 +55,14 @@ public class Window {
 
     public Portal getPortal() {
         return portal;
+    }
+
+    public WindowTask getTask() {
+        return task;
+    }
+
+    public void setTask(WindowTask task) {
+        this.task = task;
     }
 
     public void set(String key, Object value) {

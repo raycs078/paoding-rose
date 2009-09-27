@@ -52,14 +52,17 @@ class WindowTaskImpl implements WindowTask, Runnable, Callable<Window> {
 
     @Override
     public Window call() throws Exception {
-        window.setStartTime(System.currentTimeMillis());
-        if (logger.isDebugEnabled()) {
-            logger.debug("call " + this);
+        if (!isCancelled()) {
+            window.setStartTime(System.currentTimeMillis());
+            if (logger.isDebugEnabled()) {
+                logger.debug("call " + this);
+            }
+            final HttpServletRequest request = new PortalRequest(window);
+            final PortalResponse response = new PortalResponse(window);
+            request.setAttribute("$$paoding-rose-portal.window", window);
+            request.getRequestDispatcher(window.getPath()).forward(request, response);
+            window.setDoneTime(System.currentTimeMillis());
         }
-        final HttpServletRequest request = new PortalRequest(window);
-        final PortalResponse response = new PortalResponse(window);
-        request.getRequestDispatcher(window.getPath()).forward(request, response);
-        window.setDoneTime(System.currentTimeMillis());
         return window;
     }
 
@@ -134,9 +137,11 @@ class WindowTaskImpl implements WindowTask, Runnable, Callable<Window> {
     @Override
     public void run() {
         try {
-            getPortal().onWindowStarted(this);
-            future.run();
-            getPortal().onWindowDone(this, window);
+            if (!future.isCancelled()) {
+                getPortal().onWindowStarted(this);
+                future.run();
+                getPortal().onWindowDone(this, window);
+            }
         } catch (Exception e) {
             getPortal().onWindowError(this, window);
         }
