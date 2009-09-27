@@ -230,9 +230,14 @@ public class RoseEngine implements Engine {
     private List<MatchResult<ModuleEngine>> searchModule(final RequestPath requestPath) {
         List<MatchResult<ModuleEngine>> list = new ArrayList<MatchResult<ModuleEngine>>(3);
         for (Mapping<ModuleEngine> moduleMapping : moduleMappings) {
-            if (list.size() > 0
-                    && (moduleMapping.getParameterCount() > 0 || moduleMapping.getPath().length() == 0)) {
-                break;
+            if (list.size() > 0) {
+                if (moduleMapping.getParameterCount() > 0) {
+                    break;
+                }
+                if (moduleMapping.getPath().length() == 0
+                        && list.get(0).getMatchedString().length() > 0) {
+                    break;
+                }
             }
             MatchResult<ModuleEngine> moduleMatchResult = moduleMapping.match(//NL
                     requestPath.getPathInfo(), requestPath.getMethod());

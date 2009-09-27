@@ -131,7 +131,7 @@ public class ModulesBuilder {
                 if (Proxy.isProxyClass(errorHandler.getClass())) {
                     module.setErrorHandler(errorHandler);
                 } else {
-                    ErrorHanlderDispatcher dispatcher = new ErrorHanlderDispatcher(errorHandler);
+                    ErrorHandlerDispatcher dispatcher = new ErrorHandlerDispatcher(errorHandler);
                     module.setErrorHandler(dispatcher);
                 }
                 if (logger.isInfoEnabled()) {
@@ -356,7 +356,7 @@ public class ModulesBuilder {
                 continue;
             }
             if (userClass.isAnnotationPresent(NotForSubModules.class)
-                    && context.getBeanFactory().getBeanDefinition(beanName) == null) {
+                    && !context.getBeanFactory().containsBeanDefinition(beanName)) {
                 if (logger.isDebugEnabled()) {
                     logger.debug("Ignored context interceptor (NotForSubModules):" + interceptor);
                 }
