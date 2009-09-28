@@ -20,40 +20,47 @@ package net.paoding.rose.web;
  */
 public class OncePerRequestInterceptorWrapper extends ControllerInterceptorWrapper {
 
-    private String alredyFiltered;
+    private final String filtered;
 
     public OncePerRequestInterceptorWrapper(ControllerInterceptor interceptor) {
         super(interceptor);
+        this.filtered = "$$paoding-rose.interceptor.oncePerRequest."
+                + getInterceptor().getClass().getName();
     }
 
     @Override
     public void setName(String name) {
         super.setName(name);
-        this.alredyFiltered = "$$paoding-rose.interceptor.oncePerRequest." + name;
     }
 
     @Override
     public final Object before(Invocation inv) throws Exception {
-        if (inv.getRequest().getAttribute(alredyFiltered) == null) {
-            inv.getRequest().setAttribute(alredyFiltered, inv.getRequest());
-            return super.before(inv);
+        if (inv.getRequest().getAttribute(filtered) == null) {
+            inv.getRequest().setAttribute(filtered, inv);
+            return interceptor.before(inv);
         }
         return true;
     }
 
     @Override
     public final Object after(Invocation inv, Object instruction) throws Exception {
-        if (inv.getRequest() == inv.getRequest().getAttribute(alredyFiltered)) {
-            return super.after(inv, instruction);
+        if (inv == inv.getRequest().getAttribute(filtered)) {
+            return interceptor.after(inv, instruction);
         }
         return instruction;
     }
 
     @Override
     public final void afterCompletion(Invocation inv, Throwable ex) throws Exception {
-        if (inv.getRequest() == inv.getRequest().getAttribute(alredyFiltered)) {
-            super.afterCompletion(inv, ex);
+        if (inv == inv.getRequest().getAttribute(filtered)) {
+            inv.getRequest().removeAttribute(filtered);
+            interceptor.afterCompletion(inv, ex);
         }
+    }
+
+    @Override
+    public String toString() {
+        return "oncePerRequest." + this.interceptor.toString();
     }
 
 }

@@ -15,6 +15,7 @@
  */
 package net.paoding.rose.web.portal.impl;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
@@ -29,31 +30,17 @@ import net.paoding.rose.web.portal.Window;
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
-public class PortalResponse extends HttpServletResponseWrapper {
+public class WindowResponse extends HttpServletResponseWrapper {
 
     private Window window;
 
     private PrintWriter writer;
 
-    public PortalResponse(Window window) {
+    private ServletOutputStream out;
+
+    public WindowResponse(Window window) {
         super(window.getPortal().getResponse());
         this.window = window;
-        this.writer = new PrintWriter(new Writer() {
-
-            @Override
-            public void close() throws IOException {
-
-            }
-
-            @Override
-            public void flush() throws IOException {
-            }
-
-            @Override
-            public void write(char[] cbuf, int offset, int len) throws IOException {
-                PortalResponse.this.window.appendContent(cbuf, offset, len);
-            }
-        });
     }
 
     public Window getWindow() {
@@ -62,11 +49,48 @@ public class PortalResponse extends HttpServletResponseWrapper {
 
     @Override
     public ServletOutputStream getOutputStream() throws IOException {
-        throw new UnsupportedOperationException();
+        if (out == null) {
+            this.out = new ServletOutputStream() {
+
+                ByteArrayOutputStream baos = new ByteArrayOutputStream(getBufferSize());
+
+                @Override
+                public void write(int b) throws IOException {
+                    baos.write(b);
+                }
+
+                @Override
+                public void flush() throws IOException {
+                    byte[] bytes = baos.toByteArray();
+                    baos.reset();
+                    window.appendContent(new String(bytes, getCharacterEncoding()));
+                }
+
+            };
+        }
+        return out;
     }
 
     @Override
     public PrintWriter getWriter() throws IOException {
+        if (this.writer == null) {
+            this.writer = new PrintWriter(new Writer() {
+
+                @Override
+                public void close() throws IOException {
+
+                }
+
+                @Override
+                public void flush() throws IOException {
+                }
+
+                @Override
+                public void write(char[] cbuf, int offset, int len) throws IOException {
+                    WindowResponse.this.window.appendContent(cbuf, offset, len);
+                }
+            });
+        }
         return writer;
     }
 

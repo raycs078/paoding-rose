@@ -89,4 +89,9 @@ public class ControllerInterceptorAdapter implements ControllerInterceptor,
     public void afterCompletion(Invocation inv, Throwable ex) throws Exception {
     }
 
+    @Override
+    public String toString() {
+        return getName();
+    }
+
 }
