@@ -43,47 +43,71 @@ public class PortalWaitInterceptor extends ControllerInterceptorAdapter {
 
     protected void waitForWindows(PortalImpl portal) {
         long deadline;
+        long begin = System.currentTimeMillis();
         if (portal.getTimeout() > 0) {
-            deadline = System.currentTimeMillis() + portal.getTimeout();
+            deadline = begin + portal.getTimeout();
         } else {
             deadline = 0;
         }
         if (logger.isDebugEnabled()) {
-            logger.debug(this + " timeout=" + portal.getTimeout() + "; deadline="
-                    + new SimpleDateFormat("HH:dd:ss SSS").format(new Date(deadline)));
+            logger.debug("portal[" + portal.getRequestPath().getUri() + "] timeout="
+                    + portal.getTimeout() + "; deadline="
+                    + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss SSS").format(new Date(deadline)));
         }
         for (WindowTaskImpl task : portal.getTasks()) {
-            if (!task.forRender() || task.isDone() || task.isCancelled()) {
+            if (task.isDone() || task.isCancelled() || !task.forRender()) {
+                if (logger.isDebugEnabled()) {
+                    if (task.isDone()) {
+                        logger.debug("continue[done]: " + task.getWindow().getName());
+                    } else if (task.isCancelled()) {
+                        logger.debug("continue[cancelled]: " + task.getWindow().getName());
+                    } else if (!task.forRender()) {
+                        logger.debug("continue[notForRender]: " + task.getWindow().getName());
+                    }
+                }
                 continue;
             }
+            long awaitTime = 0;
             try {
                 if (deadline > 0) {
-                    long awaitTime = deadline - System.currentTimeMillis();
+                    awaitTime = deadline - System.currentTimeMillis();
                     if (awaitTime > 0) {
                         if (logger.isDebugEnabled()) {
-                            logger.debug(this + ".window[" + task.getName() + "].awaitTime="
+                            logger.debug("[" + task.getWindow().getName() + "] waiting; max="
                                     + awaitTime);
                         }
                         task.await(awaitTime);
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("[" + task.getWindow().getName() + "] done; wait="
+                                    + (System.currentTimeMillis() - deadline + awaitTime));
+                        }
                     } else {
+                        logger.error("x[" + task.getWindow().getName() + "] been timeout now ");
                         portal.onWindowTimeout(task, task.getWindow());
                         task.cancel(true);
                     }
                 } else {
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("[" + task.getWindow().getName() + "] waiting ");
+                    }
                     task.await();
                 }
             } catch (InterruptedException e) {
-                Thread.interrupted();
+                logger.error("x[" + task.getWindow().getName() + "] been interrupted ");
             } catch (ExecutionException e) {
+                logger.error("x[" + task.getWindow().getName() + "] error happened ", e);
                 task.getWindow().setThrowable(e);
                 portal.onWindowError(task, task.getWindow());
             } catch (TimeoutException e) {
+                logger.error("x[" + task.getWindow().getName() + "] waiting max=" + awaitTime
+                        + " but timeout ");
                 portal.onWindowTimeout(task, task.getWindow());
                 task.cancel(true);
             }
         }
         if (logger.isDebugEnabled()) {
-            logger.debug(this + " is about to render");
+            logger.debug("portal [" + portal.getRequestPath().getUri() + "] is done; timeout="
+                    + portal.getTimeout() + " wait=" + (System.currentTimeMillis() - begin));
         }
         portal.onPortalReady(portal);
     }

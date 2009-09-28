@@ -15,7 +15,7 @@
  */
 package net.paoding.rose.web.portal.impl;
 
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -25,6 +25,10 @@ import net.paoding.rose.web.portal.Portal;
 import net.paoding.rose.web.portal.PortalFactory;
 import net.paoding.rose.web.portal.PortalListener;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+
 /**
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
@@ -32,13 +36,15 @@ import net.paoding.rose.web.portal.PortalListener;
  */
 public class PortalFactoryImpl implements PortalFactory {
 
-    private int corePoolSize = 10;
+    private Log logger = LogFactory.getLog(getClass());
 
-    private int maximumPoolSize = 100;
+    private int corePoolSize = 100;
+
+    private int maximumPoolSize = Integer.MAX_VALUE;
 
     private long keepAliveTime = 60 * 1000;
 
-    private Executor executor;
+    private ExecutorService executor;
 
     private PortalListener portalListener;
 
@@ -66,7 +72,13 @@ public class PortalFactoryImpl implements PortalFactory {
         this.keepAliveTime = keepAliveTime;
     }
 
-    public void setExecutor(Executor executor) {
+    public void setExecutor(ThreadPoolTaskExecutor executor) {
+        logger.info("using " + executor);
+        this.executor = executor.getThreadPoolExecutor();
+    }
+
+    public void setExecutorService(ExecutorService executor) {
+        logger.info("using " + executor);
         this.executor = executor;
     }
 
@@ -78,7 +90,7 @@ public class PortalFactoryImpl implements PortalFactory {
         return portalListener;
     }
 
-    public Executor getExecutor() {
+    public ExecutorService getExecutorService() {
         if (executor == null) {
             synchronized (this) {
                 if (executor == null) {
@@ -92,7 +104,7 @@ public class PortalFactoryImpl implements PortalFactory {
 
     @Override
     public Portal createPortal(Invocation inc) {
-        PortalImpl portal = new PortalImpl(inc, portalListener, getExecutor());
+        PortalImpl portal = new PortalImpl(inc, portalListener, getExecutorService());
         portal.onPortalCreated(portal);
         return portal;
     }
