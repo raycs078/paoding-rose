@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
+import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 
 import net.paoding.rose.web.portal.Window;
@@ -34,9 +35,9 @@ import org.apache.commons.logging.LogFactory;
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
-public class PortalRequest extends HttpServletRequestWrapper {
+public class WindowRequest extends HttpServletRequestWrapper {
 
-    private static final Log logger = LogFactory.getLog(PortalRequest.class);
+    private static final Log logger = LogFactory.getLog(WindowRequest.class);
 
     /**
      * The request attributes for this request. This is initialized from
@@ -45,9 +46,16 @@ public class PortalRequest extends HttpServletRequestWrapper {
     protected Map<String, Object> attributes = Collections
             .synchronizedMap(new HashMap<String, Object>());
 
-    public PortalRequest(Window window) {
+    public WindowRequest(Window window) {
         super(window.getPortal().getRequest());
         window.getPortal().getModel();
+    }
+
+    @Override
+    public void setRequest(ServletRequest request) {
+        if (request != null) {
+            super.setRequest(request);
+        }
     }
 
     // ------------------------------------------------- ServletRequest Methods

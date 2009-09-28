@@ -73,8 +73,8 @@ class WindowTaskImpl implements WindowTask, Runnable {
             if (logger.isDebugEnabled()) {
                 logger.debug("call window [" + getName() + "]");
             }
-            final HttpServletRequest request = new PortalRequest(window);
-            final PortalResponse response = new PortalResponse(window);
+            final HttpServletRequest request = new WindowRequest(window);
+            final WindowResponse response = new WindowResponse(window);
             request.setAttribute("$$paoding-rose-portal.window", window);
             request.getRequestDispatcher(window.getPath()).forward(request, response);
             window.setDoneTime(System.currentTimeMillis());
