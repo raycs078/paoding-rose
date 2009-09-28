@@ -49,7 +49,6 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeanUtils;
-import org.springframework.util.ClassUtils;
 import org.springframework.validation.Errors;
 
 /**
@@ -358,9 +357,8 @@ public final class ActionEngine implements Engine {
             bitSet.set(intercetporIndex);
 
             if (logger.isDebugEnabled()) {
-                logger.debug("intercepted(before) and return '" + instruction + "': "
-                        + interceptor.getName() + "=" //
-                        + ClassUtils.getUserClass(interceptor.getInterceptor()).getName());
+                logger.debug("[" + interceptor.getName() + "] do before and return '" + instruction
+                        + "'");
             }
 
             if (instruction != null && !Boolean.TRUE.equals(instruction)) {
@@ -413,9 +411,8 @@ public final class ActionEngine implements Engine {
             }
             instruction = interceptors[i].after(inv, instruction);
             if (logger.isDebugEnabled()) {
-                logger.debug("intercepted(after) and return '" + instruction + "': "
-                        + interceptors[i].getName() + "=" //
-                        + ClassUtils.getUserClass(interceptors[i].getInterceptor()).getName());
+                logger.debug("[" + interceptors[i].getName() + "] do after and return '"
+                        + instruction + "'");
             }
             // 拦截器返回null的，要恢复为原instruction
             // 这个功能非常有用!!

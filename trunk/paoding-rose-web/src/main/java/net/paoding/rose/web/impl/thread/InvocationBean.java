@@ -543,4 +543,10 @@ public final class InvocationBean implements Invocation {
         }
     }
 
+    @Override
+    public String toString() {
+        return getControllerClass().getName() + "." + getMethod().getName() + "["
+                + requestPath.getUri() + "] ";
+    }
+
 }
