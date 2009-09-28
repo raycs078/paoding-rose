@@ -15,10 +15,9 @@
  */
 package net.paoding.rose.web.portal.impl;
 
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.FutureTask;
-import java.util.concurrent.RunnableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -35,27 +34,44 @@ import org.apache.commons.logging.LogFactory;
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
-class WindowTaskImpl implements WindowTask, Runnable, Callable<Window> {
+class WindowTaskImpl implements WindowTask, Runnable {
 
     private static final Log logger = LogFactory.getLog(WindowTaskImpl.class);
 
     private Window window;
 
-    private RunnableFuture<Window> future;
+    private Future<?> future;
 
     private boolean forRender = true;
 
     public WindowTaskImpl(Window window) {
         this.window = window;
-        this.future = new FutureTask<Window>(this);
+        this.window.setTask(this);
+    }
+
+    public Future<?> submitTo(ExecutorService executor) {
+        if (this.future == null) {
+            future = executor.submit(this);
+        }
+        return future;
     }
 
     @Override
-    public Window call() throws Exception {
+    public void run() {
+        try {
+            getPortal().onWindowStarted(this);
+            doRequest();
+            getPortal().onWindowDone(this, window);
+        } catch (Exception e) {
+            getPortal().onWindowError(this, window);
+        }
+    }
+
+    public Window doRequest() throws Exception {
         if (!isCancelled()) {
             window.setStartTime(System.currentTimeMillis());
             if (logger.isDebugEnabled()) {
-                logger.debug("call " + this);
+                logger.debug("call window [" + getName() + "]");
             }
             final HttpServletRequest request = new PortalRequest(window);
             final PortalResponse response = new PortalResponse(window);
@@ -132,19 +148,6 @@ class WindowTaskImpl implements WindowTask, Runnable, Callable<Window> {
 
     public void await(long await) throws InterruptedException, ExecutionException, TimeoutException {
         future.get(await, TimeUnit.MILLISECONDS);
-    }
-
-    @Override
-    public void run() {
-        try {
-            if (!future.isCancelled()) {
-                getPortal().onWindowStarted(this);
-                future.run();
-                getPortal().onWindowDone(this, window);
-            }
-        } catch (Exception e) {
-            getPortal().onWindowError(this, window);
-        }
     }
 
     @Override

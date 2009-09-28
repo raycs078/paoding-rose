@@ -54,8 +54,8 @@ public class PortalLoggerListener implements PortalListener {
 
     @Override
     public void onWindowCanceled(WindowTask task) {
-        if (logger.isInfoEnabled()) {
-            logger.info("onWindowCanceled ["
+        if (logger.isDebugEnabled()) {
+            logger.debug("onWindowCanceled ["
                     + task.getPortal().getInvocation().getRequestPath().getUri() + "]: "
                     + task.getName());
         }
@@ -72,8 +72,11 @@ public class PortalLoggerListener implements PortalListener {
 
     @Override
     public void onWindowError(WindowTask task, Window window) {
-        logger.error("onWindowError [" + task.getPortal().getInvocation().getRequestPath().getUri()
-                + "]: " + task.getName(), window.getThrowable());
+        if (logger.isDebugEnabled()) {
+            logger.debug("onWindowError ["
+                    + task.getPortal().getInvocation().getRequestPath().getUri() + "]: "
+                    + task.getName(), window.getThrowable());
+        }
     }
 
     @Override
@@ -87,9 +90,11 @@ public class PortalLoggerListener implements PortalListener {
 
     @Override
     public void onWindowTimeout(WindowTask task, Window window) {
-        logger.error("onWindowTimeout ["
-                + task.getPortal().getInvocation().getRequestPath().getUri() + "]: "
-                + task.getName() + "; timeout="
-                + (System.currentTimeMillis() - window.getStartTime()));
+        if (logger.isDebugEnabled()) {
+            logger.debug("onWindowTimeout ["
+                    + task.getPortal().getInvocation().getRequestPath().getUri() + "]: "
+                    + task.getName() + "; timeout="
+                    + (System.currentTimeMillis() - window.getStartTime()));
+        }
     }
 }

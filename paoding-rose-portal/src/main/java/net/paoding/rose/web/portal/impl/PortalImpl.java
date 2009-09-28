@@ -19,7 +19,7 @@ import java.lang.reflect.Method;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
@@ -50,7 +50,7 @@ class PortalImpl implements Portal, PortalListener {
 
     private Invocation invocation;
 
-    private Executor executor;
+    private ExecutorService executor;
 
     private List<WindowTaskImpl> tasks = new LinkedList<WindowTaskImpl>();
 
@@ -62,7 +62,7 @@ class PortalImpl implements Portal, PortalListener {
 
     private long timeout;
 
-    public PortalImpl(Invocation inv, PortalListener portalListener, Executor executor) {
+    public PortalImpl(Invocation inv, PortalListener portalListener, ExecutorService executor) {
         this.invocation = inv;
         this.portalListener = portalListener;
         this.executor = executor;
@@ -100,16 +100,11 @@ class PortalImpl implements Portal, PortalListener {
     public WindowTask addWindow(String name, String windowPath) {
         //
         Window window = new Window(this, name, windowPath);
-        WindowTaskImpl task = new WindowTaskImpl(window);
-        window.setTask(task);
-        tasks.add(task);
-        //
         addModel(name, window);
-        //
+        WindowTaskImpl task = new WindowTaskImpl(window);
+        tasks.add(task);
         onWindowAdded(task);
-        //
-        executor.execute(task);
-        //
+        task.submitTo(executor);
         return task;
     }
 
