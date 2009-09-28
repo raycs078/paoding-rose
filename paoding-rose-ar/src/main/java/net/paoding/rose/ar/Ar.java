@@ -562,6 +562,22 @@ public class Ar {
         });
     }
 
+    public static int exesql(final String sql, final Object... values) {
+        final HibernateTemplate ht = Ar.getHibernateTemplate();
+        return (Integer) ht.execute(new HibernateCallback() {
+
+            public Object doInHibernate(Session session) throws HibernateException, SQLException {
+                SQLQuery queryObject = session.createSQLQuery(sql);
+                if (values != null) {
+                    for (int i = 0; i < values.length; i++) {
+                        queryObject.setParameter(i, values[i]);
+                    }
+                }
+                return queryObject.executeUpdate();
+            }
+        });
+    }
+
     public static <T> List<T> sql(final String sql, Class<T> entityClass, final Object... values) {
         return sql(sql, (String) null, entityClass, values);
     }
