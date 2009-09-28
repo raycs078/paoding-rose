@@ -70,8 +70,12 @@ public class WindowRequest extends HttpServletRequestWrapper {
         Object value = attributes.get(name);
         if (value == null) {
             value = super.getAttribute(name);
-            logger.debug(String
-                    .format("get attribute [%s=%s] from super.getAttribute", name, value));
+            if (value != null) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug(String.format("get attribute '%s' from portal request ('%s')",
+                            name, value));
+                }
+            }
         }
         return value;
     }
