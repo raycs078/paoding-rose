@@ -25,6 +25,7 @@ import javax.servlet.http.HttpServletResponseWrapper;
 
 import net.paoding.rose.web.portal.Window;
 
+
 /**
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
@@ -32,13 +33,13 @@ import net.paoding.rose.web.portal.Window;
  */
 public class WindowResponse extends HttpServletResponseWrapper {
 
-    private Window window;
+    private WindowImpl window;
 
     private PrintWriter writer;
 
     private ServletOutputStream out;
 
-    public WindowResponse(Window window) {
+    public WindowResponse(WindowImpl window) {
         super(window.getPortal().getResponse());
         this.window = window;
     }

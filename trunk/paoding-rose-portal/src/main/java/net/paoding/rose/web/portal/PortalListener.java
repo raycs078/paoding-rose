@@ -26,16 +26,16 @@ public interface PortalListener {
 
     public void onPortalReady(Portal portal);
 
-    public void onWindowAdded(WindowTask task);
+    public void onWindowAdded(Window window);
 
-    public void onWindowStarted(WindowTask task);
+    public void onWindowStarted(Window window);
 
-    public void onWindowCanceled(WindowTask task);
+    public void onWindowCanceled(Window window);
 
-    public void onWindowDone(WindowTask task, Window window);
+    public void onWindowDone(Window window);
 
-    public void onWindowError(WindowTask task, Window window);
+    public void onWindowError(Window window);
 
-    public void onWindowTimeout(WindowTask task, Window window);
+    public void onWindowTimeout(Window window);
 
 }

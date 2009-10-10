@@ -21,8 +21,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import javax.servlet.http.HttpServletRequest;
-
 import net.paoding.rose.web.portal.Window;
 import net.paoding.rose.web.portal.WindowTask;
 
@@ -38,13 +36,11 @@ class WindowTaskImpl implements WindowTask, Runnable {
 
     private static final Log logger = LogFactory.getLog(WindowTaskImpl.class);
 
-    private Window window;
+    private WindowImpl window;
 
     private Future<?> future;
 
-    private boolean forRender = true;
-
-    public WindowTaskImpl(Window window) {
+    public WindowTaskImpl(WindowImpl window) {
         this.window = window;
         this.window.setTask(this);
     }
@@ -59,49 +55,30 @@ class WindowTaskImpl implements WindowTask, Runnable {
     @Override
     public void run() {
         try {
-            getPortal().onWindowStarted(this);
+            getPortal().onWindowStarted(window);
             doRequest();
-            getPortal().onWindowDone(this, window);
+            getPortal().onWindowDone(window);
         } catch (Exception e) {
-            getPortal().onWindowError(this, window);
+            getPortal().onWindowError(window);
         }
     }
 
     public Window doRequest() throws Exception {
-        if (!isCancelled()) {
-            window.setStartTime(System.currentTimeMillis());
-            if (logger.isDebugEnabled()) {
-                logger.debug("call window [" + getName() + "]");
-            }
-            final HttpServletRequest request = new WindowRequest(window);
-            final WindowResponse response = new WindowResponse(window);
-            request.setAttribute("$$paoding-rose-portal.window", window);
-            request.getRequestDispatcher(window.getPath()).forward(request, response);
-            window.setDoneTime(System.currentTimeMillis());
+        window.setStartTime(System.currentTimeMillis());
+        if (logger.isDebugEnabled()) {
+            logger.debug("call window [" + getWindow().getName() + "]");
         }
+        final WindowRequest request = new WindowRequest(window);
+        final WindowResponse response = new WindowResponse(window);
+        request.setAttribute("$$paoding-rose-portal.window", window);
+        window.getPortal().getRequest().getRequestDispatcher(window.getPath()).forward(request,
+                response);
+        window.setDoneTime(System.currentTimeMillis());
         return window;
     }
 
-    @Override
     public PortalImpl getPortal() {
         return (PortalImpl) window.getPortal();
-    }
-
-    @Override
-    public String getName() {
-        return window.getName();
-    }
-
-    @Override
-    public WindowTask set(String key, Object value) {
-        window.set(key, value);
-        return this;
-    }
-
-    @Override
-    public WindowTask setTitle(Object title) {
-        window.setTitle(title);
-        return this;
     }
 
     public Window getWindow() {
@@ -109,24 +86,9 @@ class WindowTaskImpl implements WindowTask, Runnable {
     }
 
     @Override
-    public WindowTask forRender(boolean forRender) {
-        this.forRender = forRender;
-        return this;
-    }
-
-    /**
-     * 是否需要在被渲染前完成该任务?
-     * 
-     * @return
-     */
-    public boolean forRender() {
-        return forRender;
-    }
-
-    @Override
     public boolean cancel(boolean mayInterruptIfRunning) {
         if (future.cancel(mayInterruptIfRunning)) {
-            getPortal().onWindowCanceled(this);
+            getPortal().onWindowCanceled(window);
             return true;
         }
         return false;
@@ -142,10 +104,12 @@ class WindowTaskImpl implements WindowTask, Runnable {
         return future.isDone();
     }
 
+    @Override
     public void await() throws InterruptedException, ExecutionException {
         future.get();
     }
 
+    @Override
     public void await(long await) throws InterruptedException, ExecutionException, TimeoutException {
         future.get(await, TimeUnit.MILLISECONDS);
     }
