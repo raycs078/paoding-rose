@@ -15,165 +15,50 @@
  */
 package net.paoding.rose.web.portal;
 
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
-public class Window {
+public interface Window {
 
-    private long startTime = System.currentTimeMillis();
+    public Portal getPortal();
 
-    private String name;
+    public WindowTask getTask();
 
-    private String path;
+    public void set(String key, Object value);
 
-    private StringBuilder buffer;
+    public Object get(String key);
 
-    private long doneTime;
+    public void setTitle(Object title);
 
-    private Throwable throwable;
+    public Object getTitle();
 
-    private int statusCode = 200;
+    public String getContent();
 
-    private String statusMessage = "";
+    public boolean isDone();
 
-    private Map<String, Object> attributes;
+    public String getName();
 
-    private Portal portal;
+    public String getPath();
 
-    private WindowTask task;
+    public long getStartTime();
 
-    public Window(Portal portal, String name, String windowPath) {
-        this.portal = portal;
-        this.name = name;
-        this.path = windowPath;
-    }
+    public long getDoneTime();
 
-    public Portal getPortal() {
-        return portal;
-    }
+    public Throwable getThrowable();
 
-    public WindowTask getTask() {
-        return task;
-    }
+    public void setThrowable(Throwable e);
 
-    public void setTask(WindowTask task) {
-        this.task = task;
-    }
+    public int getStatusCode();
 
-    public void set(String key, Object value) {
-        if (attributes == null) {
-            attributes = new HashMap<String, Object>();
-        }
-        attributes.put(key, value);
-    }
+    public String getStatusMessage();
 
-    public Object get(String key) {
-        return (attributes == null) ? null : attributes.get(key);
-    }
+    public Window forRender(boolean forRender);
 
-    public void setTitle(Object title) {
-        set("title", title);
-    }
+    public boolean isForRender();
 
-    public Object getTitle() {
-        Object value = get("title");
-        if (value == null) {
-            value = name;
-        }
-        return value;
-    }
-
-    public String getContent() {
-        return buffer == null ? null : buffer.toString();
-    }
-
-    public void appendContent(String content) {
-        if (buffer == null) {
-            buffer = new StringBuilder();
-        }
-        this.buffer.append(content);
-    }
-
-    public void appendContent(char[] content) {
-        if (buffer == null) {
-            buffer = new StringBuilder();
-        }
-        this.buffer.append(content);
-    }
-
-    public void appendContent(char[] content, int offset, int len) {
-        if (buffer == null) {
-            buffer = new StringBuilder();
-        }
-        this.buffer.append(content, offset, len);
-    }
-
-    public boolean isDone() {
-        return doneTime > 0;
-    }
-
-    public void setDoneTime(long doneTime) {
-        this.doneTime = doneTime;
-    }
-
-    public long getCurrentTime() {
-        return System.currentTimeMillis();
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getPath() {
-        return path;
-    }
-
-    public long getStartTime() {
-        return startTime;
-    }
-
-    public void setStartTime(long startTime) {
-        this.startTime = startTime;
-    }
-
-    public long getDoneTime() {
-        return doneTime;
-    }
-
-    public Throwable getThrowable() {
-        return throwable;
-    }
-
-    public void setThrowable(Throwable throwable) {
-        this.throwable = throwable;
-    }
-
-    public void setStatus(int sc) {
-        this.statusCode = sc;
-        this.statusMessage = "";
-    }
-
-    public void setStatus(int sc, String msg) {
-        this.statusCode = sc;
-        this.statusMessage = msg;
-    }
-
-    public int getStatusCode() {
-        return statusCode;
-    }
-
-    public String getStatusMessage() {
-        return statusMessage;
-    }
-
-    @Override
-    public String toString() {
-        return getContent();
-    }
+    public String toString();
 
 }

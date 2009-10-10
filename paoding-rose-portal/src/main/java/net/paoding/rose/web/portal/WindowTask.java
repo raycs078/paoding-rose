@@ -15,47 +15,15 @@
  */
 package net.paoding.rose.web.portal;
 
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
+
 /**
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
 public interface WindowTask {
-
-    /**
-     * 
-     * @return
-     */
-    public Portal getPortal();
-
-    /**
-     * 
-     * @return
-     */
-    public String getName();
-
-    /**
-     * 
-     * @param key
-     * @param value
-     * @return
-     */
-    public WindowTask set(String key, Object value);
-
-    /**
-     * 
-     * @param vlaue
-     * @return {@link #set(String, Object)}
-     */
-    public WindowTask setTitle(Object title);
-
-    /**
-     * 是否需要在被渲染前完成该任务?
-     * 
-     * @param forRender
-     * @return
-     */
-    public WindowTask forRender(boolean forRender);
 
     /**
      * Attempts to cancel execution of this task. This attempt will fail if
@@ -100,4 +68,8 @@ public interface WindowTask {
      * @return <tt>true</tt> if this task completed
      */
     boolean isDone();
+
+    public void await() throws InterruptedException, ExecutionException;
+
+    public void await(long await) throws InterruptedException, ExecutionException, TimeoutException;
 }

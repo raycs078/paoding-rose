@@ -59,44 +59,44 @@ public class PortalListeners implements PortalListener {
     }
 
     @Override
-    public void onWindowAdded(WindowTask task) {
+    public void onWindowAdded(Window window) {
         for (PortalListener l : listeners) {
-            l.onWindowAdded(task);
+            l.onWindowAdded(window);
         }
     }
 
     @Override
-    public void onWindowCanceled(WindowTask task) {
+    public void onWindowCanceled(Window window) {
         for (PortalListener l : listeners) {
-            l.onWindowCanceled(task);
+            l.onWindowCanceled(window);
         }
     }
 
     @Override
-    public void onWindowDone(WindowTask task, Window window) {
+    public void onWindowDone(Window window) {
         for (PortalListener l : listeners) {
-            l.onWindowDone(task, window);
+            l.onWindowDone(window);
         }
     }
 
     @Override
-    public void onWindowError(WindowTask task, Window window) {
+    public void onWindowError(Window window) {
         for (PortalListener l : listeners) {
-            l.onWindowError(task, window);
+            l.onWindowError(window);
         }
     }
 
     @Override
-    public void onWindowStarted(WindowTask task) {
+    public void onWindowStarted(Window window) {
         for (PortalListener l : listeners) {
-            l.onWindowStarted(task);
+            l.onWindowStarted(window);
         }
     }
 
     @Override
-    public void onWindowTimeout(WindowTask task, Window window) {
+    public void onWindowTimeout(Window window) {
         for (PortalListener l : listeners) {
-            l.onWindowTimeout(task, window);
+            l.onWindowTimeout(window);
         }
     }
 

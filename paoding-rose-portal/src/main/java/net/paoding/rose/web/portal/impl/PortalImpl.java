@@ -16,6 +16,7 @@
 package net.paoding.rose.web.portal.impl;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -30,7 +31,6 @@ import net.paoding.rose.web.RequestPath;
 import net.paoding.rose.web.portal.Portal;
 import net.paoding.rose.web.portal.PortalListener;
 import net.paoding.rose.web.portal.Window;
-import net.paoding.rose.web.portal.WindowTask;
 import net.paoding.rose.web.var.Flash;
 import net.paoding.rose.web.var.Model;
 
@@ -52,7 +52,7 @@ class PortalImpl implements Portal, PortalListener {
 
     private ExecutorService executor;
 
-    private List<WindowTaskImpl> tasks = new LinkedList<WindowTaskImpl>();
+    private List<Window> tasks = new LinkedList<Window>();
 
     private PortalListener portalListener;
 
@@ -92,20 +92,26 @@ class PortalImpl implements Portal, PortalListener {
         return invocation;
     }
 
-    public List<WindowTaskImpl> getTasks() {
-        return tasks;
+    @Override
+    public List<Window> getWindows() {
+        return new ArrayList<Window>(tasks);
     }
 
     @Override
-    public WindowTask addWindow(String name, String windowPath) {
+    public Window addWindow(String windowPath) {
+        return this.addWindow(windowPath, windowPath);
+    }
+
+    @Override
+    public Window addWindow(String name, String windowPath) {
         //
-        Window window = new Window(this, name, windowPath);
+        WindowImpl window = new WindowImpl(this, name, windowPath);
         addModel(name, window);
         WindowTaskImpl task = new WindowTaskImpl(window);
-        tasks.add(task);
-        onWindowAdded(task);
+        tasks.add(window);
+        onWindowAdded(window);
         task.submitTo(executor);
-        return task;
+        return window;
     }
 
     @Override
@@ -138,7 +144,7 @@ class PortalImpl implements Portal, PortalListener {
     }
 
     @Override
-    public void onWindowAdded(WindowTask window) {
+    public void onWindowAdded(Window window) {
         if (portalListener != null) {
             try {
                 portalListener.onWindowAdded(window);
@@ -149,7 +155,7 @@ class PortalImpl implements Portal, PortalListener {
     }
 
     @Override
-    public void onWindowStarted(WindowTask window) {
+    public void onWindowStarted(Window window) {
         if (portalListener != null) {
             try {
                 portalListener.onWindowStarted(window);
@@ -160,7 +166,7 @@ class PortalImpl implements Portal, PortalListener {
     }
 
     @Override
-    public void onWindowCanceled(WindowTask window) {
+    public void onWindowCanceled(Window window) {
         if (portalListener != null) {
             try {
                 portalListener.onWindowCanceled(window);
@@ -171,10 +177,10 @@ class PortalImpl implements Portal, PortalListener {
     }
 
     @Override
-    public void onWindowDone(WindowTask window, Window result) {
+    public void onWindowDone(Window window) {
         if (portalListener != null) {
             try {
-                portalListener.onWindowDone(window, result);
+                portalListener.onWindowDone(window);
             } catch (Exception e) {
                 logger.error("", e);
             }
@@ -182,10 +188,10 @@ class PortalImpl implements Portal, PortalListener {
     }
 
     @Override
-    public void onWindowError(WindowTask window, Window result) {
+    public void onWindowError(Window window) {
         if (portalListener != null) {
             try {
-                portalListener.onWindowError(window, result);
+                portalListener.onWindowError(window);
             } catch (Exception e) {
                 logger.error("", e);
             }
@@ -193,10 +199,10 @@ class PortalImpl implements Portal, PortalListener {
     }
 
     @Override
-    public void onWindowTimeout(WindowTask window, Window result) {
+    public void onWindowTimeout(Window window) {
         if (portalListener != null) {
             try {
-                portalListener.onWindowTimeout(window, result);
+                portalListener.onWindowTimeout(window);
             } catch (Exception e) {
                 logger.error("", e);
             }
@@ -344,4 +350,13 @@ class PortalImpl implements Portal, PortalListener {
         return this;
     }
 
+    @Override
+    public Object getOncePerRequestAttribute(String name) {
+        return getInvocation().getOncePerRequestAttribute(name);
+    }
+
+    @Override
+    public Invocation setOncePerRequestAttribute(String name, Object value) {
+        return getInvocation().setOncePerRequestAttribute(name, value);
+    }
 }

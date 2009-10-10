@@ -20,7 +20,7 @@ package net.paoding.rose.web.portal;
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
-public class PortalListenerAdapter implements PortalListener {
+public abstract class PortalListenerAdapter implements PortalListener {
 
     @Override
     public void onPortalCreated(Portal portal) {
@@ -29,30 +29,37 @@ public class PortalListenerAdapter implements PortalListener {
 
     @Override
     public void onPortalReady(Portal portal) {
+
     }
 
     @Override
-    public void onWindowAdded(WindowTask task) {
+    public void onWindowAdded(Window window) {
+
     }
 
     @Override
-    public void onWindowCanceled(WindowTask task) {
+    public void onWindowCanceled(Window window) {
+
     }
 
     @Override
-    public void onWindowDone(WindowTask task, Window window) {
+    public void onWindowDone(Window window) {
+
     }
 
     @Override
-    public void onWindowError(WindowTask task, Window window) {
+    public void onWindowError(Window window) {
+
     }
 
     @Override
-    public void onWindowStarted(WindowTask task) {
+    public void onWindowStarted(Window window) {
+
     }
 
     @Override
-    public void onWindowTimeout(WindowTask task, Window window) {
+    public void onWindowTimeout(Window window) {
+
     }
 
 }

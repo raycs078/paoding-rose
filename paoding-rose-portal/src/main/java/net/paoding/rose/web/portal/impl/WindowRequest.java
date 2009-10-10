@@ -48,6 +48,7 @@ public class WindowRequest extends HttpServletRequestWrapper {
 
     public WindowRequest(Window window) {
         super(window.getPortal().getRequest());
+//        FIXME: 以下代码何用？
         window.getPortal().getModel();
     }
 

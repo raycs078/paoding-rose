@@ -15,6 +15,8 @@
  */
 package net.paoding.rose.web.portal;
 
+import java.util.List;
+
 import net.paoding.rose.web.Invocation;
 
 /**
@@ -50,16 +52,25 @@ public interface Portal extends Invocation {
 
     /**
      * 
+     * @param windowPath
+     * @return
+     */
+    public Window addWindow(String windowPath);
+
+    /**
+     * 
      * @param name
      * @param windowPath
      * @return
      */
-    public WindowTask addWindow(String name, String windowPath);
+    public Window addWindow(String name, String windowPath);
 
     /**
      * 
      * @return
      */
     public Invocation getInvocation();
+
+    public List<Window> getWindows();
 
 }
