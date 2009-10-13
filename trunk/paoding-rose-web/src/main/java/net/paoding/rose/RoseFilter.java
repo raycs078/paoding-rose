@@ -188,6 +188,10 @@ public class RoseFilter extends GenericFilterBean {
         }
     }
 
+    public static void main(String[] args) {
+        System.out.println(System.currentTimeMillis());
+    }
+
     @Override
     public void doFilter(ServletRequest request, final ServletResponse response,
             final FilterChain filterChain) throws IOException, ServletException {
