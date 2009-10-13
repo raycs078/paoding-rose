@@ -12,8 +12,9 @@ public class UserController {
 
     @ReqMapping(path = "{id}")
     public int show(@Param("id") Integer id, Invocation inv) {
-        if (!String.valueOf(id).equals(inv.getRequest().getParameter("id"))) {
-            throw new IllegalStateException("request.getParameter should return params in uri");
+        if (!id.equals(inv.getParameter("id"))) {
+            //            throw new IllegalStateException("request.getParameter should return params in uri");
+            throw new IllegalStateException("inv.getParameter should return params in uri");
         }
         return id;
     }

@@ -35,8 +35,8 @@ public class OncePerRequestInterceptorWrapper extends ControllerInterceptorWrapp
 
     @Override
     public final Object before(Invocation inv) throws Exception {
-        if (inv.getRequest().getAttribute(filtered) == null) {
-            inv.getRequest().setAttribute(filtered, inv);
+        if (inv.getOncePerRequestAttribute(filtered) == null) {
+            inv.setOncePerRequestAttribute(filtered, inv);
             return interceptor.before(inv);
         }
         return true;
@@ -44,7 +44,7 @@ public class OncePerRequestInterceptorWrapper extends ControllerInterceptorWrapp
 
     @Override
     public final Object after(Invocation inv, Object instruction) throws Exception {
-        if (inv == inv.getRequest().getAttribute(filtered)) {
+        if (inv == inv.getOncePerRequestAttribute(filtered)) {
             return interceptor.after(inv, instruction);
         }
         return instruction;
@@ -52,8 +52,7 @@ public class OncePerRequestInterceptorWrapper extends ControllerInterceptorWrapp
 
     @Override
     public final void afterCompletion(Invocation inv, Throwable ex) throws Exception {
-        if (inv == inv.getRequest().getAttribute(filtered)) {
-            inv.getRequest().removeAttribute(filtered);
+        if (inv == inv.getOncePerRequestAttribute(filtered)) {
             interceptor.afterCompletion(inv, ex);
         }
     }

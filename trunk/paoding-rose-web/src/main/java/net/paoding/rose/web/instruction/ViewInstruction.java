@@ -117,7 +117,11 @@ public class ViewInstruction extends AbstractInstruction {
                 String encoding = resolvePlaceHolder(this.encoding, inv);
                 response.setCharacterEncoding(encoding);
             }
-            view.render(inv.getModel().getAttributes(), request, response);
+            if (!Thread.interrupted()) {
+                view.render(inv.getModel().getAttributes(), request, response);
+            } else {
+                logger.info("interrupted");
+            }
         }
     }
 

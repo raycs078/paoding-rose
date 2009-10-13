@@ -24,10 +24,8 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Set;
 
 import javax.servlet.FilterChain;
@@ -35,7 +33,6 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 
 import net.paoding.rose.scanner.ModuleInfo;
@@ -212,7 +209,7 @@ public class RoseFilter extends GenericFilterBean {
 
         // 构造invocation对象，一个invocation对象用于封装和本次请求有关的匹配结果以及方法调用参数
         final InvocationBean inv = new InvocationBean();
-        if ((requestPath.isIncludeRequest() || requestPath.isForwardRequest())) {
+        if (requestPath.isIncludeRequest() || requestPath.isForwardRequest()) {
             inv.setPreInvocation(InvocationUtils.getInvocation(InvocationUtils
                     .getCurrentThreadRequest()));
             // save before include
@@ -223,16 +220,17 @@ public class RoseFilter extends GenericFilterBean {
 
         // fill invocation 
         inv.setRoseEngine(engine);
-        inv.setRequest(httpRequest);
-        inv.setResponse(httpResponse);
         inv.setRequestPath(requestPath);
+        inv.setResponse(httpResponse);
+        inv.setRequest(httpRequest);
+        InvocationUtils.bindInvocationToRequest(inv, httpRequest);
+        InvocationUtils.bindRequestToCurrentThread(inv.getRequest());
 
         //
         boolean matched = false;
         try {
             matched = engine.match(inv);
         } catch (Throwable exception) {
-            inv.destroy();
             throwServletException(inv, exception);
         }
 
@@ -242,10 +240,6 @@ public class RoseFilter extends GenericFilterBean {
             return;
         } else {
             try {
-                final List<String> parameterNames = inv.getMatchResultParameterNames();
-                if (parameterNames.size() > 0) {
-                    inv.setRequest(new ParameterOverridedRequest(inv, parameterNames));
-                }
                 engine.invoke(inv);
 
                 // 渲染后的操作：拦截器的afterCompletion以及include属性快照的恢复等
@@ -254,8 +248,6 @@ public class RoseFilter extends GenericFilterBean {
                 // 异常后的操作(可能还没渲染)：拦截器的afterCompletion以及include属性快照的恢复等
                 afterCompletion(inv, exception);
                 throwServletException(inv, exception);
-            } finally {
-                inv.destroy();
             }
         }
     }
@@ -336,13 +328,6 @@ public class RoseFilter extends GenericFilterBean {
     protected void forwardToWebContainer(final FilterChain filterChain,
             final HttpServletRequest httpRequest, final HttpServletResponse httpResponse,
             final RequestPath requestPath, InvocationBean inv) throws IOException, ServletException {
-        if (inv != null) {
-            try {
-                inv.destroy();
-            } catch (Exception e) {
-                logger.error("", e);
-            }
-        }
         if (logger.isDebugEnabled()) {
             logger.debug("not rose uri: " + requestPath.getUri());
         }
@@ -374,10 +359,10 @@ public class RoseFilter extends GenericFilterBean {
         // 恢复include请求前的各种请求属性(包括Model对象)
         if (inv.getRequestPath().isIncludeRequest()) {
             restoreRequestAttributesAfterInclude(inv);
-            Invocation invBeforeInclude = inv.getPreInvocation();
-            if (invBeforeInclude != null) {
-                InvocationUtils.bindRequestToCurrentThread(invBeforeInclude.getRequest());
-            }
+        }
+        Invocation invBeforeInclude = inv.getPreInvocation();
+        if (invBeforeInclude != null) {
+            InvocationUtils.bindRequestToCurrentThread(invBeforeInclude.getRequest());
         }
     }
 
@@ -469,79 +454,6 @@ public class RoseFilter extends GenericFilterBean {
         }
         super.destroy();
     }
-
-    static class ParameterOverridedRequest extends HttpServletRequestWrapper {
-
-        final List<String> parameterNames;
-
-        final InvocationBean inv;
-
-        Map<String, String[]> parameterMap;
-
-        public ParameterOverridedRequest(InvocationBean inv, List<String> parameterNames) {
-            super(inv.getRequest());
-            this.inv = inv;
-            this.parameterNames = parameterNames;
-        }
-
-        @Override
-        public String getParameter(String name) {
-            String value = inv.getMatchResultParameter(name);
-            if (value == null) {
-                value = super.getParameter(name);
-            }
-            return value;
-        }
-
-        @Override
-        @SuppressWarnings("unchecked")
-        public Map getParameterMap() {
-            if (parameterMap == null) {
-                Map<String, String[]> map = new HashMap<String, String[]>(super.getParameterMap());
-                for (String name : parameterNames) {
-                    map.put(name, inv.getMethodParameterNames());
-                }
-                parameterMap = Collections.unmodifiableMap(map);
-            }
-            return parameterMap;
-        }
-
-        @Override
-        public String[] getParameterValues(String name) {
-            String[] value = inv.getMatchResultParameterValues(name);
-            if (value.length == 0) {
-                value = super.getParameterValues(name);
-            }
-            return value;
-        }
-
-        @Override
-        @SuppressWarnings("unchecked")
-        public Enumeration getParameterNames() {
-            final Enumeration<String> requestParamNames = super.getParameterNames();
-            return new Enumeration<String>() {
-
-                final Iterator<String> matchResultParamNames = parameterNames.iterator();
-
-                @Override
-                public boolean hasMoreElements() {
-                    return matchResultParamNames.hasNext() || requestParamNames.hasMoreElements();
-                }
-
-                @Override
-                public String nextElement() {
-                    if (matchResultParamNames.hasNext()) {
-                        return matchResultParamNames.next();
-                    }
-                    if (requestParamNames.hasMoreElements()) {
-                        return requestParamNames.nextElement();
-                    }
-                    throw new NoSuchElementException();
-                }
-
-            };
-        }
-    };
 
     //----------
 

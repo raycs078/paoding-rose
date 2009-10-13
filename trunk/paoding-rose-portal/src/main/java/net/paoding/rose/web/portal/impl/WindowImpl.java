@@ -95,7 +95,7 @@ public class WindowImpl implements Window  {
     }
 
     public String getContent() {
-        return buffer == null ? null : buffer.toString();
+        return buffer == null ? "" : buffer.toString();
     }
 
     void appendContent(String content) {
