@@ -300,6 +300,10 @@ public final class ActionEngine implements Engine {
 
     public Object invoke(final InvocationBean inv) throws Throwable {
 
+        // applies http features before the resolvers
+        applyHttpFeatures(inv);
+
+        //
         for (String matchResultParam : inv.getActionMatchResult().getParameterNames()) {
             inv.addModel(matchResultParam, inv.getActionMatchResult()
                     .getParameter(matchResultParam));
@@ -333,9 +337,6 @@ public final class ActionEngine implements Engine {
                 }
             }
         }
-
-        // applies http features before the inv
-        applyHttpFeatures(inv);
 
         // returned by interceptors or action
         Object instruction = null;

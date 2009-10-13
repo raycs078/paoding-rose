@@ -173,18 +173,9 @@ public class RoseEngine implements Engine {
      * @throws ServletException
      */
     public Object invoke(final InvocationBean inv) throws Throwable {
-        // rose which
-        String roseWhich = inv.getRequest().getParameter("rose.which");
-        if (roseWhich != null
-                && inv.getRequest().getAttribute("$$paoding-rose.rose-info.mapping.invocation") == null) {
-            inv.getRequest().setAttribute("$$paoding-rose.rose-info.mapping.invocation", inv);
-            roseWhich = roseWhich.trim();
-            if (roseWhich.length() == 0) {
-                roseWhich = "controller";
-            }
-            return instructionExecutor.render(inv, "f:/rose-info/which/" + roseWhich);
+        if (logger.isDebugEnabled()) {
+            logger.debug("request.charsetEncoding=" + inv.getRequest().getCharacterEncoding());
         }
-        //
         final RequestPath requestPath = inv.getRequestPath();
         ModuleEngine moduleEngine = inv.getModuleMatchResult().getMapping().getTarget();
 
