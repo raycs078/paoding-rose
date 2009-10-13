@@ -334,10 +334,10 @@ class PortalImpl implements Portal, PortalListener {
         return getInvocation().getServletContext();
     }
 
-    @Override
-    public boolean isDestroyed() {
-        return getInvocation().isDestroyed();
-    }
+//    @Override
+//    public boolean isDestroyed() {
+//        return getInvocation().isDestroyed();
+//    }
 
     @Override
     public void removeAttribute(String name) {

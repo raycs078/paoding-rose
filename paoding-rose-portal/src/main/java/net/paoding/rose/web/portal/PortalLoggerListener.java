@@ -46,26 +46,24 @@ public class PortalLoggerListener implements PortalListener {
     @Override
     public void onWindowAdded(Window window) {
         if (logger.isDebugEnabled()) {
-            logger.debug("onWindowAdded ["
-                    + window.getPortal().getInvocation().getRequestPath().getUri() + "]: "
-                    + window.getName());
+            logger.debug("onWindowAdded [" + window.getName() + "]@["
+                    + window.getPortal().getInvocation().getRequestPath().getUri() + "]");
         }
     }
 
     @Override
     public void onWindowCanceled(Window window) {
         if (logger.isDebugEnabled()) {
-            logger.debug("onWindowCanceled ["
-                    + window.getPortal().getInvocation().getRequestPath().getUri() + "]: "
-                    + window.getName());
+            logger.debug("onWindowCanceled [" + window.getName() + "]@["
+                    + window.getPortal().getInvocation().getRequestPath().getUri() + "]");
         }
     }
 
     @Override
     public void onWindowDone(Window window) {
         if (logger.isDebugEnabled()) {
-            logger.debug("onWindowDone ["
-                    + window.getPortal().getInvocation().getRequestPath().getUri() + "]: "
+            logger.debug("onWindowDone [" + window.getName() + "]@["
+                    + window.getPortal().getInvocation().getRequestPath().getUri() + "]"
                     + window.getName());
         }
     }
@@ -73,28 +71,26 @@ public class PortalLoggerListener implements PortalListener {
     @Override
     public void onWindowError(Window window) {
         if (logger.isDebugEnabled()) {
-            logger.debug("onWindowError ["
-                    + window.getPortal().getInvocation().getRequestPath().getUri() + "]: "
-                    + window.getName(), window.getThrowable());
+            logger.debug("onWindowError [" + window.getName() + "]@["
+                    + window.getPortal().getInvocation().getRequestPath().getUri() + "]", window
+                    .getThrowable());
         }
     }
 
     @Override
     public void onWindowStarted(Window window) {
         if (logger.isDebugEnabled()) {
-            logger.debug("onWindowStarted ["
-                    + window.getPortal().getInvocation().getRequestPath().getUri() + "]: "
-                    + window.getName());
+            logger.debug("onWindowStarted [" + window.getName() + "]@["
+                    + window.getPortal().getInvocation().getRequestPath().getUri() + "]");
         }
     }
 
     @Override
     public void onWindowTimeout(Window window) {
         if (logger.isDebugEnabled()) {
-            logger.debug("onWindowTimeout ["
-                    + window.getPortal().getInvocation().getRequestPath().getUri() + "]: "
-                    + window.getName() + "; timeout="
-                    + (System.currentTimeMillis() - window.getStartTime()));
+            logger.debug("onWindowTimeout [" + window.getName() + "]@["
+                    + window.getPortal().getInvocation().getRequestPath().getUri() + "]"
+                    + "; timeout=" + (System.currentTimeMillis() - window.getStartTime()));
         }
     }
 }

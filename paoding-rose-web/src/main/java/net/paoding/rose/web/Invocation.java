@@ -198,6 +198,22 @@ public interface Invocation {
     /**
      * 
      * @param name
+     * @param value
+     * @return
+     */
+    public Invocation setOncePerRequestAttribute(String name, Object value);
+
+    /**
+     * 获取前面拦截器或代码设置的，和本次调用相关的属性
+     * 
+     * @param name
+     * @return
+     */
+    public Object getOncePerRequestAttribute(String name);
+
+    /**
+     * 
+     * @param name
      */
     public void removeAttribute(String name);
 
@@ -275,9 +291,4 @@ public interface Invocation {
      */
     public BindingResult getBindingResult(Object bean);
 
-    /**
-     * 
-     * @return
-     */
-    public boolean isDestroyed();
 }

@@ -180,14 +180,14 @@ public class InvocationLocalImpl implements InvocationLocal {
         return required().getServletContext();
     }
 
-    @Override
-    public boolean isDestroyed() {
-        Invocation inv = getCurrent(false);
-        if (inv != null) {
-            return inv.isDestroyed();
-        }
-        return true;
-    }
+//    @Override
+//    public boolean isDestroyed() {
+//        Invocation inv = getCurrent(false);
+//        if (inv != null) {
+//            return inv.isDestroyed();
+//        }
+//        return true;
+//    }
 
     @Override
     public void removeAttribute(String name) {
@@ -198,6 +198,16 @@ public class InvocationLocalImpl implements InvocationLocal {
     @Override
     public Invocation setAttribute(String name, Object value) {
         return required().setAttribute(name, value);
+    }
+
+    @Override
+    public Object getOncePerRequestAttribute(String name) {
+        return required().getOncePerRequestAttribute(name);
+    }
+
+    @Override
+    public Invocation setOncePerRequestAttribute(String name, Object value) {
+        return required().setOncePerRequestAttribute(name, value);
     }
 
 }

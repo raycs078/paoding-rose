@@ -42,7 +42,7 @@ public class InstructionExecutorImpl implements InstructionExecutor {
     public Object render(Invocation inv, Object instruction) throws IOException, ServletException,
             Exception {
         instruction = translatesToInstructionObject((InvocationBean) inv, instruction);
-        if (instruction != null) {
+        if (instruction != null && !Thread.interrupted()) {
             ((Instruction) instruction).render(inv);
         }
         return instruction;
@@ -64,8 +64,8 @@ public class InstructionExecutorImpl implements InstructionExecutor {
                         + " that returned by your controller" + " action is right?");
             }
 
-            if (instruction == null) {
-                break;
+            if (Thread.interrupted() || instruction == null) {
+                return null;
             } else if (instruction.equals(">") || instruction.equals('>')) {
                 ControllerEngine controllerEngine = inv.getControllerEngine();
                 String viewPrefix = controllerEngine.getViewPrefix();

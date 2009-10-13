@@ -34,6 +34,7 @@ import org.apache.commons.logging.LogFactory;
  */
 class WindowTaskImpl implements WindowTask, Runnable {
 
+    @SuppressWarnings("unused")
     private static final Log logger = LogFactory.getLog(WindowTaskImpl.class);
 
     private WindowImpl window;
@@ -41,6 +42,9 @@ class WindowTaskImpl implements WindowTask, Runnable {
     private Future<?> future;
 
     public WindowTaskImpl(WindowImpl window) {
+        if (window == null) {
+            throw new NullPointerException("window");
+        }
         this.window = window;
         this.window.setTask(this);
     }
@@ -58,21 +62,18 @@ class WindowTaskImpl implements WindowTask, Runnable {
             getPortal().onWindowStarted(window);
             doRequest();
             getPortal().onWindowDone(window);
-        } catch (Exception e) {
+        } catch (Throwable e) {
+            window.setThrowable(e);
             getPortal().onWindowError(window);
         }
     }
 
     public Window doRequest() throws Exception {
         window.setStartTime(System.currentTimeMillis());
-        if (logger.isDebugEnabled()) {
-            logger.debug("call window [" + getWindow().getName() + "]");
-        }
         final WindowRequest request = new WindowRequest(window);
         final WindowResponse response = new WindowResponse(window);
         request.setAttribute("$$paoding-rose-portal.window", window);
-        window.getPortal().getRequest().getRequestDispatcher(window.getPath()).forward(request,
-                response);
+        request.getRequestDispatcher(window.getPath()).forward(request, response);
         window.setDoneTime(System.currentTimeMillis());
         return window;
     }
@@ -116,7 +117,7 @@ class WindowTaskImpl implements WindowTask, Runnable {
 
     @Override
     public String toString() {
-        return "window [" + window.getName() + "," + window.getPath() + "]";
+        return "window [name=" + window.getName() + ", path=" + window.getPath() + "]";
     }
 
 }

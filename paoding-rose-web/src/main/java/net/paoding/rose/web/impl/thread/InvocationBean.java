@@ -30,7 +30,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import net.paoding.rose.RoseEngine;
 import net.paoding.rose.web.Invocation;
-import net.paoding.rose.web.InvocationUtils;
 import net.paoding.rose.web.RequestPath;
 import net.paoding.rose.web.impl.module.Module;
 import net.paoding.rose.web.impl.validation.ParameterBindingResult;
@@ -63,6 +62,8 @@ public final class InvocationBean implements Invocation {
 
     private Map<String, Object> attributes;
 
+    private Map<String, Object> oncePerRequestAttributes;
+
     private HttpServletRequest request;
 
     private HttpServletResponse response;
@@ -93,7 +94,7 @@ public final class InvocationBean implements Invocation {
 
     private List<String> bindingResultNames;
 
-    private boolean destroyed;
+    //    private boolean destroyed;
 
     public InvocationBean() {
     }
@@ -340,6 +341,28 @@ public final class InvocationBean implements Invocation {
     }
 
     @Override
+    public synchronized Object getOncePerRequestAttribute(String name) {
+        if (preInvocation != null) {
+            return preInvocation.getOncePerRequestAttribute(name);
+        } else {
+            return oncePerRequestAttributes == null ? null : oncePerRequestAttributes.get(name);
+        }
+    }
+
+    @Override
+    public synchronized Invocation setOncePerRequestAttribute(String name, Object value) {
+        if (preInvocation != null) {
+            preInvocation.getOncePerRequestAttribute(name);
+        } else {
+            if (oncePerRequestAttributes == null) {
+                oncePerRequestAttributes = new HashMap<String, Object>();
+            }
+            oncePerRequestAttributes.put(name, value);
+        }
+        return this;
+    }
+
+    @Override
     public Flash getFlash() {
         return getFlash(true);
     }
@@ -398,11 +421,6 @@ public final class InvocationBean implements Invocation {
     public void setRequest(HttpServletRequest request) {
         if (request == null) {
             throw new NullPointerException("request");
-        }
-        InvocationUtils.bindInvocationToRequest(this, request);
-        // 当setRequest方法用来改变当前request，则需要改变原先Rose绑定的request
-        if (this.request == null || this.request == InvocationUtils.getCurrentThreadRequest()) {
-            InvocationUtils.bindRequestToCurrentThread(request);
         }
         this.request = request;
     }
@@ -512,17 +530,17 @@ public final class InvocationBean implements Invocation {
         return moduleMatchResult.getMapping().getTarget();
     }
 
-    @Override
-    public boolean isDestroyed() {
-        return destroyed;
-    }
-
-    public void destroy() {
-        destroyed = true;
-        if (this.request == InvocationUtils.getCurrentThreadRequest()) {
-            InvocationUtils.bindRequestToCurrentThread(null);
-        }
-    }
+    //    @Override
+    //    public boolean isDestroyed() {
+    //        return destroyed;
+    //    }
+    //
+    //    public void destroy() {
+    //        destroyed = true;
+    //        if (this.request == InvocationUtils.getCurrentThreadRequest()) {
+    //            InvocationUtils.bindRequestToCurrentThread(null);
+    //        }
+    //    }
 
     protected void fetchBindingResults() {
         if (this.bindingResults == null) {
@@ -545,8 +563,7 @@ public final class InvocationBean implements Invocation {
 
     @Override
     public String toString() {
-        return getControllerClass().getName() + "." + getMethod().getName() + "["
-                + requestPath.getUri() + "] ";
+        return requestPath.getUri();
     }
 
 }
