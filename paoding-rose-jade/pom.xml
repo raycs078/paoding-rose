@@ -12,8 +12,12 @@
 	<!-- 开发人员说明 -->
 	<developers>
 		<developer>
-			<name>wangzhiliang, liaohan</name>
-			<email>zhiliang.wang@opi-corp.com, han.liao@opi-corp.com</email>
+			<name>wangzhiliang</name>
+			<email>zhiliang.wang@opi-corp.com</email>
+		</developer>
+		<developer>
+			<name>liaohan</name>
+			<email>han.liao@opi-corp.com</email>
 		</developer>
 	</developers>
 
