@@ -13,13 +13,13 @@ http://www.springframework.org/schema/aop http://www.springframework.org/schema/
 	default-autowire="byName" default-lazy-init="false">
 
 	<bean id="dataAccessProvider"
-		class="com.xiaonei.commons.jade.jadeinterface.provider.springjdbctemplte.SpringJdbcTemplateDataAccessProvider" />
+		class="net.paoding.rose.jade.jadeinterface.provider.springjdbctemplte.SpringJdbcTemplateDataAccessProvider" />
 
 	<bean id="defaultDataSourceFactory"
-		class="com.xiaonei.commons.jade.jadeinterface.impl.ServletContextDataSourceFactory">
+		class="net.paoding.rose.jade.jadeinterface.impl.ServletContextDataSourceFactory">
 		<property name="springDataSourceFactory" ref="springDataSourceFactory" />
 	</bean>
 
 	<bean id="springDataSourceFactory"
-		class="com.xiaonei.commons.jade.jadeinterface.impl.SpingDataSourceFactory" />
+		class="net.paoding.rose.jade.jadeinterface.impl.SpingDataSourceFactory" />
 </beans>
