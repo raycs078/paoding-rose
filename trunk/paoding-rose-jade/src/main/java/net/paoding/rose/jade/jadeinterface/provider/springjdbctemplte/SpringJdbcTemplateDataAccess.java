@@ -13,6 +13,7 @@ import java.util.regex.Pattern;
 import javax.sql.DataSource;
 
 import net.paoding.rose.jade.jadeinterface.provider.DataAccess;
+import net.paoding.rose.jade.jadeinterface.provider.Modifier;
 
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
@@ -53,7 +54,8 @@ public class SpringJdbcTemplateDataAccess implements DataAccess {
     }
 
     @Override
-    public List<?> select(String sql, Map<String, ?> parameters, RowMapper rowMapper) {
+    public List<?> select(String sql, Modifier modifier, Map<String, ?> parameters,
+            RowMapper rowMapper) {
 
         if (sql == null) {
             throw new IllegalArgumentException("SQL must not be null");
@@ -75,7 +77,7 @@ public class SpringJdbcTemplateDataAccess implements DataAccess {
     }
 
     @Override
-    public int update(String sql, Map<String, ?> parameters) {
+    public int update(String sql, Modifier modifier, Map<String, ?> parameters) {
 
         if (sql == null) {
             throw new IllegalArgumentException("SQL must not be null");
@@ -97,7 +99,7 @@ public class SpringJdbcTemplateDataAccess implements DataAccess {
     }
 
     @Override
-    public Number insertReturnId(String sql, Map<String, ?> parameters) {
+    public Number insertReturnId(String sql, Modifier modifier, Map<String, ?> parameters) {
 
         if (sql == null) {
             throw new IllegalArgumentException("SQL must not be null");

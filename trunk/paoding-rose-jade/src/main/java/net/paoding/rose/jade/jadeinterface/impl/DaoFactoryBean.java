@@ -78,12 +78,14 @@ public class DaoFactoryBean<T> implements FactoryBean, InitializingBean {
         String dataSourceName = annotation.catalog();
         javax.sql.DataSource dataSource = dataSourceFactory.getDataSource(dataSourceName);
         final DataAccess dataAccess = dataAccessProvider.createDataAccess(dataSource);
+
         return (T) Proxy.newProxyInstance(ClassUtils.getDefaultClassLoader(),
                 new Class[] { daoClass }, new InvocationHandler() {
 
                     @Override
                     public Object invoke(Object proxy, Method method, Object[] args)
                             throws Throwable {
+
                         SQL sql = method.getAnnotation(SQL.class);
                         if (sql == null) {
                             // toString
@@ -100,6 +102,7 @@ public class DaoFactoryBean<T> implements FactoryBean, InitializingBean {
                                         "not a sql command method: " + method.getName());
                             }
                         }
+
                         JdbcOperation operation = getJdbcOperation(sql);
                         return operation.execute(dataAccess, daoClass, method, args);
                     }

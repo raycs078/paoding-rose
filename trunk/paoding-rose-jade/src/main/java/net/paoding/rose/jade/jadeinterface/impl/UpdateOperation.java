@@ -9,6 +9,7 @@ import net.paoding.rose.jade.jadeinterface.Identity;
 import net.paoding.rose.jade.jadeinterface.annotation.SQL;
 import net.paoding.rose.jade.jadeinterface.annotation.SQLParam;
 import net.paoding.rose.jade.jadeinterface.provider.DataAccess;
+import net.paoding.rose.jade.jadeinterface.provider.Modifier;
 
 import org.springframework.util.NumberUtils;
 
@@ -53,7 +54,8 @@ public class UpdateOperation implements JdbcOperation {
         if (returnClassType == Identity.class) {
 
             // 执行 INSERT 查询
-            Number number = dataAccess.insertReturnId(sqlCommand.value(), parameters);
+            Number number = dataAccess.insertReturnId(sqlCommand.value(), new Modifier(method),
+                    parameters);
 
             // 将结果转成方法的返回类型
             return new Identity(number);
@@ -61,7 +63,7 @@ public class UpdateOperation implements JdbcOperation {
         } else {
 
             // 执行 UPDATE / DELETE 查询
-            int updated = dataAccess.update(sqlCommand.value(), parameters);
+            int updated = dataAccess.update(sqlCommand.value(), new Modifier(method), parameters);
 
             // 将结果转成方法的返回类型
             if (returnClassType == boolean.class || returnClassType == Boolean.class) {
