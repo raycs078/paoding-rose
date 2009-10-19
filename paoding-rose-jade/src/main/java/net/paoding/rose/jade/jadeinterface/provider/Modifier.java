@@ -1,4 +1,4 @@
-package net.paoding.rose.jade.jadeinterface.impl;
+package net.paoding.rose.jade.jadeinterface.provider;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
