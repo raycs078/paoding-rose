@@ -12,6 +12,7 @@ http://www.springframework.org/schema/tx http://www.springframework.org/schema/t
 http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.5.xsd"
 	default-autowire="byName" default-lazy-init="false">
 
+	<!-- dataAccessProvider 配置被转移到 impl 实现  
 	<bean id="dataAccessProvider"
 		class="net.paoding.rose.jade.jadeinterface.provider.springjdbctemplte.SpringJdbcTemplateDataAccessProvider" />
 
@@ -22,4 +23,5 @@ http://www.springframework.org/schema/aop http://www.springframework.org/schema/
 
 	<bean id="springDataSourceFactory"
 		class="net.paoding.rose.jade.jadeinterface.impl.SpingDataSourceFactory" />
+	-->
 </beans>

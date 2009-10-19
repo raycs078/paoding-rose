@@ -16,30 +16,34 @@ public interface DataAccess {
      * 执行 SELECT 语句。
      * 
      * @param sql - 执行的语句
+     * @param modifier - 语句修饰
      * @param parameters - 参数
      * @param rowMapper - 对象映射方式
      * 
      * @return 返回的对象列表
      */
-    public List<?> select(String sql, Map<String, ?> parameters, RowMapper rowMapper);
+    public List<?> select(String sql, Modifier modifier, Map<String, ?> parameters,
+            RowMapper rowMapper);
 
     /**
      * 执行 UPDATE / DELETE 语句。
      * 
      * @param sql - 执行的语句
+     * @param modifier - 语句修饰
      * @param parameters - 参数
      * 
      * @return 更新的记录数目
      */
-    public int update(String sql, Map<String, ?> parameters);
+    public int update(String sql, Modifier modifier, Map<String, ?> parameters);
 
     /**
      * 执行 INSERT 语句，并返回插入对象的 ID.
      * 
      * @param sql - 执行的语句
+     * @param modifier - 语句修饰
      * @param parameters - 参数
      * 
      * @return 插入对象的 ID
      */
-    public Number insertReturnId(String sql, Map<String, ?> parameters);
+    public Number insertReturnId(String sql, Modifier modifier, Map<String, ?> parameters);
 }

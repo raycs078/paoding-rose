@@ -13,6 +13,7 @@ import java.util.Set;
 import net.paoding.rose.jade.jadeinterface.annotation.SQL;
 import net.paoding.rose.jade.jadeinterface.annotation.SQLParam;
 import net.paoding.rose.jade.jadeinterface.provider.DataAccess;
+import net.paoding.rose.jade.jadeinterface.provider.Modifier;
 
 import org.springframework.beans.SimpleTypeConverter;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
@@ -63,7 +64,8 @@ public class SelectOperation implements JdbcOperation {
         // 
         RowMapperDelegate rowMapper = new RowMapperDelegate(this.rowMapperFactory, daoClass, method);
         // 执行查询
-        List<?> result = dataAccess.select(sqlCommand.value(), parameters, rowMapper);
+        List<?> result = dataAccess.select(sqlCommand.value(), new Modifier(method), parameters,
+                rowMapper);
 
         // 将result转成方法的返回类型
         Class<?> returnClassType = method.getReturnType();
