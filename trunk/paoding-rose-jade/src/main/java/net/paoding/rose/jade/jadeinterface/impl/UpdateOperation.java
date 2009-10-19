@@ -58,7 +58,7 @@ public class UpdateOperation implements JdbcOperation {
             // 将结果转成方法的返回类型
             return new Identity(number);
 
-        } else if (returnClassType != Void.class) {
+        } else {
 
             // 执行 UPDATE / DELETE 查询
             int updated = dataAccess.update(sqlCommand.value(), parameters);
