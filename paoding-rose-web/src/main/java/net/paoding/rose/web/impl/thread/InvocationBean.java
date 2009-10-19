@@ -299,7 +299,9 @@ public final class InvocationBean implements Invocation {
                 Model parent = model;
                 model = new ModelImpl(this);
                 if (parent != null && requestPath.isForwardRequest()) {
-                    model.merge(parent.getAttributes());
+                    synchronized (parent) {
+                        model.merge(parent.getAttributes());
+                    }
                 }
                 getRequest().setAttribute("$$paoding-rose.model", model);
             }

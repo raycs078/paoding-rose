@@ -17,7 +17,7 @@ package net.paoding.rose.web.var;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.Map;
 
 import net.paoding.rose.util.PlaceHolderUtils;
@@ -37,16 +37,21 @@ public class ModelImpl implements Model {
 
     private static Log logger = LogFactory.getLog(ModelImpl.class);
 
-    private LinkedHashMap<String, Object> map = new LinkedHashMap<String, Object>();
+    private Map<String, Object> map = new HashMap<String, Object>();
 
     private Invocation invocation;
 
+    final Object mutex; // Object on which to synchronize
+
     public ModelImpl(Invocation inv) {
         this.invocation = inv;
+        mutex = this;
     }
 
     public Map<String, Object> getAttributes() {
-        return Collections.unmodifiableMap(map);
+        synchronized (mutex) {
+            return Collections.unmodifiableMap(map);
+        }
     }
 
     @Override
@@ -55,11 +60,12 @@ public class ModelImpl implements Model {
         if (value instanceof String) {
             value = PlaceHolderUtils.resolve((String) value, invocation);
         }
-        map.put(name, value);
+        synchronized (mutex) {
+            map.put(name, value);
+        }
         if (logger.isDebugEnabled()) {
             logger.debug("add attribute to model: " + name + "=" + value);
         }
-
         return this;
     }
 
@@ -79,12 +85,16 @@ public class ModelImpl implements Model {
 
     @Override
     public boolean contains(String name) {
-        return map.containsKey(name);
+        synchronized (mutex) {
+            return map.containsKey(name);
+        }
     }
 
     @Override
     public Object get(String name) {
-        return map.get(name);
+        synchronized (mutex) {
+            return map.get(name);
+        }
     }
 
     @Override
@@ -104,7 +114,9 @@ public class ModelImpl implements Model {
         if (name == null) {
             return this;
         }
-        map.remove(name);
+        synchronized (mutex) {
+            map.remove(name);
+        }
         return this;
     }
 

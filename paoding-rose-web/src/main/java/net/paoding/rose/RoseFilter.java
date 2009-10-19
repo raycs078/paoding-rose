@@ -214,8 +214,7 @@ public class RoseFilter extends GenericFilterBean {
         // 构造invocation对象，一个invocation对象用于封装和本次请求有关的匹配结果以及方法调用参数
         final InvocationBean inv = new InvocationBean();
         if (requestPath.isIncludeRequest() || requestPath.isForwardRequest()) {
-            inv.setPreInvocation(InvocationUtils.getInvocation(InvocationUtils
-                    .getCurrentThreadRequest()));
+            inv.setPreInvocation(InvocationUtils.getInvocation(request));
             // save before include
             if (requestPath.isIncludeRequest()) {
                 saveAttributesBeforeInclude(inv, httpRequest);
@@ -227,8 +226,6 @@ public class RoseFilter extends GenericFilterBean {
         inv.setRequestPath(requestPath);
         inv.setResponse(httpResponse);
         inv.setRequest(httpRequest);
-        InvocationUtils.bindInvocationToRequest(inv, httpRequest);
-        InvocationUtils.bindRequestToCurrentThread(inv.getRequest());
 
         //
         boolean matched = false;
@@ -244,6 +241,9 @@ public class RoseFilter extends GenericFilterBean {
             return;
         } else {
             try {
+                InvocationUtils.bindInvocationToRequest(inv, httpRequest);
+                InvocationUtils.bindRequestToCurrentThread(inv.getRequest());
+
                 engine.invoke(inv);
 
                 // 渲染后的操作：拦截器的afterCompletion以及include属性快照的恢复等
@@ -367,6 +367,8 @@ public class RoseFilter extends GenericFilterBean {
         Invocation invBeforeInclude = inv.getPreInvocation();
         if (invBeforeInclude != null) {
             InvocationUtils.bindRequestToCurrentThread(invBeforeInclude.getRequest());
+        } else {
+            InvocationUtils.unindRequestFromCurrentThread();
         }
     }
 
