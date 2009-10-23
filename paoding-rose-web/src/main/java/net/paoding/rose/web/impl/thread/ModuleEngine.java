@@ -26,7 +26,6 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 
 import net.paoding.rose.web.ControllerErrorHandler;
-import net.paoding.rose.web.InvocationUtils;
 import net.paoding.rose.web.RequestPath;
 import net.paoding.rose.web.impl.mapping.Mapping;
 import net.paoding.rose.web.impl.mapping.MappingImpl;
@@ -282,8 +281,6 @@ public class ModuleEngine implements Engine {
                 logger.debug("Request is already a MultipartHttpServletRequest");
             } else {
                 inv.setRequest(module.getMultipartResolver().resolveMultipart(inv.getRequest()));
-                InvocationUtils.bindRequestToCurrentThread(inv.getRequest());
-                InvocationUtils.bindInvocationToRequest(inv, inv.getRequest());
             }
             return true;
         }

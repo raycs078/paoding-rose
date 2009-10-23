@@ -21,7 +21,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
-import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 
 import net.paoding.rose.web.portal.Window;
@@ -48,15 +47,6 @@ public class WindowRequest extends HttpServletRequestWrapper {
 
     public WindowRequest(Window window) {
         super(window.getPortal().getRequest());
-//        FIXME: 以下代码何用？
-        window.getPortal().getModel();
-    }
-
-    @Override
-    public void setRequest(ServletRequest request) {
-        if (request != null) {
-            super.setRequest(request);
-        }
     }
 
     // ------------------------------------------------- ServletRequest Methods

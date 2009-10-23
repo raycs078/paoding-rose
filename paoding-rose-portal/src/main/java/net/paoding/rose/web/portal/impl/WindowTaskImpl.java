@@ -34,7 +34,6 @@ import org.apache.commons.logging.LogFactory;
  */
 class WindowTaskImpl implements WindowTask, Runnable {
 
-    @SuppressWarnings("unused")
     private static final Log logger = LogFactory.getLog(WindowTaskImpl.class);
 
     private WindowImpl window;
@@ -63,6 +62,7 @@ class WindowTaskImpl implements WindowTask, Runnable {
             doRequest();
             getPortal().onWindowDone(window);
         } catch (Throwable e) {
+            logger.error("", e);
             window.setThrowable(e);
             getPortal().onWindowError(window);
         }

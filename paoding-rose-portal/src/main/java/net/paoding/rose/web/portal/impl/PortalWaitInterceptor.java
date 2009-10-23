@@ -38,7 +38,17 @@ public class PortalWaitInterceptor extends ControllerInterceptorAdapter {
     public Object after(Invocation inv, Object instruction) throws Exception {
         Portal portal = PortalUtils.getPortal(inv);
         if (portal != null) {
+            long begin = System.currentTimeMillis();
+            if (logger.isDebugEnabled()) {
+                logger.debug(portal + " is going to wait windows.");
+            }
+            //
             waitForWindows((PortalImpl) portal);
+            //
+            if (logger.isDebugEnabled()) {
+                logger.debug(portal + ".waitForWindows is done; cost="
+                        + (System.currentTimeMillis() - begin));
+            }
         }
         return instruction;
     }
@@ -48,68 +58,85 @@ public class PortalWaitInterceptor extends ControllerInterceptorAdapter {
         long begin = System.currentTimeMillis();
         if (portal.getTimeout() > 0) {
             deadline = begin + portal.getTimeout();
+            if (logger.isDebugEnabled()) {
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss SSS");
+                logger.debug(portal + ".maxWait=" + portal.getTimeout() + "; deadline="
+                        + sdf.format(new Date(deadline)));
+            }
         } else {
             deadline = 0;
+            if (logger.isDebugEnabled()) {
+                logger.debug(portal + ".maxWait=(forever)");
+            }
         }
-        if (logger.isDebugEnabled()) {
-            logger.debug("portal[" + portal.getRequestPath().getUri() + "] timeout="
-                    + portal.getTimeout() + "; deadline="
-                    + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss SSS").format(new Date(deadline)));
-        }
+        int winSize = portal.getWindows().size();
+        int winIndex = 0;
         for (Window window : portal.getWindows()) {
+            winIndex++;
             WindowTask task = window.getTask();
             if (task.isDone() || task.isCancelled() || !window.isForRender()) {
                 if (logger.isDebugEnabled()) {
                     if (task.isDone()) {
-                        logger.debug("continue[done]: " + window.getName());
+                        logger.debug("[" + winIndex + "/" + winSize + "] continue[done]: "
+                                + window.getName());
                     } else if (task.isCancelled()) {
-                        logger.debug("continue[cancelled]: " + window.getName());
+                        logger.debug("[" + winIndex + "/" + winSize + "] continue[cancelled]: "
+                                + window.getName());
                     } else if (!window.isForRender()) {
-                        logger.debug("continue[notForRender]: " + window.getName());
+                        logger.debug("[" + winIndex + "/" + winSize + "] continue[notForRender]: "
+                                + window.getName());
                     }
                 }
                 continue;
             }
             long awaitTime = 0;
             try {
+                long begineWait = System.currentTimeMillis();
                 if (deadline > 0) {
-                    awaitTime = deadline - System.currentTimeMillis();
+                    awaitTime = deadline - begineWait;
                     if (awaitTime > 0) {
                         if (logger.isDebugEnabled()) {
-                            logger.debug("[" + window.getName() + "] waiting; max=" + awaitTime);
+                            logger.debug("[" + winIndex + "/" + winSize + "] waiting[begin] : "
+                                    + window.getName() + "; maxWait=" + awaitTime);
                         }
                         task.await(awaitTime);
                         if (logger.isDebugEnabled()) {
-                            logger.debug("[" + window.getName() + "] done; wait="
-                                    + (System.currentTimeMillis() - deadline + awaitTime));
+                            logger.debug("[" + winIndex + "/" + winSize + "] waiting[done] : "
+                                    + window.getName() + "; actualWait="
+                                    + (System.currentTimeMillis() - begineWait));
                         }
                     } else {
-                        logger.error("x[" + window.getName() + "] been timeout now ");
+                        logger.error("[" + winIndex + "/" + winSize
+                                + "] waiting[been timeout now] : " + window.getName());
                         portal.onWindowTimeout(window);
                         task.cancel(true);
                     }
                 } else {
                     if (logger.isDebugEnabled()) {
-                        logger.debug("[" + window.getName() + "] waiting ");
+                        logger.debug("[" + winIndex + "/" + winSize + "] waiting[begin] : "
+                                + window.getName() + "; maxWait=(forever)");
                     }
                     task.await();
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("[" + winIndex + "/" + winSize + "] waiting[done] : "
+                                + window.getName() + "; actualWait="
+                                + (System.currentTimeMillis() - begineWait));
+                    }
                 }
             } catch (InterruptedException e) {
-                logger.error("x[" + window.getName() + "] been interrupted ");
+                logger.error("x[" + winIndex + "/" + winSize + "] waiting[interrupted] : "
+                        + window.getName());
             } catch (ExecutionException e) {
-                logger.error("x[" + window.getName() + "] error happened ", e);
+                logger.error("x[" + winIndex + "/" + winSize + "] waiting[error] : "
+                        + window.getName(), e);
                 window.setThrowable(e);
                 portal.onWindowError(window);
             } catch (TimeoutException e) {
-                logger.error("x[" + window.getName() + "] waiting max=" + awaitTime
-                        + " but timeout ");
+                logger.error("x[" + winIndex + "/" + winSize + "] waiting[timeout] : "
+                        + window.getName(), e);
                 portal.onWindowTimeout(window);
                 task.cancel(true);
             }
-        }
-        if (logger.isDebugEnabled()) {
-            logger.debug("portal [" + portal.getRequestPath().getUri() + "] is done; timeout="
-                    + portal.getTimeout() + " wait=" + (System.currentTimeMillis() - begin));
         }
         portal.onPortalReady(portal);
     }
