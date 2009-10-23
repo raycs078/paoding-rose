@@ -26,10 +26,12 @@ import java.util.Set;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 
 import net.paoding.rose.RoseEngine;
 import net.paoding.rose.web.Invocation;
+import net.paoding.rose.web.InvocationUtils;
 import net.paoding.rose.web.RequestPath;
 import net.paoding.rose.web.impl.module.Module;
 import net.paoding.rose.web.impl.validation.ParameterBindingResult;
@@ -64,7 +66,7 @@ public final class InvocationBean implements Invocation {
 
     private Map<String, Object> oncePerRequestAttributes;
 
-    private HttpServletRequest request;
+    private HttpServletRequestWrapper request;
 
     private HttpServletResponse response;
 
@@ -388,7 +390,7 @@ public final class InvocationBean implements Invocation {
 
     @Override
     public HttpServletRequest getRequest() {
-        return request;
+        return (HttpServletRequest) (request == null ? null : request.getRequest());
     }
 
     @Override
@@ -424,7 +426,15 @@ public final class InvocationBean implements Invocation {
         if (request == null) {
             throw new NullPointerException("request");
         }
-        this.request = request;
+        if (request == this.request) {
+            return;
+        }
+        if (this.request == null) {
+            this.request = new HttpServletRequestWrapper(request);
+            InvocationUtils.bindInvocationToRequest(this, this.request);
+        } else {
+            this.request.setRequest(request);
+        }
     }
 
     @Override

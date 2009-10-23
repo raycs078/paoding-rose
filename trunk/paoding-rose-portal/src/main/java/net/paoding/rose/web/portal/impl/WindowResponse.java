@@ -25,7 +25,6 @@ import javax.servlet.http.HttpServletResponseWrapper;
 
 import net.paoding.rose.web.portal.Window;
 
-
 /**
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
@@ -128,6 +127,10 @@ public class WindowResponse extends HttpServletResponseWrapper {
     @Override
     public void setBufferSize(int size) {
 
+    }
+
+    @Override
+    public void resetBuffer() {
     }
 
     @Override

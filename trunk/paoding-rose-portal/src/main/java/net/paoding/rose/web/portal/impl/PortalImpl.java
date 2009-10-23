@@ -116,7 +116,7 @@ class PortalImpl implements Portal, PortalListener {
 
     @Override
     public String toString() {
-        return "portal [" + invocation.getRequestPath().getUri() + "]";
+        return "portal ['" + invocation.getRequestPath().getUri() + "']";
     }
 
     //--------------------------------------------
@@ -334,10 +334,10 @@ class PortalImpl implements Portal, PortalListener {
         return getInvocation().getServletContext();
     }
 
-//    @Override
-//    public boolean isDestroyed() {
-//        return getInvocation().isDestroyed();
-//    }
+    //    @Override
+    //    public boolean isDestroyed() {
+    //        return getInvocation().isDestroyed();
+    //    }
 
     @Override
     public void removeAttribute(String name) {
@@ -358,5 +358,10 @@ class PortalImpl implements Portal, PortalListener {
     @Override
     public Invocation setOncePerRequestAttribute(String name, Object value) {
         return getInvocation().setOncePerRequestAttribute(name, value);
+    }
+
+    @Override
+    public void setRequest(HttpServletRequest request) {
+        getInvocation().setRequest(request);
     }
 }

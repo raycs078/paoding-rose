@@ -2,6 +2,8 @@ package net.paoding.rose.testcases.web.impl.thread;
 
 import java.lang.reflect.Method;
 
+import javax.servlet.http.HttpServletRequestWrapper;
+
 import junit.framework.TestCase;
 import net.paoding.rose.web.InvocationUtils;
 import net.paoding.rose.web.annotation.Param;
@@ -53,7 +55,7 @@ public class MethodParameterResolverMatchResultTest extends TestCase {
         inv.setRequest(request);
         inv.setResponse(response);
         InvocationUtils.bindRequestToCurrentThread(request);
-        InvocationUtils.bindInvocationToRequest(inv, request);
+        InvocationUtils.bindInvocationToRequest(inv, new HttpServletRequestWrapper(request));
         paramenterBindingResult = new ParameterBindingResult(inv);
 
         //

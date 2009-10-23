@@ -19,6 +19,7 @@ import java.util.TreeSet;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
@@ -86,7 +87,7 @@ public class MethodParameterResolverTest extends TestCase {
         inv.setRequest(request);
         inv.setResponse(response);
         InvocationUtils.bindRequestToCurrentThread(request);
-        InvocationUtils.bindInvocationToRequest(inv, request);
+        InvocationUtils.bindInvocationToRequest(inv, new HttpServletRequestWrapper(request));
         paramenterBindingResult = new ParameterBindingResult(inv);
 
         //
@@ -361,7 +362,7 @@ public class MethodParameterResolverTest extends TestCase {
     public void testMultiPartFile() throws Exception {
         inv.setRequest(multipartRequest);
         InvocationUtils.bindRequestToCurrentThread(multipartRequest);
-        InvocationUtils.bindInvocationToRequest(inv, multipartRequest);
+        InvocationUtils.bindInvocationToRequest(inv, new HttpServletRequestWrapper(multipartRequest));
         Object[] parameters = resolveMethodParameters("multipart");
         assertNotNull(parameters);
         assertSame(file1, parameters[0]);
@@ -372,7 +373,7 @@ public class MethodParameterResolverTest extends TestCase {
     public void testMultiPartFile2() throws Exception {
         inv.setRequest(multipartRequest);
         InvocationUtils.bindRequestToCurrentThread(multipartRequest);
-        InvocationUtils.bindInvocationToRequest(inv, multipartRequest);
+        InvocationUtils.bindInvocationToRequest(inv, new HttpServletRequestWrapper(multipartRequest));
         Object[] parameters = resolveMethodParameters("multipart2");
         assertNotNull(parameters);
         assertSame(multipartRequest, parameters[0]);

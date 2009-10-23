@@ -15,8 +15,8 @@
  */
 package net.paoding.rose.web;
 
-import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequestWrapper;
 
 /**
  * 
@@ -26,14 +26,14 @@ import javax.servlet.http.HttpServletRequest;
 public class InvocationUtils {
 
     // 存放当前线程所处理的请求对象 
-    private final static ThreadLocal<ServletRequest> currentRequests = new ThreadLocal<ServletRequest>();
+    private final static ThreadLocal<HttpServletRequest> currentRequests = new ThreadLocal<HttpServletRequest>();
 
     //
-    public static void bindInvocationToRequest(Invocation inv, HttpServletRequest request) {
+    public static void bindInvocationToRequest(Invocation inv, HttpServletRequestWrapper request) {
         request.setAttribute("$$paoding-rose.invocation", inv);
     }
 
-    public static Invocation getInvocation(ServletRequest request) {
+    public static Invocation getInvocation(HttpServletRequest request) {
         if (request == null) {
             return null;
         }
@@ -44,7 +44,7 @@ public class InvocationUtils {
         currentRequests.remove();
     }
 
-    public static void bindRequestToCurrentThread(ServletRequest request) {
+    public static void bindRequestToCurrentThread(HttpServletRequest request) {
         if (request == null) {
             currentRequests.remove();
         } else {
@@ -53,6 +53,10 @@ public class InvocationUtils {
     }
 
     public static HttpServletRequest getCurrentThreadRequest() {
-        return (HttpServletRequest) currentRequests.get();
+        return currentRequests.get();
+    }
+
+    public static Invocation getCurrentThreadInvocation() {
+        return getInvocation(currentRequests.get());
     }
 }

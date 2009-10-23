@@ -291,4 +291,10 @@ public interface Invocation {
      */
     public BindingResult getBindingResult(Object bean);
 
+    /**
+     * 
+     * @param request
+     */
+    public void setRequest(HttpServletRequest request);
+
 }
