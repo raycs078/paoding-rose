@@ -24,6 +24,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Collections;
 import java.util.List;
@@ -78,12 +79,13 @@ public final class ActionEngine implements Engine {
         this.method = method;
         interceptors = compileInterceptors();
         methodParameterResolver = compileParamResolvers();
-        genericParameterTypesDetail = compileGenericParameterTypesDetail();
         validators = compileValidators();
-    }
-
-    private String methodToString() {
-        return method.toString();
+        genericParameterTypesDetail = compileGenericParameterTypesDetail();
+        if (logger.isDebugEnabled()) {
+        	logger.debug("action info: " + controllerEngine.getControllerClass().getName() + "." + method.getName() + ":");
+        	logger.debug("\t interceptors:" + Arrays.toString(interceptors));
+        	logger.debug("\t validators:" + Arrays.toString(validators));
+        }
     }
 
     public ControllerEngine getControllerEngine() {
@@ -125,7 +127,7 @@ public final class ActionEngine implements Engine {
         for (ParamResolverBean resolver : module.getCustomerResolvers()) {
             resolverFactory.addCustomerResolver(resolver);
         }
-        return new MethodParameterResolver(method, parameterNameDiscoverer, resolverFactory);
+        return new MethodParameterResolver(controllerEngine.getControllerClass(), method, parameterNameDiscoverer, resolverFactory);
     }
 
     @SuppressWarnings("unchecked")
@@ -181,88 +183,40 @@ public final class ActionEngine implements Engine {
                 interceptors.size());
         for (NestedControllerInterceptorWrapper interceptor : interceptors) {
             if (interceptor.getController() != null) {
-                // 1、controller自己声明的拦截器，只作用自己
-                if (controllerEngine.getController() != interceptor.getController()) {
+                // interceptor.getController()非空的，表示该拦截器是控制器的一个field
+            	// 此时该拦截器只能拦截这个控制器的方法，不拦截其他控制器的方法
+                if (interceptor.getController() != controllerEngine.getController()) {
                     continue;
                 }
             }
-
-            // 2、如果拦截器定义必须标注某些annoation才要拦截的...
-            // 那么只有标注了这些annotation的才拦截，不标注的不拦截
+            
+            // 确定本拦截器的名字
             String name = interceptor.getName();
             String nameForUser = name;
             if (nameForUser.indexOf('.') != -1) {
-                nameForUser = nameForUser.replace(controllerEngine.getControllerPath() + ".",
-                        "this.");
+                nameForUser = nameForUser.replace(controllerEngine.getControllerPath() + ".", "this.");
             }
-            List<Class<? extends Annotation>> interceptorAnnotationRequired = interceptor
-                    .getAnnotationClasses();
-            if (interceptorAnnotationRequired.size() > 0) {
-                for (Class<? extends Annotation> annotationClazz : interceptorAnnotationRequired) {
-                    if (annotationClazz == null) {
-                        continue;
-                    }
-                    Annotation interceptorRequiredAnnotation = method
-                            .getAnnotation(annotationClazz);
-                    if (interceptorRequiredAnnotation == null) {
-                        // 对于标注@Inherited的annotation，getAnnotation可以保证：如果本类没有，自动会从父类判断是否具有
-                        interceptorRequiredAnnotation = controllerEngine.getControllerClass()
-                                .getAnnotation(annotationClazz);
-                    }
-                    if (interceptorRequiredAnnotation == null) {
-                        // don't intercept it
-                    } else {
-                        registeredInterceptors.add(interceptor);
-                        if (logger.isDebugEnabled()) {
-                            logger.debug("register interceptor" + " (by intercetor annotation) '"
-                                    + name + "' for " + methodToString());
-                        }
-                        break;
-                    }
+            // 获取@Intercepted注解 (@Intercepted注解配置于控制器或其方法中，决定一个拦截器是否应该拦截之。没有配置按“需要”处理)
+            Intercepted intercepted = method.getAnnotation(Intercepted.class);
+            if (intercepted == null) {
+                Class<?> clazz = controllerEngine.getControllerClass();
+                // 对于标注@Inherited的annotation，class.getAnnotation可以保证：如果本类没有，自动会从父类判断是否具有
+                intercepted = clazz.getAnnotation(Intercepted.class);
+            }
+            // 通过@Intercepted注解的allow和deny排除拦截器
+            if (intercepted != null) {
+            	// 3.1 先排除deny禁止的
+                if (ArrayUtils.contains(intercepted.deny(), "*") || ArrayUtils.contains(intercepted.deny(), nameForUser)) {
+                	continue;
+                }  
+                // 3.2 确认最大的allow允许
+                else if (!ArrayUtils.contains(intercepted.allow(), "*") && !ArrayUtils.contains(intercepted.allow(), nameForUser)) {
+                    continue;
                 }
-            } else {
-                // 3、拦截器没有要求特有的annotation的，这种情况通过@Intercepted来标注
-                Intercepted intercepted = method.getAnnotation(Intercepted.class);
-                if (intercepted == null) {
-                    Class<?> clazz = controllerEngine.getControllerClass();
-                    // 对于标注@Inherited的annotation，class.getAnnotation可以保证：如果本类没有，自动会从父类判断是否具有
-                    intercepted = clazz.getAnnotation(Intercepted.class);
-                }
-                // 没有标注@Intercepted注解的，所有拦截器都能拦截
-                if (intercepted == null) {
-                    registeredInterceptors.add(interceptor);
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("register interceptor '" + name + "' for " + methodToString());
-                    }
-                }
-                // 标注@Intercepted来标注注解的
-                else {
-                    // 3.1先排除deny禁止的
-                    if (ArrayUtils.contains(intercepted.deny(), "*")
-                            || ArrayUtils.contains(intercepted.deny(), nameForUser)) {
-                        if (logger.isDebugEnabled()) {
-                            logger.debug("(1)igonre interceptor '" + nameForUser + "' for "
-                                    + methodToString());
-                        }
-                        continue;
-                    }
-                    // 3.2确认最大的allow允许
-                    if (intercepted.allow().length > 0) {
-                        if (ArrayUtils.contains(intercepted.allow(), "*")
-                                || ArrayUtils.contains(intercepted.allow(), nameForUser)) {
-                            registeredInterceptors.add(interceptor);
-                            if (logger.isDebugEnabled()) {
-                                logger.debug("register interceptor '" + name + "' for " + "."
-                                        + methodToString());
-                            }
-                        } else {
-                            if (logger.isDebugEnabled()) {
-                                logger.debug("(2)igonre interceptor '" + name + "' for "
-                                        + methodToString());
-                            }
-                        }
-                    }
-                }
+            }
+            // 取得拦截器同意后，注册到这个控制器方法中
+            if (interceptor.isForAction(controllerEngine.getControllerClass(), method)) {
+            	registeredInterceptors.add(interceptor);
             }
         }
         //
@@ -349,7 +303,7 @@ public final class ActionEngine implements Engine {
         for (; intercetporIndex < interceptors.length; intercetporIndex++) {
 
             NestedControllerInterceptorWrapper interceptor = interceptors[intercetporIndex];
-            if (!interceptor.isSupportDispatcher(inv.getRequestPath().getDispatcher())) {
+            if (!interceptor.isForDispatcher(inv.getRequestPath().getDispatcher())) {
                 continue;
             }
 

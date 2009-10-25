@@ -16,6 +16,8 @@
  */
 package net.paoding.rose.web.paramresolver;
 
+import java.lang.reflect.Method;
+
 /**
  * @author 王志亮 [qieqie.wang@gmail.com]
  */
@@ -26,5 +28,5 @@ public interface ResolverFactory {
      * @param parameterType
      * @return
      */
-    public ParamResolverBean accepted(Class<?> parameterType);
+    public ParamResolverBean supports(Class<?> parameterType, Class<?> controllerClazz, Method method);
 }

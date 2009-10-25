@@ -15,16 +15,15 @@
  */
 package net.paoding.rose.web;
 
-import java.lang.annotation.Annotation;
-import java.util.List;
+import java.lang.reflect.Method;
 
 /**
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
-public class ControllerInterceptorWrapper implements ControllerInterceptor,
-        NamedControllerInterceptor {
+public class ControllerInterceptorWrapper implements NamedControllerInterceptor,
+        ControllerInterceptor {
 
     protected ControllerInterceptor interceptor;
 
@@ -53,15 +52,20 @@ public class ControllerInterceptorWrapper implements ControllerInterceptor,
         }
         this.name = name;
     }
-
+    
     @Override
     public int getPriority() {
         return interceptor.getPriority();
     }
+    
+    @Override
+    public boolean isForAction(Class<?> controllerClazz, Method actionMethod) {
+    	 return interceptor.isForAction(controllerClazz, actionMethod);
+    }
 
     @Override
-    public boolean isSupportDispatcher(Dispatcher dispatcher) {
-        return interceptor.isSupportDispatcher(dispatcher);
+    public boolean isForDispatcher(Dispatcher dispatcher) {
+        return interceptor.isForDispatcher(dispatcher);
     }
 
     @Override
@@ -77,11 +81,6 @@ public class ControllerInterceptorWrapper implements ControllerInterceptor,
     @Override
     public void afterCompletion(Invocation inv, Throwable ex) throws Exception {
         interceptor.afterCompletion(inv, ex);
-    }
-
-    @Override
-    public List<Class<? extends Annotation>> getAnnotationClasses() {
-        return interceptor.getAnnotationClasses();
     }
 
 }

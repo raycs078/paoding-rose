@@ -191,7 +191,7 @@ public class MethodParameterResolverMatchResultTest extends TestCase {
 
         ParameterNameDiscovererImpl parameterNameDiscoverer = new ParameterNameDiscovererImpl();
         ResolverFactoryImpl resolverFactory = new ResolverFactoryImpl();
-        MethodParameterResolver resolver = new MethodParameterResolver(method,
+        MethodParameterResolver resolver = new MethodParameterResolver(MockController.class, method,
                 parameterNameDiscoverer, resolverFactory);
         return resolver.resolve(inv, paramenterBindingResult);
     }

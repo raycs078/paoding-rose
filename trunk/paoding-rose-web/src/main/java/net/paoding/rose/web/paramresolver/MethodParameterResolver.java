@@ -53,7 +53,7 @@ public final class MethodParameterResolver {
 
     private final int[][] reduplatedResolverCount;
 
-    public MethodParameterResolver(Method method,
+    public MethodParameterResolver(Class<?> controllerClazz, Method method,
             ParameterNameDiscovererImpl parameterNameDiscoverer, ResolverFactory resolverFactory) {
         this.method = method;
         this.parameterTypes = method.getParameterTypes();
@@ -63,7 +63,7 @@ public final class MethodParameterResolver {
         reduplatedResolverCount = new int[parameterTypes.length][2];
         for (int i = 0; i < parameterTypes.length; i++) {
             Class<?> parameterType = parameterTypes[i];
-            resolvers[i] = resolverFactory.accepted(parameterType);
+            resolvers[i] = resolverFactory.supports(parameterType, controllerClazz, method);
             if (resolvers[i] != null) {
                 reduplatedResolverCount[i][0] = 1;
                 reduplatedResolverCount[i][1] = 0;

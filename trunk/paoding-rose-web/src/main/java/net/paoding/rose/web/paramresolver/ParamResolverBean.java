@@ -16,6 +16,8 @@
  */
 package net.paoding.rose.web.paramresolver;
 
+import java.lang.reflect.Method;
+
 import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.annotation.Param;
 
@@ -29,9 +31,10 @@ public interface ParamResolverBean {
      * 返回true表示是由本解析器负责解析这种类型的参数.
      * 
      * @param parameterType
+     * @param method
      * @return
      */
-    public boolean supports(Class<?> parameterType);
+    public boolean supports(Class<?> parameterType, Class<?> controllerClazz, Method method);
 
     /**
      * @param parameterType

@@ -15,6 +15,7 @@
  */
 package net.paoding.rose.web.portal.impl;
 
+import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.ExecutionException;
@@ -23,7 +24,7 @@ import java.util.concurrent.TimeoutException;
 import net.paoding.rose.web.ControllerInterceptorAdapter;
 import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.portal.Portal;
-import net.paoding.rose.web.portal.PortalUtils;
+import net.paoding.rose.web.portal.PortalListener;
 import net.paoding.rose.web.portal.Window;
 import net.paoding.rose.web.portal.WindowTask;
 
@@ -34,26 +35,42 @@ import net.paoding.rose.web.portal.WindowTask;
  */
 public class PortalWaitInterceptor extends ControllerInterceptorAdapter {
 
+	
+	@Override
+	protected boolean isForAction(Method actionMethod, Class<?> controllerClazz) {
+		for(Class<?> paramType : actionMethod.getParameterTypes()) {
+			if (paramType == Portal.class) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
     @Override
     public Object after(Invocation inv, Object instruction) throws Exception {
-        Portal portal = PortalUtils.getPortal(inv);
+    	PortalImpl portal = null;
+    	for(Object param : inv.getMethodParameters()) {
+			if (param instanceof Portal) {
+				portal = (PortalImpl) param;
+				break;
+			}
+		}
         if (portal != null) {
             long begin = System.currentTimeMillis();
             if (logger.isDebugEnabled()) {
                 logger.debug(portal + " is going to wait windows.");
             }
             //
-            waitForWindows((PortalImpl) portal);
+            waitForWindows((Portal) portal, (PortalListener) portal);
             //
             if (logger.isDebugEnabled()) {
-                logger.debug(portal + ".waitForWindows is done; cost="
-                        + (System.currentTimeMillis() - begin));
+                logger.debug(portal + ".waitForWindows is done; cost=" + (System.currentTimeMillis() - begin));
             }
         }
         return instruction;
     }
 
-    protected void waitForWindows(PortalImpl portal) {
+    protected void waitForWindows(Portal portal, PortalListener listener) {
         long deadline;
         long begin = System.currentTimeMillis();
         if (portal.getTimeout() > 0) {
@@ -108,7 +125,7 @@ public class PortalWaitInterceptor extends ControllerInterceptorAdapter {
                     } else {
                         logger.error("[" + winIndex + "/" + winSize
                                 + "] waiting[been timeout now] : " + window.getName());
-                        portal.onWindowTimeout(window);
+                        listener.onWindowTimeout(window);
                         task.cancel(true);
                     }
                 } else {
@@ -130,14 +147,14 @@ public class PortalWaitInterceptor extends ControllerInterceptorAdapter {
                 logger.error("x[" + winIndex + "/" + winSize + "] waiting[error] : "
                         + window.getName(), e);
                 window.setThrowable(e);
-                portal.onWindowError(window);
+                listener.onWindowError(window);
             } catch (TimeoutException e) {
                 logger.error("x[" + winIndex + "/" + winSize + "] waiting[timeout] : "
                         + window.getName(), e);
-                portal.onWindowTimeout(window);
+                listener.onWindowTimeout(window);
                 task.cancel(true);
             }
         }
-        portal.onPortalReady(portal);
+        listener.onPortalReady(portal);
     }
 }

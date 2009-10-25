@@ -26,11 +26,11 @@ public interface AfterInterceptors {
 
     /**
      * 
-     * @param inc
+     * @param inv
      * @param instruction
      * @return null表示保留原来所返回的指示
      * @throws Exception
      */
-    public Object doAfterInterceptors(Invocation inc, Object instruction) throws Exception;
+    public Object doAfterInterceptors(Invocation inv, Object instruction) throws Exception;
 
 }

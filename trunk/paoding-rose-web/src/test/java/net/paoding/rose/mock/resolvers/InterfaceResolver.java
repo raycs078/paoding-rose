@@ -1,5 +1,7 @@
 package net.paoding.rose.mock.resolvers;
 
+import java.lang.reflect.Method;
+
 import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.annotation.Param;
 import net.paoding.rose.web.paramresolver.ParamResolverBean;
@@ -9,7 +11,7 @@ public class InterfaceResolver implements ParamResolverBean {
     public static final String GET_VALUE = "yhntgbrfv";
 
     @Override
-    public boolean supports(Class<?> parameterType) {
+    public boolean supports(Class<?> parameterType, Class<?> controllerClazz, Method method) {
         return Interface.class == parameterType;
     }
 

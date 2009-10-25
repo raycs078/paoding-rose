@@ -15,8 +15,7 @@
  */
 package net.paoding.rose.web;
 
-import java.lang.annotation.Annotation;
-import java.util.List;
+import java.lang.reflect.Method;
 
 import net.paoding.rose.web.annotation.Intercepted;
 import net.paoding.rose.web.instruction.Instruction;
@@ -43,20 +42,22 @@ import net.paoding.rose.web.instruction.Instruction;
  * @see ControllerInterceptorAdapter
  */
 public interface ControllerInterceptor {
+    
+    /**
+     * 作为候选拦截器，这个拦截器是否应拦截所指的控制器或其方法？
+     * @param controllerClazz
+     * @param actionMethod
+     * @return
+     */
+    public boolean isForAction(Class<?> controllerClazz, Method actionMethod);
+    
 
     /**
      * 当所分配请求是所给的类型时，是否执行此拦截器？
      * 
      * @return
      */
-    boolean isSupportDispatcher(Dispatcher dispatcher);
-
-    /**
-     * 如果返回了所需要的Annotation类，表示只有明确标注了他们其中的任意一个的控制器或方法才能被该拦截器拦截
-     * 
-     * @return
-     */
-    public List<Class<? extends Annotation>> getAnnotationClasses();
+    boolean isForDispatcher(Dispatcher dispatcher);
 
     /**
      * 返回一个数字，值大的具有最高优先拦截权

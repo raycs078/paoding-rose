@@ -18,6 +18,7 @@ package net.paoding.rose.web.paramresolver;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -114,14 +115,14 @@ public class ResolverFactoryImpl implements ResolverFactory {
     }
 
     @Override
-    public ParamResolverBean accepted(Class<?> parameterType) {
+    public ParamResolverBean supports(Class<?> parameterType, Class<?> controllerClazz, Method method) {
         for (ParamResolverBean resolver : customerResolvers) {
-            if (resolver.supports(parameterType)) {
+            if (resolver.supports(parameterType, controllerClazz, method)) {
                 return resolver;
             }
         }
         for (ParamResolverBean resolver : buildinResolvers) {
-            if (resolver.supports(parameterType)) {
+            if (resolver.supports(parameterType, controllerClazz, method)) {
                 return resolver;
             }
         }
@@ -133,7 +134,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
     static final class InvocationResolver implements ParamResolverBean {
 
         @Override
-        public boolean supports(Class<?> parameterType) {
+        public boolean supports(Class<?> parameterType, Class<?> controllerClazz, Method method) {
             return Invocation.class == parameterType;
         }
 
@@ -147,7 +148,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
     static final class RequestResolver implements ParamResolverBean {
 
         @Override
-        public boolean supports(Class<?> parameterType) {
+        public boolean supports(Class<?> parameterType, Class<?> controllerClazz, Method method) {
             return HttpServletRequest.class == parameterType
                     || ServletRequest.class == parameterType;
         }
@@ -162,7 +163,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
     static final class ResponseResolver implements ParamResolverBean {
 
         @Override
-        public boolean supports(Class<?> parameterType) {
+        public boolean supports(Class<?> parameterType, Class<?> controllerClazz, Method method) {
             return HttpServletResponse.class == parameterType
                     || ServletResponse.class == parameterType;
         }
@@ -177,7 +178,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
     static final class ServletContextResolver implements ParamResolverBean {
 
         @Override
-        public boolean supports(Class<?> parameterType) {
+        public boolean supports(Class<?> parameterType, Class<?> controllerClazz, Method method) {
             return ServletContext.class == parameterType;
         }
 
@@ -191,7 +192,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
     static final class HttpSessionResolver implements ParamResolverBean {
 
         @Override
-        public boolean supports(Class<?> parameterType) {
+        public boolean supports(Class<?> parameterType, Class<?> controllerClazz, Method method) {
             return HttpSession.class == parameterType;
         }
 
@@ -209,7 +210,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
     static final class ModelResolver implements ParamResolverBean {
 
         @Override
-        public boolean supports(Class<?> parameterType) {
+        public boolean supports(Class<?> parameterType, Class<?> controllerClazz, Method method) {
             return Model.class == parameterType;
         }
 
@@ -223,7 +224,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
     static final class FlashResolver implements ParamResolverBean {
 
         @Override
-        public boolean supports(Class<?> parameterType) {
+        public boolean supports(Class<?> parameterType, Class<?> controllerClazz, Method method) {
             return Flash.class == parameterType;
         }
 
@@ -237,7 +238,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
     static final class ModuleResolver implements ParamResolverBean {
 
         @Override
-        public boolean supports(Class<?> parameterType) {
+        public boolean supports(Class<?> parameterType, Class<?> controllerClazz, Method method) {
             return Module.class == parameterType;
         }
 
@@ -251,7 +252,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
     static final class StringResolver implements ParamResolverBean {
 
         @Override
-        public boolean supports(Class<?> parameterType) {
+        public boolean supports(Class<?> parameterType, Class<?> controllerClazz, Method method) {
             return String.class == parameterType;
         }
 
@@ -265,7 +266,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
     static final class MultipartRequestResolver implements ParamResolverBean {
 
         @Override
-        public boolean supports(Class<?> parameterType) {
+        public boolean supports(Class<?> parameterType, Class<?> controllerClazz, Method method) {
             return MultipartRequest.class == parameterType
                     || MultipartHttpServletRequest.class == parameterType;
         }
@@ -288,7 +289,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
     static final class MultipartHttpServletRequestResolver implements ParamResolverBean {
 
         @Override
-        public boolean supports(Class<?> parameterType) {
+        public boolean supports(Class<?> parameterType, Class<?> controllerClazz, Method method) {
             return MultipartHttpServletRequest.class == parameterType;
         }
 
@@ -310,7 +311,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
     static final class MultipartFileResolver implements ParamResolverBean {
 
         @Override
-        public boolean supports(Class<?> parameterType) {
+        public boolean supports(Class<?> parameterType, Class<?> controllerClazz, Method method) {
             return MultipartFile.class == parameterType;
         }
 
@@ -339,7 +340,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
     static final class BeanResolver implements ParamResolverBean {
 
         @Override
-        public boolean supports(Class<?> parameterType) {
+        public boolean supports(Class<?> parameterType, Class<?> controllerClazz, Method method) {
             return !Modifier.isAbstract(parameterType.getModifiers());
 
         }
@@ -365,7 +366,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
     static final class BindingResultResolver implements ParamResolverBean {
 
         @Override
-        public boolean supports(Class<?> parameterType) {
+        public boolean supports(Class<?> parameterType, Class<?> controllerClazz, Method method) {
             return BindingResult.class == parameterType || Errors.class == parameterType;
         }
 
@@ -383,7 +384,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
     static final class ArrayResolver implements ParamResolverBean {
 
         @Override
-        public boolean supports(Class<?> parameterType) {
+        public boolean supports(Class<?> parameterType, Class<?> controllerClazz, Method method) {
             return parameterType.isArray();
         }
 
@@ -433,7 +434,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
     static final class ListResolver extends CollectionResolver<List<?>> {
 
         @Override
-        public boolean supports(Class<?> parameterType) {
+        public boolean supports(Class<?> parameterType, Class<?> controllerClazz, Method method) {
             return List.class == parameterType
                     || Collection.class == parameterType
                     || (!Modifier.isAbstract(parameterType.getModifiers()) && List.class
@@ -459,7 +460,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
     static final class SetResolver extends CollectionResolver<Set<?>> {
 
         @Override
-        public boolean supports(Class<?> parameterType) {
+        public boolean supports(Class<?> parameterType, Class<?> controllerClazz, Method method) {
             return Set.class == parameterType
                     || (!Modifier.isAbstract(parameterType.getModifiers()) && Set.class
                             .isAssignableFrom(parameterType));
@@ -484,7 +485,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
     static final class MapResolver implements ParamResolverBean {
 
         @Override
-        public boolean supports(Class<?> parameterType) {
+        public boolean supports(Class<?> parameterType, Class<?> controllerClazz, Method method) {
             return Map.class == parameterType || HashMap.class == parameterType;
         }
 
@@ -539,7 +540,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
         private final static String stimePattern = "HH:mm";
 
         @Override
-        public boolean supports(Class<?> parameterType) {
+        public boolean supports(Class<?> parameterType, Class<?> controllerClazz, Method method) {
             return Date.class == parameterType || java.sql.Date.class == parameterType
                     || java.sql.Time.class == parameterType
                     || java.sql.Timestamp.class == parameterType;
@@ -636,7 +637,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
     static final class EditorResolver implements ParamResolverBean {
 
         @Override
-        public boolean supports(Class<?> parameterType) {
+        public boolean supports(Class<?> parameterType, Class<?> controllerClazz, Method method) {
             return ClassUtils.isPrimitiveOrWrapper(parameterType)
                     || simpleTypeConverter.findCustomEditor(parameterType, null) != null
                     || simpleTypeConverter.getDefaultEditor(parameterType) != null;

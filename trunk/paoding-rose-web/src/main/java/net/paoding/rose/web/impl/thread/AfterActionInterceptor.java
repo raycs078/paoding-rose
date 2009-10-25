@@ -15,34 +15,29 @@
  */
 package net.paoding.rose.web.impl.thread;
 
+import java.lang.reflect.Method;
+
 import net.paoding.rose.web.AfterAction;
-import net.paoding.rose.web.BeforeAction;
 import net.paoding.rose.web.ControllerInterceptorAdapter;
-import net.paoding.rose.web.Dispatcher;
 import net.paoding.rose.web.Invocation;
 
 /**
  * @author 王志亮 [qieqie.wang@gmail.com]
  */
-public class InnerRoundActionInterceptor extends ControllerInterceptorAdapter {
+public class AfterActionInterceptor extends ControllerInterceptorAdapter {
 
-    public InnerRoundActionInterceptor() {
+    public AfterActionInterceptor() {
         setPriority(Integer.MIN_VALUE);
     }
 
     @Override
-    public boolean isSupportDispatcher(Dispatcher dispatcher) {
-        return true;
-    }
-
-    @Override
-    public Object before(Invocation inv) throws Exception {
-        for (Object object : inv.getMethodParameters()) {
-            if (object instanceof BeforeAction) {
-                ((BeforeAction) object).doBeforeAction(inv);
+    protected boolean isForAction(Method actionMethod, Class<?> controllerClazz) {
+    	for (Class<?> clazz :actionMethod.getParameterTypes()) {
+            if (AfterAction.class.isAssignableFrom(clazz)) {
+                return true;
             }
         }
-        return true;
+    	return false;
     }
 
     @Override
