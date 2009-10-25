@@ -1,5 +1,7 @@
 package net.paoding.rose.mock.resolvers;
 
+import java.lang.reflect.Method;
+
 import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.annotation.Param;
 import net.paoding.rose.web.paramresolver.ParamResolverBean;
@@ -18,7 +20,7 @@ public class ApplicationContextResolver implements ParamResolverBean, Applicatio
     }
 
     @Override
-    public boolean supports(Class<?> parameterType) {
+    public boolean supports(Class<?> parameterType, Class<?> controllerClazz, Method method) {
 
         return ApplicationContext.class.isAssignableFrom(parameterType);
     }

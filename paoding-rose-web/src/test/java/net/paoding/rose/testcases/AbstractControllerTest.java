@@ -35,12 +35,11 @@ public abstract class AbstractControllerTest extends TestCase {
         request.setMethod("GET");
     }
 
-    protected <T> T invoke(String uri) throws ServletException, IOException {
+    protected Object invoke(String uri) throws ServletException, IOException {
         return invoke(uri, "", "");
     }
 
-    @SuppressWarnings("unchecked")
-    protected <T> T invoke(String uri, String method, String queryString) throws ServletException,
+    protected Object invoke(String uri, String method, String queryString) throws ServletException,
             IOException {
         request.setRequestURI(uri);
         if (StringUtils.isNotEmpty(method)) {
@@ -51,6 +50,6 @@ public abstract class AbstractControllerTest extends TestCase {
         }
         MockFilterChain chain = new MockFilterChain();
         filter.doFilter(request, response, chain);
-        return (T) RoseTestEnv.instance().getInstructionExecutor().getInstruction(request);
+        return RoseTestEnv.instance().getInstructionExecutor().getInstruction(request);
     }
 }

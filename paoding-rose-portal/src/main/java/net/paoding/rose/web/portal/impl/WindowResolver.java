@@ -15,6 +15,8 @@
  */
 package net.paoding.rose.web.portal.impl;
 
+import java.lang.reflect.Method;
+
 import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.annotation.Param;
 import net.paoding.rose.web.paramresolver.ParamResolverBean;
@@ -29,7 +31,7 @@ import net.paoding.rose.web.portal.Window;
 public class WindowResolver implements ParamResolverBean {
 
     @Override
-    public boolean supports(Class<?> parameterType) {
+    public boolean supports(Class<?> parameterType, Class<?> controllerClazz, Method method) {
         return Window.class == parameterType;
     }
 

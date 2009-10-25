@@ -19,7 +19,7 @@ public class CollectionControllerTest extends AbstractControllerTest {
         request.addParameter("bool", "false");
 
         @SuppressWarnings("unchecked")
-        Class[] classes = invoke("/resolver/collection/list");
+        Class[] classes = (Class[]) invoke("/resolver/collection/list");
         int i = 0;
         assertTrue(Integer.class.isAssignableFrom(classes[i++]));
         assertTrue(Integer.class.isAssignableFrom(classes[i++]));
@@ -40,7 +40,7 @@ public class CollectionControllerTest extends AbstractControllerTest {
         request.addParameter("bool", "false");
 
         @SuppressWarnings("unchecked")
-        Class[] classes = invoke("/resolver/collection/set");
+        Class[] classes = (Class[]) invoke("/resolver/collection/set");
         int i = 0;
         assertTrue(Integer.class.isAssignableFrom(classes[i++]));
         assertTrue(Integer.class.isAssignableFrom(classes[i++]));
@@ -66,7 +66,7 @@ public class CollectionControllerTest extends AbstractControllerTest {
         request.addParameter("ib:3", "false");
 
         @SuppressWarnings("unchecked")
-        Class[] classes = invoke("/resolver/collection/map");
+        Class[] classes = (Class[]) invoke("/resolver/collection/map");
         int i = 0;
         assertTrue(String.class.isAssignableFrom(classes[i++]));
         assertTrue(String.class.isAssignableFrom(classes[i++]));

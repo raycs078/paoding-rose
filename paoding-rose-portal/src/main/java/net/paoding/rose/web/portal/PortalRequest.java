@@ -38,7 +38,7 @@ import javax.servlet.http.HttpSession;
  * 
  */
 @SuppressWarnings("unchecked")
-public class PortalRequest /**/extends HttpServletRequestWrapper/**/implements HttpServletRequest {
+public class PortalRequest extends HttpServletRequestWrapper implements HttpServletRequest {
 
     private Portal portal;
 

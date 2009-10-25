@@ -15,43 +15,38 @@
  */
 package net.paoding.rose.web.impl.thread;
 
-import net.paoding.rose.web.AfterInterceptors;
-import net.paoding.rose.web.BeforeInterceptors;
+import java.lang.reflect.Method;
+
+import net.paoding.rose.web.BeforeAction;
 import net.paoding.rose.web.ControllerInterceptorAdapter;
-import net.paoding.rose.web.Dispatcher;
 import net.paoding.rose.web.Invocation;
 
 /**
  * @author 王志亮 [qieqie.wang@gmail.com]
  */
-public class OutterRoundActionInterceptor extends ControllerInterceptorAdapter {
+public class BeforeActionInterceptor extends ControllerInterceptorAdapter {
 
-    public OutterRoundActionInterceptor() {
-        setPriority(Integer.MAX_VALUE);
+    public BeforeActionInterceptor() {
+        setPriority(Integer.MIN_VALUE);
     }
 
     @Override
-    public boolean isSupportDispatcher(Dispatcher dispatcher) {
-        return true;
+    protected boolean isForAction(Method actionMethod, Class<?> controllerClazz) {
+    	for (Class<?> clazz :actionMethod.getParameterTypes()) {
+            if (BeforeAction.class.isAssignableFrom(clazz)) {
+                return true;
+            }
+        }
+    	return false;
     }
 
     @Override
     public Object before(Invocation inv) throws Exception {
         for (Object object : inv.getMethodParameters()) {
-            if (object instanceof BeforeInterceptors) {
-                ((BeforeInterceptors) object).doBeforeInterceptors(inv);
+            if (object instanceof BeforeAction) {
+                ((BeforeAction) object).doBeforeAction(inv);
             }
         }
         return true;
-    }
-
-    @Override
-    public Object after(Invocation inv, Object instruction) throws Exception {
-        for (Object object : inv.getMethodParameters()) {
-            if (object instanceof AfterInterceptors) {
-                instruction = ((AfterInterceptors) object).doAfterInterceptors(inv, instruction);
-            }
-        }
-        return instruction;
     }
 }
