@@ -30,7 +30,7 @@ import net.paoding.rose.web.portal.Window;
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
-public class WindowResponse extends HttpServletResponseWrapper {
+class WindowResponse extends HttpServletResponseWrapper {
 
     private WindowImpl window;
 

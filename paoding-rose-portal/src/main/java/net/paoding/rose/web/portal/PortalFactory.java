@@ -16,13 +16,21 @@
 package net.paoding.rose.web.portal;
 
 import net.paoding.rose.web.Invocation;
+
 /**
+ * {@link PortalFactory} 是 Portal 框架的核心，它负责创建 {@link Portal} 对象，使开发者能够通过 {@link Portal} 对象实现 Portal 功能。
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
 public interface PortalFactory {
 
-    public Portal createPortal(Invocation inc);
+	/**
+	 * 创建给定请求的 {@link Portal} 实例
+	 * 
+	 * @param inv
+	 * @return
+	 */
+    public Portal createPortal(Invocation inv);
 
 }

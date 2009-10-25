@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.paoding.rose.web.portal;
+package net.paoding.rose.web.portal.impl;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -28,6 +28,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpSession;
 
+import net.paoding.rose.web.portal.Portal;
+
 /**
  * 不扩展 {@link HttpServletRequestWrapper}，使
  * {@link PortalRequest#setRequest(javax.servlet.ServletRequest)}能被web容器调用到
@@ -36,7 +38,7 @@ import javax.servlet.http.HttpSession;
  * 
  */
 @SuppressWarnings("unchecked")
-public class PortalNestRequest implements HttpServletRequest {
+class PortalNestRequest implements HttpServletRequest {
 
     private HttpServletRequest request;
 

@@ -34,7 +34,7 @@ import org.apache.commons.logging.LogFactory;
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
-public class WindowRequest extends HttpServletRequestWrapper {
+class WindowRequest extends HttpServletRequestWrapper {
 
     private static final Log logger = LogFactory.getLog(WindowRequest.class);
 

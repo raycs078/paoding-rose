@@ -13,13 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.paoding.rose.web.portal;
+package net.paoding.rose.web.portal.impl;
 
 import java.lang.reflect.Method;
 
 import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.annotation.Param;
 import net.paoding.rose.web.paramresolver.ParamResolverBean;
+import net.paoding.rose.web.portal.Portal;
+import net.paoding.rose.web.portal.PortalFactory;
+import net.paoding.rose.web.portal.PortalSetting;
 
 /**
  * 

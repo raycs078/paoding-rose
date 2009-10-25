@@ -16,9 +16,6 @@
 package net.paoding.rose.web.portal.impl;
 
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.portal.Portal;
@@ -30,56 +27,37 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 /**
+ * {@link PortalFactory} 的实现。
+ * <p>
+ * 
+ * 创建 {@link PortalFactoryImpl}实例后，应该通过{@link #setExecutorService(ExecutorService)} 
+ * 或 {@link #setExecutorServiceBySpring(ThreadPoolTaskExecutor)}设置执行器，用于执行Portal下的每个“窗口请求”。
+ * <p>
+ * 
+ * 可选设置 {@link PortalListener} 来获知portal的创建以及窗口的创建、执行等状态信息。
+ * 
+ * @see PortalImpl
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
 public class PortalFactoryImpl implements PortalFactory {
 
-    private Log logger = LogFactory.getLog(getClass());
+    protected Log logger = LogFactory.getLog(getClass());
 
-    private int corePoolSize = 100;
-
-    private int maximumPoolSize = Integer.MAX_VALUE;
-
-    private long keepAliveTime = 60 * 1000;
-
-    private ExecutorService executor;
+    private ExecutorService executorService;
 
     private PortalListener portalListener;
 
-    public int getCorePoolSize() {
-        return corePoolSize;
-    }
-
-    public void setCorePoolSize(int corePoolSize) {
-        this.corePoolSize = corePoolSize;
-    }
-
-    public int getMaximumPoolSize() {
-        return maximumPoolSize;
-    }
-
-    public void setMaximumPoolSize(int maximumPoolSize) {
-        this.maximumPoolSize = maximumPoolSize;
-    }
-
-    public long getKeepAliveTime() {
-        return keepAliveTime;
-    }
-
-    public void setKeepAliveTime(long keepAliveTime) {
-        this.keepAliveTime = keepAliveTime;
-    }
-
-    public void setExecutor(ThreadPoolTaskExecutor executor) {
-        logger.info("using " + executor);
-        this.executor = executor.getThreadPoolExecutor();
-    }
-
     public void setExecutorService(ExecutorService executor) {
-        logger.info("using " + executor);
-        this.executor = executor;
+    	if (logger.isInfoEnabled()) {
+            logger.info("using executorService: " + executor);
+    	}
+        this.executorService = executor;
+    }
+
+    public ExecutorService getExecutorService() {
+        return executorService;
     }
 
     public void setPortalListener(PortalListener portalListener) {
@@ -90,21 +68,9 @@ public class PortalFactoryImpl implements PortalFactory {
         return portalListener;
     }
 
-    public ExecutorService getExecutorService() {
-        if (executor == null) {
-            synchronized (this) {
-                if (executor == null) {
-                    executor = new ThreadPoolExecutor(corePoolSize, maximumPoolSize, keepAliveTime,
-                            TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>());
-                }
-            }
-        }
-        return executor;
-    }
-
     @Override
-    public Portal createPortal(Invocation inc) {
-        PortalImpl portal = new PortalImpl(inc, portalListener, getExecutorService());
+    public Portal createPortal(Invocation inv) {
+        PortalImpl portal = new PortalImpl(inv, executorService, portalListener);
         portal.onPortalCreated(portal);
         return portal;
     }

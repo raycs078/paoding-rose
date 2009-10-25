@@ -40,49 +40,35 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.context.WebApplicationContext;
 
 /**
+ * {@link Portal} 的实现类，Portal 框架的核心类。
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
-class PortalImpl implements Portal, PortalListener {
+class PortalImpl implements Portal, Invocation, PortalListener {
 
     private static final Log logger = LogFactory.getLog(PortalImpl.class);
 
-    private Invocation invocation;
-
-    private ExecutorService executor;
-
-    private List<Window> tasks = new LinkedList<Window>();
+    private ExecutorService executorService;
 
     private PortalListener portalListener;
 
-    private long createTime = System.currentTimeMillis();
+    private Invocation invocation;
 
-    private long sleepTime;
+    private List<Window> windows = new LinkedList<Window>();
 
     private long timeout;
 
-    public PortalImpl(Invocation inv, PortalListener portalListener, ExecutorService executor) {
+    public PortalImpl(Invocation inv, ExecutorService executorService, PortalListener portalListener) {
         this.invocation = inv;
         this.portalListener = portalListener;
-        this.executor = executor;
-    }
-
-    @Override
-    public long getSleepTime() {
-        return sleepTime;
-    }
-
-    @Override
-    public long getCreateTime() {
-        return createTime;
+        this.executorService = executorService;
     }
 
     public void setTimeout(long timeoutInMills) {
         this.timeout = timeoutInMills;
     }
 
-    @Override
     public long getTimeout() {
         return timeout;
     }
@@ -94,7 +80,7 @@ class PortalImpl implements Portal, PortalListener {
 
     @Override
     public List<Window> getWindows() {
-        return new ArrayList<Window>(tasks);
+        return new ArrayList<Window>(windows);
     }
 
     @Override
@@ -104,13 +90,17 @@ class PortalImpl implements Portal, PortalListener {
 
     @Override
     public Window addWindow(String name, String windowPath) {
-        //
+        // 创建 窗口对象，并放到 portal的 model 中
         WindowImpl window = new WindowImpl(this, name, windowPath);
-        addModel(name, window);
+        this.windows.add(window);
+        this.invocation.addModel(name, window);
+        
+        // 创建窗口任务器，提交给执行器执行，实现对这个窗口请求的处理和渲染
         WindowTaskImpl task = new WindowTaskImpl(window);
-        tasks.add(window);
         onWindowAdded(window);
-        task.submitTo(executor);
+        task.submitTo(this.executorService);
+        
+        // 返回窗口对象
         return window;
     }
 
@@ -119,7 +109,7 @@ class PortalImpl implements Portal, PortalListener {
         return "portal ['" + invocation.getRequestPath().getUri() + "']";
     }
 
-    //--------------------------------------------
+    //------------ 以下代码是PortalListener和Invocation的实现代码 --------------------------------
 
     @Override
     public void onPortalCreated(Portal portal) {
@@ -211,157 +201,152 @@ class PortalImpl implements Portal, PortalListener {
 
     @Override
     public void addModel(Object value) {
-        getInvocation().addModel(value);
+        invocation.addModel(value);
     }
 
     @Override
     public void addModel(String name, Object value) {
-        getInvocation().addModel(name, value);
+        invocation.addModel(name, value);
     }
 
     @Override
     public void changeMethodParameter(int index, Object value) {
-        getInvocation().changeMethodParameter(index, value);
+        invocation.changeMethodParameter(index, value);
     }
 
     @Override
     public void changeMethodParameter(String name, Object value) {
-        getInvocation().changeMethodParameter(name, value);
+        invocation.changeMethodParameter(name, value);
     }
 
     @Override
     public WebApplicationContext getApplicationContext() {
-        return getInvocation().getApplicationContext();
+        return invocation.getApplicationContext();
     }
 
     @Override
     public Object getAttribute(String name) {
-        return getInvocation().getAttribute(name);
+        return invocation.getAttribute(name);
     }
 
     @Override
     public Set<String> getAttributeNames() {
-        return getInvocation().getAttributeNames();
+        return invocation.getAttributeNames();
     }
 
     @Override
     public BindingResult getBindingResult(Object bean) {
-        return getInvocation().getBindingResult(bean);
+        return invocation.getBindingResult(bean);
     }
 
     @Override
     public List<String> getBindingResultNames() {
-        return getInvocation().getBindingResultNames();
+        return invocation.getBindingResultNames();
     }
 
     @Override
     public List<BindingResult> getBindingResults() {
-        return getInvocation().getBindingResults();
+        return invocation.getBindingResults();
     }
 
     @Override
     public Object getController() {
-        return getInvocation().getController();
+        return invocation.getController();
     }
 
     @Override
     public Class<?> getControllerClass() {
-        return getInvocation().getControllerClass();
+        return invocation.getControllerClass();
     }
 
     @Override
     public Flash getFlash() {
-        return getInvocation().getFlash();
+        return invocation.getFlash();
     }
 
     @Override
     public Method getMethod() {
-        return getInvocation().getMethod();
+        return invocation.getMethod();
     }
 
     @Override
     public Object getMethodParameter(String name) {
-        return getInvocation().getMethodParameter(name);
+        return invocation.getMethodParameter(name);
     }
 
     @Override
     public String[] getMethodParameterNames() {
-        return getInvocation().getMethodParameterNames();
+        return invocation.getMethodParameterNames();
     }
 
     @Override
     public Object[] getMethodParameters() {
-        return getInvocation().getMethodParameters();
+        return invocation.getMethodParameters();
     }
 
     @Override
     public Model getModel() {
-        return getInvocation().getModel();
+        return invocation.getModel();
     }
 
     @Override
     public Object getParameter(String name) {
-        return getInvocation().getParameter(name);
+        return invocation.getParameter(name);
     }
 
     @Override
     public BindingResult getParameterBindingResult() {
-        return getInvocation().getParameterBindingResult();
+        return invocation.getParameterBindingResult();
     }
 
     @Override
     public String getRawParameter(String name) {
-        return getInvocation().getRawParameter(name);
+        return invocation.getRawParameter(name);
     }
 
     @Override
     public HttpServletRequest getRequest() {
-        return getInvocation().getRequest();
+        return invocation.getRequest();
     }
 
     @Override
     public RequestPath getRequestPath() {
-        return getInvocation().getRequestPath();
+        return invocation.getRequestPath();
     }
 
     @Override
     public HttpServletResponse getResponse() {
-        return getInvocation().getResponse();
+        return invocation.getResponse();
     }
 
     @Override
     public ServletContext getServletContext() {
-        return getInvocation().getServletContext();
+        return invocation.getServletContext();
     }
-
-    //    @Override
-    //    public boolean isDestroyed() {
-    //        return getInvocation().isDestroyed();
-    //    }
 
     @Override
     public void removeAttribute(String name) {
-        getInvocation().removeAttribute(name);
+        invocation.removeAttribute(name);
     }
 
     @Override
     public Invocation setAttribute(String name, Object value) {
-        getInvocation().setAttribute(name, value);
+        invocation.setAttribute(name, value);
         return this;
     }
 
     @Override
     public Object getOncePerRequestAttribute(String name) {
-        return getInvocation().getOncePerRequestAttribute(name);
+        return invocation.getOncePerRequestAttribute(name);
     }
 
     @Override
     public Invocation setOncePerRequestAttribute(String name, Object value) {
-        return getInvocation().setOncePerRequestAttribute(name, value);
+        return invocation.setOncePerRequestAttribute(name, value);
     }
 
     @Override
     public void setRequest(HttpServletRequest request) {
-        getInvocation().setRequest(request);
+        invocation.setRequest(request);
     }
 }
