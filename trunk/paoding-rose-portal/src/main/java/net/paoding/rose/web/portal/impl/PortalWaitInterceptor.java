@@ -61,7 +61,7 @@ public class PortalWaitInterceptor extends ControllerInterceptorAdapter {
                 logger.debug(portal + " is going to wait windows.");
             }
             //
-            waitForWindows((Portal) portal, (PortalListener) portal);
+            waitForWindows((PortalImpl) portal, (PortalListener) portal);
             //
             if (logger.isDebugEnabled()) {
                 logger.debug(portal + ".waitForWindows is done; cost=" + (System.currentTimeMillis() - begin));
@@ -70,7 +70,7 @@ public class PortalWaitInterceptor extends ControllerInterceptorAdapter {
         return instruction;
     }
 
-    protected void waitForWindows(Portal portal, PortalListener listener) {
+    protected void waitForWindows(PortalImpl portal, PortalListener listener) {
         long deadline;
         long begin = System.currentTimeMillis();
         if (portal.getTimeout() > 0) {

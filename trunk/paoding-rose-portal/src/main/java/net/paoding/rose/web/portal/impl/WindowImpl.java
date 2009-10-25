@@ -27,7 +27,7 @@ import net.paoding.rose.web.portal.WindowTask;
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
-public class WindowImpl implements Window  {
+class WindowImpl implements Window  {
 
     private long startTime = System.currentTimeMillis();
 
