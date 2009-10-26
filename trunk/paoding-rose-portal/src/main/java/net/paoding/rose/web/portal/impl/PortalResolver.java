@@ -64,7 +64,7 @@ public class PortalResolver implements ParamResolverBean {
             Invocation inv, String parameterName, Param paramAnnotation) throws Exception {
         Portal portal = portalFactory.createPortal(inv);
         // 换request对象
-        inv.setRequest(new PortalRequest(portal));
+        inv.setRequest(new PortalRequest(inv.getRequest()));
         //
         long timeout = this.defaultTimeout;
         PortalSetting portalSetting = inv.getMethod().getAnnotation(PortalSetting.class);

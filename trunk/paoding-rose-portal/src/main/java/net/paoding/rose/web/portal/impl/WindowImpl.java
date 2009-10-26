@@ -17,10 +17,10 @@ package net.paoding.rose.web.portal.impl;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Future;
 
 import net.paoding.rose.web.portal.Portal;
 import net.paoding.rose.web.portal.Window;
-import net.paoding.rose.web.portal.WindowTask;
 
 /**
  * 
@@ -29,15 +29,11 @@ import net.paoding.rose.web.portal.WindowTask;
  */
 class WindowImpl implements Window  {
 
-    private long startTime = System.currentTimeMillis();
-
     private String name;
 
     private String path;
 
     private StringBuilder buffer;
-
-    private long doneTime;
 
     private Throwable throwable;
 
@@ -51,7 +47,7 @@ class WindowImpl implements Window  {
 
     private boolean forRender = true;
 
-    private WindowTask task;
+    private Future<?> future;
 
     public WindowImpl(Portal portal, String name, String windowPath) {
         this.portal = portal;
@@ -63,14 +59,16 @@ class WindowImpl implements Window  {
         return portal;
     }
 
-    public WindowTask getTask() {
-        return task;
+    @Override
+    public Future<?> getFuture() {
+        return future;
     }
 
-    public void setTask(WindowTask task) {
-        this.task = task;
+    public void setFuture(Future<?> future) {
+        this.future = future;
     }
 
+    @Override
     public void set(String key, Object value) {
         if (attributes == null) {
             attributes = new HashMap<String, Object>();
@@ -78,14 +76,17 @@ class WindowImpl implements Window  {
         attributes.put(key, value);
     }
 
+    @Override
     public Object get(String key) {
         return (attributes == null) ? null : attributes.get(key);
     }
 
+    @Override
     public void setTitle(Object title) {
         set("title", title);
     }
 
+    @Override
     public Object getTitle() {
         Object value = get("title");
         if (value == null) {
@@ -94,6 +95,7 @@ class WindowImpl implements Window  {
         return value;
     }
 
+    @Override
     public String getContent() {
         return buffer == null ? "" : buffer.toString();
     }
@@ -120,41 +122,25 @@ class WindowImpl implements Window  {
     }
 
     public boolean isDone() {
-        return doneTime > 0;
+        return future.isDone();
     }
 
-    public void setDoneTime(long doneTime) {
-        this.doneTime = doneTime;
-    }
-
-    public long getCurrentTime() {
-        return System.currentTimeMillis();
-    }
-
+    @Override
     public String getName() {
         return name;
     }
 
+    @Override
     public String getPath() {
         return path;
     }
 
-    public long getStartTime() {
-        return startTime;
-    }
-
-    public void setStartTime(long startTime) {
-        this.startTime = startTime;
-    }
-
-    public long getDoneTime() {
-        return doneTime;
-    }
-
+    @Override
     public Throwable getThrowable() {
         return throwable;
     }
 
+    @Override
     public void setThrowable(Throwable throwable) {
         this.throwable = throwable;
     }
@@ -169,19 +155,23 @@ class WindowImpl implements Window  {
         this.statusMessage = msg;
     }
 
+    @Override
     public int getStatusCode() {
         return statusCode;
     }
 
+    @Override
     public String getStatusMessage() {
         return statusMessage;
     }
 
+    @Override
     public WindowImpl forRender(boolean forRender) {
         this.forRender = forRender;
         return this;
     }
 
+    @Override
     public boolean isForRender() {
         return forRender;
     }

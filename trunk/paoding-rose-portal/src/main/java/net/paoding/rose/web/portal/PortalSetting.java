@@ -23,7 +23,7 @@ import java.lang.annotation.Target;
 import java.util.concurrent.TimeUnit;
 
 /**
- * 标注 {@link PortalSetting}设置有关 {@link Portal} 的参数
+ * 在portal主控制器方法上标注 {@link PortalSetting}设置有关 {@link Portal} 的参数
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
@@ -34,12 +34,14 @@ import java.util.concurrent.TimeUnit;
 public @interface PortalSetting {
 
     /**
+     * 设置超时等待时间。如果为0或负数表示无限期等待直至所有窗口完毕
      * 
      * @return
      */
     public long timeout() default -1;
 
     /**
+     * 超时时间设置单位，默认为毫秒
      * 
      * @return
      */

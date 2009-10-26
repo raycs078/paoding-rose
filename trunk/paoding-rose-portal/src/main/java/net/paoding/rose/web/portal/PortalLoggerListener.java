@@ -30,49 +30,42 @@ public class PortalLoggerListener implements PortalListener {
     @Override
     public void onPortalCreated(Portal portal) {
         if (logger.isDebugEnabled()) {
-            logger.debug("onPortalCreated [" + portal.getInvocation().getRequestPath().getUri()
-                    + "]");
+            logger.debug("onPortalCreated: " + portal);
         }
     }
 
     @Override
     public void onPortalReady(Portal portal) {
         if (logger.isDebugEnabled()) {
-            logger.debug("onPortalReady [" // NL
-                    + portal.getInvocation().getRequestPath().getUri() + "]");
+            logger.debug("onPortalReady: " + portal);
         }
     }
 
     @Override
     public void onWindowAdded(Window window) {
         if (logger.isDebugEnabled()) {
-            logger.debug("onWindowAdded [" + window.getName() + "]@["
-                    + window.getPortal().getInvocation().getRequestPath().getUri() + "]");
+            logger.debug("onWindowAdded: [" + window.getName() + "]@" + window.getPortal());
         }
     }
 
     @Override
     public void onWindowCanceled(Window window) {
         if (logger.isDebugEnabled()) {
-            logger.debug("onWindowCanceled [" + window.getName() + "]@["
-                    + window.getPortal().getInvocation().getRequestPath().getUri() + "]");
+            logger.debug("onWindowCanceled: [" + window.getName() + "]@" + window.getPortal());
         }
     }
 
     @Override
     public void onWindowDone(Window window) {
         if (logger.isDebugEnabled()) {
-            logger.debug("onWindowDone [" + window.getName() + "]@["
-                    + window.getPortal().getInvocation().getRequestPath().getUri() + "]"
-                    + window.getName());
+            logger.debug("onWindowDone: [" + window.getName() + "]@" + window.getPortal());
         }
     }
 
     @Override
     public void onWindowError(Window window) {
         if (logger.isDebugEnabled()) {
-            logger.debug("onWindowError [" + window.getName() + "]@["
-                    + window.getPortal().getInvocation().getRequestPath().getUri() + "]", window
+            logger.debug("onWindowError: [" + window.getName() + "]@" + window.getPortal(), window
                     .getThrowable());
         }
     }
@@ -80,17 +73,14 @@ public class PortalLoggerListener implements PortalListener {
     @Override
     public void onWindowStarted(Window window) {
         if (logger.isDebugEnabled()) {
-            logger.debug("onWindowStarted [" + window.getName() + "]@["
-                    + window.getPortal().getInvocation().getRequestPath().getUri() + "]");
+            logger.debug("onWindowStarted: [" + window.getName() + "]@" + window.getPortal());
         }
     }
 
     @Override
     public void onWindowTimeout(Window window) {
         if (logger.isDebugEnabled()) {
-            logger.debug("onWindowTimeout [" + window.getName() + "]@["
-                    + window.getPortal().getInvocation().getRequestPath().getUri() + "]"
-                    + "; timeout=" + (System.currentTimeMillis() - window.getStartTime()));
+            logger.debug("onWindowTimeout: [" + window.getName() + "]@" + window.getPortal());
         }
     }
 }

@@ -15,6 +15,8 @@
  */
 package net.paoding.rose.web.portal;
 
+import java.util.concurrent.Future;
+
 
 /**
  * 
@@ -25,7 +27,7 @@ public interface Window {
 
     public Portal getPortal();
 
-    public WindowTask getTask();
+    public Future<?> getFuture();
 
     public void set(String key, Object value);
 
@@ -42,10 +44,6 @@ public interface Window {
     public String getName();
 
     public String getPath();
-
-    public long getStartTime();
-
-    public long getDoneTime();
 
     public Throwable getThrowable();
 

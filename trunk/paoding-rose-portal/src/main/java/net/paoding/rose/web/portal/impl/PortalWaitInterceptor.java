@@ -19,6 +19,8 @@ import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import net.paoding.rose.web.ControllerInterceptorAdapter;
@@ -26,35 +28,35 @@ import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.portal.Portal;
 import net.paoding.rose.web.portal.PortalListener;
 import net.paoding.rose.web.portal.Window;
-import net.paoding.rose.web.portal.WindowTask;
 
 /**
+ * 这个拦截器只拦截 Portal 控制器方法，用于等待所有该 portal 的窗口执行完成或进行超时取消。
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
 public class PortalWaitInterceptor extends ControllerInterceptorAdapter {
 
-	
-	@Override
-	protected boolean isForAction(Method actionMethod, Class<?> controllerClazz) {
-		for(Class<?> paramType : actionMethod.getParameterTypes()) {
-			if (paramType == Portal.class) {
-				return true;
-			}
-		}
-		return false;
-	}
-	
+    // 只拦截含有 Portal 的控制器方法
+    @Override
+    protected boolean isForAction(Method actionMethod, Class<?> controllerClazz) {
+        for (Class<?> paramType : actionMethod.getParameterTypes()) {
+            if (paramType == Portal.class) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Override
     public Object after(Invocation inv, Object instruction) throws Exception {
-    	PortalImpl portal = null;
-    	for(Object param : inv.getMethodParameters()) {
-			if (param instanceof Portal) {
-				portal = (PortalImpl) param;
-				break;
-			}
-		}
+        PortalImpl portal = null;
+        for (Object param : inv.getMethodParameters()) {
+            if (param instanceof Portal) {
+                portal = (PortalImpl) param;
+                break;
+            }
+        }
         if (portal != null) {
             long begin = System.currentTimeMillis();
             if (logger.isDebugEnabled()) {
@@ -64,7 +66,8 @@ public class PortalWaitInterceptor extends ControllerInterceptorAdapter {
             waitForWindows((PortalImpl) portal, (PortalListener) portal);
             //
             if (logger.isDebugEnabled()) {
-                logger.debug(portal + ".waitForWindows is done; cost=" + (System.currentTimeMillis() - begin));
+                logger.debug(portal + ".waitForWindows is done; cost="
+                        + (System.currentTimeMillis() - begin));
             }
         }
         return instruction;
@@ -90,13 +93,13 @@ public class PortalWaitInterceptor extends ControllerInterceptorAdapter {
         int winIndex = 0;
         for (Window window : portal.getWindows()) {
             winIndex++;
-            WindowTask task = window.getTask();
-            if (task.isDone() || task.isCancelled() || !window.isForRender()) {
+            Future<?> future = window.getFuture();
+            if (future.isDone() || future.isCancelled() || !window.isForRender()) {
                 if (logger.isDebugEnabled()) {
-                    if (task.isDone()) {
+                    if (future.isDone()) {
                         logger.debug("[" + winIndex + "/" + winSize + "] continue[done]: "
                                 + window.getName());
-                    } else if (task.isCancelled()) {
+                    } else if (future.isCancelled()) {
                         logger.debug("[" + winIndex + "/" + winSize + "] continue[cancelled]: "
                                 + window.getName());
                     } else if (!window.isForRender()) {
@@ -113,46 +116,46 @@ public class PortalWaitInterceptor extends ControllerInterceptorAdapter {
                     awaitTime = deadline - begineWait;
                     if (awaitTime > 0) {
                         if (logger.isDebugEnabled()) {
-                            logger.debug("[" + winIndex + "/" + winSize + "] waiting[begin] : "
+                            logger.debug("[" + winIndex + "/" + winSize + "] waiting[begin]: "
                                     + window.getName() + "; maxWait=" + awaitTime);
                         }
-                        task.await(awaitTime);
+                        future.get(awaitTime, TimeUnit.MILLISECONDS);
                         if (logger.isDebugEnabled()) {
-                            logger.debug("[" + winIndex + "/" + winSize + "] waiting[done] : "
+                            logger.debug("[" + winIndex + "/" + winSize + "] waiting[done]: "
                                     + window.getName() + "; actualWait="
                                     + (System.currentTimeMillis() - begineWait));
                         }
                     } else {
                         logger.error("[" + winIndex + "/" + winSize
-                                + "] waiting[been timeout now] : " + window.getName());
+                                + "] waiting[been timeout now]: " + window.getName());
                         listener.onWindowTimeout(window);
-                        task.cancel(true);
+                        future.cancel(true);
                     }
                 } else {
                     if (logger.isDebugEnabled()) {
-                        logger.debug("[" + winIndex + "/" + winSize + "] waiting[begin] : "
+                        logger.debug("[" + winIndex + "/" + winSize + "] waiting[begin]: "
                                 + window.getName() + "; maxWait=(forever)");
                     }
-                    task.await();
+                    future.get();
                     if (logger.isDebugEnabled()) {
-                        logger.debug("[" + winIndex + "/" + winSize + "] waiting[done] : "
+                        logger.debug("[" + winIndex + "/" + winSize + "] waiting[done]: "
                                 + window.getName() + "; actualWait="
                                 + (System.currentTimeMillis() - begineWait));
                     }
                 }
             } catch (InterruptedException e) {
-                logger.error("x[" + winIndex + "/" + winSize + "] waiting[interrupted] : "
+                logger.error("x[" + winIndex + "/" + winSize + "] waiting[interrupted]: "
                         + window.getName());
             } catch (ExecutionException e) {
-                logger.error("x[" + winIndex + "/" + winSize + "] waiting[error] : "
+                logger.error("x[" + winIndex + "/" + winSize + "] waiting[error]: "
                         + window.getName(), e);
                 window.setThrowable(e);
                 listener.onWindowError(window);
             } catch (TimeoutException e) {
-                logger.error("x[" + winIndex + "/" + winSize + "] waiting[timeout] : "
+                logger.error("x[" + winIndex + "/" + winSize + "] waiting[timeout]: "
                         + window.getName(), e);
                 listener.onWindowTimeout(window);
-                task.cancel(true);
+                future.cancel(true);
             }
         }
         listener.onPortalReady(portal);

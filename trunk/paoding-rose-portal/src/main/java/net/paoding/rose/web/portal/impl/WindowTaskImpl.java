@@ -15,14 +15,9 @@
  */
 package net.paoding.rose.web.portal.impl;
 
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import javax.servlet.RequestDispatcher;
 
 import net.paoding.rose.web.portal.Window;
-import net.paoding.rose.web.portal.WindowTask;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -32,27 +27,25 @@ import org.apache.commons.logging.LogFactory;
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
-class WindowTaskImpl implements WindowTask, Runnable {
+final class WindowTaskImpl implements Runnable {
 
     private static final Log logger = LogFactory.getLog(WindowTaskImpl.class);
 
-    private WindowImpl window;
-
-    private Future<?> future;
+    private final WindowImpl window;
 
     public WindowTaskImpl(WindowImpl window) {
         if (window == null) {
             throw new NullPointerException("window");
         }
         this.window = window;
-        this.window.setTask(this);
     }
 
-    public Future<?> submitTo(ExecutorService executor) {
-        if (this.future == null) {
-            future = executor.submit(this);
-        }
-        return future;
+    public Window getWindow() {
+        return window;
+    }
+
+    public PortalImpl getPortal() {
+        return (PortalImpl) window.getPortal();
     }
 
     @Override
@@ -68,53 +61,15 @@ class WindowTaskImpl implements WindowTask, Runnable {
         }
     }
 
-    public Window doRequest() throws Exception {
-        window.setStartTime(System.currentTimeMillis());
-        final WindowRequest request = new WindowRequest(window);
+    protected void doRequest() throws Exception {
+        final WindowRequest request = new WindowRequest(window.getPortal().getRequest());
         final WindowResponse response = new WindowResponse(window);
+        final RequestDispatcher rd = request.getRequestDispatcher(window.getPath());
         request.setAttribute("$$paoding-rose-portal.window", window);
-        request.getRequestDispatcher(window.getPath()).forward(request, response);
-        window.setDoneTime(System.currentTimeMillis());
-        return window;
+        // !!forward!!
+        rd.forward(request, response);
     }
-
-    public PortalImpl getPortal() {
-        return (PortalImpl) window.getPortal();
-    }
-
-    public Window getWindow() {
-        return window;
-    }
-
-    @Override
-    public boolean cancel(boolean mayInterruptIfRunning) {
-        if (future.cancel(mayInterruptIfRunning)) {
-            getPortal().onWindowCanceled(window);
-            return true;
-        }
-        return false;
-    }
-
-    @Override
-    public boolean isCancelled() {
-        return future.isCancelled();
-    }
-
-    @Override
-    public boolean isDone() {
-        return future.isDone();
-    }
-
-    @Override
-    public void await() throws InterruptedException, ExecutionException {
-        future.get();
-    }
-
-    @Override
-    public void await(long await) throws InterruptedException, ExecutionException, TimeoutException {
-        future.get(await, TimeUnit.MILLISECONDS);
-    }
-
+    
     @Override
     public String toString() {
         return "window [name=" + window.getName() + ", path=" + window.getPath() + "]";

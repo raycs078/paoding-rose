@@ -23,72 +23,28 @@ import java.util.Map;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletInputStream;
-import javax.servlet.ServletRequest;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpSession;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 /**
- * 封装Portal的请求对象，使能够支持并发执行窗口请求
+ * 私有请求包装器，但不继承于 {@link HttpServletRequestWrapper}
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
-final class PortalRequest extends HttpServletRequestWrapper implements HttpServletRequest {
+public class PrivateRequestWrapper implements HttpServletRequest {
 
-    private static final Log logger = LogFactory.getLog(PortalRequest.class);
+    private HttpServletRequest request;
 
-    /**
-     * 封装了原始的 portal 请求对象， 组织了容器的 HttpServletRequestWrapper 链<br>
-     * 即 RequestWrapper 通过不实现 HttpServletRequestWrapper 使得
-     * PortalRequest的setRequest方法能够被容器调用到
-     */
-    private final PrivateRequestWrapper privateRequestWrapper;
-
-    /**
-     * 保存本次 portal 请求的窗口请求对象 (由容器调用setRequest设置进来)
-     */
-    private final ThreadLocal<HttpServletRequest> threadLocalRequests = new ThreadLocal<HttpServletRequest>();
-
-    /**
-     * 构造子
-     * 
-     * @param orginRequest 封装之前访问该 portal 的请求对象
-     */
-    public PortalRequest(HttpServletRequest orginRequest) {
-        super(new PrivateRequestWrapper(orginRequest));
-        privateRequestWrapper = (PrivateRequestWrapper) super.getRequest();
+    public PrivateRequestWrapper(HttpServletRequest request) {
+        this.request = request;
     }
 
-    /**
-     * 设置一个请求对象到这个包装器中， {@link PortalRequest} 将把这个请求对象关联给当前线程。
-     * <p>
-     * 
-     * 这个方法将由web容器(tomcat/resin等)调用
-     */
-    public void setRequest(ServletRequest request) {
-        if (logger.isDebugEnabled()) {
-            logger.debug(String.format("set request: %s", request));
-        }
-        this.threadLocalRequests.set((HttpServletRequest) request);
-    }
-
-    /**
-     * 返回当前邦定到当前线程的请求对象，如果没有则返回 portalNotWrapperRequest 请求对象
-     */
-    public HttpServletRequest getRequest() {
-        HttpServletRequest request = (HttpServletRequest) threadLocalRequests.get();
-        if (request == null) {
-            request = privateRequestWrapper;
-        }
+    protected HttpServletRequest getRequest() {
         return request;
     }
-
-    // ----- HttpServletRequestWrapper的每个方法都得重新覆盖，不解时请看ServletRequestWrapper的代码即知 ----
 
     @Override
     public RequestDispatcher getRequestDispatcher(String path) {
@@ -366,13 +322,6 @@ final class PortalRequest extends HttpServletRequestWrapper implements HttpServl
     @Override
     public int getLocalPort() {
         return getRequest().getLocalPort();
-    }
-
-    // ---------------toString ----------------
-
-    @Override
-    public String toString() {
-        return "PortalRequest for " + privateRequestWrapper.getRequestURI();
     }
 
 }
