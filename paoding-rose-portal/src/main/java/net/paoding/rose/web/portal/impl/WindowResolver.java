@@ -24,6 +24,7 @@ import net.paoding.rose.web.portal.PortalUtils;
 import net.paoding.rose.web.portal.Window;
 
 /**
+ * 解析声明在窗口控制器中的Window参数
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 

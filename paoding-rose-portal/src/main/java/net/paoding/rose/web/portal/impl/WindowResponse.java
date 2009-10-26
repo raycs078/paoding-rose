@@ -100,7 +100,7 @@ class WindowResponse extends HttpServletResponseWrapper {
 
     @Override
     public void sendError(int sc) throws IOException {
-        sendError(sc, "error:" + sc);
+        sendError(sc, "error" + sc + ": " + window.getPath());
     }
 
     @Override

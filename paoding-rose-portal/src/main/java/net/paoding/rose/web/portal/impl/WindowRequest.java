@@ -20,91 +20,97 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 
-import net.paoding.rose.web.portal.Window;
 import net.paoding.rose.web.portal.util.Enumerator;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 /**
+ * 封装窗口请求，使每个窗口都有自己的独立属性空间，同时又能共享共同的portal请求对象的属性
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
 class WindowRequest extends HttpServletRequestWrapper {
 
-    private static final Log logger = LogFactory.getLog(WindowRequest.class);
-
     /**
-     * The request attributes for this request. This is initialized from
-     * the wrapped request, but updates are allowed.
+     * 窗口请求对象私有的、有别于其他窗口的属性
      */
-    protected Map<String, Object> attributes = Collections
+    private Map<String, Object> privateAttributes = Collections
             .synchronizedMap(new HashMap<String, Object>());
 
-    public WindowRequest(Window window) {
-        super(window.getPortal().getRequest());
+    /**
+     * 那些属性是这个窗口所不要的，在此标志
+     */
+    private Set<String> deleteAttributes = Collections.synchronizedSet(new HashSet<String>(4));
+
+    public WindowRequest(HttpServletRequest request) {
+        super(request);
     }
 
     // ------------------------------------------------- ServletRequest Methods
 
     /**
-     * Override the <code>getAttribute()</code> method of the wrapped
-     * request.
+     * 返回这个窗口的私有属性或portal主控请求对象的共同属性
      * 
      * @param name Name of the attribute to retrieve
      */
     public Object getAttribute(String name) {
-        Object value = attributes.get(name);
+        if (deleteAttributes.contains(name)) {
+            return null;
+        }
+        Object value = privateAttributes.get(name);
         if (value == null) {
             value = super.getAttribute(name);
-            if (value != null) {
-                if (logger.isDebugEnabled()) {
-                    logger.debug(String.format("get attribute '%s' from portal request ('%s')",
-                            name, value));
-                }
-            }
         }
         return value;
     }
 
     /**
-     * Override the <code>getAttributeNames()</code> method of the wrapped
-     * request.
+     * 返回这个窗口的私有属性名加portal主控请求对象共同属性的属性名
      */
     @SuppressWarnings("unchecked")
     public Enumeration getAttributeNames() {
-        HashSet<String> keys = new HashSet<String>(attributes.keySet());
+        HashSet<String> keys;
+        synchronized (privateAttributes) {
+            keys = new HashSet<String>(privateAttributes.keySet());
+        }
         Enumeration<String> names = super.getAttributeNames();
         while (names.hasMoreElements()) {
             String name = (String) names.nextElement();
-            keys.add(name);
+            if (!deleteAttributes.contains(name)) {
+                keys.add(name);
+            }
         }
         return new Enumerator(keys);
     }
 
     /**
-     * Override the <code>removeAttribute()</code> method of the wrapped
-     * request.
+     * 实际删除私有属性，如果是窗口共有的portal属性，只是在本窗口中做删除标志，其他窗口还能正常获取
      * 
      * @param name Name of the attribute to remove
      */
     public void removeAttribute(String name) {
-        attributes.remove(name);
+        privateAttributes.remove(name);
+        deleteAttributes.add(name);
     }
 
     /**
-     * Override the <code>setAttribute()</code> method of the wrapped
-     * request.
+     * 
+     * 设置窗口私有属性
      * 
      * @param name Name of the attribute to set
      * @param value Value of the attribute to set
      */
     public void setAttribute(String name, Object value) {
-        attributes.put(name, value);
+        privateAttributes.put(name, value);
+        if (value == null) {
+            deleteAttributes.add(name);
+        } else {
+            deleteAttributes.remove(name);
+        }
     }
 
 }

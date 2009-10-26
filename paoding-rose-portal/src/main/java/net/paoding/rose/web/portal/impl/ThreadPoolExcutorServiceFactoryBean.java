@@ -16,6 +16,7 @@
 package net.paoding.rose.web.portal.impl;
 
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -41,7 +42,7 @@ public class ThreadPoolExcutorServiceFactoryBean implements FactoryBean {
 	@Override
 	@SuppressWarnings("unchecked")
 	public Class getObjectType() {
-		return ExecutorService.class;
+		return ThreadPoolExecutor.class;
 	}
 
 	@Override

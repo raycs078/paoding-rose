@@ -20,7 +20,11 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
@@ -80,29 +84,49 @@ class PortalImpl implements Portal, Invocation, PortalListener {
 
     @Override
     public List<Window> getWindows() {
-        return new ArrayList<Window>(windows);
+        synchronized (windows) {
+            return new ArrayList<Window>(windows);
+        }
     }
 
     @Override
     public Window addWindow(String windowPath) {
-        return this.addWindow(windowPath, windowPath);
+        String windowName = windowPath;
+        return this.addWindow(windowName, windowPath);
     }
 
     @Override
     public Window addWindow(String name, String windowPath) {
-        // 创建 窗口对象，并放到 portal的 model 中
-        WindowImpl window = new WindowImpl(this, name, windowPath);
-        this.windows.add(window);
-        this.invocation.addModel(name, window);
-        
-        // 创建窗口任务器，提交给执行器执行，实现对这个窗口请求的处理和渲染
+        // 创建 窗口对象
+        WindowImpl window = new WindowImpl((Portal) this, name, windowPath);
+
+        // 定义窗口任务
         WindowTaskImpl task = new WindowTaskImpl(window);
+
+        // 注册到相关变量中
+        synchronized (windows) {
+            this.windows.add(window);
+        }
+        this.invocation.addModel(name, window);
+
+        // 事件侦听回调
         onWindowAdded(window);
-        task.submitTo(this.executorService);
-        
+
+        // 提交到执行服务中执行
+        Future<?> future = submitWindow(this.executorService, task);
+        window.setFuture(future);
+
         // 返回窗口对象
         return window;
     }
+
+    @SuppressWarnings("unchecked")
+    protected Future<?> submitWindow(ExecutorService executor, WindowTaskImpl task) {
+        Future<?> future = executor.submit(task);
+        return new WindowFuture(future, task.getWindow());
+    }
+    
+    //-------------实现toString()---------------F
 
     @Override
     public String toString() {
@@ -348,5 +372,48 @@ class PortalImpl implements Portal, Invocation, PortalListener {
     @Override
     public void setRequest(HttpServletRequest request) {
         invocation.setRequest(request);
+    }
+
+    class WindowFuture<T> implements Future<T> {
+
+        private final Future<T> future;
+
+        private final Window window;
+
+        public WindowFuture(Future<T> future, Window window) {
+            this.future = future;
+            this.window = window;
+        }
+
+        @Override
+        public boolean cancel(boolean mayInterruptIfRunning) {
+            if (future.cancel(mayInterruptIfRunning)) {
+                ((PortalListener) PortalImpl.this).onWindowCanceled(window);
+                return true;
+            }
+            return false;
+        }
+
+        @Override
+        public T get() throws InterruptedException, ExecutionException {
+            return future.get();
+        }
+
+        @Override
+        public T get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException,
+                TimeoutException {
+            return future.get(timeout, unit);
+        }
+
+        @Override
+        public boolean isCancelled() {
+            return future.isCancelled();
+        }
+
+        @Override
+        public boolean isDone() {
+            return future.isDone();
+        }
+
     }
 }
