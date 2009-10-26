@@ -15,9 +15,7 @@
  */
 package net.paoding.rose.ar.hibernate.interceptors;
 
-import java.lang.annotation.Annotation;
-import java.util.ArrayList;
-import java.util.List;
+import java.lang.reflect.Method;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -39,12 +37,15 @@ public class OpenSessionInViewInterceptor extends HibernateAccessor implements
         ControllerInterceptor {
 
     private int priority;
-
+    
     @Override
-    public List<Class<? extends Annotation>> getAnnotationClasses() {
-        List<Class<? extends Annotation>> list = new ArrayList<Class<? extends Annotation>>();
-        list.add(OpenSessionInView.class);
-        return list;
+    public boolean isForAction(Class<?> controllerClazz, Method actionMethod) {
+        return actionMethod.isAnnotationPresent(OpenSessionInView.class);
+    }
+    
+    @Override
+    public boolean isForDispatcher(Dispatcher dispatcher) {
+        return true;
     }
 
     /**
@@ -55,11 +56,6 @@ public class OpenSessionInViewInterceptor extends HibernateAccessor implements
      */
     public OpenSessionInViewInterceptor() {
         setFlushMode(FLUSH_NEVER);
-    }
-
-    @Override
-    public boolean isSupportDispatcher(Dispatcher dispatcher) {
-        return true;
     }
 
     @Override
