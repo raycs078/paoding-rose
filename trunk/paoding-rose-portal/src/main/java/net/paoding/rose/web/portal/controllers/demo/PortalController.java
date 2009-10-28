@@ -30,7 +30,7 @@ public class PortalController {
         portal.addWindow("content1", "/test/uri?abc=asd");
         portal.addWindow("content2", "/test/uri?abc=asd");
         portal.addWindow("content3", "/test/uri?abc=asd");
-        portal.addWindow("content4", "/test/uri?abc=asd").forRender(false);
+        portal.addWindow("content4", "/test/uri?abc=asd");
         return "portal-home";
     }
 }

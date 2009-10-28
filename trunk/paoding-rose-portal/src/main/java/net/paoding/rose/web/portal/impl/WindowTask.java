@@ -15,61 +15,58 @@
  */
 package net.paoding.rose.web.portal.impl;
 
-import javax.servlet.RequestDispatcher;
+import java.util.concurrent.ExecutorService;
 
-import net.paoding.rose.web.portal.Window;
+import javax.servlet.RequestDispatcher;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
+ * {@link WindowTask} 把一个窗口任务进行封装，使可以提交到 {@link ExecutorService} 执行。
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
-final class WindowTaskImpl implements Runnable {
+final class WindowTask implements Runnable {
 
-    private static final Log logger = LogFactory.getLog(WindowTaskImpl.class);
+    private static final Log logger = LogFactory.getLog(WindowTask.class);
 
     private final WindowImpl window;
 
-    public WindowTaskImpl(WindowImpl window) {
+    public WindowTask(WindowImpl window) {
         if (window == null) {
             throw new NullPointerException("window");
         }
         this.window = window;
     }
 
-    public Window getWindow() {
+    public WindowImpl getWindow() {
         return window;
-    }
-
-    public PortalImpl getPortal() {
-        return (PortalImpl) window.getPortal();
     }
 
     @Override
     public void run() {
         try {
-            getPortal().onWindowStarted(window);
-            doRequest();
-            getPortal().onWindowDone(window);
+            // started
+            window.getPortal().onWindowStarted(window);
+
+            // doRequest
+            final WindowRequest request = new WindowRequest(window.getPortal().getRequest());
+            final WindowResponse response = new WindowResponse(window);
+            final RequestDispatcher rd = request.getRequestDispatcher(window.getPath());
+            request.setAttribute("$$paoding-rose-portal.window", window);
+            rd.forward(request, response);
+
+            // done!
+            window.getPortal().onWindowDone(window);
         } catch (Throwable e) {
             logger.error("", e);
             window.setThrowable(e);
-            getPortal().onWindowError(window);
+            window.getPortal().onWindowError(window);
         }
     }
 
-    protected void doRequest() throws Exception {
-        final WindowRequest request = new WindowRequest(window.getPortal().getRequest());
-        final WindowResponse response = new WindowResponse(window);
-        final RequestDispatcher rd = request.getRequestDispatcher(window.getPath());
-        request.setAttribute("$$paoding-rose-portal.window", window);
-        // !!forward!!
-        rd.forward(request, response);
-    }
-    
     @Override
     public String toString() {
         return "window [name=" + window.getName() + ", path=" + window.getPath() + "]";

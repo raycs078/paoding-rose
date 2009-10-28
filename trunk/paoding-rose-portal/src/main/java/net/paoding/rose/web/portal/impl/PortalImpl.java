@@ -59,7 +59,7 @@ class PortalImpl implements Portal, Invocation, PortalListener {
 
     private Invocation invocation;
 
-    private List<Window> windows = new LinkedList<Window>();
+    private List<WindowImpl> windows = new LinkedList<WindowImpl>();
 
     private long timeout;
 
@@ -83,9 +83,9 @@ class PortalImpl implements Portal, Invocation, PortalListener {
     }
 
     @Override
-    public List<Window> getWindows() {
+    public List<WindowImpl> getWindows() {
         synchronized (windows) {
-            return new ArrayList<Window>(windows);
+            return new ArrayList<WindowImpl>(windows);
         }
     }
 
@@ -98,10 +98,10 @@ class PortalImpl implements Portal, Invocation, PortalListener {
     @Override
     public Window addWindow(String name, String windowPath) {
         // 创建 窗口对象
-        WindowImpl window = new WindowImpl((Portal) this, name, windowPath);
+        WindowImpl window = new WindowImpl((PortalImpl) this, name, windowPath);
 
         // 定义窗口任务
-        WindowTaskImpl task = new WindowTaskImpl(window);
+        WindowTask task = new WindowTask(window);
 
         // 注册到相关变量中
         synchronized (windows) {
@@ -121,11 +121,11 @@ class PortalImpl implements Portal, Invocation, PortalListener {
     }
 
     @SuppressWarnings("unchecked")
-    protected Future<?> submitWindow(ExecutorService executor, WindowTaskImpl task) {
+    protected Future<?> submitWindow(ExecutorService executor, WindowTask task) {
         Future<?> future = executor.submit(task);
         return new WindowFuture(future, task.getWindow());
     }
-    
+
     //-------------实现toString()---------------F
 
     @Override
