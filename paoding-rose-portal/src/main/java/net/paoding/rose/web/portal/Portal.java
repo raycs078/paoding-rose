@@ -73,6 +73,6 @@ public interface Portal extends Invocation {
      * 返回添加到这个 {@link Portal} 对象上的窗口
      * @return
      */
-    public List<Window> getWindows();
+    public List<? extends Window> getWindows();
 
 }

@@ -27,7 +27,6 @@ import net.paoding.rose.web.ControllerInterceptorAdapter;
 import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.portal.Portal;
 import net.paoding.rose.web.portal.PortalListener;
-import net.paoding.rose.web.portal.Window;
 
 /**
  * 这个拦截器只拦截 Portal 控制器方法，用于等待所有该 portal 的窗口执行完成或进行超时取消。
@@ -91,19 +90,17 @@ public class PortalWaitInterceptor extends ControllerInterceptorAdapter {
         }
         int winSize = portal.getWindows().size();
         int winIndex = 0;
-        for (Window window : portal.getWindows()) {
+        for (WindowImpl window : portal.getWindows()) {
             winIndex++;
             Future<?> future = window.getFuture();
-            if (future.isDone() || future.isCancelled() || !window.isForRender()) {
+            if (future.isDone()) {
                 if (logger.isDebugEnabled()) {
-                    if (future.isDone()) {
-                        logger.debug("[" + winIndex + "/" + winSize + "] continue[done]: "
-                                + window.getName());
-                    } else if (future.isCancelled()) {
+                    if (future.isCancelled()) {
                         logger.debug("[" + winIndex + "/" + winSize + "] continue[cancelled]: "
                                 + window.getName());
-                    } else if (!window.isForRender()) {
-                        logger.debug("[" + winIndex + "/" + winSize + "] continue[notForRender]: "
+                    }
+                    if (future.isDone()) {
+                        logger.debug("[" + winIndex + "/" + winSize + "] continue[done]: "
                                 + window.getName());
                     }
                 }

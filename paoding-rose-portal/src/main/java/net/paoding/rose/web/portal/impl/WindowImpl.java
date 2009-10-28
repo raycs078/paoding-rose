@@ -19,7 +19,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Future;
 
-import net.paoding.rose.web.portal.Portal;
+import javax.servlet.http.HttpServletResponse;
+
 import net.paoding.rose.web.portal.Window;
 
 /**
@@ -27,7 +28,7 @@ import net.paoding.rose.web.portal.Window;
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
-class WindowImpl implements Window  {
+class WindowImpl implements Window {
 
     private String name;
 
@@ -37,25 +38,23 @@ class WindowImpl implements Window  {
 
     private Throwable throwable;
 
-    private int statusCode = 200;
+    private int statusCode = -1;
 
     private String statusMessage = "";
 
     private Map<String, Object> attributes;
 
-    private Portal portal;
-
-    private boolean forRender = true;
+    private PortalImpl portal;
 
     private Future<?> future;
 
-    public WindowImpl(Portal portal, String name, String windowPath) {
+    public WindowImpl(PortalImpl portal, String name, String windowPath) {
         this.portal = portal;
         this.name = name;
         this.path = windowPath;
     }
 
-    public Portal getPortal() {
+    public PortalImpl getPortal() {
         return portal;
     }
 
@@ -100,6 +99,11 @@ class WindowImpl implements Window  {
         return buffer == null ? "" : buffer.toString();
     }
 
+    @Override
+    public int getContentLength() {
+        return buffer == null ? 0 : buffer.length();
+    }
+
     void appendContent(String content) {
         if (buffer == null) {
             buffer = new StringBuilder();
@@ -126,6 +130,11 @@ class WindowImpl implements Window  {
     }
 
     @Override
+    public boolean isSuccess() {
+        return future.isDone() && getStatusCode() == HttpServletResponse.SC_OK;
+    }
+
+    @Override
     public String getName() {
         return name;
     }
@@ -140,7 +149,6 @@ class WindowImpl implements Window  {
         return throwable;
     }
 
-    @Override
     public void setThrowable(Throwable throwable) {
         this.throwable = throwable;
     }
@@ -163,17 +171,6 @@ class WindowImpl implements Window  {
     @Override
     public String getStatusMessage() {
         return statusMessage;
-    }
-
-    @Override
-    public WindowImpl forRender(boolean forRender) {
-        this.forRender = forRender;
-        return this;
-    }
-
-    @Override
-    public boolean isForRender() {
-        return forRender;
     }
 
     @Override
