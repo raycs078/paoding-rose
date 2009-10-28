@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -64,16 +65,9 @@ public class SpringJdbcTemplateDataAccess implements DataAccess {
         // 用 :name 参数的值填充列表
         final List<Object> values = new ArrayList<Object>();
 
-        sql = processParameters(sql, parameters, values);
+        sql = resolveParam(sql, parameters, values);
 
-        if (!values.isEmpty()) {
-
-            return jdbcTemplate.query(sql, values.toArray(), rowMapper);
-
-        } else {
-
-            return jdbcTemplate.query(sql, rowMapper);
-        }
+        return select(sql, values.toArray(), rowMapper);
     }
 
     @Override
@@ -86,16 +80,9 @@ public class SpringJdbcTemplateDataAccess implements DataAccess {
         // 用 :name 参数的值填充列表
         final List<Object> values = new ArrayList<Object>();
 
-        sql = processParameters(sql, parameters, values);
+        sql = resolveParam(sql, parameters, values);
 
-        if (!values.isEmpty()) {
-
-            return jdbcTemplate.update(sql, values.toArray());
-
-        } else {
-
-            return jdbcTemplate.update(sql);
-        }
+        return update(sql, values.toArray());
     }
 
     @Override
@@ -108,18 +95,74 @@ public class SpringJdbcTemplateDataAccess implements DataAccess {
         // 用 :name 参数的值填充列表
         final List<Object> values = new ArrayList<Object>();
 
-        sql = processParameters(sql, parameters, values);
+        sql = resolveParam(sql, parameters, values);
 
-        if (!values.isEmpty()) {
+        return insertReturnId(sql, values.toArray());
+    }
+
+    /**
+     * 执行 SELECT 语句。
+     * 
+     * @param sql - 执行的语句
+     * @param parameters - 参数
+     * @param rowMapper - 对象映射方式
+     * 
+     * @return 返回的对象列表
+     */
+    protected List<?> select(String sql, Object[] parameters, RowMapper rowMapper) {
+
+        if (parameters.length > 0) {
+
+            return jdbcTemplate.query(sql, parameters, rowMapper);
+
+        } else {
+
+            return jdbcTemplate.query(sql, rowMapper);
+        }
+    }
+
+    /**
+     * 执行 UPDATE / DELETE 语句。
+     * 
+     * @param sql - 执行的语句
+     * @param parameters - 参数
+     * 
+     * @return 更新的记录数目
+     */
+    protected int update(String sql, Object[] parameters) {
+
+        if (parameters.length > 0) {
+
+            return jdbcTemplate.update(sql, parameters);
+
+        } else {
+
+            return jdbcTemplate.update(sql);
+        }
+    }
+
+    /**
+     * 执行 INSERT 语句，并返回插入对象的 ID.
+     * 
+     * @param sql - 执行的语句
+     * @param parameters - 参数
+     * 
+     * @return 插入对象的 ID
+     */
+    protected Number insertReturnId(String sql, Object[] parameters) {
+
+        if (parameters.length > 0) {
 
             PreparedStatementCallbackReturnId callbackReturnId = new PreparedStatementCallbackReturnId(
-                    new ArgPreparedStatementSetter(values.toArray()));
+                    new ArgPreparedStatementSetter(parameters));
+
             return (Number) jdbcTemplate.execute(new GenerateKeysPreparedStatementCreator(sql),
                     callbackReturnId);
 
         } else {
 
             PreparedStatementCallbackReturnId callbackReturnId = new PreparedStatementCallbackReturnId();
+
             return (Number) jdbcTemplate.execute(new GenerateKeysPreparedStatementCreator(sql),
                     callbackReturnId);
         }
@@ -134,12 +177,15 @@ public class SpringJdbcTemplateDataAccess implements DataAccess {
      * 
      * @return 包含 '?' 的 SQL 语句
      */
-    protected String processParameters(String sql, Map<String, ?> parameters,
-            final List<Object> values) {
+    private String resolveParam(String sql, Map<String, ?> parameters, final List<Object> values) {
 
         // 匹配符合  :name 格式的参数
         Matcher matcher = PATTERN.matcher(sql);
         if (matcher.find()) {
+
+            StringBuilder builder = new StringBuilder();
+
+            int index = 0;
 
             do {
                 // 提取参数名称
@@ -148,14 +194,14 @@ public class SpringJdbcTemplateDataAccess implements DataAccess {
                 Object value = null;
 
                 // 解析  a.b.c 类型的名称 
-                int index = name.indexOf('.');
-                if (index >= 0) {
+                int find = name.indexOf('.');
+                if (find >= 0) {
 
                     // 用  BeanWrapper 获取属性值
-                    Object bean = parameters.get(name.substring(0, index));
+                    Object bean = parameters.get(name.substring(0, find));
                     if (bean != null) {
                         BeanWrapper beanWrapper = new BeanWrapperImpl(bean);
-                        value = beanWrapper.getPropertyValue(name.substring(index + 1));
+                        value = beanWrapper.getPropertyValue(name.substring(find + 1));
                     }
 
                 } else {
@@ -163,11 +209,47 @@ public class SpringJdbcTemplateDataAccess implements DataAccess {
                     value = parameters.get(name);
                 }
 
-                values.add(value);
+                // 拼装查询语句
+                builder.append(sql.substring(index, matcher.start()));
+
+                if (value instanceof Collection<?>) {
+
+                    // 拼装 IN (...) 的查询条件
+                    builder.append('(');
+
+                    Collection<?> collection = (Collection<?>) value;
+
+                    if (collection.isEmpty()) {
+                        builder.append("NULL");
+                    } else {
+                        builder.append('?');
+                    }
+
+                    for (int i = 1; i < collection.size(); i++) {
+                        builder.append(", ?");
+                    }
+
+                    builder.append(')');
+
+                    // 保存参数值
+                    values.addAll(collection);
+
+                } else {
+                    // 拼装普通的查询条件
+                    builder.append('?');
+
+                    // 保存参数值
+                    values.add(value);
+                }
+
+                index = matcher.end();
 
             } while (matcher.find());
 
-            return matcher.replaceAll("?");
+            // 拼装查询语句
+            builder.append(sql.substring(index));
+
+            return builder.toString();
         }
 
         return sql;
