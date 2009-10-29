@@ -5,34 +5,32 @@ import net.paoding.rose.jade.jadeinterface.exql.ExqlContext;
 import net.paoding.rose.jade.jadeinterface.exql.ExqlUnit;
 
 /**
- * 原样输出文本的语句单元, 通常是语句中不含表达式的部分。
+ * 条件输出子单元的语句单元, 例如一个: {...}? 语句段。
  * 
  * @author han.liao
  */
-public class TextUnit implements ExqlUnit {
+public class OptionUnit implements ExqlUnit {
 
-    private final String text;
+    private final ExqlUnit unit;
 
-    /**
-     * 构造输出文本的语句单元。
-     * 
-     * @param text - 输出的文本
-     */
-    public TextUnit(String text) {
-        this.text = text;
+    public OptionUnit(ExqlUnit unit) {
+        this.unit = unit;
     }
 
     @Override
     public boolean isValid(ExprResolver exprResolver) throws Exception {
 
-        // 文本始终有效
+        // 条件单元始终有效, 因为若子单元无效
+        // 它就不会产生输出。
         return true;
     }
 
     @Override
     public void fill(ExqlContext exqlContext, ExprResolver exprResolver) throws Exception {
 
-        // 输出未经转义的文本
-        exqlContext.fillText(text);
+        // 当且仅当子单元有效时输出
+        if (unit.isValid(exprResolver)) {
+            unit.fill(exqlContext, exprResolver);
+        }
     }
 }

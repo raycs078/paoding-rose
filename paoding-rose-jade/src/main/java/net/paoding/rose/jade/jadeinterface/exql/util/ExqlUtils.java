@@ -14,6 +14,18 @@ import java.util.Map;
 public class ExqlUtils {
 
     /**
+     * 检查对象是否有效。
+     * 
+     * @param obj - 检查的对象
+     * 
+     * @return true / false
+     */
+    public static boolean isValid(Object obj) {
+
+        return (obj != null);
+    }
+
+    /**
      * 将对象转换成: Boolean 值。
      * 
      * @param obj - 用于转换的对象
@@ -55,7 +67,7 @@ public class ExqlUtils {
      */
     public static Object[] asArray(Object obj) {
 
-        if (obj != null && obj.getClass().isArray()) {
+        if ((obj != null) && obj.getClass().isArray()) {
 
             Class<?> componentType = obj.getClass().getComponentType();
 
@@ -107,24 +119,5 @@ public class ExqlUtils {
 
             return Arrays.asList(obj); // 其他类型, 返回包含单个对象的集合
         }
-    }
-
-    /**
-     * 比较表达式输出的对象是否相等。
-     * 
-     * @param obj1 - 比较的对象 1
-     * @param obj2 - 比较的对象 2
-     * 
-     * @return true / false
-     */
-    public static boolean isEqual(Object obj1, Object obj2) {
-
-        // 如果有对象为空，表达式恒不等            
-        if (obj1 == null || obj2 == null) {
-            return false;
-        }
-
-        // 临时：用强类型的比较
-        return obj1.equals(obj2);
     }
 }

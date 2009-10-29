@@ -6,7 +6,7 @@
 	<groupId>net.paoding</groupId>
 	<artifactId>paoding-rose-jade</artifactId>
 	<packaging>jar</packaging>
-	<version>0.9.4</version>
+	<version>0.9-SNAPSHOT</version>
 	<name>paoding-rose-jade</name>
 
 	<!-- 开发人员说明 -->

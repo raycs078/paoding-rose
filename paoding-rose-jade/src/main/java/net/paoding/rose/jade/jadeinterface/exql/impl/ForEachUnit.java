@@ -32,6 +32,20 @@ public class ForEachUnit implements ExqlUnit {
     }
 
     @Override
+    public boolean isValid(ExprResolver exprResolver) throws Exception {
+
+        // 解释表达式内容
+        Object obj = exprResolver.executeExpr(expr);
+
+        if (ExqlUtils.isValid(obj)) {
+            return unit.isValid(exprResolver);
+        }
+
+        // 表达式内容为空
+        return false;
+    }
+
+    @Override
     public void fill(ExqlContext exqlContext, ExprResolver exprResolver) throws Exception {
 
         // 解释表达式内容
