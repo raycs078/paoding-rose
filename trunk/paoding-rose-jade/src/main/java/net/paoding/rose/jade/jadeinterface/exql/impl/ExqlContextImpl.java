@@ -71,7 +71,7 @@ public class ExqlContextImpl implements ExqlContext {
             // IN :varlist --> IN (?, ?, ...)
             fillCollection((Collection<?>) obj);
 
-        } else if (obj != null && obj.getClass().isArray()) {
+        } else if ((obj != null) && obj.getClass().isArray()) {
 
             // 用数组构造  Collection 容器
             fillCollection(Arrays.asList((Object[]) obj));

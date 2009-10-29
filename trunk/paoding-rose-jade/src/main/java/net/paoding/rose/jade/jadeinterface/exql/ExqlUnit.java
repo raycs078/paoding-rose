@@ -8,6 +8,17 @@ package net.paoding.rose.jade.jadeinterface.exql;
 public interface ExqlUnit {
 
     /**
+     * 检查单元的内容是否有效。
+     * 
+     * @param exprResolver - 解析表达式
+     * 
+     * @return 内容是否有效
+     * 
+     * @throws Exception
+     */
+    boolean isValid(ExprResolver exprResolver) throws Exception;
+
+    /**
      * 输出单元的语句内容。
      * 
      * @param exqlContext - 输出上下文

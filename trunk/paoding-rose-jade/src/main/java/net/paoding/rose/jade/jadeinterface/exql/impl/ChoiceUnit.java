@@ -42,6 +42,27 @@ public class ChoiceUnit implements ExqlUnit {
     }
 
     @Override
+    public boolean isValid(ExprResolver exprResolver) throws Exception {
+
+        // 解释表达式内容
+        Object obj = exprResolver.executeExpr(expr);
+
+        if (ExqlUtils.asBoolean(obj)) {
+
+            // 检查第一个单元
+            return unitIfTrue.isValid(exprResolver);
+
+        } else if (unitIfFalse != null) {
+
+            // 检查第二个单元
+            return unitIfFalse.isValid(exprResolver);
+        }
+
+        // 条件单元有效
+        return true;
+    }
+
+    @Override
     public void fill(ExqlContext exqlContext, ExprResolver exprResolver) throws Exception {
 
         // 解释表达式内容

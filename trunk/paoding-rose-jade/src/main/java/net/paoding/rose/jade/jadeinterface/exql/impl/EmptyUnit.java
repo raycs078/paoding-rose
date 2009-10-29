@@ -12,6 +12,12 @@ import net.paoding.rose.jade.jadeinterface.exql.ExqlUnit;
 public class EmptyUnit implements ExqlUnit {
 
     @Override
+    public boolean isValid(ExprResolver exprResolver) throws Exception {
+        // Empty unit is always valid.
+        return true;
+    }
+
+    @Override
     public void fill(ExqlContext exqlContext, ExprResolver exprResolver) throws Exception {
         // Do nothing.
     }

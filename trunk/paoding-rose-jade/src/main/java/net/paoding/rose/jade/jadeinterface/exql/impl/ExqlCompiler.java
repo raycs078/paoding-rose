@@ -36,7 +36,7 @@ public class ExqlCompiler {
 
     // 正则表达式
     private static final Pattern PATTERN_KEYWORD = Pattern.compile( // NL
-            "(\\:[a-zA-Z0-9_\\.]*)|#(#|if|for)?");
+            "(\\:[a-zA-Z0-9_\\.]*)|\\{([^\\{\\}#]*)\\}\\?|#(#|if|for)?");
 
     private static final Pattern PATTERN_IN = Pattern.compile(// NL
             "([a-zA-Z0-9_]*)\\s+in\\s+(.+)");
@@ -87,7 +87,7 @@ public class ExqlCompiler {
         // 组装位置
         int fromIndex = 0;
 
-        while (position < length && matcher.find(position)) {
+        while ((position < length) && matcher.find(position)) {
 
             // 修改当前位置
             position = matcher.end();
@@ -107,8 +107,27 @@ public class ExqlCompiler {
                 fromIndex = position;
             }
 
+            // 检查  {...}? 的语法
+            String group = matcher.group(2);
+            if (group != null) {
+
+                // 创建文本子句
+                if (matcher.start() > fromIndex) {
+                    units.add(new TextUnit(pattern.substring(fromIndex, matcher.start())));
+                }
+
+                // 编译  {...} 内部的子句
+                ExqlCompiler compiler = new ExqlCompiler(group);
+                ExqlUnit unit = compiler.compileUnit();
+
+                // 创建   {...}? 形式的子句
+                units.add(new OptionUnit(unit));
+
+                fromIndex = position;
+            }
+
             // 检查  # 后面的关键字
-            String keyword = matcher.group(2);
+            String keyword = matcher.group(3);
 
             // 处理  #(:expr) 形式的子句
             if (keyword == null) {
@@ -348,11 +367,11 @@ public class ExqlCompiler {
     private ExqlUnit compileBlock() {
 
         // 查找匹配的  {...}
-        String content = findBrace(BLOCK_LEFT, BLOCK_RIGHT);
-        if (content != null) {
+        String group = findBrace(BLOCK_LEFT, BLOCK_RIGHT);
+        if (group != null) {
 
             // 编译  {...} 内部的子句
-            ExqlCompiler compiler = new ExqlCompiler(content);
+            ExqlCompiler compiler = new ExqlCompiler(group);
             return compiler.compileUnit();
         }
 
@@ -407,9 +426,10 @@ public class ExqlCompiler {
     public static void main(String... args) throws Exception {
 
         String string = "SELECT :expr1, #(:expr2.class),"
-                + " ##(:expr3) WHERE #if(:expr4) {e = :expr4} #else {e IS NULL}"
-                + "#for(variant in :expr5.bytes) { AND c = :variant}" // NL
-                + " BY ##(:expr1) ASC";
+                + " WHERE #if(:expr3) {e = :expr3} #else {e IS NULL}"
+                + "#for(variant in :expr4.bytes) { AND c = :variant}" // NL
+                + " {AND d = :expr5}? {AND f = :expr6}?" // NL
+                + " BY ##(:expr7) ASC";
 
         // 在输入中查找  PREFIX 字符
         Matcher matcher = PATTERN_KEYWORD.matcher(string);
@@ -422,6 +442,7 @@ public class ExqlCompiler {
             System.out.println("group 0: " + matcher.group(0));
             System.out.println("group 1: " + matcher.group(1));
             System.out.println("group 2: " + matcher.group(2));
+            System.out.println("group 3: " + matcher.group(3));
 
             position = matcher.end();
         }
@@ -449,6 +470,8 @@ public class ExqlCompiler {
         map.put("expr3", "expr3");
         map.put("expr4", "expr4");
         map.put("expr5", "expr5");
+        // map.put("expr6", "expr6");
+        map.put("expr7", "expr7");
 
         System.out.println(pattern.execute(context, map));
         System.out.println(Arrays.toString(context.getParams()));
