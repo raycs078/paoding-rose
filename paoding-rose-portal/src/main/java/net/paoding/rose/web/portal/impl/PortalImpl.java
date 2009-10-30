@@ -20,11 +20,8 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
@@ -374,46 +371,4 @@ class PortalImpl implements Portal, Invocation, PortalListener {
         invocation.setRequest(request);
     }
 
-    class WindowFuture<T> implements Future<T> {
-
-        private final Future<T> future;
-
-        private final Window window;
-
-        public WindowFuture(Future<T> future, Window window) {
-            this.future = future;
-            this.window = window;
-        }
-
-        @Override
-        public boolean cancel(boolean mayInterruptIfRunning) {
-            if (future.cancel(mayInterruptIfRunning)) {
-                ((PortalListener) PortalImpl.this).onWindowCanceled(window);
-                return true;
-            }
-            return false;
-        }
-
-        @Override
-        public T get() throws InterruptedException, ExecutionException {
-            return future.get();
-        }
-
-        @Override
-        public T get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException,
-                TimeoutException {
-            return future.get(timeout, unit);
-        }
-
-        @Override
-        public boolean isCancelled() {
-            return future.isCancelled();
-        }
-
-        @Override
-        public boolean isDone() {
-            return future.isDone();
-        }
-
-    }
 }
