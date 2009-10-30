@@ -28,14 +28,14 @@ http://www.springframework.org/schema/aop http://www.springframework.org/schema/
 		class="net.paoding.rose.web.portal.impl.PortalBeanPostProcessor" />
 	
 	<bean id="portalFactory" class="net.paoding.rose.web.portal.impl.PortalFactoryImpl">
-		<property name="executorService" ref="portalExecutor" />
+		<property name="executorService" ref="portalExecutorService" />
 		<property name="portalListener" ref="portalListeners" />
 	</bean>
 
-	<bean id="portalExecutor"
+	<bean id="portalExecutorService"
 		class="net.paoding.rose.web.portal.impl.ThreadPoolExcutorServiceFactoryBean">
 		<property name="threadPoolTaskExecutor">
-			<bean class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor"/>
+			<bean id="portalExecutor" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor"/>
 		</property>
 	</bean>
 
