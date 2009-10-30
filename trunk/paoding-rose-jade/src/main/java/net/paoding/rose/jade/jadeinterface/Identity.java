@@ -46,6 +46,6 @@ public class Identity extends Number {
 
     @Override
     public String toString() {
-        return number.toString();
+        return Long.toString(number.longValue());
     }
 }

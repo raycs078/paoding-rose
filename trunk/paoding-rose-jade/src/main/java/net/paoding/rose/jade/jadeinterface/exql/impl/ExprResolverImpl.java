@@ -25,7 +25,7 @@ public class ExprResolverImpl implements ExprResolver {
     private static final Pattern PREFIX = Pattern.compile("\\:([a-zA-Z0-9_\\.]*)");
 
     // 表达式的缓存
-    protected final ConcurrentHashMap<String, Expression> cache = new ConcurrentHashMap<String, Expression>();
+    protected static final ConcurrentHashMap<String, Expression> cache = new ConcurrentHashMap<String, Expression>();
 
     // Jexl 上下文
     protected final JexlContext context;
