@@ -20,11 +20,9 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import net.paoding.rose.web.portal.Portal;
 import net.paoding.rose.web.portal.PortalListener;
 
 /**
- * {@link Portal} 的实现类，Portal 框架的核心类。
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
