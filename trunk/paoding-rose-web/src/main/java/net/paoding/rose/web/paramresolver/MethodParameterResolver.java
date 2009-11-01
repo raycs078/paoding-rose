@@ -18,6 +18,7 @@ package net.paoding.rose.web.paramresolver;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 
+import net.paoding.rose.web.annotation.FlashParam;
 import net.paoding.rose.web.annotation.Param;
 import net.paoding.rose.web.impl.thread.InvocationBean;
 import net.paoding.rose.web.impl.validation.ParameterBindingResult;
@@ -45,52 +46,46 @@ public final class MethodParameterResolver {
 
     private final String[] parameterNames;
 
-    private final Param[] paramAnnotations;
+    private final ParamResolver[] resolvers;
 
-    private final Class<?>[] parameterTypes;
-
-    private final ParamResolverBean[] resolvers;
-
-    private final int[][] reduplatedResolverCount;
+    private final ParamMetaData[] paramMetaDatas;
 
     public MethodParameterResolver(Class<?> controllerClazz, Method method,
             ParameterNameDiscovererImpl parameterNameDiscoverer, ResolverFactory resolverFactory) {
         this.method = method;
-        this.parameterTypes = method.getParameterTypes();
-        this.parameterNames = parameterNameDiscoverer.getParameterNames(method);
-        this.paramAnnotations = getParamAnnotations(method);
-        resolvers = new ParamResolverBean[parameterTypes.length];
-        reduplatedResolverCount = new int[parameterTypes.length][2];
-        for (int i = 0; i < parameterTypes.length; i++) {
-            Class<?> parameterType = parameterTypes[i];
-            resolvers[i] = resolverFactory.supports(parameterType, controllerClazz, method);
-            if (resolvers[i] != null) {
-                reduplatedResolverCount[i][0] = 1;
-                reduplatedResolverCount[i][1] = 0;
-                for (int j = 0; j < i; j++) {
-                    if (resolvers[i] == resolvers[j]) {
-                        reduplatedResolverCount[j][0] += 1;
-                        reduplatedResolverCount[i][0] += 1;
-                        reduplatedResolverCount[i][1] += 1;
-                    }
-                }
-            }
-        }
-    }
-
-    private Param[] getParamAnnotations(Method method) {
         Class<?>[] parameterTypes = method.getParameterTypes();
-        Annotation[][] parameterAnnotations = method.getParameterAnnotations();
-        Param[] paramAnnotations = new Param[parameterTypes.length];
-        for (int i = 0; i < paramAnnotations.length; i++) {
-            Annotation[] annotations = parameterAnnotations[i];
-            for (Annotation annotation : annotations) {
-                if (annotation instanceof Param) {
-                    paramAnnotations[i] = Param.class.cast(annotation);
+        parameterNames = parameterNameDiscoverer.getParameterNames(method);
+        resolvers = new ParamResolver[parameterTypes.length];
+        paramMetaDatas = new ParamMetaData[parameterTypes.length];
+        // 
+        int[][] replicatedResolverCount = new int[parameterTypes.length][2];
+        for (int i = 0; i < parameterTypes.length; i++) {
+            replicatedResolverCount[i][0] = 1;
+            replicatedResolverCount[i][1] = 0;
+            for (int j = 0; j < i; j++) {
+                if (parameterTypes[i] == parameterTypes[j]) {
+                    replicatedResolverCount[j][0] += 1;
+                    replicatedResolverCount[i][0] += 1;
+                    replicatedResolverCount[i][1] += 1;
                 }
             }
         }
-        return paramAnnotations;
+        //
+        Annotation[][] parameterAnnotations = method.getParameterAnnotations();
+        for (int i = 0; i < parameterTypes.length; i++) {
+            ParamMetaDataImpl paramMetaData = new ParamMetaDataImpl(controllerClazz, method,
+                    parameterTypes[i], parameterNames[i], replicatedResolverCount[i][0],
+                    replicatedResolverCount[i][1]);
+            paramMetaDatas[i] = paramMetaData;
+            resolvers[i] = resolverFactory.supports(paramMetaData);
+            for (Annotation annotation : parameterAnnotations[i]) {
+                if (annotation instanceof Param) {
+                    paramMetaData.setParamAnnotation(Param.class.cast(annotation));
+                } else if (annotation instanceof FlashParam) {
+                    paramMetaData.setFlashParamAnnotation(FlashParam.class.cast(annotation));
+                }
+            }
+        }
     }
 
     public String[] getParameterNames() {
@@ -102,32 +97,31 @@ public final class MethodParameterResolver {
     }
 
     public Param getParamAnnotationAt(int index) {
-        return this.paramAnnotations[index];
+        return this.paramMetaDatas[index].getParamAnnotation();
     }
 
     // ---------------------------------------------------------
 
     public Object[] resolve(final InvocationBean inv,
             final ParameterBindingResult parameterBindingResult) throws Exception {
-        Object[] parameters = new Object[parameterTypes.length];
+        Object[] parameters = new Object[paramMetaDatas.length];
         for (int i = 0; i < resolvers.length; i++) {
             if (resolvers[i] == null) {
                 continue;
             }
             String parameterName = parameterNames[i];
-            Class<?> parameterType = parameterTypes[i];
-            Param paramAnnotation = paramAnnotations[i];
+            Class<?> parameterType = paramMetaDatas[i].getParamType();
             try {
                 if (parameterName == null) {
-                    if (ClassUtils.isPrimitiveOrWrapper(parameterTypes[i])) {
+                    if (ClassUtils.isPrimitiveOrWrapper(parameterType)) {
                         parameters[i] = simpleTypeConverter.convertIfNecessary("0", parameterType);
                         continue;
-                    } else if (parameterTypes[i] == String.class) {
+                    } else if (parameterType == String.class) {
                         parameters[i] = null;
                         continue;
                     } else {
                         parameterName = parameterType.getSimpleName()
-                                + reduplatedResolverCount[i][1];
+                                + paramMetaDatas[i].getIndexOfReplicated();
                     }
                 }
                 if (logger.isDebugEnabled()) {
@@ -135,8 +129,7 @@ public final class MethodParameterResolver {
                             + parameterType.getSimpleName() + " using "
                             + resolvers[i].getClass().getName());
                 }
-                parameters[i] = resolvers[i].resolve(parameterType, reduplatedResolverCount[i][0],
-                        reduplatedResolverCount[i][1], inv, parameterName, paramAnnotation);
+                parameters[i] = resolvers[i].resolve(inv, paramMetaDatas[i]);
                 // afterPropertiesSet
                 if (parameters[i] instanceof InitializingBean) {
                     ((InitializingBean) parameters[i]).afterPropertiesSet();
@@ -148,6 +141,7 @@ public final class MethodParameterResolver {
                 parameterBindingResult.rejectValue(parameterName, "convert.failed", new Object[] {
                         parameterName, e }, e.getMessage());
                 if (parameterType.isPrimitive()) {
+                    Param paramAnnotation = paramMetaDatas[i].getParamAnnotation();
                     if (paramAnnotation != null && !"~".equals(paramAnnotation.def())) {
                         parameters[i] = simpleTypeConverter.convertIfNecessary(paramAnnotation
                                 .def(), parameterType);

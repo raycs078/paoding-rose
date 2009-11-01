@@ -1,23 +1,20 @@
 package net.paoding.rose.mock.resolvers;
 
-import java.lang.reflect.Method;
-
 import net.paoding.rose.web.Invocation;
-import net.paoding.rose.web.annotation.Param;
-import net.paoding.rose.web.paramresolver.ParamResolverBean;
+import net.paoding.rose.web.paramresolver.ParamMetaData;
+import net.paoding.rose.web.paramresolver.ParamResolver;
 
-public class BeanResolver implements ParamResolverBean {
+public class BeanResolver implements ParamResolver {
 
     public static final String GET_VALUE = "bean0isadcae54";
 
     @Override
-    public boolean supports(Class<?> parameterType, Class<?> controllerClazz, Method method) {
-        return Bean.class == parameterType;
+    public boolean supports(ParamMetaData paramMetaData) {
+        return Bean.class == paramMetaData.getParamType();
     }
 
     @Override
-    public Bean resolve(Class<?> parameterType, int replicatedCount, int indexOfReplicated,
-            Invocation inv, String parameterName, Param paramAnnotation) throws Exception {
+    public Bean resolve(Invocation inv, ParamMetaData paramMetaData) throws Exception {
         return new Bean() {
 
             @Override

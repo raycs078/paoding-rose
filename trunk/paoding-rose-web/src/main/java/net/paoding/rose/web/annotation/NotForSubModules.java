@@ -22,11 +22,11 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import net.paoding.rose.web.ControllerErrorHandler;
-import net.paoding.rose.web.paramresolver.ParamResolverBean;
+import net.paoding.rose.web.paramresolver.ParamResolver;
 
 /**
  * 使用 {@link NotForSubModules} 标注在编写在模块目录中的拦截器、错误处理器
- * {@link ControllerErrorHandler}、 参数解析器 {@link ParamResolverBean} 上，表示不应用到子模块
+ * {@link ControllerErrorHandler}、 参数解析器 {@link ParamResolver} 上，表示不应用到子模块
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  */

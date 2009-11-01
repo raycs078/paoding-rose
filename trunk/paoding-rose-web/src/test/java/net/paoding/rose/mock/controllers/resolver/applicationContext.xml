@@ -14,5 +14,9 @@ http://www.springframework.org/schema/aop http://www.springframework.org/schema/
 
 	<bean id="applicationContextResolver"
 		class="net.paoding.rose.mock.resolvers.ApplicationContextResolver" />
+	<bean id="infterfaceResolver"
+		class="net.paoding.rose.mock.resolvers.InterfaceResolver" />
+	<bean id="beanResolver"
+		class="net.paoding.rose.mock.resolvers.BeanResolver" />
 
 </beans>

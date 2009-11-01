@@ -27,7 +27,7 @@ import net.paoding.rose.web.annotation.ReqMethod;
 import net.paoding.rose.web.impl.mapping.Mapping;
 import net.paoding.rose.web.impl.mapping.MappingImpl;
 import net.paoding.rose.web.impl.mapping.MatchMode;
-import net.paoding.rose.web.paramresolver.ParamResolverBean;
+import net.paoding.rose.web.paramresolver.ParamResolver;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -62,7 +62,7 @@ public class ModuleBean implements Module {
     private List<Mapping<ControllerInfo>> controllerMappings = new ArrayList<Mapping<ControllerInfo>>();
 
     // 本module使用的所有非内置的方法参数解析器
-    private List<ParamResolverBean> customerResolvers = new ArrayList<ParamResolverBean>();
+    private List<ParamResolver> customerResolvers = new ArrayList<ParamResolver>();
 
     // 用于add方法加进来
     private List<NestedControllerInterceptorWrapper> interceptors = new ArrayList<NestedControllerInterceptorWrapper>(
@@ -187,12 +187,12 @@ public class ModuleBean implements Module {
         return this;
     }
 
-    public ModuleBean addCustomerResolver(ParamResolverBean resolver) {
+    public ModuleBean addCustomerResolver(ParamResolver resolver) {
         customerResolvers.add(resolver);
         return this;
     }
 
-    public List<ParamResolverBean> getCustomerResolvers() {
+    public List<ParamResolver> getCustomerResolvers() {
         return Collections.unmodifiableList(customerResolvers);
     }
 

@@ -16,38 +16,16 @@
  */
 package net.paoding.rose.web.paramresolver;
 
-import java.lang.reflect.Method;
-
-import net.paoding.rose.web.Invocation;
-import net.paoding.rose.web.annotation.Param;
-
 /**
+ * 
+ * 请改为实现 {@link ParamResolver}，并调整方法的参数。新的接口 {@link ParamResolver}
+ * 将原方法中的众多参数封装到 {@link ParamMetaData} .
+ * <p>
+ * 本类将在2009年12月前删除。
+ * 
+ * @deprecated
  * @author 王志亮 [qieqie.wang@gmail.com]
- * @param <T>
  */
-public interface ParamResolverBean {
-
-    /**
-     * 返回true表示是由本解析器负责解析这种类型的参数.
-     * 
-     * @param parameterType
-     * @param method
-     * @return
-     */
-    public boolean supports(Class<?> parameterType, Class<?> controllerClazz, Method method);
-
-    /**
-     * @param parameterType
-     * @param replicatedCount 在本次 {@link Invocation}中，使用此 {@link ParamResolverBean}
-     *        对象的总个数
-     * @param indexOfReplicated 此次resolve调用是对本对象的resolve的第几次调用(0,1,2,3...)
-     * @param inv
-     * @param parameterName 这个参数所使用的名称，同时也表示这个参数的值应该从所给名的请求数据中获取
-     * @param paramAnnotation 可能为null，如果控制器没有标注的话
-     * @return
-     * @throws Exception
-     */
-    public Object resolve(Class<?> parameterType, int replicatedCount, int indexOfReplicated,
-            Invocation inv,//
-            String parameterName, Param paramAnnotation) throws Exception;
+// TODO: 2009年12月前删除此类
+public interface ParamResolverBean extends ParamResolver {
 }

@@ -1,16 +1,14 @@
 package net.paoding.rose.mock.resolvers;
 
-import java.lang.reflect.Method;
-
 import net.paoding.rose.web.Invocation;
-import net.paoding.rose.web.annotation.Param;
-import net.paoding.rose.web.paramresolver.ParamResolverBean;
+import net.paoding.rose.web.paramresolver.ParamMetaData;
+import net.paoding.rose.web.paramresolver.ParamResolver;
 
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
-public class ApplicationContextResolver implements ParamResolverBean, ApplicationContextAware {
+public class ApplicationContextResolver implements ParamResolver, ApplicationContextAware {
 
     ApplicationContext applicationContext;
 
@@ -20,14 +18,13 @@ public class ApplicationContextResolver implements ParamResolverBean, Applicatio
     }
 
     @Override
-    public boolean supports(Class<?> parameterType, Class<?> controllerClazz, Method method) {
+    public boolean supports(ParamMetaData paramMetaData) {
 
-        return ApplicationContext.class.isAssignableFrom(parameterType);
+        return ApplicationContext.class.isAssignableFrom(paramMetaData.getParamType());
     }
 
     @Override
-    public Object resolve(Class<?> parameterType, int replicatedCount, int indexOfReplicated,
-            Invocation inv, String parameterName, Param paramAnnotation) throws Exception {
+    public Object resolve(Invocation inv, ParamMetaData paramMetaData) throws Exception {
         return applicationContext;
     }
 

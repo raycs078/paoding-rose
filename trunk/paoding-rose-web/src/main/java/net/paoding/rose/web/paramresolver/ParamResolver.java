@@ -1,4 +1,5 @@
 /*
+ * $Id$
  * Copyright 2007-2009 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,29 +14,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.paoding.rose.web.portal.impl;
+package net.paoding.rose.web.paramresolver;
 
 import net.paoding.rose.web.Invocation;
-import net.paoding.rose.web.paramresolver.ParamMetaData;
-import net.paoding.rose.web.paramresolver.ParamResolver;
-import net.paoding.rose.web.portal.PortalUtils;
-import net.paoding.rose.web.portal.Window;
 
 /**
- * 解析声明在窗口控制器中的Window参数
- * 
  * @author 王志亮 [qieqie.wang@gmail.com]
- * 
  */
-public class WindowResolver implements ParamResolver {
+public interface ParamResolver {
 
-    @Override
-    public boolean supports(ParamMetaData paramMetaData) {
-        return Window.class == paramMetaData.getParamType();
-    }
+    /**
+     * 返回true表示是由本解析器负责解析这种类型的参数.
+     * 
+     * @param metaData
+     * @return
+     */
+    public boolean supports(ParamMetaData metaData);
 
-    @Override
-    public Object resolve(Invocation inv, ParamMetaData paramMetaData) throws Exception {
-        return PortalUtils.getWindow(inv);
-    }
+    /**
+     * @param inv
+     * @param metaData
+     * @return
+     * @throws Exception
+     */
+    public Object resolve(Invocation inv, ParamMetaData metaData) throws Exception;
 }

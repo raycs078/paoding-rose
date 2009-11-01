@@ -114,6 +114,11 @@ public class InvocationLocalImpl implements InvocationLocal {
     public Class<?> getControllerClass() {
         return required().getControllerClass();
     }
+    
+    @Override
+    public void addFlash(String name, String msg) {
+        required().addFlash(name, msg);
+    }
 
     @Override
     public Flash getFlash() {

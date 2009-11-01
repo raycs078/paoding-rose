@@ -40,7 +40,7 @@ import net.paoding.rose.web.annotation.NotForSubModules;
 import net.paoding.rose.web.annotation.ReqMapping;
 import net.paoding.rose.web.annotation.ReqMethod;
 import net.paoding.rose.web.impl.context.ContextLoader;
-import net.paoding.rose.web.paramresolver.ParamResolverBean;
+import net.paoding.rose.web.paramresolver.ParamResolver;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -95,13 +95,13 @@ public class ModulesBuilder {
             registerBeanDefinitions(context, moduleInfo.getModuleClasses());
 
             // 从Spring应用环境中找出全局resolver, interceptors, errorHanlder
-            List<ParamResolverBean> customerResolvers = findContextResolvers(context);
+            List<ParamResolver> customerResolvers = findContextResolvers(context);
             List<NestedControllerInterceptorWrapper> interceptors = findContextInterceptors(context);
             List<NamedValidator> validators = findContextValidators(context);
             ControllerErrorHandler errorHandler = getContextErrorHandler(context);
 
             // resolvers
-            for (ParamResolverBean resolver : customerResolvers) {
+            for (ParamResolver resolver : customerResolvers) {
                 module.addCustomerResolver(resolver);
             }
             if (logger.isDebugEnabled()) {
@@ -311,13 +311,13 @@ public class ModulesBuilder {
         return errorHandler;
     }
 
-    private List<ParamResolverBean> findContextResolvers(XmlWebApplicationContext context) {
+    private List<ParamResolver> findContextResolvers(XmlWebApplicationContext context) {
         String[] resolverNames = SpringUtils.getBeanNames(context.getBeanFactory(),
-                ParamResolverBean.class);
-        ArrayList<ParamResolverBean> resolvers = new ArrayList<ParamResolverBean>(
+                ParamResolver.class);
+        ArrayList<ParamResolver> resolvers = new ArrayList<ParamResolver>(
                 resolverNames.length);
         for (String beanName : resolverNames) {
-            ParamResolverBean resolver = (ParamResolverBean) context.getBean(beanName);
+            ParamResolver resolver = (ParamResolver) context.getBean(beanName);
             Class<?> userClass = ClassUtils.getUserClass(resolver);
             if (userClass.isAnnotationPresent(Ignored.class)) {
                 if (logger.isDebugEnabled()) {

@@ -18,7 +18,6 @@ package net.paoding.rose.web.paramresolver;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -40,6 +39,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import net.paoding.rose.web.Invocation;
+import net.paoding.rose.web.annotation.FlashParam;
 import net.paoding.rose.web.annotation.Param;
 import net.paoding.rose.web.annotation.ParamConf;
 import net.paoding.rose.web.impl.module.Module;
@@ -85,7 +85,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
         primitiveWrapperTypeMap.put(short.class, Short.class);
     }
 
-    private static final ParamResolverBean[] buildinResolvers = new ParamResolverBean[] {//
+    private static final ParamResolver[] buildinResolvers = new ParamResolver[] {//
     new InvocationResolver(), //
             new ModelResolver(), //
             new FlashResolver(), //
@@ -108,21 +108,21 @@ public class ResolverFactoryImpl implements ResolverFactory {
             new BeanResolver(), //
     };
 
-    private final List<ParamResolverBean> customerResolvers = new ArrayList<ParamResolverBean>();
+    private final List<ParamResolver> customerResolvers = new ArrayList<ParamResolver>();
 
-    public void addCustomerResolver(ParamResolverBean resolver) {
+    public void addCustomerResolver(ParamResolver resolver) {
         customerResolvers.add(resolver);
     }
 
     @Override
-    public ParamResolverBean supports(Class<?> parameterType, Class<?> controllerClazz, Method method) {
-        for (ParamResolverBean resolver : customerResolvers) {
-            if (resolver.supports(parameterType, controllerClazz, method)) {
+    public ParamResolver supports(ParamMetaData paramMetaData) {
+        for (ParamResolver resolver : customerResolvers) {
+            if (resolver.supports(paramMetaData)) {
                 return resolver;
             }
         }
-        for (ParamResolverBean resolver : buildinResolvers) {
-            if (resolver.supports(parameterType, controllerClazz, method)) {
+        for (ParamResolver resolver : buildinResolvers) {
+            if (resolver.supports(paramMetaData)) {
                 return resolver;
             }
         }
@@ -131,149 +131,139 @@ public class ResolverFactoryImpl implements ResolverFactory {
 
     // ---------------------------------------------------------
 
-    static final class InvocationResolver implements ParamResolverBean {
+    static final class InvocationResolver implements ParamResolver {
 
         @Override
-        public boolean supports(Class<?> parameterType, Class<?> controllerClazz, Method method) {
-            return Invocation.class == parameterType;
+        public boolean supports(ParamMetaData paramMetaData) {
+            return Invocation.class == paramMetaData.getParamType();
         }
 
         @Override
-        public Invocation resolve(Class<?> parameterType, int replicatedCount,
-                int indexOfReplicated, Invocation inv, String parameterName, Param paramAnnotation) {
+        public Invocation resolve(Invocation inv, ParamMetaData paramMetaData) {
             return inv;
         }
     }
 
-    static final class RequestResolver implements ParamResolverBean {
+    static final class RequestResolver implements ParamResolver {
 
         @Override
-        public boolean supports(Class<?> parameterType, Class<?> controllerClazz, Method method) {
-            return HttpServletRequest.class == parameterType
-                    || ServletRequest.class == parameterType;
+        public boolean supports(ParamMetaData paramMetaData) {
+            return HttpServletRequest.class == paramMetaData.getParamType()
+                    || ServletRequest.class == paramMetaData.getParamType();
         }
 
         @Override
-        public HttpServletRequest resolve(Class<?> parameterType, int replicatedCount,
-                int indexOfReplicated, Invocation inv, String parameterName, Param paramAnnotation) {
+        public HttpServletRequest resolve(Invocation inv, ParamMetaData paramMetaData) {
             return inv.getRequest();
         }
     }
 
-    static final class ResponseResolver implements ParamResolverBean {
+    static final class ResponseResolver implements ParamResolver {
 
         @Override
-        public boolean supports(Class<?> parameterType, Class<?> controllerClazz, Method method) {
-            return HttpServletResponse.class == parameterType
-                    || ServletResponse.class == parameterType;
+        public boolean supports(ParamMetaData paramMetaData) {
+            return HttpServletResponse.class == paramMetaData.getParamType()
+                    || ServletResponse.class == paramMetaData.getParamType();
         }
 
         @Override
-        public ServletResponse resolve(Class<?> parameterType, int replicatedCount,
-                int indexOfReplicated, Invocation inv, String parameterName, Param paramAnnotation) {
+        public ServletResponse resolve(Invocation inv, ParamMetaData paramMetaData) {
             return inv.getResponse();
         }
     }
 
-    static final class ServletContextResolver implements ParamResolverBean {
+    static final class ServletContextResolver implements ParamResolver {
 
         @Override
-        public boolean supports(Class<?> parameterType, Class<?> controllerClazz, Method method) {
-            return ServletContext.class == parameterType;
+        public boolean supports(ParamMetaData paramMetaData) {
+            return ServletContext.class == paramMetaData.getParamType();
         }
 
         @Override
-        public ServletContext resolve(Class<?> parameterType, int replicatedCount,
-                int indexOfReplicated, Invocation inv, String parameterName, Param paramAnnotation) {
+        public ServletContext resolve(Invocation inv, ParamMetaData paramMetaData) {
             return inv.getServletContext();
         }
     }
 
-    static final class HttpSessionResolver implements ParamResolverBean {
+    static final class HttpSessionResolver implements ParamResolver {
 
         @Override
-        public boolean supports(Class<?> parameterType, Class<?> controllerClazz, Method method) {
-            return HttpSession.class == parameterType;
+        public boolean supports(ParamMetaData paramMetaData) {
+            return HttpSession.class == paramMetaData.getParamType();
         }
 
         @Override
-        public HttpSession resolve(Class<?> parameterType, int replicatedCount,
-                int indexOfReplicated, Invocation inv, String parameterName, Param paramAnnotation) {
+        public HttpSession resolve(Invocation inv, ParamMetaData paramMetaData) {
             boolean create = true;
-            if (paramAnnotation != null) {
-                create = paramAnnotation.required();
+            if (paramMetaData.getParamAnnotation() != null) {
+                create = paramMetaData.getParamAnnotation().required();
             }
             return inv.getRequest().getSession(create);
         }
     }
 
-    static final class ModelResolver implements ParamResolverBean {
+    static final class ModelResolver implements ParamResolver {
 
         @Override
-        public boolean supports(Class<?> parameterType, Class<?> controllerClazz, Method method) {
-            return Model.class == parameterType;
+        public boolean supports(ParamMetaData paramMetaData) {
+            return Model.class == paramMetaData.getParamType();
         }
 
         @Override
-        public Object resolve(Class<?> parameterType, int replicatedCount, int indexOfReplicated,
-                Invocation inv, String parameterName, Param paramAnnotation) {
+        public Object resolve(Invocation inv, ParamMetaData paramMetaData) {
             return inv.getModel();
         }
     }
 
-    static final class FlashResolver implements ParamResolverBean {
+    static final class FlashResolver implements ParamResolver {
 
         @Override
-        public boolean supports(Class<?> parameterType, Class<?> controllerClazz, Method method) {
-            return Flash.class == parameterType;
+        public boolean supports(ParamMetaData paramMetaData) {
+            return Flash.class == paramMetaData.getParamType();
         }
 
         @Override
-        public Flash resolve(Class<?> parameterType, int replicatedCount, int indexOfReplicated,
-                Invocation inv, String parameterName, Param paramAnnotation) {
+        public Flash resolve(Invocation inv, ParamMetaData paramMetaData) {
             return inv.getFlash();
         }
     }
 
-    static final class ModuleResolver implements ParamResolverBean {
+    static final class ModuleResolver implements ParamResolver {
 
         @Override
-        public boolean supports(Class<?> parameterType, Class<?> controllerClazz, Method method) {
-            return Module.class == parameterType;
+        public boolean supports(ParamMetaData paramMetaData) {
+            return Module.class == paramMetaData.getParamType();
         }
 
         @Override
-        public Module resolve(Class<?> parameterType, int replicatedCount, int indexOfReplicated,
-                Invocation inv, String parameterName, Param paramAnnotation) {
+        public Module resolve(Invocation inv, ParamMetaData paramMetaData) {
             return ((InvocationBean) inv).getModule();
         }
     }
 
-    static final class StringResolver implements ParamResolverBean {
+    static final class StringResolver implements ParamResolver {
 
         @Override
-        public boolean supports(Class<?> parameterType, Class<?> controllerClazz, Method method) {
-            return String.class == parameterType;
+        public boolean supports(ParamMetaData paramMetaData) {
+            return String.class == paramMetaData.getParamType();
         }
 
         @Override
-        public String resolve(Class<?> parameterType, int replicatedCount, int indexOfReplicated,
-                Invocation inv, String parameterName, Param paramAnnotation) {
-            return inv.getRawParameter(parameterName);
+        public String resolve(Invocation inv, ParamMetaData paramMetaData) {
+            return inv.getRawParameter(paramMetaData.getParamName());
         }
     }
 
-    static final class MultipartRequestResolver implements ParamResolverBean {
+    static final class MultipartRequestResolver implements ParamResolver {
 
         @Override
-        public boolean supports(Class<?> parameterType, Class<?> controllerClazz, Method method) {
-            return MultipartRequest.class == parameterType
-                    || MultipartHttpServletRequest.class == parameterType;
+        public boolean supports(ParamMetaData paramMetaData) {
+            return MultipartRequest.class == paramMetaData.getParamType()
+                    || MultipartHttpServletRequest.class == paramMetaData.getParamType();
         }
 
         @Override
-        public MultipartRequest resolve(Class<?> parameterType, int replicatedCount,
-                int indexOfReplicated, Invocation inv, String parameterName, Param paramAnnotation) {
+        public MultipartRequest resolve(Invocation inv, ParamMetaData paramMetaData) {
             if (inv.getRequest() instanceof MultipartRequest) {
                 return (MultipartRequest) inv.getRequest();
             } else {
@@ -286,16 +276,15 @@ public class ResolverFactoryImpl implements ResolverFactory {
         }
     }
 
-    static final class MultipartHttpServletRequestResolver implements ParamResolverBean {
+    static final class MultipartHttpServletRequestResolver implements ParamResolver {
 
         @Override
-        public boolean supports(Class<?> parameterType, Class<?> controllerClazz, Method method) {
-            return MultipartHttpServletRequest.class == parameterType;
+        public boolean supports(ParamMetaData paramMetaData) {
+            return MultipartHttpServletRequest.class == paramMetaData.getParamType();
         }
 
         @Override
-        public MultipartRequest resolve(Class<?> parameterType, int replicatedCount,
-                int indexOfReplicated, Invocation inv, String parameterName, Param paramAnnotation) {
+        public MultipartRequest resolve(Invocation inv, ParamMetaData paramMetaData) {
             if (inv.getRequest() instanceof MultipartHttpServletRequest) {
                 return (MultipartHttpServletRequest) inv.getRequest();
             } else {
@@ -308,23 +297,23 @@ public class ResolverFactoryImpl implements ResolverFactory {
         }
     }
 
-    static final class MultipartFileResolver implements ParamResolverBean {
+    static final class MultipartFileResolver implements ParamResolver {
 
         @Override
-        public boolean supports(Class<?> parameterType, Class<?> controllerClazz, Method method) {
-            return MultipartFile.class == parameterType;
+        public boolean supports(ParamMetaData paramMetaData) {
+            return MultipartFile.class == paramMetaData.getParamType();
         }
 
         @Override
-        public MultipartFile resolve(Class<?> parameterType, int replicatedCount,
-                int indexOfReplicated, Invocation inv, String parameterName, Param paramAnnotation) {
+        public MultipartFile resolve(Invocation inv, ParamMetaData paramMetaData) {
             MultipartFile multipartFile = null;
             if (inv.getRequest() instanceof MultipartRequest) {
                 MultipartRequest multipartRequest = (MultipartRequest) inv.getRequest();
-                multipartFile = multipartRequest.getFile(parameterName);
+                multipartFile = multipartRequest.getFile(paramMetaData.getParamName());
                 if (multipartFile == null) {
                     if (logger.isDebugEnabled()) {
-                        logger.debug("not found MultipartFile named:" + parameterName);
+                        logger.debug("not found MultipartFile named:"
+                                + paramMetaData.getParamName());
                     }
                 }
             } else {
@@ -337,82 +326,82 @@ public class ResolverFactoryImpl implements ResolverFactory {
         }
     }
 
-    static final class BeanResolver implements ParamResolverBean {
+    static final class BeanResolver implements ParamResolver {
 
         @Override
-        public boolean supports(Class<?> parameterType, Class<?> controllerClazz, Method method) {
-            return !Modifier.isAbstract(parameterType.getModifiers());
+        public boolean supports(ParamMetaData paramMetaData) {
+            return !Modifier.isAbstract(paramMetaData.getParamType().getModifiers());
 
         }
 
         @Override
-        public Object resolve(Class<?> parameterType, int replicatedCount, int indexOfReplicated,
-                Invocation inv, String parameterName, Param paramAnnotation) {
-            Object bean = BeanUtils.instantiateClass(parameterType);
+        public Object resolve(Invocation inv, ParamMetaData paramMetaData) {
+            Object bean = BeanUtils.instantiateClass(paramMetaData.getParamType());
             ServletRequestDataBinder binder;
-            if (replicatedCount == 1) {
+            if (paramMetaData.getReplicatedCount() == 1) {
                 binder = new ServletRequestDataBinder(bean);
             } else {
-                binder = new ServletRequestDataBinder(bean, parameterName);
+                binder = new ServletRequestDataBinder(bean, paramMetaData.getParamName());
             }
             binder.bind(inv.getRequest());
-            String bindingResultName = BindingResult.MODEL_KEY_PREFIX + parameterName
-                    + "BindingResult";
+            String bindingResultName = BindingResult.MODEL_KEY_PREFIX
+                    + paramMetaData.getParamName() + "BindingResult";
             inv.addModel(bindingResultName, binder.getBindingResult());
             return bean;
         }
     }
 
-    static final class BindingResultResolver implements ParamResolverBean {
+    static final class BindingResultResolver implements ParamResolver {
 
         @Override
-        public boolean supports(Class<?> parameterType, Class<?> controllerClazz, Method method) {
-            return BindingResult.class == parameterType || Errors.class == parameterType;
+        public boolean supports(ParamMetaData paramMetaData) {
+            return BindingResult.class == paramMetaData.getParamType()
+                    || Errors.class == paramMetaData.getParamType();
         }
 
         @Override
-        public BindingResult resolve(Class<?> parameterType, int replicatedCount,
-                int indexOfReplicated, Invocation inv, String parameterName, Param paramAnnotation) {
-            if (parameterName != null) {
-                return inv.getBindingResult(parameterName);
+        public BindingResult resolve(Invocation inv, ParamMetaData paramMetaData) {
+            if (paramMetaData.getParamName() != null) {
+                return inv.getBindingResult(paramMetaData.getParamName());
             } else {
                 return inv.getParameterBindingResult();
             }
         }
     }
 
-    static final class ArrayResolver implements ParamResolverBean {
+    static final class ArrayResolver implements ParamResolver {
 
         @Override
-        public boolean supports(Class<?> parameterType, Class<?> controllerClazz, Method method) {
-            return parameterType.isArray();
+        public boolean supports(ParamMetaData paramMetaData) {
+            return paramMetaData.getParamType().isArray();
         }
 
         @Override
-        public Object resolve(Class<?> parameterType, int replicatedCount, int indexOfReplicated,
-                Invocation inv, String parameterName, Param paramAnnotation) {
-            if (StringUtils.isNotEmpty(parameterName)) {
-                Object toConvert = inv.getRequest().getParameterValues(parameterName);
+        public Object resolve(Invocation inv, ParamMetaData paramMetaData) {
+            if (StringUtils.isNotEmpty(paramMetaData.getParamName())) {
+                Object toConvert = inv.getRequest()
+                        .getParameterValues(paramMetaData.getParamName());
                 if (toConvert != null) {
                     if (((String[]) toConvert).length == 1) {
                         toConvert = ((String[]) toConvert)[0].split(",");
                     }
-                    return simpleTypeConverter.convertIfNecessary(toConvert, parameterType);
+                    return simpleTypeConverter.convertIfNecessary(toConvert, paramMetaData
+                            .getParamType());
                 }
             }
-            return Array.newInstance(parameterType.getComponentType(), 0);
+            return Array.newInstance(paramMetaData.getParamType().getComponentType(), 0);
         }
     }
 
-    static abstract class CollectionResolver<T extends Collection<?>> implements ParamResolverBean {
+    static abstract class CollectionResolver<T extends Collection<?>> implements ParamResolver {
 
         @Override
-        public T resolve(Class<?> parameterType, int replicatedCount, int indexOfReplicated,
-                Invocation inv, String parameterName, Param paramAnnotation) throws Exception {
-            if (StringUtils.isNotEmpty(parameterName)) {
+        public T resolve(Invocation inv, ParamMetaData paramMetaData) throws Exception {
+            if (StringUtils.isNotEmpty(paramMetaData.getParamName())) {
                 Class<?> componentType = ((InvocationBean) inv).getActionEngine()
-                        .getParameterGenericTypes(parameterName)[0];
-                Object toConvert = inv.getRequest().getParameterValues(parameterName);
+                        .getParameterGenericTypes(paramMetaData.getParamName())[0];
+                Object toConvert = inv.getRequest()
+                        .getParameterValues(paramMetaData.getParamName());
                 if (toConvert != null) {
                     if (((String[]) toConvert).length == 1) {
                         toConvert = ((String[]) toConvert)[0].split(","); // 去掉数组，变为一个String，converter将按逗号切割
@@ -421,36 +410,36 @@ public class ResolverFactoryImpl implements ResolverFactory {
                         toConvert = simpleTypeConverter.convertIfNecessary(toConvert, Array
                                 .newInstance(componentType, 0).getClass());
                     }
-                    return convertFromArray(parameterType, (Object[]) toConvert);
+                    return convertFromArray(paramMetaData.getParamType(), (Object[]) toConvert);
                 }
             }
-            return convertFromArray(parameterType, new Object[0]);
+            return convertFromArray(paramMetaData.getParamType(), new Object[0]);
         }
 
-        protected abstract T convertFromArray(Class<?> parameterType, Object[] toConvert)
+        protected abstract T convertFromArray(Class<?> paramType, Object[] toConvert)
                 throws Exception;
     }
 
     static final class ListResolver extends CollectionResolver<List<?>> {
 
         @Override
-        public boolean supports(Class<?> parameterType, Class<?> controllerClazz, Method method) {
-            return List.class == parameterType
-                    || Collection.class == parameterType
-                    || (!Modifier.isAbstract(parameterType.getModifiers()) && List.class
-                            .isAssignableFrom(parameterType));
+        public boolean supports(ParamMetaData paramMetaData) {
+            return List.class == paramMetaData.getParamType()
+                    || Collection.class == paramMetaData.getParamType()
+                    || (!Modifier.isAbstract(paramMetaData.getParamType().getModifiers()) && List.class
+                            .isAssignableFrom(paramMetaData.getParamType()));
         }
 
         @Override
         @SuppressWarnings("unchecked")
-        protected List<?> convertFromArray(Class<?> parameterType, Object[] toConvert)
+        protected List<?> convertFromArray(Class<?> paramType, Object[] toConvert)
                 throws InstantiationException, IllegalAccessException, IllegalArgumentException,
                 SecurityException, InvocationTargetException, NoSuchMethodException {
             Collection<Object> param;
-            if (parameterType.isInterface()) {
+            if (paramType.isInterface()) {
                 param = new ArrayList<Object>(toConvert.length);
             } else {
-                param = (Collection<Object>) parameterType.getConstructor().newInstance();
+                param = (Collection<Object>) paramType.getConstructor().newInstance();
             }
             Collections.addAll(param, toConvert);
             return (List<?>) param;
@@ -460,45 +449,45 @@ public class ResolverFactoryImpl implements ResolverFactory {
     static final class SetResolver extends CollectionResolver<Set<?>> {
 
         @Override
-        public boolean supports(Class<?> parameterType, Class<?> controllerClazz, Method method) {
-            return Set.class == parameterType
-                    || (!Modifier.isAbstract(parameterType.getModifiers()) && Set.class
-                            .isAssignableFrom(parameterType));
+        public boolean supports(ParamMetaData paramMetaData) {
+            return Set.class == paramMetaData.getParamType()
+                    || (!Modifier.isAbstract(paramMetaData.getParamType().getModifiers()) && Set.class
+                            .isAssignableFrom(paramMetaData.getParamType()));
         }
 
         @Override
         @SuppressWarnings("unchecked")
-        protected Set<?> convertFromArray(Class<?> parameterType, Object[] toConvert)
+        protected Set<?> convertFromArray(Class<?> paramType, Object[] toConvert)
                 throws InstantiationException, IllegalAccessException, IllegalArgumentException,
                 SecurityException, InvocationTargetException, NoSuchMethodException {
             Collection<Object> param;
-            if (parameterType.isInterface()) {
+            if (paramType.isInterface()) {
                 param = new HashSet<Object>(toConvert.length);
             } else {
-                param = (Collection<Object>) parameterType.getConstructor().newInstance();
+                param = (Collection<Object>) paramType.getConstructor().newInstance();
             }
             Collections.addAll(param, toConvert);
             return (Set<?>) param;
         }
     }
 
-    static final class MapResolver implements ParamResolverBean {
+    static final class MapResolver implements ParamResolver {
 
         @Override
-        public boolean supports(Class<?> parameterType, Class<?> controllerClazz, Method method) {
-            return Map.class == parameterType || HashMap.class == parameterType;
+        public boolean supports(ParamMetaData paramMetaData) {
+            return Map.class == paramMetaData.getParamType()
+                    || HashMap.class == paramMetaData.getParamType();
         }
 
         @Override
-        public Map<?, ?> resolve(Class<?> parameterType, int replicatedCount,
-                int indexOfReplicated, Invocation inv, String parameterName, Param paramAnnotation) {
-            if (StringUtils.isNotEmpty(parameterName)) {
+        public Map<?, ?> resolve(Invocation inv, ParamMetaData paramMetaData) {
+            if (StringUtils.isNotEmpty(paramMetaData.getParamName())) {
                 Class<?>[] genericTypes = ((InvocationBean) inv).getActionEngine()
-                        .getParameterGenericTypes(parameterName);
+                        .getParameterGenericTypes(paramMetaData.getParamName());
                 Class<?> keyType = genericTypes[0];
                 Class<?> valueType = genericTypes[1];
                 Map<?, ?> toConvert = WebUtils.getParametersStartingWith(inv.getRequest(),
-                        parameterName + MAP_SEPARATOR);
+                        paramMetaData.getParamName() + MAP_SEPARATOR);
                 if (toConvert != null) {
                     if (keyType != String.class || valueType != String.class) {
                         Map<Object, Object> ret = new HashMap<Object, Object>();
@@ -523,7 +512,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
         }
     }
 
-    static final class DateResolver implements ParamResolverBean {
+    static final class DateResolver implements ParamResolver {
 
         private final static String dateTimePattern = "yyyy-MM-dd HH:mm:ss";
 
@@ -540,35 +529,36 @@ public class ResolverFactoryImpl implements ResolverFactory {
         private final static String stimePattern = "HH:mm";
 
         @Override
-        public boolean supports(Class<?> parameterType, Class<?> controllerClazz, Method method) {
-            return Date.class == parameterType || java.sql.Date.class == parameterType
-                    || java.sql.Time.class == parameterType
-                    || java.sql.Timestamp.class == parameterType;
+        public boolean supports(ParamMetaData paramMetaData) {
+            return Date.class == paramMetaData.getParamType()
+                    || java.sql.Date.class == paramMetaData.getParamType()
+                    || java.sql.Time.class == paramMetaData.getParamType()
+                    || java.sql.Timestamp.class == paramMetaData.getParamType();
         }
 
         @Override
-        public Date resolve(Class<?> parameterType, int replicatedCount, int indexOfReplicated,
-                Invocation inv, String parameterName, Param paramAnnotation) throws Exception {
-            Date date = resolveUtilDate(parameterType, inv, parameterName, paramAnnotation);
+        public Date resolve(Invocation inv, ParamMetaData paramMetaData) throws Exception {
+            Date date = resolveUtilDate(inv, paramMetaData);
             if (date == null) {
                 return date;
             }
-            if (java.sql.Date.class == parameterType) {
+            if (java.sql.Date.class == paramMetaData.getParamType()) {
                 date = new java.sql.Date(date.getTime());
-            } else if (java.sql.Time.class == parameterType) {
+            } else if (java.sql.Time.class == paramMetaData.getParamType()) {
                 date = new java.sql.Time(date.getTime());
-            } else if (java.sql.Timestamp.class == parameterType) {
+            } else if (java.sql.Timestamp.class == paramMetaData.getParamType()) {
                 date = new java.sql.Timestamp(date.getTime());
             }
             return date;
         }
 
-        protected Date resolveUtilDate(Class<?> parameterType, Invocation inv,
-                String parameterName, Param paramAnnotation) throws ParseException {
-            String text = inv.getRawParameter(parameterName);
+        protected Date resolveUtilDate(Invocation inv, ParamMetaData paramMetaData)
+                throws ParseException {
+            String text = inv.getRawParameter(paramMetaData.getParamName());
             if (StringUtils.isEmpty(text)) {
-                if (paramAnnotation != null && !"~".equals(paramAnnotation.def())) {
-                    text = paramAnnotation.def();
+                if (paramMetaData.getParamAnnotation() != null
+                        && !"~".equals(paramMetaData.getParamAnnotation().def())) {
+                    text = paramMetaData.getParamAnnotation().def();
                     if (StringUtils.isEmpty(text)) {
                         return new Date(); // 当前时间!
                     }
@@ -576,9 +566,10 @@ public class ResolverFactoryImpl implements ResolverFactory {
                     return null; // 保留null，而非当前时间
                 }
             }
-            if (paramAnnotation != null && paramAnnotation.conf() != null
-                    && paramAnnotation.conf().length > 0) {
-                ParamConf[] conf = paramAnnotation.conf();
+            if (paramMetaData.getParamAnnotation() != null
+                    && paramMetaData.getParamAnnotation().conf() != null
+                    && paramMetaData.getParamAnnotation().conf().length > 0) {
+                ParamConf[] conf = paramMetaData.getParamAnnotation().conf();
                 for (ParamConf paramConf : conf) {
                     if ("pattern".equals(paramConf.name())) {
                         // 如果都找不到pattern则使用parseLong，但是总可能存在意外，
@@ -634,38 +625,46 @@ public class ResolverFactoryImpl implements ResolverFactory {
         }
     }
 
-    static final class EditorResolver implements ParamResolverBean {
+    static final class EditorResolver implements ParamResolver {
 
         @Override
-        public boolean supports(Class<?> parameterType, Class<?> controllerClazz, Method method) {
-            return ClassUtils.isPrimitiveOrWrapper(parameterType)
-                    || simpleTypeConverter.findCustomEditor(parameterType, null) != null
-                    || simpleTypeConverter.getDefaultEditor(parameterType) != null;
+        public boolean supports(ParamMetaData paramMetaData) {
+            return ClassUtils.isPrimitiveOrWrapper(paramMetaData.getParamType())
+                    || simpleTypeConverter.findCustomEditor(paramMetaData.getParamType(), null) != null
+                    || simpleTypeConverter.getDefaultEditor(paramMetaData.getParamType()) != null;
         }
 
         @Override
-        public Object resolve(Class<?> parameterType, int replicatedCount, int indexOfReplicated,
-                Invocation inv, String parameterName, Param paramAnnotation) {
+        public Object resolve(Invocation inv, ParamMetaData paramMetaData) {
             String toConvert = null;
-            if (paramAnnotation != null && "$".equals(paramAnnotation.value())) {
-                MatchResult<?> mr = ((InvocationBean) inv).getActionMatchResult();
-                int index = Integer.parseInt(parameterName.substring(1)) - 1;
-                if (index < mr.getParameterCount()) {
-                    toConvert = mr.getParameter(index);
+            // 
+            FlashParam flashParam = paramMetaData.getFlashParamAnnotation();
+            Param param = paramMetaData.getParamAnnotation();
+            if (flashParam != null) {
+                toConvert = inv.getFlash().get(flashParam.value());
+            }
+            if (toConvert == null && param != null) {
+                if ("$".equals(param.value())) {
+                    MatchResult<?> mr = ((InvocationBean) inv).getActionMatchResult();
+                    int index = Integer.parseInt(paramMetaData.getParamName().substring(1)) - 1;
+                    if (index < mr.getParameterCount()) {
+                        toConvert = mr.getParameter(index);
+                    }
+                } else {
+                    toConvert = inv.getRawParameter(param.value());
                 }
-            } else if (parameterName != null) {
-                toConvert = inv.getRawParameter(parameterName);
             }
             if (toConvert == null) {
-                if (paramAnnotation != null && !"~".equals(paramAnnotation.def())) {
-                    toConvert = paramAnnotation.def();
+                if (param != null && !"~".equals(param.def())) {
+                    toConvert = paramMetaData.getParamAnnotation().def();
                 }
             }
             if (toConvert != null) {
-                return simpleTypeConverter.convertIfNecessary(toConvert, parameterType);
+                return simpleTypeConverter.convertIfNecessary(toConvert, paramMetaData
+                        .getParamType());
             }
-            if (parameterType.isPrimitive()) {
-                return simpleTypeConverter.convertIfNecessary("0", parameterType);
+            if (paramMetaData.getParamType().isPrimitive()) {
+                return simpleTypeConverter.convertIfNecessary("0", paramMetaData.getParamType());
             }
             return null;
         }
