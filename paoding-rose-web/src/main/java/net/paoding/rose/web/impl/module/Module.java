@@ -21,7 +21,7 @@ import java.util.List;
 import net.paoding.rose.web.ControllerErrorHandler;
 import net.paoding.rose.web.NamedValidator;
 import net.paoding.rose.web.impl.mapping.Mapping;
-import net.paoding.rose.web.paramresolver.ParamResolverBean;
+import net.paoding.rose.web.paramresolver.ParamResolver;
 
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.multipart.MultipartResolver;
@@ -78,7 +78,7 @@ public interface Module {
      * 
      * @return
      */
-    public List<ParamResolverBean> getCustomerResolvers();
+    public List<ParamResolver> getCustomerResolvers();
 
     /**
      * @return

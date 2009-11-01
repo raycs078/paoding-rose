@@ -3,8 +3,6 @@ package net.paoding.rose.mock.controllers.resolver;
 import net.paoding.rose.mock.resolvers.Bean;
 import net.paoding.rose.mock.resolvers.BeanEx;
 import net.paoding.rose.mock.resolvers.Interface;
-import net.paoding.rose.mock.resolvers.InterfaceResolver;
-import net.paoding.rose.web.annotation.ParamResolver;
 
 import org.springframework.context.ApplicationContext;
 
@@ -14,7 +12,6 @@ public class MainController {
         return phone.getId();
     }
 
-    @ParamResolver(InterfaceResolver.class)
     public String intf(Interface intf) {
         return intf.get();
     }

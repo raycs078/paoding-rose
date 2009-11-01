@@ -367,6 +367,11 @@ public final class InvocationBean implements Invocation {
     }
 
     @Override
+    public void addFlash(String name, String msg) {
+        getFlash(true).add(name, msg);
+    }
+
+    @Override
     public Flash getFlash() {
         return getFlash(true);
     }

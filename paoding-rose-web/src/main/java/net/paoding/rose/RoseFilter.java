@@ -51,7 +51,7 @@ import net.paoding.rose.web.impl.module.Module;
 import net.paoding.rose.web.impl.module.ModulesBuilder;
 import net.paoding.rose.web.impl.module.NestedControllerInterceptorWrapper;
 import net.paoding.rose.web.impl.thread.InvocationBean;
-import net.paoding.rose.web.paramresolver.ParamResolverBean;
+import net.paoding.rose.web.paramresolver.ParamResolver;
 import net.paoding.rose.web.var.PrivateVar;
 
 import org.apache.commons.lang.ArrayUtils;
@@ -477,7 +477,7 @@ public class RoseFilter extends GenericFilterBean {
                 sb.setLength(sb.length() - 2);
             }
             sb.append("];\n\tparamResolvers=[");
-            for (ParamResolverBean resolver : module.getCustomerResolvers()) {
+            for (ParamResolver resolver : module.getCustomerResolvers()) {
                 sb.append(resolver.getClass().getSimpleName()).append(", ");
             }
             if (module.getCustomerResolvers().size() > 0) {

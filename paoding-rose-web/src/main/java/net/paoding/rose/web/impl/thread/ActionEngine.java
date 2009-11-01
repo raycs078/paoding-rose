@@ -18,7 +18,6 @@ package net.paoding.rose.web.impl.thread;
 import static org.springframework.validation.BindingResult.MODEL_KEY_PREFIX;
 
 import java.io.UnsupportedEncodingException;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
@@ -26,7 +25,6 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
-import java.util.Collections;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -35,13 +33,12 @@ import javax.servlet.http.HttpServletResponse;
 import net.paoding.rose.web.NamedValidator;
 import net.paoding.rose.web.annotation.HttpFeatures;
 import net.paoding.rose.web.annotation.Intercepted;
-import net.paoding.rose.web.annotation.ParamResolver;
 import net.paoding.rose.web.annotation.Return;
 import net.paoding.rose.web.impl.module.Module;
 import net.paoding.rose.web.impl.module.NestedControllerInterceptorWrapper;
 import net.paoding.rose.web.impl.validation.ParameterBindingResult;
 import net.paoding.rose.web.paramresolver.MethodParameterResolver;
-import net.paoding.rose.web.paramresolver.ParamResolverBean;
+import net.paoding.rose.web.paramresolver.ParamResolver;
 import net.paoding.rose.web.paramresolver.ParameterNameDiscovererImpl;
 import net.paoding.rose.web.paramresolver.ResolverFactoryImpl;
 
@@ -49,7 +46,6 @@ import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.BeanUtils;
 import org.springframework.validation.Errors;
 
 /**
@@ -82,9 +78,10 @@ public final class ActionEngine implements Engine {
         validators = compileValidators();
         genericParameterTypesDetail = compileGenericParameterTypesDetail();
         if (logger.isDebugEnabled()) {
-        	logger.debug("action info: " + controllerEngine.getControllerClass().getName() + "." + method.getName() + ":");
-        	logger.debug("\t interceptors:" + Arrays.toString(interceptors));
-        	logger.debug("\t validators:" + Arrays.toString(validators));
+            logger.debug("action info: " + controllerEngine.getControllerClass().getName() + "."
+                    + method.getName() + ":");
+            logger.debug("\t interceptors:" + Arrays.toString(interceptors));
+            logger.debug("\t validators:" + Arrays.toString(validators));
         }
     }
 
@@ -118,16 +115,11 @@ public final class ActionEngine implements Engine {
         Module module = controllerEngine.getModule();
         ParameterNameDiscovererImpl parameterNameDiscoverer = new ParameterNameDiscovererImpl();
         ResolverFactoryImpl resolverFactory = new ResolverFactoryImpl();
-        for (ParamResolverBean resolver : this.getCustomerResolvers()) {
+        for (ParamResolver resolver : module.getCustomerResolvers()) {
             resolverFactory.addCustomerResolver(resolver);
         }
-        for (ParamResolverBean resolver : controllerEngine.getCustomerResolvers()) {
-            resolverFactory.addCustomerResolver(resolver);
-        }
-        for (ParamResolverBean resolver : module.getCustomerResolvers()) {
-            resolverFactory.addCustomerResolver(resolver);
-        }
-        return new MethodParameterResolver(controllerEngine.getControllerClass(), method, parameterNameDiscoverer, resolverFactory);
+        return new MethodParameterResolver(controllerEngine.getControllerClass(), method,
+                parameterNameDiscoverer, resolverFactory);
     }
 
     @SuppressWarnings("unchecked")
@@ -184,17 +176,18 @@ public final class ActionEngine implements Engine {
         for (NestedControllerInterceptorWrapper interceptor : interceptors) {
             if (interceptor.getController() != null) {
                 // interceptor.getController()非空的，表示该拦截器是控制器的一个field
-            	// 此时该拦截器只能拦截这个控制器的方法，不拦截其他控制器的方法
+                // 此时该拦截器只能拦截这个控制器的方法，不拦截其他控制器的方法
                 if (interceptor.getController() != controllerEngine.getController()) {
                     continue;
                 }
             }
-            
+
             // 确定本拦截器的名字
             String name = interceptor.getName();
             String nameForUser = name;
             if (nameForUser.indexOf('.') != -1) {
-                nameForUser = nameForUser.replace(controllerEngine.getControllerPath() + ".", "this.");
+                nameForUser = nameForUser.replace(controllerEngine.getControllerPath() + ".",
+                        "this.");
             }
             // 获取@Intercepted注解 (@Intercepted注解配置于控制器或其方法中，决定一个拦截器是否应该拦截之。没有配置按“需要”处理)
             Intercepted intercepted = method.getAnnotation(Intercepted.class);
@@ -205,47 +198,25 @@ public final class ActionEngine implements Engine {
             }
             // 通过@Intercepted注解的allow和deny排除拦截器
             if (intercepted != null) {
-            	// 3.1 先排除deny禁止的
-                if (ArrayUtils.contains(intercepted.deny(), "*") || ArrayUtils.contains(intercepted.deny(), nameForUser)) {
-                	continue;
-                }  
+                // 3.1 先排除deny禁止的
+                if (ArrayUtils.contains(intercepted.deny(), "*")
+                        || ArrayUtils.contains(intercepted.deny(), nameForUser)) {
+                    continue;
+                }
                 // 3.2 确认最大的allow允许
-                else if (!ArrayUtils.contains(intercepted.allow(), "*") && !ArrayUtils.contains(intercepted.allow(), nameForUser)) {
+                else if (!ArrayUtils.contains(intercepted.allow(), "*")
+                        && !ArrayUtils.contains(intercepted.allow(), nameForUser)) {
                     continue;
                 }
             }
             // 取得拦截器同意后，注册到这个控制器方法中
             if (interceptor.isForAction(controllerEngine.getControllerClass(), method)) {
-            	registeredInterceptors.add(interceptor);
+                registeredInterceptors.add(interceptor);
             }
         }
         //
         return registeredInterceptors
                 .toArray(new NestedControllerInterceptorWrapper[registeredInterceptors.size()]);
-    }
-
-    private List<ParamResolverBean> getCustomerResolvers() {
-        ArrayList<ParamResolverBean> resolvers = new ArrayList<ParamResolverBean>(2);
-        ParamResolver paramResolver = method.getAnnotation(ParamResolver.class);
-        if (paramResolver != null) {
-            for (Class<? extends ParamResolverBean> clazz : paramResolver.value()) {
-                resolvers.add((ParamResolverBean) BeanUtils.instantiateClass(clazz));
-            }
-        }
-        Class<?>[] parameterTypes = this.method.getParameterTypes();
-        for (Class<?> parameterType : parameterTypes) {
-            // only decleared annotations
-            for (Annotation annotation : parameterType.getDeclaredAnnotations()) {
-                if (annotation instanceof ParamResolver) {
-                    for (Class<? extends ParamResolverBean> clazz : ((ParamResolver) annotation)
-                            .value()) {
-                        resolvers.add((ParamResolverBean) BeanUtils.instantiateClass(clazz));
-                    }
-                }
-            }
-
-        }
-        return Collections.unmodifiableList(resolvers);
     }
 
     public boolean match(final InvocationBean inv) {

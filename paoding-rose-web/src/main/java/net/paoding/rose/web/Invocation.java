@@ -225,6 +225,14 @@ public interface Invocation {
     public Set<String> getAttributeNames();
 
     /**
+     * 用于向重定向跳转后的页面传递参数，比如提示信息
+     * 
+     * @param name
+     * @param msg
+     */
+    public void addFlash(String name, String msg);
+
+    /**
      * 
      * @return
      */

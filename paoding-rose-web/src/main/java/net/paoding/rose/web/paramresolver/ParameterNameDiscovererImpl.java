@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import net.paoding.rose.web.annotation.FlashParam;
 import net.paoding.rose.web.annotation.Param;
 
 import org.apache.commons.lang.StringUtils;
@@ -48,8 +49,13 @@ public class ParameterNameDiscovererImpl {
         for (int i = 0; i < names.length; i++) {
             Annotation[] annotations = parameterAnnotations[i];
             for (Annotation annotation : annotations) {
+                String name = null;
                 if (annotation instanceof Param) {
-                    String name = ((Param) annotation).value();
+                    name = ((Param) annotation).value();
+                } else if (annotation instanceof FlashParam) {
+                    name = ((FlashParam) annotation).value();
+                }
+                if (name != null) {
                     if (StringUtils.isNotEmpty(name)) {
                         if (name.equals("$")) {
                             if (ClassUtils.isPrimitiveOrWrapper(parameterTypes[i])

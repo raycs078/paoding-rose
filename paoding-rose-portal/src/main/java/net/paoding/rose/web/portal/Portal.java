@@ -18,18 +18,22 @@ package net.paoding.rose.web.portal;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import net.paoding.rose.web.Invocation;
 
 /**
- * 一个 {@link Portal} 对象邦定在 {@link HttpServletRequest} 之上，提供了 portal 框架的编程接口。通过多次调用 {@link #addWindow(String, String)} 接口来为一个 portal 增加窗口。
+ * 一个 {@link Portal} 对象邦定在 {@link HttpServletRequest} 之上，提供了 portal
+ * 框架的编程接口。通过多次调用 {@link #addWindow(String, String)} 接口来为一个 portal 增加窗口。
+ * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
-public interface Portal extends Invocation {
+public interface Portal {
 
     /**
      * 返回这个 {@link Portal} 对象邦定的 {@link Invocation} 对象
+     * 
      * @return
      */
     public Invocation getInvocation();
@@ -42,13 +46,15 @@ public interface Portal extends Invocation {
     public void setTimeout(long timeoutInMillis);
 
     /**
-     * 增加一个窗口到本 portal 中，增加后将立即被执行。窗口名字取所给的窗口地址，，使得在 portal 渲染页面中使用 ${windowPath} 渲染该窗口内容。
+     * 增加一个窗口到本 portal 中，增加后将立即被执行。窗口名字取所给的窗口地址，，使得在 portal 渲染页面中使用
+     * ${windowPath} 渲染该窗口内容。
      * <p>
      * 
      * 如果 portal 框架使用了多线程并发执行，将被派发给专门的并发线程处理，否则则是串行执行，只有执行完一个真正的窗口后才返回。
-     *
-     * 在 portal 返回的渲染页面中使用可使用 ${windowPath} 渲染该窗口内容， ${windowPath}实际是 {@link Window}对象， {@link Window#toString()} 可返回该窗口的文本内容。    
-     *
+     * 
+     * 在 portal 返回的渲染页面中使用可使用 ${windowPath} 渲染该窗口内容， ${windowPath}实际是
+     * {@link Window}对象， {@link Window#toString()} 可返回该窗口的文本内容。
+     * 
      * @param windowPath 这个参数表示窗口的地址，取值规范同 forward 请求到其他地址的规范一样
      * @return
      */
@@ -61,8 +67,9 @@ public interface Portal extends Invocation {
      * 如果 portal 框架使用了多线程并发执行，将被派发给专门的并发线程处理，否则则是串行执行，只有执行完一个真正的窗口后才返回。
      * <p>
      * 
-     * 在 portal 返回的渲染页面中使用可使用 ${name} 渲染该窗口内容， ${name}实际是 {@link Window}对象， {@link Window#toString()} 可返回该窗口的文本内容。
-     *
+     * 在 portal 返回的渲染页面中使用可使用 ${name} 渲染该窗口内容， ${name}实际是 {@link Window}对象，
+     * {@link Window#toString()} 可返回该窗口的文本内容。
+     * 
      * @param name 窗口的名字，可用于在 portal 页面中通过 ${name} 的形式获取该窗口的渲染结果
      * @param windowPath 这个参数表示窗口的地址，取值规范同 forward 请求到其他地址的规范一样
      * @return
@@ -71,8 +78,20 @@ public interface Portal extends Invocation {
 
     /**
      * 返回添加到这个 {@link Portal} 对象上的窗口
+     * 
      * @return
      */
     public List<? extends Window> getWindows();
 
+    /**
+     * 
+     * @return
+     */
+    public HttpServletRequest getRequest();
+
+    /**
+     * 
+     * @return
+     */
+    public HttpServletResponse getResponse();
 }

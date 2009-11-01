@@ -29,11 +29,9 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
-import net.paoding.rose.util.SpringUtils;
 import net.paoding.rose.web.RequestPath;
 import net.paoding.rose.web.annotation.AsSuperController;
 import net.paoding.rose.web.annotation.Ignored;
-import net.paoding.rose.web.annotation.ParamResolver;
 import net.paoding.rose.web.annotation.REST;
 import net.paoding.rose.web.annotation.ReqMapping;
 import net.paoding.rose.web.annotation.ReqMethod;
@@ -49,7 +47,6 @@ import net.paoding.rose.web.impl.mapping.MappingImpl;
 import net.paoding.rose.web.impl.mapping.MatchMode;
 import net.paoding.rose.web.impl.module.ControllerInfo;
 import net.paoding.rose.web.impl.module.Module;
-import net.paoding.rose.web.paramresolver.ParamResolverBean;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.logging.Log;
@@ -298,18 +295,6 @@ public class ControllerEngine implements Engine {
             }
         }
         return false;
-    }
-
-    public List<ParamResolverBean> getCustomerResolvers() {
-        List<ParamResolverBean> resolvers = new ArrayList<ParamResolverBean>(2);
-        ParamResolver paramResolver = this.controllerClass.getAnnotation(ParamResolver.class);
-        if (paramResolver != null) {
-            for (Class<? extends ParamResolverBean> clazz : paramResolver.value()) {
-                resolvers.add((ParamResolverBean) SpringUtils.createBean(clazz, module
-                        .getApplicationContext()));
-            }
-        }
-        return Collections.unmodifiableList(resolvers);
     }
 
     public boolean match(final InvocationBean inv) {

@@ -80,8 +80,8 @@
 					<archive>
 						<manifestEntries>
 							<Rose>applicationContext</Rose>
-							<Implementation-Version>0.9.4-20091028</Implementation-Version>
-							<Rose-Version>0.9.4-20091028</Rose-Version>
+							<Implementation-Version>0.9.4-20091101</Implementation-Version>
+							<Rose-Version>0.9.4-20091101</Rose-Version>
 						</manifestEntries>
 					</archive>
 				</configuration>

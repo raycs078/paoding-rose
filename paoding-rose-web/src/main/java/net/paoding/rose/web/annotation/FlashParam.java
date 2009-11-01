@@ -1,5 +1,4 @@
 /*
- * $Id$
  * Copyright 2007-2009 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,22 +17,28 @@ package net.paoding.rose.web.annotation;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
-import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import net.paoding.rose.web.paramresolver.ParamResolverBean;
-
 /**
+ * 将{@link FlashParam}标注在控制器方法的参数上，重定向之前的的信息.
+ * <p>
+ * 
  * @author 王志亮 [qieqie.wang@gmail.com]
+ * 
  */
-@Inherited
-@Target( { ElementType.TYPE, ElementType.METHOD })
+@Target( { ElementType.PARAMETER })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-public @interface ParamResolver {
+public @interface FlashParam {
 
-    Class<? extends ParamResolverBean>[] value();
+    /**
+     * 声明要从Flash对象获取的参数的名字；
+     * <p>
+     * 
+     * @return
+     */
+    String value();
 
 }

@@ -15,30 +15,22 @@
  */
 package net.paoding.rose.web.portal.impl;
 
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
-import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import net.paoding.rose.web.Invocation;
-import net.paoding.rose.web.RequestPath;
 import net.paoding.rose.web.portal.Portal;
 import net.paoding.rose.web.portal.PortalListener;
 import net.paoding.rose.web.portal.Window;
-import net.paoding.rose.web.var.Flash;
-import net.paoding.rose.web.var.Model;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.validation.BindingResult;
-import org.springframework.web.context.WebApplicationContext;
 
 /**
  * {@link Portal} 的实现类，Portal 框架的核心类。
@@ -46,7 +38,7 @@ import org.springframework.web.context.WebApplicationContext;
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
-class PortalImpl implements Portal, Invocation, PortalListener {
+class PortalImpl implements Portal, PortalListener {
 
     private static final Log logger = LogFactory.getLog(PortalImpl.class);
 
@@ -221,154 +213,13 @@ class PortalImpl implements Portal, Invocation, PortalListener {
     }
 
     @Override
-    public void addModel(Object value) {
-        invocation.addModel(value);
-    }
-
-    @Override
-    public void addModel(String name, Object value) {
-        invocation.addModel(name, value);
-    }
-
-    @Override
-    public void changeMethodParameter(int index, Object value) {
-        invocation.changeMethodParameter(index, value);
-    }
-
-    @Override
-    public void changeMethodParameter(String name, Object value) {
-        invocation.changeMethodParameter(name, value);
-    }
-
-    @Override
-    public WebApplicationContext getApplicationContext() {
-        return invocation.getApplicationContext();
-    }
-
-    @Override
-    public Object getAttribute(String name) {
-        return invocation.getAttribute(name);
-    }
-
-    @Override
-    public Set<String> getAttributeNames() {
-        return invocation.getAttributeNames();
-    }
-
-    @Override
-    public BindingResult getBindingResult(Object bean) {
-        return invocation.getBindingResult(bean);
-    }
-
-    @Override
-    public List<String> getBindingResultNames() {
-        return invocation.getBindingResultNames();
-    }
-
-    @Override
-    public List<BindingResult> getBindingResults() {
-        return invocation.getBindingResults();
-    }
-
-    @Override
-    public Object getController() {
-        return invocation.getController();
-    }
-
-    @Override
-    public Class<?> getControllerClass() {
-        return invocation.getControllerClass();
-    }
-
-    @Override
-    public Flash getFlash() {
-        return invocation.getFlash();
-    }
-
-    @Override
-    public Method getMethod() {
-        return invocation.getMethod();
-    }
-
-    @Override
-    public Object getMethodParameter(String name) {
-        return invocation.getMethodParameter(name);
-    }
-
-    @Override
-    public String[] getMethodParameterNames() {
-        return invocation.getMethodParameterNames();
-    }
-
-    @Override
-    public Object[] getMethodParameters() {
-        return invocation.getMethodParameters();
-    }
-
-    @Override
-    public Model getModel() {
-        return invocation.getModel();
-    }
-
-    @Override
-    public Object getParameter(String name) {
-        return invocation.getParameter(name);
-    }
-
-    @Override
-    public BindingResult getParameterBindingResult() {
-        return invocation.getParameterBindingResult();
-    }
-
-    @Override
-    public String getRawParameter(String name) {
-        return invocation.getRawParameter(name);
-    }
-
-    @Override
     public HttpServletRequest getRequest() {
         return invocation.getRequest();
     }
 
     @Override
-    public RequestPath getRequestPath() {
-        return invocation.getRequestPath();
-    }
-
-    @Override
     public HttpServletResponse getResponse() {
         return invocation.getResponse();
-    }
-
-    @Override
-    public ServletContext getServletContext() {
-        return invocation.getServletContext();
-    }
-
-    @Override
-    public void removeAttribute(String name) {
-        invocation.removeAttribute(name);
-    }
-
-    @Override
-    public Invocation setAttribute(String name, Object value) {
-        invocation.setAttribute(name, value);
-        return this;
-    }
-
-    @Override
-    public Object getOncePerRequestAttribute(String name) {
-        return invocation.getOncePerRequestAttribute(name);
-    }
-
-    @Override
-    public Invocation setOncePerRequestAttribute(String name, Object value) {
-        return invocation.setOncePerRequestAttribute(name, value);
-    }
-
-    @Override
-    public void setRequest(HttpServletRequest request) {
-        invocation.setRequest(request);
     }
 
 }

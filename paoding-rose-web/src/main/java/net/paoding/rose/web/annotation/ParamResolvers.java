@@ -1,4 +1,5 @@
 /*
+ * $Id$
  * Copyright 2007-2009 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,19 +18,22 @@ package net.paoding.rose.web.annotation;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import net.paoding.rose.web.paramresolver.ParamResolver;
+
 /**
- * 
  * @author 王志亮 [qieqie.wang@gmail.com]
- * 
  */
-@Target( { ElementType.METHOD })
+@Inherited
+@Target( { ElementType.TYPE, ElementType.METHOD })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-public @interface Message {
+@interface ParamResolvers {
 
-    String key() default "msg";
+    Class<? extends ParamResolver>[] value();
+
 }

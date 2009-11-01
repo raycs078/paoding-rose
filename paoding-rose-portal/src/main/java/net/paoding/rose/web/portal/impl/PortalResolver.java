@@ -15,11 +15,9 @@
  */
 package net.paoding.rose.web.portal.impl;
 
-import java.lang.reflect.Method;
-
 import net.paoding.rose.web.Invocation;
-import net.paoding.rose.web.annotation.Param;
-import net.paoding.rose.web.paramresolver.ParamResolverBean;
+import net.paoding.rose.web.paramresolver.ParamMetaData;
+import net.paoding.rose.web.paramresolver.ParamResolver;
 import net.paoding.rose.web.portal.Portal;
 import net.paoding.rose.web.portal.PortalFactory;
 import net.paoding.rose.web.portal.PortalSetting;
@@ -29,7 +27,7 @@ import net.paoding.rose.web.portal.PortalSetting;
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
-public class PortalResolver implements ParamResolverBean {
+public class PortalResolver implements ParamResolver {
 
     private PortalFactory portalFactory;
 
@@ -52,16 +50,15 @@ public class PortalResolver implements ParamResolverBean {
     }
 
     @Override
-    public boolean supports(Class<?> parameterType, Class<?> controllerClazz, Method method) {
+    public boolean supports(ParamMetaData paramMetaData) {
         if (portalFactory == null) {
             return false;
         }
-        return parameterType == Portal.class;
+        return paramMetaData.getParamType() == Portal.class;
     }
 
     @Override
-    public Portal resolve(Class<?> parameterType, int replicatedCount, int indexOfReplicated,
-            Invocation inv, String parameterName, Param paramAnnotation) throws Exception {
+    public Portal resolve(Invocation inv, ParamMetaData paramMetaData) throws Exception {
         Portal portal = portalFactory.createPortal(inv);
         // 换request对象
         inv.setRequest(new PortalRequest(inv.getRequest()));
