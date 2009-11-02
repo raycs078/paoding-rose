@@ -12,3 +12,8 @@
 #macro(msg $code $arg0 $arg1 $arg2)$springMacroRequestContext.getMessage($code, $arg0, $arg1, $arg2)#end
 #macro(msg $code $arg0 $arg1 $arg2 $arg3)$springMacroRequestContext.getMessage($code, $arg0, $arg1, $arg2, $arg3)#end
 #macro(msg $code $arg0 $arg1 $arg2 $arg3 $arg4)$springMacroRequestContext.getMessage($code, $arg0, $arg1, $arg2, $arg3, $arg4)#end
+
+#**
+ * flash
+ *#
+#macro(flash $key )$!{roseInvocation.flash.get($key)}#end
