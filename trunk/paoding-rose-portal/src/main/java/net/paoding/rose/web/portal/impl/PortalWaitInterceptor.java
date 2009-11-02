@@ -39,12 +39,17 @@ public class PortalWaitInterceptor extends ControllerInterceptorAdapter {
     // 只拦截含有 Portal 的控制器方法
     @Override
     protected boolean isForAction(Method actionMethod, Class<?> controllerClazz) {
+        int portalCount = 0;
         for (Class<?> paramType : actionMethod.getParameterTypes()) {
             if (paramType == Portal.class) {
-                return true;
+                portalCount++;
             }
         }
-        return false;
+        if (portalCount > 1) {
+            throw new IllegalArgumentException("only one portal parameter is allowed: "
+                    + controllerClazz.getName() + "." + actionMethod.getName());
+        }
+        return portalCount > 0;
     }
 
     @Override
