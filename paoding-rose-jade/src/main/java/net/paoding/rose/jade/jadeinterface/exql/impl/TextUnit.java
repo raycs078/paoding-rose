@@ -23,7 +23,7 @@ public class TextUnit implements ExqlUnit {
     }
 
     @Override
-    public boolean isValid(ExprResolver exprResolver) throws Exception {
+    public boolean isValid(ExprResolver exprResolver) {
 
         // 文本始终有效
         return true;

@@ -18,7 +18,7 @@ public class OptionUnit implements ExqlUnit {
     }
 
     @Override
-    public boolean isValid(ExprResolver exprResolver) throws Exception {
+    public boolean isValid(ExprResolver exprResolver) {
 
         // 条件单元始终有效, 因为若子单元无效
         // 它就不会产生输出。

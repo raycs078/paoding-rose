@@ -42,10 +42,10 @@ public class ChoiceUnit implements ExqlUnit {
     }
 
     @Override
-    public boolean isValid(ExprResolver exprResolver) throws Exception {
+    public boolean isValid(ExprResolver exprResolver) {
 
         // 解释表达式内容
-        Object obj = exprResolver.executeExpr(expr);
+        Object obj = ExqlUtils.execExpr(exprResolver, expr);
 
         if (ExqlUtils.asBoolean(obj)) {
 

@@ -51,14 +51,14 @@ public class ExqlPatternImpl implements ExqlPattern {
      */
     public static ExqlPattern compile(String pattern) {
 
-        // 输出日志
-        if (logger.isDebugEnabled()) {
-            logger.debug("EXQL pattern compiling:\n    pattern: " + pattern);
-        }
-
         // 从缓存中获取编译好的语句
         ExqlPattern compiledPattern = cache.get(pattern);
         if (compiledPattern == null) {
+
+            // 输出日志
+            if (logger.isDebugEnabled()) {
+                logger.debug("EXQL pattern compiling:\n    pattern: " + pattern);
+            }
 
             // 重新编译语句
             ExqlCompiler compiler = new ExqlCompiler(pattern);
