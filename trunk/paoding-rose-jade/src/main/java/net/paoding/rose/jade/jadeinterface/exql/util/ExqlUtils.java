@@ -6,12 +6,46 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 
+import net.paoding.rose.jade.jadeinterface.exql.ExprResolver;
+import net.paoding.rose.jade.jadeinterface.exql.ExqlPattern;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /**
  * 实现表达式求值时的常用方法。
  * 
  * @author han.liao
  */
 public class ExqlUtils {
+
+    // 输出日志
+    private static final Log logger = LogFactory.getLog(ExqlPattern.class);
+
+    /**
+     * 返回在语句输出的内容。
+     * 
+     * @param exprResolver - 使用的引擎
+     * @param expression - 解释的表达式
+     * 
+     * @return 输出的内容
+     */
+    public static Object execExpr(ExprResolver exprResolver, String expression) {
+
+        try {
+            // 返回输出的内容
+            return exprResolver.executeExpr(expression);
+
+        } catch (Exception e) {
+
+            // 输出日志
+            if (logger.isDebugEnabled()) {
+                logger.debug("Can't resolving expression: " + expression, e);
+            }
+        }
+
+        return null;
+    }
 
     /**
      * 检查对象是否有效。
@@ -22,7 +56,7 @@ public class ExqlUtils {
      */
     public static boolean isValid(Object obj) {
 
-        return (obj != null);
+        return asBoolean(obj);
     }
 
     /**
@@ -44,7 +78,7 @@ public class ExqlUtils {
 
         } else if (obj instanceof Number) {
 
-            return ((Number) obj).doubleValue() > 0; // 数字类型, > 0 表示有效
+            return ((Number) obj).doubleValue() > 0; // 数字类型, >= 0 表示有效
 
         } else if (obj instanceof Boolean) {
 

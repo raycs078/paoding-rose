@@ -25,7 +25,7 @@ public class BunchUnit implements ExqlUnit {
     }
 
     @Override
-    public boolean isValid(ExprResolver exprResolver) throws Exception {
+    public boolean isValid(ExprResolver exprResolver) {
 
         // 顺序检查子单元
         for (ExqlUnit unit : units) {

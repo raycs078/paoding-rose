@@ -24,10 +24,10 @@ public class ExprUnit implements ExqlUnit {
     }
 
     @Override
-    public boolean isValid(ExprResolver exprResolver) throws Exception {
+    public boolean isValid(ExprResolver exprResolver) {
 
         // 解释表达式内容
-        Object obj = exprResolver.executeExpr(expr);
+        Object obj = ExqlUtils.execExpr(exprResolver, expr);
 
         // 表达式内容有效
         return ExqlUtils.isValid(obj);
