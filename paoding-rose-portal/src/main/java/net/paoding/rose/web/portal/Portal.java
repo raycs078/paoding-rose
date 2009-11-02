@@ -21,6 +21,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import net.paoding.rose.web.Invocation;
+import net.paoding.rose.web.var.Model;
 
 /**
  * 一个 {@link Portal} 对象邦定在 {@link HttpServletRequest} 之上，提供了 portal
@@ -30,20 +31,6 @@ import net.paoding.rose.web.Invocation;
  * 
  */
 public interface Portal {
-
-    /**
-     * 返回这个 {@link Portal} 对象邦定的 {@link Invocation} 对象
-     * 
-     * @return
-     */
-    public Invocation getInvocation();
-
-    /**
-     * 设置超时时间。这个时间指的是控制器返回之后， portal 等待所有窗口执行完毕的最大时间。
-     * 
-     * @param timeoutInMillis 毫秒，小于或等于0表示 portal 应等待所有窗口执行完毕或被取消才最终渲染页面给用户
-     */
-    public void setTimeout(long timeoutInMillis);
 
     /**
      * 增加一个窗口到本 portal 中，增加后将立即被执行。窗口名字取所给的窗口地址，，使得在 portal 渲染页面中使用
@@ -84,6 +71,20 @@ public interface Portal {
     public List<? extends Window> getWindows();
 
     /**
+     * 返回这个 {@link Portal} 对象邦定的 {@link Invocation} 对象
+     * 
+     * @return
+     */
+    public Invocation getInvocation();
+
+    /**
+     * 设置超时时间。这个时间指的是控制器返回之后， portal 等待所有窗口执行完毕的最大时间。
+     * 
+     * @param timeoutInMillis 毫秒，小于或等于0表示 portal 应等待所有窗口执行完毕或被取消才最终渲染页面给用户
+     */
+    public void setTimeout(long timeoutInMillis);
+
+    /**
      * 
      * @return
      */
@@ -94,4 +95,17 @@ public interface Portal {
      * @return
      */
     public HttpServletResponse getResponse();
+
+    /**
+     * 
+     * @return
+     */
+    public Model getModel();
+
+    /**
+     * 
+     * @param name
+     * @param value
+     */
+    public void addModel(String name, Object value);
 }
