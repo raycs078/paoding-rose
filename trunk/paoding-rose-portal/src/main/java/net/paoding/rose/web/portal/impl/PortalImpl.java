@@ -28,6 +28,7 @@ import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.portal.Portal;
 import net.paoding.rose.web.portal.PortalListener;
 import net.paoding.rose.web.portal.Window;
+import net.paoding.rose.web.var.Model;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -113,6 +114,26 @@ class PortalImpl implements Portal, PortalListener {
     protected Future<?> submitWindow(ExecutorService executor, WindowTask task) {
         Future<?> future = executor.submit(task);
         return new WindowFuture(future, task.getWindow());
+    }
+
+    @Override
+    public HttpServletRequest getRequest() {
+        return invocation.getRequest();
+    }
+
+    @Override
+    public HttpServletResponse getResponse() {
+        return invocation.getResponse();
+    }
+
+    @Override
+    public void addModel(String name, Object value) {
+        invocation.addModel(name, value);
+    }
+
+    @Override
+    public Model getModel() {
+        return invocation.getModel();
     }
 
     //-------------实现toString()---------------F
@@ -210,16 +231,6 @@ class PortalImpl implements Portal, PortalListener {
                 logger.error("", e);
             }
         }
-    }
-
-    @Override
-    public HttpServletRequest getRequest() {
-        return invocation.getRequest();
-    }
-
-    @Override
-    public HttpServletResponse getResponse() {
-        return invocation.getResponse();
     }
 
 }
