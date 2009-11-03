@@ -24,6 +24,11 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.SqlProvider;
 import org.springframework.util.Assert;
 
+/**
+ * 通过 SpringJdbcTemplate 实现的 {@link DataAccess}.
+ * 
+ * @author han.liao
+ */
 public class SpringJdbcTemplateDataAccess implements DataAccess {
 
     // 创建  PreparedStatement 时指定  Statement.RETURN_GENERATED_KEYS 属性
