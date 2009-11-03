@@ -28,7 +28,6 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.SimpleTypeConverter;
 import org.springframework.beans.TypeMismatchException;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.util.ClassUtils;
 import org.springframework.validation.ObjectError;
 
 /**
@@ -58,26 +57,10 @@ public final class MethodParameterResolver {
         resolvers = new ParamResolver[parameterTypes.length];
         paramMetaDatas = new ParamMetaData[parameterTypes.length];
         // 
-        int[][] replicatedResolverCount = new int[parameterTypes.length][2];
-        for (int i = 0; i < parameterTypes.length; i++) {
-            replicatedResolverCount[i][0] = 1;
-            replicatedResolverCount[i][1] = 0;
-            for (int j = 0; j < i; j++) {
-                if (parameterTypes[i] == parameterTypes[j]) {
-                    replicatedResolverCount[j][0] += 1;
-                    replicatedResolverCount[i][0] += 1;
-                    replicatedResolverCount[i][1] += 1;
-                }
-            }
-        }
-        //
         Annotation[][] parameterAnnotations = method.getParameterAnnotations();
         for (int i = 0; i < parameterTypes.length; i++) {
             ParamMetaDataImpl paramMetaData = new ParamMetaDataImpl(controllerClazz, method,
-                    parameterTypes[i], parameterNames[i], replicatedResolverCount[i][0],
-                    replicatedResolverCount[i][1]);
-            paramMetaDatas[i] = paramMetaData;
-            resolvers[i] = resolverFactory.supports(paramMetaData);
+                    parameterTypes[i], parameterNames[i]);
             for (Annotation annotation : parameterAnnotations[i]) {
                 if (annotation instanceof Param) {
                     paramMetaData.setParamAnnotation(Param.class.cast(annotation));
@@ -85,6 +68,8 @@ public final class MethodParameterResolver {
                     paramMetaData.setFlashParamAnnotation(FlashParam.class.cast(annotation));
                 }
             }
+            paramMetaDatas[i] = paramMetaData;
+            resolvers[i] = resolverFactory.supports(paramMetaData);
         }
     }
 
@@ -109,24 +94,10 @@ public final class MethodParameterResolver {
             if (resolvers[i] == null) {
                 continue;
             }
-            String parameterName = parameterNames[i];
-            Class<?> parameterType = paramMetaDatas[i].getParamType();
             try {
-                if (parameterName == null) {
-                    if (ClassUtils.isPrimitiveOrWrapper(parameterType)) {
-                        parameters[i] = simpleTypeConverter.convertIfNecessary("0", parameterType);
-                        continue;
-                    } else if (parameterType == String.class) {
-                        parameters[i] = null;
-                        continue;
-                    } else {
-                        parameterName = parameterType.getSimpleName()
-                                + paramMetaDatas[i].getIndexOfReplicated();
-                    }
-                }
                 if (logger.isDebugEnabled()) {
-                    logger.debug("Resolves parameter " + parameterName + ":"
-                            + parameterType.getSimpleName() + " using "
+                    logger.debug("Resolves parameter "
+                            + paramMetaDatas[i].getParamType().getSimpleName() + " using "
                             + resolvers[i].getClass().getName());
                 }
                 parameters[i] = resolvers[i].resolve(inv, paramMetaDatas[i]);
@@ -138,22 +109,23 @@ public final class MethodParameterResolver {
                 if (logger.isWarnEnabled()) {
                     logger.warn("", e);
                 }
-                parameterBindingResult.rejectValue(parameterName, "convert.failed", new Object[] {
-                        parameterName, e }, e.getMessage());
-                if (parameterType.isPrimitive()) {
+                parameterBindingResult.rejectValue(parameterNames[i], "convert.failed",
+                        new Object[] { parameterNames[i], e }, e.getMessage());
+                if (paramMetaDatas[i].getParamType().isPrimitive()) {
                     Param paramAnnotation = paramMetaDatas[i].getParamAnnotation();
                     if (paramAnnotation != null && !"~".equals(paramAnnotation.def())) {
                         parameters[i] = simpleTypeConverter.convertIfNecessary(paramAnnotation
-                                .def(), parameterType);
+                                .def(), paramMetaDatas[i].getParamType());
                     } else {
-                        parameters[i] = simpleTypeConverter.convertIfNecessary("0", parameterType);
+                        parameters[i] = simpleTypeConverter.convertIfNecessary("0",
+                                paramMetaDatas[i].getParamType());
                     }
                 }
             } catch (Exception e) {
                 if (logger.isWarnEnabled()) {
                     logger.warn("", e);
                 }
-                parameterBindingResult.addError(new ObjectError(parameterName, e.getMessage()));
+                parameterBindingResult.addError(new ObjectError(parameterNames[i], e.getMessage()));
             }
         }
         return parameters;

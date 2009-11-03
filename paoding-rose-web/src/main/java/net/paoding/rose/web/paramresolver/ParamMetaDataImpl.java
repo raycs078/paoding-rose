@@ -35,22 +35,16 @@ class ParamMetaDataImpl implements ParamMetaData {
 
     private String paramName;
 
-    private int replicatedCount;
-
-    private int indexOfReplicated;
-
     private Param paramAnnotation;
 
     private FlashParam flashParamAnnotation;
 
     public ParamMetaDataImpl(Class<?> controllerClass, Method method, Class<?> paramType,
-            String paramName, int replicatedCount, int indexOfReplicated) {
+            String paramName) {
         this.controllerClass = controllerClass;
-        this.indexOfReplicated = indexOfReplicated;
         this.method = method;
         this.paramName = paramName;
         this.paramType = paramType;
-        this.replicatedCount = replicatedCount;
     }
 
     public Class<?> getControllerClass() {
@@ -83,22 +77,6 @@ class ParamMetaDataImpl implements ParamMetaData {
 
     public void setParamName(String paramName) {
         this.paramName = paramName;
-    }
-
-    public int getReplicatedCount() {
-        return replicatedCount;
-    }
-
-    public void setReplicatedCount(int replicatedCount) {
-        this.replicatedCount = replicatedCount;
-    }
-
-    public int getIndexOfReplicated() {
-        return indexOfReplicated;
-    }
-
-    public void setIndexOfReplicated(int indexOfReplicated) {
-        this.indexOfReplicated = indexOfReplicated;
     }
 
     public Param getParamAnnotation() {

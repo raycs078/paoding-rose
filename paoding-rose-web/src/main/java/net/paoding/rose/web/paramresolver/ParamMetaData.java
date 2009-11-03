@@ -57,20 +57,6 @@ public interface ParamMetaData {
     public String getParamName();
 
     /**
-     * 该类型的参数在所在方法中的总个数
-     * 
-     * @return
-     */
-    public int getReplicatedCount();
-
-    /**
-     * 这个参数在同类型的参数中的位置，第一个位置参数这个值是0，后续依次加一
-     * 
-     * @return
-     */
-    public int getIndexOfReplicated();
-
-    /**
      * 返回对该参数的 {@link Param} 注解；可能为null
      * 
      * @return
