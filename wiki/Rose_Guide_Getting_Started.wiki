@@ -27,7 +27,7 @@ Eclipse
 }}}
 
 ===WEB-INF===
- * 在web.xml下配置一个Filter,以及可选的log4j功能
+ * 在web.xml下配置一个Filter,以及 *可选的* log4j功能
 
 {{{
 <context-param>
