@@ -338,7 +338,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
         public Object resolve(Invocation inv, ParamMetaData paramMetaData) {
             Object bean = BeanUtils.instantiateClass(paramMetaData.getParamType());
             ServletRequestDataBinder binder;
-            if (paramMetaData.getReplicatedCount() == 1) {
+            if (paramMetaData.getParamAnnotation() == null) {
                 binder = new ServletRequestDataBinder(bean);
             } else {
                 binder = new ServletRequestDataBinder(bean, paramMetaData.getParamName());
