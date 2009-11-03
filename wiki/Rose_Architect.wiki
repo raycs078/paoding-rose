@@ -1,0 +1,11 @@
+#
+
+= Rose和Spring的关系 =
+
+作为一名现代的Java开发者，几乎是离不开Spring的。Spring是SpringSource.org公司提供的开源Java基础架构产品。我们并不完全迷信Spring，但从技术上讲Spring提供了很好的在web开发中使用的基础组件、基础容器，使得它得到我们很大的尊重。
+
+因为Spring充分地使用面向对象原则开发使Spring的丰富基础组件具有良好的使用和复用，有关web的一些基础组件包括：参数对象绑定器、Multipart对象抽象、视图渲染器等。这些组件被 Spring 自己的 Spring-MVC 框架自己使用，同时也被 Rose 大量使用。
+
+除了对spring基础组件的使用，实际最重要的是Rose极大重视了对Spring ApplicationContext的使用。因为ApplicationContext的强大、聪慧，使得Rose的架构变得轻松而简单。每种框架对对象都有它的管理策略，Rose从本质上就是将各种各样的对象放置在合适的ApplicationContext上，不同的ApplicationContext之间形成上下级关系，让Spring来管理，并和开发者自定义的ApplicationContext有机结合起来。所以，从Spring的角度出发，开发者可以把Rose看出成是Spring的另外一种配置方式。也因此，Spring的@Autowired 可在Rose的类中大量被使用。
+
+当然，为了更好地完成WEB工作以及极大的贯彻约定，不在没有意义的多种选择中彷徨，我们提供了Spring所没有的(或不同的)、Rose特有的各种机制：URI映射机制、参数映射机制以及各种道具的关系假设(拦截器、错误处理器、参数解析器)、页面映射关系、国际化配置机制等等。
