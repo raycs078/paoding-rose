@@ -54,13 +54,7 @@ public class JadeDaoProcessor implements BeanFactoryPostProcessor, ApplicationCo
         } catch (IOException e) {
             throw new BeanCreationException("", e);
         }
-        DataSourceFactory dataSourceFactory;
-        if (applicationContext.containsBean("dataSourceFactory")) {
-            dataSourceFactory = (DataSourceFactory) applicationContext.getBean("dataSourceFactory");
-        } else {
-            dataSourceFactory = (DataSourceFactory) applicationContext
-                    .getBean("defaultDataSourceFactory");
-        }
+
         DataAccessProvider dataAccessProvider = (DataAccessProvider) applicationContext
                 .getBean("dataAccessProvider");
         for (Class<?> clazz : classes) {
@@ -68,7 +62,6 @@ public class JadeDaoProcessor implements BeanFactoryPostProcessor, ApplicationCo
                 GenericBeanDefinition beanDefinition = new GenericBeanDefinition();
                 beanDefinition.setBeanClass(DaoFactoryBean.class);
                 MutablePropertyValues propertyValues = beanDefinition.getPropertyValues();
-                propertyValues.addPropertyValue("dataSourceFactory", dataSourceFactory);
                 propertyValues.addPropertyValue("dataAccessProvider", dataAccessProvider);
                 propertyValues.addPropertyValue("daoClass", clazz);
                 beanDefinition.setAutowireCandidate(true);

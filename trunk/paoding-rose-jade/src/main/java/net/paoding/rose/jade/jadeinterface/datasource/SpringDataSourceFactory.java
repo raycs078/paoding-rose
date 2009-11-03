@@ -1,4 +1,4 @@
-package net.paoding.rose.jade.jadeinterface.impl;
+package net.paoding.rose.jade.jadeinterface.datasource;
 
 import javax.sql.DataSource;
 
@@ -7,11 +7,11 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
 /**
+ * 获取用 Spring Framework 配置的 {@link javax.sql.DataSource} 数据源。
  * 
- * 
- * @author 王志亮 [qieqie.wang@gmail.com]
+ * @author zhiliang.wang
  */
-public class SpingDataSourceFactory implements DataSourceFactory, ApplicationContextAware {
+public class SpringDataSourceFactory implements DataSourceFactory, ApplicationContextAware {
 
     private ApplicationContext applicationContext;
 
@@ -21,7 +21,8 @@ public class SpingDataSourceFactory implements DataSourceFactory, ApplicationCon
     }
 
     @Override
-    public DataSource getDataSource(String name) {
-        return (DataSource) applicationContext.getBean(name + "DataSource", DataSource.class);
+    public DataSource getDataSource(String dataSourceName) {
+        return (DataSource) applicationContext.getBean(dataSourceName + "DataSource",
+                DataSource.class);
     }
 }

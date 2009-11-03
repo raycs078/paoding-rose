@@ -24,8 +24,6 @@ public class DaoFactoryBean<T> implements FactoryBean, InitializingBean {
 
     private DataAccessProvider dataAccessProvider;
 
-    private DataSourceFactory dataSourceFactory;
-
     private static RowMapperFactory rowMapperFactory = new RowMapperFactoryImpl();
 
     private T dao;
@@ -38,10 +36,6 @@ public class DaoFactoryBean<T> implements FactoryBean, InitializingBean {
 
     public void setDataAccessProvider(DataAccessProvider dataAccessProvider) {
         this.dataAccessProvider = dataAccessProvider;
-    }
-
-    public void setDataSourceFactory(DataSourceFactory dataSourceFactory) {
-        this.dataSourceFactory = dataSourceFactory;
     }
 
     @Override
@@ -76,8 +70,7 @@ public class DaoFactoryBean<T> implements FactoryBean, InitializingBean {
         }
 
         String dataSourceName = annotation.catalog();
-        javax.sql.DataSource dataSource = dataSourceFactory.getDataSource(dataSourceName);
-        final DataAccess dataAccess = dataAccessProvider.createDataAccess(dataSource);
+        final DataAccess dataAccess = dataAccessProvider.createDataAccess(dataSourceName);
 
         return (T) Proxy.newProxyInstance(ClassUtils.getDefaultClassLoader(),
                 new Class[] { daoClass }, new InvocationHandler() {

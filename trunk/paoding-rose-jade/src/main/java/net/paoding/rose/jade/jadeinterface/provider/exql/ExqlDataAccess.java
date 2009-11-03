@@ -10,12 +10,18 @@ import net.paoding.rose.jade.jadeinterface.exql.ExqlContext;
 import net.paoding.rose.jade.jadeinterface.exql.ExqlPattern;
 import net.paoding.rose.jade.jadeinterface.exql.impl.ExqlContextImpl;
 import net.paoding.rose.jade.jadeinterface.exql.impl.ExqlPatternImpl;
+import net.paoding.rose.jade.jadeinterface.provider.DataAccess;
 import net.paoding.rose.jade.jadeinterface.provider.Modifier;
 import net.paoding.rose.jade.jadeinterface.provider.springjdbctemplte.SpringJdbcTemplateDataAccess;
 
 import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.jdbc.core.RowMapper;
 
+/**
+ * 提供动态: SQL 语句功能的 {@link DataAccess} 实现。
+ * 
+ * @author han.liao
+ */
 public class ExqlDataAccess extends SpringJdbcTemplateDataAccess {
 
     public ExqlDataAccess(DataSource dataSource) {

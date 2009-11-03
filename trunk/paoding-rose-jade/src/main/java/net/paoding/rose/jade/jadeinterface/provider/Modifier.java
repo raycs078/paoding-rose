@@ -25,7 +25,7 @@ public class Modifier {
     }
 
     public <T extends Annotation> T getAnnotation(Class<T> annotationClass) {
-        return (T) method.getAnnotation(annotationClass);
+        return method.getAnnotation(annotationClass);
     }
 
     @Override
