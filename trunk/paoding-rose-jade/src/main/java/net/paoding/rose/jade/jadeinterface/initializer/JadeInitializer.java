@@ -1,5 +1,7 @@
 package net.paoding.rose.jade.jadeinterface.initializer;
 
+import javax.servlet.ServletContext;
+
 import net.paoding.rose.jade.jadeinterface.provider.DataAccessProvider;
 import net.paoding.rose.jade.jadeinterface.provider.DataAccessProviderHolder;
 
@@ -57,5 +59,27 @@ public class JadeInitializer {
         Class<?> providerClass = Class.forName(providerClassName);
         DataAccessProvider provider = (DataAccessProvider) providerClass.newInstance();
         DataAccessProviderHolder.setProvider(provider);
+    }
+
+    /**
+     * 用所给的 ServletContext 初始化系统。
+     * 
+     * @param servletContext - {@link ServletContext}
+     */
+    public static void initialize(ServletContext servletContext) {
+
+        String providerClassName = servletContext.getInitParameter("jadeDataAccessProviderClass");
+
+        if (providerClassName == null) {
+            throw new NullPointerException("jadeDataAccessProviderClass");
+        }
+
+        try {
+            JadeInitializer.initialize(providerClassName);
+
+        } catch (Exception e) {
+
+            throw new IllegalArgumentException(providerClassName, e);
+        }
     }
 }
