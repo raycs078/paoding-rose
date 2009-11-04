@@ -9,12 +9,10 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.sql.DataSource;
-
 import net.paoding.rose.jade.jadeinterface.cache.Cache;
 import net.paoding.rose.jade.jadeinterface.cache.CacheProvider;
+import net.paoding.rose.jade.jadeinterface.provider.DataAccess;
 import net.paoding.rose.jade.jadeinterface.provider.Modifier;
-import net.paoding.rose.jade.jadeinterface.provider.exql.ExqlDataAccess;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -22,12 +20,11 @@ import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.jdbc.core.RowMapper;
 
 /**
- * 提供包含缓存的 {@link net.paoding.rose.jade.jadeinterface.provider.DataAccess}
- * 实现。
+ * 提供包含缓存的 {@link DataAccess} 实现。
  * 
  * @author han.liao
  */
-public class CacheDataAccess extends ExqlDataAccess {
+public class CacheDataAccess implements DataAccess {
 
     // 输出日志
     private static final Log logger = LogFactory.getLog(CacheDataAccess.class);
@@ -38,11 +35,11 @@ public class CacheDataAccess extends ExqlDataAccess {
     // 可配置的缓存实现
     private final CacheProvider cacheProvider;
 
-    public CacheDataAccess(DataSource dataSource, CacheProvider cacheProvider) {
+    private final DataAccess dataAccess;
 
-        super(dataSource);
-
+    public CacheDataAccess(DataAccess dataAccess, CacheProvider cacheProvider) {
         this.cacheProvider = cacheProvider;
+        this.dataAccess = dataAccess;
     }
 
     @Override
@@ -68,7 +65,7 @@ public class CacheDataAccess extends ExqlDataAccess {
                 }
 
                 // 查询对象，并添加到缓存
-                List<?> list = super.select(sql, modifier, parameters, rowMapper);
+                List<?> list = dataAccess.select(sql, modifier, parameters, rowMapper);
 
                 final int size = list.size();
                 if (size == 1) {
@@ -87,14 +84,14 @@ public class CacheDataAccess extends ExqlDataAccess {
         }
 
         // 执行原有的查询
-        return super.select(sql, modifier, parameters, rowMapper);
+        return dataAccess.select(sql, modifier, parameters, rowMapper);
     }
 
     @Override
     public int update(String sql, Modifier modifier, Map<String, ?> parameters) {
 
         // 先执行原有的语句
-        int number = super.update(sql, modifier, parameters);
+        int number = dataAccess.update(sql, modifier, parameters);
 
         net.paoding.rose.jade.jadeinterface.annotation.CacheDelete cacheDelete = modifier
                 .getAnnotation(net.paoding.rose.jade.jadeinterface.annotation.CacheDelete.class);
@@ -120,7 +117,7 @@ public class CacheDataAccess extends ExqlDataAccess {
     public Number insertReturnId(String sql, Modifier modifier, Map<String, ?> parameters) {
 
         // 先执行原有的语句
-        Number number = super.insertReturnId(sql, modifier, parameters);
+        Number number = dataAccess.insertReturnId(sql, modifier, parameters);
 
         net.paoding.rose.jade.jadeinterface.annotation.CacheDelete cacheDelete = modifier
                 .getAnnotation(net.paoding.rose.jade.jadeinterface.annotation.CacheDelete.class);

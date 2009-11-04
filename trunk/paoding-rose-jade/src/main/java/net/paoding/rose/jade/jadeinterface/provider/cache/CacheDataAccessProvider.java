@@ -1,11 +1,13 @@
 package net.paoding.rose.jade.jadeinterface.provider.cache;
 
+import javax.servlet.ServletContext;
 import javax.sql.DataSource;
 
 import net.paoding.rose.jade.jadeinterface.cache.CacheProvider;
-import net.paoding.rose.jade.jadeinterface.cache.EhCacheProvider;
 import net.paoding.rose.jade.jadeinterface.provider.DataAccess;
-import net.paoding.rose.jade.jadeinterface.provider.springjdbctemplte.SpringJdbcTemplateDataAccessProvider;
+import net.paoding.rose.jade.jadeinterface.provider.exql.ExqlDataAccessProvider;
+
+import org.springframework.web.context.WebApplicationContext;
 
 /**
  * 提供 cache 版本的
@@ -14,7 +16,7 @@ import net.paoding.rose.jade.jadeinterface.provider.springjdbctemplte.SpringJdbc
  * 
  * @author han.liao
  */
-public class CacheDataAccessProvider extends SpringJdbcTemplateDataAccessProvider {
+public class CacheDataAccessProvider extends ExqlDataAccessProvider {
 
     // 可配置的缓存实现
     protected CacheProvider cacheProvider;
@@ -26,9 +28,15 @@ public class CacheDataAccessProvider extends SpringJdbcTemplateDataAccessProvide
     @Override
     public DataAccess createDataAccess(String dataSourceName) {
 
-        // 创建  Ehcache 缓存实现
         if (cacheProvider == null) {
-            cacheProvider = new EhCacheProvider();
+
+            if (applicationContext instanceof WebApplicationContext) {
+
+                ServletContext servletContext = ((WebApplicationContext) applicationContext) // NL 
+                        .getServletContext();
+
+                cacheProvider = initCacheProvider(servletContext);
+            }
         }
 
         return super.createDataAccess(dataSourceName);
@@ -36,6 +44,37 @@ public class CacheDataAccessProvider extends SpringJdbcTemplateDataAccessProvide
 
     @Override
     protected DataAccess createDataAccess(DataSource dataSource) {
-        return new CacheDataAccess(dataSource, cacheProvider);
+
+        DataAccess dataAccess = super.createDataAccess(dataSource);
+
+        if (cacheProvider != null) {
+            return new CacheDataAccess(dataAccess, cacheProvider);
+        }
+
+        return dataAccess;
+    }
+
+    /**
+     * 根据 web.xml 配置初始化 {@link CacheProvider}.
+     * 
+     * @param servletContext - 容器的 {@link ServletContext}
+     * 
+     * @return {@link CacheProvider} 实例
+     */
+    protected CacheProvider initCacheProvider(ServletContext servletContext) {
+
+        String providerClassName = servletContext.getInitParameter("jadeCacheProviderClass");
+
+        try {
+            if (providerClassName != null) {
+                Class<?> providerClass = Class.forName(providerClassName);
+                return (CacheProvider) providerClass.newInstance();
+            }
+
+        } catch (Exception e) {
+            throw new IllegalArgumentException(providerClassName, e);
+        }
+
+        return null;
     }
 }
