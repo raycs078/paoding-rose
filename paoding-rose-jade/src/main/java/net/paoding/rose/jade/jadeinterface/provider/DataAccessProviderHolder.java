@@ -1,8 +1,13 @@
 package net.paoding.rose.jade.jadeinterface.provider;
 
+import javax.servlet.ServletContext;
+
+import net.paoding.rose.jade.jadeinterface.initializer.JadeInitializer;
+
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.web.context.WebApplicationContext;
 
 /**
  * 提供可配置的 {@link DataAccessProvider} 占位符。
@@ -20,18 +25,6 @@ public class DataAccessProviderHolder implements DataAccessProvider, Application
     private static DataAccessProvider provider;
 
     private static ApplicationContext applicationContext;
-
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-
-        DataAccessProviderHolder.applicationContext = applicationContext;
-
-        if ((DataAccessProviderHolder.provider != null)
-                && (DataAccessProviderHolder.provider instanceof ApplicationContextAware)) {
-            ((ApplicationContextAware) DataAccessProviderHolder.provider)
-                    .setApplicationContext(applicationContext);
-        }
-    }
 
     /**
      * 设置全局使用的 {@link DataAccessProvider} 实现。
@@ -59,7 +52,32 @@ public class DataAccessProviderHolder implements DataAccessProvider, Application
     }
 
     @Override
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+
+        DataAccessProviderHolder.applicationContext = applicationContext;
+
+        if ((DataAccessProviderHolder.provider != null)
+                && (DataAccessProviderHolder.provider instanceof ApplicationContextAware)) {
+            ((ApplicationContextAware) DataAccessProviderHolder.provider)
+                    .setApplicationContext(applicationContext);
+        }
+    }
+
+    @Override
     public DataAccess createDataAccess(String dataSourceName) {
+
+        // 自动检查是否设置 {@link DataAccessProvider} 实现。
+        if (DataAccessProviderHolder.provider == null) {
+
+            if (applicationContext instanceof WebApplicationContext) {
+
+                ServletContext servletContext = ((WebApplicationContext) applicationContext) // NL 
+                        .getServletContext();
+
+                JadeInitializer.initialize(servletContext);
+            }
+        }
+
         return provider.createDataAccess(dataSourceName);
     }
 }
