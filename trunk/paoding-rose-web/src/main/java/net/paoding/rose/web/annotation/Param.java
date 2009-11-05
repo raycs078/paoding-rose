@@ -51,7 +51,7 @@ public @interface Param {
      * 
      * @return
      */
-    String value() default "$";
+    String value();
 
     /**
      * 
