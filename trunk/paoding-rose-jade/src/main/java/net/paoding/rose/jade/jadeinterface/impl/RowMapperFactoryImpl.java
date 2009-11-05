@@ -8,6 +8,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -27,10 +28,26 @@ import org.springframework.util.ClassUtils;
  */
 public class RowMapperFactoryImpl implements RowMapperFactory {
 
+    private static final Map<Class<?>, Class<?>> primitiveWrapperClassMap = new HashMap<Class<?>, Class<?>>(16);
+
+    static {
+        primitiveWrapperClassMap.put(boolean.class, Boolean.class);
+        primitiveWrapperClassMap.put(byte.class, Byte.class);
+        primitiveWrapperClassMap.put(char.class, Character.class);
+        primitiveWrapperClassMap.put(double.class, Double.class);
+        primitiveWrapperClassMap.put(float.class, Float.class);
+        primitiveWrapperClassMap.put(int.class, Integer.class);
+        primitiveWrapperClassMap.put(long.class, Long.class);
+        primitiveWrapperClassMap.put(short.class, Short.class);
+    }
+
     public RowMapper getRowMapper(Class<?> daoClass, Method method, ResultSet resultSet,
             Class<?> rowType) throws SQLException {
         if (ClassUtils.isPrimitiveOrWrapper(rowType)) {
             SingleColumnRowMapper mapper = new SingleColumnRowMapper();
+            if (rowType.isPrimitive()) {
+                rowType = primitiveWrapperClassMap.get(rowType);
+            }
             mapper.setRequiredType(rowType);
             return mapper;
         }
