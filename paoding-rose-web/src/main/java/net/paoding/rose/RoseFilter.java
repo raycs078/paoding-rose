@@ -51,6 +51,7 @@ import net.paoding.rose.web.impl.module.Module;
 import net.paoding.rose.web.impl.module.ModulesBuilder;
 import net.paoding.rose.web.impl.module.NestedControllerInterceptorWrapper;
 import net.paoding.rose.web.impl.thread.InvocationBean;
+import net.paoding.rose.web.impl.thread.ParameteredUriRequest;
 import net.paoding.rose.web.paramresolver.ParamResolver;
 import net.paoding.rose.web.var.PrivateVar;
 
@@ -237,6 +238,10 @@ public class RoseFilter extends GenericFilterBean {
             return;
         } else {
             try {
+                final List<String> parameterNames = inv.getMatchResultParameterNames();
+                if (parameterNames.size() > 0) {
+                    inv.setRequest(new ParameteredUriRequest(inv, parameterNames));
+                }
                 InvocationUtils.bindRequestToCurrentThread(inv.getRequest());
                 engine.invoke(inv);
 
@@ -280,7 +285,6 @@ public class RoseFilter extends GenericFilterBean {
         String uri;
         if (WebUtils.isIncludeRequest(request)) {
             requestPath.setDispatcher(Dispatcher.INCLUDE);
-            // reference: http://www.bj-hk.go.cn/resin-doc/webapp/faq.xtp#include
             uri = (String) request.getAttribute(WebUtils.INCLUDE_REQUEST_URI_ATTRIBUTE);
             invocationCtxpath = ((String) request
                     .getAttribute(WebUtils.INCLUDE_CONTEXT_PATH_ATTRIBUTE));

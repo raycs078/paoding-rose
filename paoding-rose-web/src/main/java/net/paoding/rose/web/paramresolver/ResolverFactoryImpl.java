@@ -44,7 +44,6 @@ import net.paoding.rose.web.annotation.Param;
 import net.paoding.rose.web.annotation.ParamConf;
 import net.paoding.rose.web.impl.module.Module;
 import net.paoding.rose.web.impl.thread.InvocationBean;
-import net.paoding.rose.web.impl.thread.MatchResult;
 import net.paoding.rose.web.var.Flash;
 import net.paoding.rose.web.var.Model;
 
@@ -53,9 +52,12 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.SimpleTypeConverter;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.MessageSource;
 import org.springframework.util.ClassUtils;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.Errors;
+import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.multipart.MultipartRequest;
@@ -87,6 +89,8 @@ public class ResolverFactoryImpl implements ResolverFactory {
 
     private static final ParamResolver[] buildinResolvers = new ParamResolver[] {//
     new InvocationResolver(), //
+            new ApplicationContextResolver(), //
+            new MessageSourceResolver(), //
             new ModelResolver(), //
             new FlashResolver(), //
             new ModuleResolver(), //
@@ -141,6 +145,33 @@ public class ResolverFactoryImpl implements ResolverFactory {
         @Override
         public Invocation resolve(Invocation inv, ParamMetaData paramMetaData) {
             return inv;
+        }
+    }
+
+    static final class ApplicationContextResolver implements ParamResolver {
+
+        @Override
+        public boolean supports(ParamMetaData paramMetaData) {
+            return ApplicationContext.class == paramMetaData.getParamType()
+                    || WebApplicationContext.class == paramMetaData.getParamType();
+        }
+
+        @Override
+        public ApplicationContext resolve(Invocation inv, ParamMetaData paramMetaData) {
+            return inv.getApplicationContext();
+        }
+    }
+
+    static final class MessageSourceResolver implements ParamResolver {
+
+        @Override
+        public boolean supports(ParamMetaData paramMetaData) {
+            return MessageSource.class == paramMetaData.getParamType();
+        }
+
+        @Override
+        public MessageSource resolve(Invocation inv, ParamMetaData paramMetaData) {
+            return inv.getApplicationContext();
         }
     }
 
@@ -644,15 +675,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
                 toConvert = inv.getFlash().get(flashParam.value());
             }
             if (toConvert == null && param != null) {
-                if ("$".equals(param.value())) {
-                    MatchResult<?> mr = ((InvocationBean) inv).getActionMatchResult();
-                    int index = Integer.parseInt(paramMetaData.getParamName().substring(1)) - 1;
-                    if (index < mr.getParameterCount()) {
-                        toConvert = mr.getParameter(index);
-                    }
-                } else {
-                    toConvert = inv.getRawParameter(param.value());
-                }
+                toConvert = inv.getRawParameter(param.value());
             }
             if (toConvert == null) {
                 if (param != null && !"~".equals(param.def())) {

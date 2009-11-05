@@ -45,7 +45,6 @@ public class ParameterNameDiscovererImpl {
         Annotation[][] parameterAnnotations = method.getParameterAnnotations();
         String[] names = new String[parameterTypes.length];
         Map<String, Integer> counts = new HashMap<String, Integer>();
-        int indexOfNamedParam = 1;
         for (int i = 0; i < names.length; i++) {
             Annotation[] annotations = parameterAnnotations[i];
             for (Annotation annotation : annotations) {
@@ -57,17 +56,10 @@ public class ParameterNameDiscovererImpl {
                 }
                 if (name != null) {
                     if (StringUtils.isNotEmpty(name)) {
-                        if (name.equals("$")) {
-                            if (ClassUtils.isPrimitiveOrWrapper(parameterTypes[i])
-                                    || parameterTypes[i] == String.class) {
-                                names[i] = "$" + indexOfNamedParam++;
-                            }
-                        } else {
-                            names[i] = name;
-                            if ((parameterTypes[i] == BindingResult.class || parameterTypes[i] == Errors.class)
-                                    && !name.endsWith("BindingResult")) {
-                                names[i] = name + "BindingResult";
-                            }
+                        names[i] = name;
+                        if ((parameterTypes[i] == BindingResult.class || parameterTypes[i] == Errors.class)
+                                && !name.endsWith("BindingResult")) {
+                            names[i] = name + "BindingResult";
                         }
                     }
                     break;
