@@ -15,10 +15,6 @@ import net.paoding.rose.jade.jadeinterface.exql.ExqlContext;
 public class ExqlContextImpl implements ExqlContext {
 
     // 输出的常量
-    private static final char LEFT_BRACKET = '(';
-
-    private static final char RIGHT_BRACKET = ')';
-
     private static final char QUESTION = '?';
 
     private static final char COMMA = ',';
@@ -68,7 +64,7 @@ public class ExqlContextImpl implements ExqlContext {
         if (obj instanceof Collection<?>) {
 
             // 展开  Collection 容器, 输出逗号分隔以支持 IN (...) 语法
-            // IN :varlist --> IN (?, ?, ...)
+            // "IN (:varlist)" --> "IN (?, ?, ...)"
             fillCollection((Collection<?>) obj);
 
         } else if ((obj != null) && obj.getClass().isArray()) {
@@ -78,7 +74,7 @@ public class ExqlContextImpl implements ExqlContext {
 
         } else {
 
-            // 直接输出参数, uid > :var --> uid > ?
+            // 直接输出参数, "uid > :var" --> "uid > ?"
             setParam(obj);
 
             builder.append(QUESTION);
@@ -117,8 +113,6 @@ public class ExqlContextImpl implements ExqlContext {
 
         // 展开  Collection 容器, 输出逗号分隔以支持 IN (...) 语法
         // IN :varlist --> IN (?, ?, ...)
-        builder.append(LEFT_BRACKET);
-
         for (Object value : collection) {
 
             if (value != null) {
@@ -135,8 +129,6 @@ public class ExqlContextImpl implements ExqlContext {
                 index++;
             }
         }
-
-        builder.append(RIGHT_BRACKET);
     }
 
     // 进行简单测试
