@@ -87,6 +87,10 @@ public class ExqlUtils {
         } else if (obj instanceof Collection<?>) {
 
             return ((Collection<?>) obj).size() > 0; // 容器类型, 对象数量 > 0 表示有效
+
+        } else if (obj.getClass().isArray()) {
+
+            return Array.getLength(obj) > 0; // 数组类型, 对象数量 > 0 表示有效
         }
 
         return true; // 任意对象，引用不为空就判定有效
@@ -101,10 +105,15 @@ public class ExqlUtils {
      */
     public static Object[] asArray(Object obj) {
 
-        if ((obj != null) && obj.getClass().isArray()) {
+        if (obj == null) {
+
+            return new Object[] {}; // 返回空数组
+
+        } else if (obj.getClass().isArray()) {
 
             Class<?> componentType = obj.getClass().getComponentType();
 
+            // 转换元素为基本类型的数组
             if (componentType.isPrimitive()) {
 
                 final int length = Array.getLength(obj);
@@ -118,10 +127,13 @@ public class ExqlUtils {
                 return array;
             }
 
+            // 数组直接返回
             return (Object[]) obj;
-        }
 
-        return new Object[] { obj };
+        } else {
+
+            return new Object[] { obj }; // 其他类型, 返回包含单个对象的数组
+        }
     }
 
     /**
