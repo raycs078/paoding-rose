@@ -36,7 +36,7 @@ public class ExqlCompiler {
 
     // 正则表达式
     private static final Pattern PATTERN_KEYWORD = Pattern.compile( // NL
-            "(\\:[a-zA-Z0-9_\\.]*)|\\{([^\\{\\}]*)\\}\\?|#(#|if|for)?");
+            "\\:\\:|(\\:[a-zA-Z0-9_\\.]+)|\\{([^\\{\\}]+)\\}\\?|#(#|if|for)?");
 
     private static final Pattern PATTERN_IN = Pattern.compile(// NL
             "([a-zA-Z0-9_]*)\\s+in\\s+(.+)");
