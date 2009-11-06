@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.Date;
 
 import net.paoding.rose.jade.jadeinterface.exql.ExqlContext;
+import net.paoding.rose.jade.jadeinterface.exql.util.ExqlUtils;
 
 /**
  * 实现简单的输出上下文。
@@ -15,6 +16,8 @@ import net.paoding.rose.jade.jadeinterface.exql.ExqlContext;
 public class ExqlContextImpl implements ExqlContext {
 
     // 输出的常量
+    private static final String NULL = "NULL";
+
     private static final char QUESTION = '?';
 
     private static final char COMMA = ',';
@@ -70,7 +73,7 @@ public class ExqlContextImpl implements ExqlContext {
         } else if ((obj != null) && obj.getClass().isArray()) {
 
             // 用数组构造  Collection 容器
-            fillCollection(Arrays.asList((Object[]) obj));
+            fillCollection(ExqlUtils.asCollection(obj));
 
         } else {
 
@@ -109,24 +112,33 @@ public class ExqlContextImpl implements ExqlContext {
      */
     private void fillCollection(Collection<?> collection) {
 
-        int index = 0;
+        int count = 0;
 
         // 展开  Collection 容器, 输出逗号分隔以支持 IN (...) 语法
-        // IN :varlist --> IN (?, ?, ...)
-        for (Object value : collection) {
+        // "IN :varlist" --> "IN (?, ?, ...)"
+        if (collection.isEmpty()) {
 
-            if (value != null) {
+            // 输出  "IN (NULL)" 保证不会产生错误
+            builder.append(NULL);
 
-                if (index > 0) {
-                    builder.append(COMMA);
+        } else {
+
+            // 输出逗号分隔的参数表
+            for (Object value : collection) {
+
+                if (value != null) {
+
+                    if (count > 0) {
+                        builder.append(COMMA);
+                    }
+
+                    // 输出参数内容
+                    setParam(value);
+
+                    builder.append(QUESTION);
+
+                    count++;
                 }
-
-                // 输出参数内容
-                setParam(value);
-
-                builder.append(QUESTION);
-
-                index++;
             }
         }
     }
@@ -138,15 +150,15 @@ public class ExqlContextImpl implements ExqlContext {
 
         context.fillText("WHERE uid = ");
         context.fillValue(102);
-        context.fillText(" AND sid IN ");
-        context.fillValue(new Integer[] { 11, 12, 24, 25, 31, 32, 33 });
-        context.fillText(" AND (create_time > ");
+        context.fillText(" AND sid IN (");
+        context.fillValue(new int[] { 11, 12, 24, 25, 31, 32, 33 });
+        context.fillText(") AND (create_time > ");
         context.fillValue(new Date());
         context.fillText(" OR create_time <= ");
         context.fillValue(new Date());
         context.fillChar(')');
 
-        System.out.println(Arrays.toString(context.getParams()));
         System.out.println(context.flushOut());
+        System.out.println(Arrays.toString(context.getParams()));
     }
 }
