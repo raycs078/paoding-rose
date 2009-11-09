@@ -128,6 +128,15 @@ public class ViewInstruction extends AbstractInstruction {
         }
     }
 
+    /**
+     * 
+     * @param inv
+     * @param viewName 大多数情况viewName应该是一个普通字符串 (e.g:
+     *        index)，也可能是index.jsp带后缀的字符串，
+     *        可能是一个带有/开头的绝对路径地址，可能是类似template/default这样的地址
+     * @return
+     * @throws IOException
+     */
     private String getViewPath(InvocationBean inv, final String viewName) throws IOException {
         if (logger.isDebugEnabled()) {
             logger.debug("resolving view name = '" + viewName + "'");
@@ -158,8 +167,17 @@ public class ViewInstruction extends AbstractInstruction {
             if (logger.isDebugEnabled()) {
                 logger.debug("to find viewPath by viewName '" + viewName + "'");
             }
+            final String notDirectoryViewName;
             String directoryPath = viewPathCache.getDirectoryPath();
-            File directoryFile = new File(inv.getServletContext().getRealPath(directoryPath));
+            int viewNameIndex = viewName.lastIndexOf('/');
+            if (viewNameIndex > 0) {
+                directoryPath = directoryPath + "/" + viewName.substring(0, viewNameIndex);
+                notDirectoryViewName = viewName.substring(viewNameIndex + 1);
+            } else {
+                notDirectoryViewName = viewName;
+            }
+            String deriectoryRealPath = inv.getServletContext().getRealPath(directoryPath);
+            File directoryFile = new File(deriectoryRealPath);
             if (!directoryFile.exists()) {
                 inv.getResponse().sendError(404, "not found directoryPath '" + directoryPath + "'");
                 return null;
@@ -171,17 +189,23 @@ public class ViewInstruction extends AbstractInstruction {
 
                 @Override
                 public boolean accept(File dir, String fileName) {
-                    if (fileName.startsWith(viewName) && fileName.length() > viewName.length()
-                            && fileName.charAt(viewName.length()) == '.'
+                    if (fileName.startsWith(notDirectoryViewName)
                             && new File(dir, fileName).isFile()) {
-                        return true;
+                        if (fileName.length() == notDirectoryViewName.length()
+                                && notDirectoryViewName.lastIndexOf('.') != -1) {
+                            return true;
+                        }
+                        if (fileName.length() > notDirectoryViewName.length()
+                                && fileName.charAt(notDirectoryViewName.length()) == '.') {
+                            return true;
+                        }
                     }
                     return false;
                 }
             });
             if (viewFiles.length == 0) {
                 inv.getResponse().sendError(404,
-                        "not found view file '" + viewName + "' in " + directoryPath);
+                        "not found view file '" + notDirectoryViewName + "' in " + directoryPath);
                 return null;
             }
 
