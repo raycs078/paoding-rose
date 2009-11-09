@@ -18,6 +18,7 @@ package net.paoding.rose.scanner;
 import java.io.File;
 import java.io.IOException;
 import java.lang.ref.SoftReference;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.util.ArrayList;
@@ -35,7 +36,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.core.io.support.ResourcePatternResolver;
 
@@ -78,6 +78,7 @@ public class RoseScanner {
      * @param resourceLoader
      * @return
      * @throws IOException
+     * @throws URISyntaxException
      */
     public List<ResourceInfo> getClassesFolderResources() throws IOException {
         if (classesFolderResources == null) {
@@ -86,7 +87,19 @@ public class RoseScanner {
             while (found.hasMoreElements()) {
                 URL urlObject = found.nextElement();
                 if ("file".equals(urlObject.getProtocol())) {
-                    classesFolderResources.add(new ResourceInfo(new UrlResource(urlObject),
+                    File file;
+                    try {
+                        file = new File(urlObject.toURI());
+                    } catch (URISyntaxException e) {
+                        throw new IOException(e);
+                    }
+                    if (file.isFile()) {
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("skip classes folder (not a directory): " + urlObject);
+                        }
+                        continue;
+                    }
+                    classesFolderResources.add(new ResourceInfo(new FileSystemResource(file),
                             new String[] { "*" }));
                     if (logger.isDebugEnabled()) {
                         logger.debug("add classes folder: " + urlObject);
