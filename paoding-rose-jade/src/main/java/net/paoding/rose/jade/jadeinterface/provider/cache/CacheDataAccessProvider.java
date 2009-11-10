@@ -1,80 +1,45 @@
 package net.paoding.rose.jade.jadeinterface.provider.cache;
 
-import javax.servlet.ServletContext;
-import javax.sql.DataSource;
-
 import net.paoding.rose.jade.jadeinterface.cache.CacheProvider;
 import net.paoding.rose.jade.jadeinterface.provider.DataAccess;
-import net.paoding.rose.jade.jadeinterface.provider.exql.ExqlDataAccessProvider;
+import net.paoding.rose.jade.jadeinterface.provider.DataAccessProvider;
 
-import org.springframework.web.context.WebApplicationContext;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 
 /**
- * 提供 cache 版本的
- * {@link net.paoding.rose.jade.jadeinterface.provider.DataAccessProvider}
- * 实现。
+ * 提供支持缓存的 {@link DataAccessProvider} 包装器实现。
  * 
  * @author han.liao
  */
-public class CacheDataAccessProvider extends ExqlDataAccessProvider {
+public class CacheDataAccessProvider implements DataAccessProvider, ApplicationContextAware {
 
-    // 可配置的缓存实现
-    protected CacheProvider cacheProvider;
+    protected final DataAccessProvider dataAccessProvider;
 
-    public void setCacheProvider(CacheProvider cacheProvider) {
+    protected final CacheProvider cacheProvider;
+
+    public CacheDataAccessProvider(DataAccessProvider dataAccessProvider,
+            CacheProvider cacheProvider) {
+        this.dataAccessProvider = dataAccessProvider;
         this.cacheProvider = cacheProvider;
+    }
+
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+
+        if (dataAccessProvider instanceof ApplicationContextAware) {
+            // 向下转播  ApplicationContext 对象
+            ((ApplicationContextAware) dataAccessProvider)
+                    .setApplicationContext(applicationContext);
+        }
     }
 
     @Override
     public DataAccess createDataAccess(String dataSourceName) {
 
-        if (cacheProvider == null) {
-
-            if (applicationContext instanceof WebApplicationContext) {
-
-                ServletContext servletContext = ((WebApplicationContext) applicationContext) // NL 
-                        .getServletContext();
-
-                cacheProvider = initCacheProvider(servletContext);
-            }
-        }
-
-        return super.createDataAccess(dataSourceName);
-    }
-
-    @Override
-    protected DataAccess createDataAccess(DataSource dataSource) {
-
-        DataAccess dataAccess = super.createDataAccess(dataSource);
-
-        if (cacheProvider != null) {
-            return new CacheDataAccess(dataAccess, cacheProvider);
-        }
-
-        return dataAccess;
-    }
-
-    /**
-     * 根据 web.xml 配置初始化 {@link CacheProvider}.
-     * 
-     * @param servletContext - 容器的 {@link ServletContext}
-     * 
-     * @return {@link CacheProvider} 实例
-     */
-    protected CacheProvider initCacheProvider(ServletContext servletContext) {
-
-        String providerClassName = servletContext.getInitParameter("jadeCacheProviderClass");
-
-        try {
-            if (providerClassName != null) {
-                Class<?> providerClass = Class.forName(providerClassName);
-                return (CacheProvider) providerClass.newInstance();
-            }
-
-        } catch (Exception e) {
-            throw new IllegalArgumentException(providerClassName, e);
-        }
-
-        return null;
+        return new CacheDataAccess( // NL
+                dataAccessProvider.createDataAccess(dataSourceName), // NL
+                cacheProvider);
     }
 }

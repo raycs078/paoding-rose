@@ -12,10 +12,12 @@ http://www.springframework.org/schema/tx http://www.springframework.org/schema/t
 http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.5.xsd"
 	default-autowire="byName" default-lazy-init="false">
 
+	<bean id="jadeDaoFactory" class="net.paoding.rose.jade.jadeinterface.JadeDaoFactoryImpl" />
+
 	<bean id="jadeDaoProcessor"
 		class="net.paoding.rose.jade.jadeinterface.impl.JadeDaoProcessor" />
 
 	<!-- 使用外部配置的 DataAccessProvider -->
 	<bean id="dataAccessProvider"
-		class="net.paoding.rose.jade.jadeinterface.provider.DataAccessProviderHolder" />
+		class="net.paoding.rose.jade.jadeinterface.provider.DataAccessProviderFactory" />
 </beans>
