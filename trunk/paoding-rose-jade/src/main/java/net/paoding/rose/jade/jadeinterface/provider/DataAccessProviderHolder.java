@@ -3,42 +3,48 @@ package net.paoding.rose.jade.jadeinterface.provider;
 import javax.servlet.ServletContext;
 
 import net.paoding.rose.jade.jadeinterface.initializer.JadeInitializer;
+import net.paoding.rose.jade.jadeinterface.initializer.JadeServletInitContext;
 
-import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.web.context.WebApplicationContext;
 
 /**
- * 提供可配置的 {@link DataAccessProvider} 占位符。
+ * 提供可配置的 {@link DataAccessProvider} 占位符。 <BR>
  * 
- * <p>
- * 提示：使用
- * {@link net.paoding.rose.jade.jadeinterface.initializer.JadeInitializer}
- * 配置系统使用的 DataAccessProvider 实现。
- * </p>
+ * 提示：使用 {@link JadeInitializer} 初始化系统使用的 {@link DataAccessProvider} 实现。
  * 
  * @author han.liao
  */
-public class DataAccessProviderHolder implements DataAccessProvider, ApplicationContextAware {
+public class DataAccessProviderHolder implements DataAccessProvider {
 
-    private static DataAccessProvider provider;
+    private static DataAccessProviderHolder _instance = new DataAccessProviderHolder();
 
-    private static ApplicationContext applicationContext;
+    private DataAccessProvider provider;
+
+    private ApplicationContext applicationContext;
+
+    public static DataAccessProviderHolder getInstance() {
+        return _instance;
+    }
+
+    // 单例构造函数
+    private DataAccessProviderHolder() {
+        super();
+    }
 
     /**
      * 设置全局使用的 {@link DataAccessProvider} 实现。
      * 
      * @param provider - {@link DataAccessProvider} 实现
      */
-    public static void setProvider(DataAccessProvider provider) {
+    public void setProvider(DataAccessProvider provider) {
 
-        DataAccessProviderHolder.provider = provider;
+        this.provider = provider;
 
-        if ((DataAccessProviderHolder.applicationContext != null)
-                && (DataAccessProviderHolder.provider instanceof ApplicationContextAware)) {
-            ((ApplicationContextAware) DataAccessProviderHolder.provider)
-                    .setApplicationContext(applicationContext);
+        if ((applicationContext != null) && (provider instanceof ApplicationContextAware)) {
+            // 向下转播  ApplicationContext 对象
+            ((ApplicationContextAware) provider).setApplicationContext(applicationContext);
         }
     }
 
@@ -47,35 +53,51 @@ public class DataAccessProviderHolder implements DataAccessProvider, Application
      * 
      * @return {@link DataAccessProvider} 实现
      */
-    public static DataAccessProvider getProvider() {
+    public DataAccessProvider getProvider() {
         return provider;
     }
 
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+    /**
+     * 设置全局设置的 {@link ApplicationContext}.
+     * 
+     * @param applicationContext - {@link ApplicationContext}
+     */
+    public void setApplicationContext(ApplicationContext applicationContext) {
 
-        DataAccessProviderHolder.applicationContext = applicationContext;
+        this.applicationContext = applicationContext;
 
-        if ((DataAccessProviderHolder.provider != null)
-                && (DataAccessProviderHolder.provider instanceof ApplicationContextAware)) {
-            ((ApplicationContextAware) DataAccessProviderHolder.provider)
-                    .setApplicationContext(applicationContext);
+        if ((provider != null) && (provider instanceof ApplicationContextAware)) {
+            // 向下转播  ApplicationContext 对象
+            ((ApplicationContextAware) provider).setApplicationContext(applicationContext);
         }
+    }
+
+    /**
+     * 获取全局设置的 {@link ApplicationContext}.
+     * 
+     * @return {@link ApplicationContext}
+     */
+    public ApplicationContext getApplicationContext() {
+        return applicationContext;
     }
 
     @Override
     public DataAccess createDataAccess(String dataSourceName) {
 
         // 自动检查是否设置 {@link DataAccessProvider} 实现。
-        if (DataAccessProviderHolder.provider == null) {
+        if (provider == null) {
 
+            // 从  web.xml 配置的属性初始化
             if (applicationContext instanceof WebApplicationContext) {
-
                 ServletContext servletContext = ((WebApplicationContext) applicationContext) // NL 
                         .getServletContext();
-
-                JadeInitializer.initialize(servletContext);
+                JadeInitializer.initialize(new JadeServletInitContext(servletContext));
             }
+        }
+
+        // 检查是否初始化
+        if (provider == null) {
+            throw new IllegalStateException("Jade not initialized");
         }
 
         return provider.createDataAccess(dataSourceName);

@@ -4,7 +4,7 @@ import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
 /**
- * 使用下列配置在容器 web.xml 中配置 {@link JadeServletContextListener}
+ * 使用下列配置在容器 web.xml 中配置 {@link JadeInitListener}
  * 
  * <pre>
  * &lt;context-param&gt;
@@ -13,7 +13,7 @@ import javax.servlet.ServletContextListener;
  * &lt;/context-param&gt;
  * 
  * &lt;listener&gt;
- *     &lt;listener-class&gt;net.paoding.rose.jade.jadeinterface.initializer.JadeServletContextListener&lt;/listener-class&gt;
+ *     &lt;listener-class&gt;net.paoding.rose.jade.jadeinterface.initializer.JadeInitListener&lt;/listener-class&gt;
  * &lt;/listener&gt;
  * </pre>
  * 
@@ -25,11 +25,11 @@ import javax.servlet.ServletContextListener;
  * 
  * @author han.liao
  */
-public class JadeServletContextListener implements ServletContextListener {
+public class JadeInitListener implements ServletContextListener {
 
     @Override
     public void contextInitialized(ServletContextEvent e) {
-        JadeInitializer.initialize(e.getServletContext());
+        JadeInitializer.initialize(new JadeServletInitContext(e.getServletContext()));
     }
 
     @Override
