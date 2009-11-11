@@ -3,12 +3,13 @@ package net.paoding.rose.mock.controllers.resolver;
 import net.paoding.rose.mock.resolvers.Bean;
 import net.paoding.rose.mock.resolvers.BeanEx;
 import net.paoding.rose.mock.resolvers.Interface;
+import net.paoding.rose.web.annotation.Param;
 
 import org.springframework.context.ApplicationContext;
 
 public class MainController {
 
-    public String index(Phone phone) {
+    public String index(@Param("phone") Phone phone) {
         return phone.getId();
     }
 
