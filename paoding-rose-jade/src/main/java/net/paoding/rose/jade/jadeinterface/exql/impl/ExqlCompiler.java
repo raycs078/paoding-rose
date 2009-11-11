@@ -36,7 +36,7 @@ public class ExqlCompiler {
 
     // 正则表达式
     private static final Pattern PATTERN_KEYWORD = Pattern.compile( // NL
-            "\\:\\:|(\\:[a-zA-Z0-9_\\.]+)|\\{([^\\{\\}]+)\\}\\?|#(#|if|for)?");
+            "\\:\\:|(\\:[a-zA-Z0-9_\\.\\(\\)]+)|\\{([^\\{\\}]+)\\}\\?|#(#|if|for)?");
 
     private static final Pattern PATTERN_IN = Pattern.compile(// NL
             "([a-zA-Z0-9_]*)\\s+in\\s+(.+)");
@@ -105,6 +105,8 @@ public class ExqlCompiler {
                 units.add(new ExprUnit(expr));
 
                 fromIndex = position;
+
+                continue;
             }
 
             // 检查  {...}? 的语法
@@ -124,6 +126,8 @@ public class ExqlCompiler {
                 units.add(new OptionUnit(unit));
 
                 fromIndex = position;
+
+                continue;
             }
 
             // 检查  # 后面的关键字
