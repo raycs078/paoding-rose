@@ -10,11 +10,18 @@ public class SomeResolver implements ParamResolver {
 
     @Override
     public boolean supports(ParamMetaData paramMetaData) {
-        return paramMetaData.getParamType() == Phone.class;
+        boolean result = paramMetaData.getParamType() == Phone.class;
+        if (result && paramMetaData.getParamAnnotation() == null) {
+            throw new NullPointerException("param");
+        }
+        return result;
     }
 
     @Override
     public Object resolve(Invocation inv, ParamMetaData paramMetaData) throws Exception {
+        if (paramMetaData.getParamAnnotation() == null) {
+            throw new NullPointerException("param");
+        }
         Phone phone = new Phone();
         phone.setId(DEFAULT_PHONE_ID);
         return phone;

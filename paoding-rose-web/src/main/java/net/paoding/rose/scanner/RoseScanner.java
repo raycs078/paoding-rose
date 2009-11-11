@@ -82,7 +82,7 @@ public class RoseScanner {
      */
     public List<ResourceInfo> getClassesFolderResources() throws IOException {
         if (classesFolderResources == null) {
-            List<ResourceInfo> classesFolderResources = new LinkedList<ResourceInfo>();
+            List<ResourceInfo> classesFolderResources = new ArrayList<ResourceInfo>();
             Enumeration<URL> found = resourcePatternResolver.getClassLoader().getResources("");
             while (found.hasMoreElements()) {
                 URL urlObject = found.nextElement();
@@ -106,7 +106,25 @@ public class RoseScanner {
                     }
                 }
             }
-            this.classesFolderResources = classesFolderResources;
+            //
+            List<ResourceInfo> toRemove = new LinkedList<ResourceInfo>();
+            for (int i = 0; i < classesFolderResources.size(); i ++) {
+                ResourceInfo resourceInfo = classesFolderResources.get(i);
+                String path = resourceInfo.getResource().getFile().getAbsolutePath();
+                for (int j = i + 1; j < classesFolderResources.size(); j ++) {
+                    ResourceInfo toCheck = classesFolderResources.get(j);
+                    String toCheckPath = toCheck.getResource().getFile().getAbsolutePath();
+                    if (path.startsWith(toCheckPath)) {
+                        toRemove.add(toCheck);
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("remove classes folder: " + toCheck);
+                        }
+                    }
+                }
+            }
+            classesFolderResources.removeAll(toRemove);
+            //
+            this.classesFolderResources = new ArrayList<ResourceInfo>(classesFolderResources);
             if (logger.isInfoEnabled()) {
                 ResourceInfo[] ret = classesFolderResources
                         .toArray(new ResourceInfo[classesFolderResources.size()]);
