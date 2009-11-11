@@ -92,7 +92,7 @@ public class ExqlPatternImpl implements ExqlPattern {
     public static void main(String... args) throws Exception {
 
         // 编译下列语句
-        ExqlPattern pattern = ExqlPatternImpl.compile("SELECT :expr1, #(:expr2.class),"
+        ExqlPattern pattern = ExqlPatternImpl.compile("SELECT :expr1.length(), #(:expr2.class),"
                 + " ##(:expr3) WHERE #if(:expr4) {e = :expr4} #else {e IS NULL}"
                 + "#for(variant in :expr5.bytes) { AND c = :variant}" // NL
                 + " GROUP BY ##(:expr1) ASC");
