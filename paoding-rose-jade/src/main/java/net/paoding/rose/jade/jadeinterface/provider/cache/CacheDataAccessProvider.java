@@ -38,6 +38,7 @@ public class CacheDataAccessProvider implements DataAccessProvider, ApplicationC
     @Override
     public DataAccess createDataAccess(String dataSourceName) {
 
+        // 含缓存逻辑的  DataAccess
         return new CacheDataAccess( // NL
                 dataAccessProvider.createDataAccess(dataSourceName), // NL
                 cacheProvider);
