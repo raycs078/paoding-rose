@@ -72,27 +72,15 @@ public class JadeInitializer {
         }
 
         // 获得配置的  DataAccessProvider
-        DataAccessProvider dataAccessProvider = context.get(JadeInitContext.DATA_ACCESS_PROVIDER);
+        DataAccessProvider dataAccessProvider = (DataAccessProvider) context
+                .get(JadeInitContext.DATA_ACCESS_PROVIDER);
         if (dataAccessProvider == null) {
 
-            Object dataAccessProviderClassName = context
-                    .get(JadeInitContext.DATA_ACCESS_PROVIDER_CLASS);
-            if (dataAccessProviderClassName == null) {
-                throw new NullPointerException("Config \"jadeDataAccessProviderClass\" not found.");
-            }
-
-            Class<?> dataAccessProviderClass;
-            if (dataAccessProviderClassName instanceof Class<?>) {
-                dataAccessProviderClass = (Class<?>) dataAccessProviderClassName;
-            } else if (dataAccessProviderClassName instanceof String) {
-                dataAccessProviderClass = Class.forName((String) dataAccessProviderClassName);
-            } else {
-                throw new NullPointerException("Config \"jadeDataAccessProviderClass\" type error.");
-            }
-
-            if (!DataAccessProvider.class.isAssignableFrom(dataAccessProviderClass)) {
-                throw new ClassCastException(dataAccessProviderClass + " must implements "
-                        + DataAccessProvider.class.getName());
+            Class<?> dataAccessProviderClass = context.getClassOrName(
+                    JadeInitContext.DATA_ACCESS_PROVIDER_CLASS, DataAccessProvider.class);
+            if (dataAccessProviderClass == null) {
+                throw new IllegalArgumentException(
+                        "Config \"jadeDataAccessProviderClass\" not found.");
             }
 
             if (logger.isDebugEnabled()) {
@@ -103,26 +91,12 @@ public class JadeInitializer {
         }
 
         // 获得配置的  CacheProvider
-        CacheProvider cacheProvider = context.get(JadeInitContext.CACHE_PROVIDER);
+        CacheProvider cacheProvider = (CacheProvider) context.get(JadeInitContext.CACHE_PROVIDER);
         if (cacheProvider == null) {
 
-            Object cacheProviderClassName = context.get(JadeInitContext.CACHE_PROVIDER_CLASS);
-            if (cacheProviderClassName != null) {
-
-                Class<?> cacheProviderClass;
-                if (cacheProviderClassName instanceof Class<?>) {
-                    cacheProviderClass = (Class<?>) cacheProviderClassName;
-                } else if (cacheProviderClassName instanceof String) {
-                    cacheProviderClass = Class.forName((String) cacheProviderClassName);
-                } else {
-                    throw new NullPointerException(
-                            "Config \"jadeDataAccessProviderClass\" type error.");
-                }
-
-                if (!CacheProvider.class.isAssignableFrom(cacheProviderClass)) {
-                    throw new ClassCastException(cacheProviderClass + " must implements "
-                            + CacheProvider.class.getName());
-                }
+            Class<?> cacheProviderClass = context.getClassOrName(
+                    JadeInitContext.CACHE_PROVIDER_CLASS, CacheProvider.class);
+            if (cacheProviderClass != null) {
 
                 if (logger.isDebugEnabled()) {
                     logger.debug("jadeCacheProviderClass = " + cacheProviderClass.getName());

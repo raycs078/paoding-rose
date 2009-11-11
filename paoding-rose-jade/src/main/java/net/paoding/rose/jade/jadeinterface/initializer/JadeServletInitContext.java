@@ -16,13 +16,12 @@ public class JadeServletInitContext extends JadeInitContext {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public <T> T get(String name) {
-        return (T) context.getInitParameter(name);
+    public Object get(String param) {
+        return context.getInitParameter(param);
     }
 
     @Override
-    public void put(String name, Object value) {
+    public void put(String param, Object value) {
         throw new UnsupportedOperationException("JadeServletInitContext#put");
     }
 }
