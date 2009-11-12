@@ -3,7 +3,6 @@ package net.paoding.rose.jade.jadeinterface.provider.springjdbctemplte;
 import javax.sql.DataSource;
 
 import net.paoding.rose.jade.jadeinterface.datasource.DataSourceFactory;
-import net.paoding.rose.jade.jadeinterface.datasource.ServletContextDataSourceFactory;
 import net.paoding.rose.jade.jadeinterface.datasource.SpringDataSourceFactory;
 import net.paoding.rose.jade.jadeinterface.provider.DataAccess;
 import net.paoding.rose.jade.jadeinterface.provider.DataAccessProvider;
@@ -40,11 +39,6 @@ public class SpringJdbcTemplateDataAccessProvider extends DataAccessProviderImpl
         SpringDataSourceFactory springDataSourceFactory = new SpringDataSourceFactory();
         springDataSourceFactory.setApplicationContext(applicationContext);
 
-        // 创建   defaultDataSourceFactory
-        ServletContextDataSourceFactory defaultDataSourceFactory = new ServletContextDataSourceFactory();
-        defaultDataSourceFactory.setSpringDataSourceFactory(springDataSourceFactory);
-        defaultDataSourceFactory.setApplicationContext(applicationContext);
-
-        return defaultDataSourceFactory;
+        return springDataSourceFactory;
     }
 }
