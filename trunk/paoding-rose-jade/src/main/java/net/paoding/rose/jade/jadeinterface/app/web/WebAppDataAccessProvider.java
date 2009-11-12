@@ -3,6 +3,7 @@ package net.paoding.rose.jade.jadeinterface.app.web;
 import javax.servlet.ServletContext;
 
 import net.paoding.rose.jade.jadeinterface.provider.DataAccessProvider;
+import net.paoding.rose.jade.jadeinterface.provider.DataAccessProviderMock;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.FactoryBean;
@@ -18,11 +19,13 @@ import org.springframework.web.context.WebApplicationContext;
  */
 public class WebAppDataAccessProvider implements FactoryBean, ApplicationContextAware {
 
+    protected static final DataAccessProvider mockProvider = new DataAccessProviderMock();
+
     protected DataAccessProvider dataAccessProvider;
 
     @Override
     public boolean isSingleton() {
-        return true;
+        return (dataAccessProvider != null);
     }
 
     @Override
@@ -30,7 +33,7 @@ public class WebAppDataAccessProvider implements FactoryBean, ApplicationContext
 
         // 检查是否初始化
         if (dataAccessProvider == null) {
-            throw new IllegalStateException("Jade not initialized");
+            return mockProvider;
         }
 
         return dataAccessProvider;
