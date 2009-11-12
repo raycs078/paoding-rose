@@ -117,6 +117,9 @@ public class SelectOperation implements JdbcOperation {
 
                 // 返回  0 (Primitive Type) 或者  null.
                 if (returnClazz.isPrimitive()) {
+                    if (returnClazz == boolean.class) {
+                        return Boolean.FALSE;
+                    }
                     return NumberUtils.convertNumberToTargetClass( // NL
                             Integer.valueOf(0), ClassUtils.primitiveToWrapper(returnClazz));
                 }

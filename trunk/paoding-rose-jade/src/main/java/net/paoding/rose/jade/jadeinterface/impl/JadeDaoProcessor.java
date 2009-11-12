@@ -38,6 +38,8 @@ import org.springframework.util.ClassUtils;
  */
 public class JadeDaoProcessor implements BeanFactoryPostProcessor, ApplicationContextAware {
 
+    protected static final Log logger = LogFactory.getLog(JadeDaoProcessor.class);
+
     private ApplicationContext applicationContext;
 
     @Override
@@ -67,7 +69,10 @@ public class JadeDaoProcessor implements BeanFactoryPostProcessor, ApplicationCo
                 beanDefinition.setAutowireCandidate(true);
                 beanDefinition.setPropertyValues(propertyValues);
                 String beanName = ClassUtils.getShortNameAsProperty(clazz);
-                System.out.println("------add bean definition " + beanName + "=" + clazz);
+                if (logger.isInfoEnabled()) {
+                    logger.info("Auto-generate Dao definition: " + beanName + " = "
+                            + clazz.getName());
+                }
                 ((DefaultListableBeanFactory) beanFactory).registerBeanDefinition(beanName,
                         beanDefinition);
             }
@@ -75,8 +80,6 @@ public class JadeDaoProcessor implements BeanFactoryPostProcessor, ApplicationCo
     }
 
     //------------------
-
-    protected Log logger = LogFactory.getLog(this.getClass());
 
     private List<Class<?>> daoClasses;
 
