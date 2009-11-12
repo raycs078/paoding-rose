@@ -38,7 +38,6 @@ public class UpdateOperation implements JdbcOperation {
 
         // 将参数放入  Map, 并且检查是否需要批量执行
         Annotation[][] parameterAnnotations = method.getParameterAnnotations();
-
         Map<String, Object> parameters = new HashMap<String, Object>();
 
         // 批量执行的参数与集合
@@ -58,7 +57,7 @@ public class UpdateOperation implements JdbcOperation {
 
                         if (batchParam != null) {
                             throw new IllegalArgumentException(
-                                    "Two collection arguments in a batch method");
+                                    "Too many collection arguments in a batch method");
                         }
 
                         // 纪录批量
@@ -142,7 +141,8 @@ public class UpdateOperation implements JdbcOperation {
         } else if (batchReturnClazz == Boolean.class) {
             return Boolean.valueOf(successful);
         } else if (Number.class.isAssignableFrom(batchReturnClazz)) {
-            return NumberUtils.convertNumberToTargetClass(new Integer(updated), batchReturnClazz);
+            return NumberUtils.convertNumberToTargetClass(Integer.valueOf(updated),
+                    batchReturnClazz);
         }
 
         return null;
@@ -176,11 +176,12 @@ public class UpdateOperation implements JdbcOperation {
             if (returnClazz == Boolean.class) {
                 return Boolean.valueOf(updated > 0);
             } else if (returnClazz == Long.class) {
-                return new Long(updated);
+                return Long.valueOf(updated);
             } else if (returnClazz == Integer.class) {
-                return new Integer(updated);
+                return Integer.valueOf(updated);
             } else if (Number.class.isAssignableFrom(returnClazz)) {
-                return NumberUtils.convertNumberToTargetClass(new Integer(updated), returnClazz);
+                return NumberUtils.convertNumberToTargetClass( // NL
+                        Integer.valueOf(updated), returnClazz);
             }
         }
 

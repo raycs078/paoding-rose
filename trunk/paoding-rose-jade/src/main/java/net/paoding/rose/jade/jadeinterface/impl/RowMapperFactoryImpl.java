@@ -2,24 +2,23 @@ package net.paoding.rose.jade.jadeinterface.impl;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import net.paoding.rose.jade.jadeinterface.annotation.MapKey;
+
+import org.apache.commons.lang.ClassUtils;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.ColumnMapRowMapper;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.SingleColumnRowMapper;
 import org.springframework.jdbc.support.JdbcUtils;
-import org.springframework.util.ClassUtils;
 
 /**
  * 
@@ -28,43 +27,39 @@ import org.springframework.util.ClassUtils;
  */
 public class RowMapperFactoryImpl implements RowMapperFactory {
 
-    private static final Map<Class<?>, Class<?>> primitiveWrapperClassMap = new HashMap<Class<?>, Class<?>>(16);
-
-    static {
-        primitiveWrapperClassMap.put(boolean.class, Boolean.class);
-        primitiveWrapperClassMap.put(byte.class, Byte.class);
-        primitiveWrapperClassMap.put(char.class, Character.class);
-        primitiveWrapperClassMap.put(double.class, Double.class);
-        primitiveWrapperClassMap.put(float.class, Float.class);
-        primitiveWrapperClassMap.put(int.class, Integer.class);
-        primitiveWrapperClassMap.put(long.class, Long.class);
-        primitiveWrapperClassMap.put(short.class, Short.class);
-    }
-
     public RowMapper getRowMapper(Class<?> daoClass, Method method, ResultSet resultSet,
             Class<?> rowType) throws SQLException {
-        if (ClassUtils.isPrimitiveOrWrapper(rowType)) {
+
+        // BUGFIX: SingleColumnRowMapper 处理  Primitive Type 抛异常
+        if (rowType.isPrimitive()) {
+            rowType = ClassUtils.primitiveToWrapper(rowType);
+        }
+
+        // 根据类型创建  RowMapper
+        RowMapper rowMapper;
+        if (ClassUtils.wrapperToPrimitive(rowType) != null) {
             SingleColumnRowMapper mapper = new SingleColumnRowMapper();
-            if (rowType.isPrimitive()) {
-                rowType = primitiveWrapperClassMap.get(rowType);
-            }
             mapper.setRequiredType(rowType);
-            return mapper;
-        }
-        if (rowType == Map.class) {
+            rowMapper = mapper;
+        } else if (rowType == Map.class) {
             ColumnMapRowMapper mapper = new ColumnMapRowMapper();
-            return mapper;
+            rowMapper = mapper;
+        } else if (rowType.isArray()) {
+            rowMapper = new ArrayRowMapper(rowType.getComponentType());
+        } else if (rowType == List.class || rowType == Collection.class) {
+            rowMapper = new ListRowMapper(method);
+        } else if (rowType == Set.class) {
+            rowMapper = new ListRowMapper(method);
+        } else {
+            rowMapper = new BeanPropertyRowMapper(rowType);
         }
-        if (rowType.isArray()) {
-            return new ArrayRowMapper(rowType.getComponentType());
+
+        // 处理返回值是  Map 的情况
+        if (method.getReturnType() == Map.class) {
+            rowMapper = new KeyValuePairMapper(method, rowMapper);
         }
-        if (rowType == List.class || rowType == Collection.class) {
-            return new ListRowMapper(method);
-        }
-        if (rowType == Set.class) {
-            return new ListRowMapper(method);
-        }
-        return new BeanPropertyRowMapper(rowType);
+
+        return rowMapper;
     }
 
     static class ArrayRowMapper implements RowMapper {
@@ -83,6 +78,37 @@ public class RowMapperFactoryImpl implements RowMapperFactory {
                 Array.set(array, i, JdbcUtils.getResultSetValue(rs, i));
             }
             return array;
+        }
+    }
+
+    class KeyValuePairMapper implements RowMapper {
+
+        private final RowMapper mapper;
+
+        private String keyColumn;
+
+        private Class<?> keyType;
+
+        public KeyValuePairMapper(Method method, RowMapper mapper) {
+            MapKey mapKey = method.getAnnotation(MapKey.class);
+            if (mapKey != null) {
+                keyColumn = mapKey.value();
+            } else {
+                keyColumn = "id";
+            }
+            Class<?>[] genericTypes = GenericUtils.getActualClass(method.getGenericReturnType());
+            if (genericTypes.length < 1) {
+                throw new IllegalArgumentException("Map generic");
+            }
+            keyType = genericTypes[0];
+            this.mapper = mapper;
+        }
+
+        @Override
+        public Object mapRow(ResultSet rs, int rowNum) throws SQLException {
+            Object key = JdbcUtils.getResultSetValue(rs, rs.findColumn(keyColumn), keyType);
+            Object value = mapper.mapRow(rs, rowNum);
+            return new KeyValuePair(key, value);
         }
     }
 
@@ -115,14 +141,11 @@ public class RowMapperFactoryImpl implements RowMapperFactory {
         private Class<?> elementType;
 
         public CollectionRowMapper(Method method) {
-            Type returnType = method.getGenericReturnType();
-            if (returnType instanceof ParameterizedType) {
-                ParameterizedType type = (ParameterizedType) returnType;
-                Type[] typeArguments = type.getActualTypeArguments();
-                for (Type typeArgument : typeArguments) {
-                    elementType = (Class<?>) typeArgument;
-                }
+            Class<?>[] genericTypes = GenericUtils.getActualClass(method.getGenericReturnType());
+            if (genericTypes.length < 1) {
+                throw new IllegalArgumentException("Collection generic");
             }
+            elementType = genericTypes[0];
         }
 
         @Override
