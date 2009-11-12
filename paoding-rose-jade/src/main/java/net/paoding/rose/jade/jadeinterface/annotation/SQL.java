@@ -18,7 +18,7 @@ import java.lang.annotation.Target;
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  */
-@Target( { ElementType.METHOD, ElementType.PARAMETER })
+@Target( { ElementType.METHOD })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface SQL {

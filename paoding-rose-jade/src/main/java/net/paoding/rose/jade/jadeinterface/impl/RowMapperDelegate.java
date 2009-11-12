@@ -1,12 +1,11 @@
 package net.paoding.rose.jade.jadeinterface.impl;
 
 import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.springframework.jdbc.core.RowMapper;
@@ -27,31 +26,22 @@ class RowMapperDelegate implements RowMapper {
 
     private RowMapper rowMapper;
 
-    private Class<?> rowType;
-
     public RowMapperDelegate(RowMapperFactory rowMapperFactory, Class<?> daoClass, Method method) {
         this.rowMapperFactory = rowMapperFactory;
         this.daoClass = daoClass;
         this.method = method;
     }
 
-    public Class<?> getRowType() {
-        if (rowMapper == null) {
-            throw new IllegalStateException("");
-        }
-        return rowType;
-    }
-
     @Override
     public Object mapRow(ResultSet rs, int rowNum) throws SQLException {
         if (rowMapper == null) {
-            rowMapper = rowMapperFactory.getRowMapper(daoClass, method, rs, getRowType(method
-                    .getReturnType(), rs));
+            rowMapper = rowMapperFactory.getRowMapper(daoClass, method, rs, getRowType(method, rs));
         }
         return rowMapper.mapRow(rs, rowNum);
     }
 
-    private Class<?> getRowType(Class<?> returnClassType, ResultSet rs) throws SQLException {
+    private static Class<?> getRowType(Method method, ResultSet rs) throws SQLException {
+        Class<?> returnClassType = method.getReturnType();
         Class<?> rowType = returnClassType;
         if (Collection.class.isAssignableFrom(returnClassType)) {
             if (returnClassType != List.class && returnClassType != Collection.class
@@ -59,14 +49,17 @@ class RowMapperDelegate implements RowMapper {
                 throw new IllegalArgumentException("error collection type "
                         + returnClassType.getName() + "; only support List, Set, Collection");
             }
-            Type returnType = method.getGenericReturnType();
-            if (returnType instanceof ParameterizedType) {
-                ParameterizedType type = (ParameterizedType) returnType;
-                Type[] typeArguments = type.getActualTypeArguments();
-                for (Type typeArgument : typeArguments) {
-                    rowType = (Class<?>) typeArgument;
-                }
+            Class<?>[] genericTypes = GenericUtils.getActualClass(method.getGenericReturnType());
+            if (genericTypes.length < 1) {
+                throw new IllegalArgumentException("Collection generic");
             }
+            rowType = genericTypes[0];
+        } else if (Map.class == returnClassType) {
+            Class<?>[] genericTypes = GenericUtils.getActualClass(method.getGenericReturnType());
+            if (genericTypes.length != 2) {
+                throw new IllegalArgumentException("Map generic");
+            }
+            rowType = genericTypes[1]; // 取  V 类型
         } else if (returnClassType.isArray()) {
             Class<?> componentType = returnClassType.getComponentType();
             if (componentType == String.class || ClassUtils.isPrimitiveOrWrapper(componentType)) {
@@ -79,6 +72,6 @@ class RowMapperDelegate implements RowMapper {
                 rowType = componentType;
             }
         }
-        return this.rowType = rowType;
+        return rowType;
     }
 }
