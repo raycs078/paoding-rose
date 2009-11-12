@@ -9,14 +9,31 @@ import net.paoding.rose.jade.jadeinterface.provider.DataAccess;
 import net.paoding.rose.jade.jadeinterface.provider.DataAccessProvider;
 import net.paoding.rose.jade.jadeinterface.provider.cache.CacheDataAccess;
 
-public class Jade {
+public class Jade implements DaoFactory {
 
     @SuppressWarnings("unchecked")
     protected static ConcurrentHashMap<Class, DaoFactoryBean> mapDao = new ConcurrentHashMap<Class, DaoFactoryBean>();
 
-    protected DataAccessProvider dataAccessProvider;
+    private DataAccessProvider dataAccessProvider;
 
-    protected CacheProvider cacheProvider;
+    private CacheProvider cacheProvider;
+
+    private final DataAccessProvider actualProvider = new DataAccessProvider() {
+
+        @Override
+        public DataAccess createDataAccess(String dataSourceName) {
+
+            if (cacheProvider != null) {
+                // 含缓存逻辑的  DataAccess
+                return new CacheDataAccess( // NL
+                        dataAccessProvider.createDataAccess(dataSourceName), // NL
+                        cacheProvider);
+            } else {
+                // 返回原始的  DataAccess
+                return dataAccessProvider.createDataAccess(dataSourceName);
+            }
+        }
+    };
 
     public Jade() {
         super();
@@ -47,15 +64,7 @@ public class Jade {
         this.cacheProvider = cacheProvider;
     }
 
-    /**
-     * 获取指定类型的 DAO 对象。
-     * 
-     * @param <T> - DAO 对象的类型
-     * 
-     * @param daoClass - DAO 对象的类
-     * 
-     * @return DAO 对象
-     */
+    @Override
     public <T> T getDao(Class<T> daoClass) {
 
         // 获取缓存的  DaoFactoryBean<T>
@@ -75,23 +84,8 @@ public class Jade {
 
             // 创建  DaoFactoryBean<T>
             factoryBean = new DaoFactoryBean<T>();
+            factoryBean.setDataAccessProvider(actualProvider);
             factoryBean.setDaoClass(daoClass);
-            factoryBean.setDataAccessProvider(new DataAccessProvider() {
-
-                @Override
-                public DataAccess createDataAccess(String dataSourceName) {
-
-                    if (cacheProvider != null) {
-                        // 含缓存逻辑的  DataAccess
-                        return new CacheDataAccess( // NL
-                                dataAccessProvider.createDataAccess(dataSourceName), // NL
-                                cacheProvider);
-                    } else {
-                        // 返回原始的  DataAccess
-                        return dataAccessProvider.createDataAccess(dataSourceName);
-                    }
-                }
-            });
             factoryBean.afterPropertiesSet();
 
             // 缓存创建的  DaoFactoryBean<T>
