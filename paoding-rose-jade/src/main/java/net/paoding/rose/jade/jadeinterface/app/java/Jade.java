@@ -7,12 +7,15 @@ import net.paoding.rose.jade.jadeinterface.cache.CacheProvider;
 import net.paoding.rose.jade.jadeinterface.impl.DaoFactoryBean;
 import net.paoding.rose.jade.jadeinterface.provider.DataAccess;
 import net.paoding.rose.jade.jadeinterface.provider.DataAccessProvider;
+import net.paoding.rose.jade.jadeinterface.provider.DataAccessProviderMock;
 import net.paoding.rose.jade.jadeinterface.provider.cache.CacheDataAccess;
 
 public class Jade implements DaoFactory {
 
     @SuppressWarnings("unchecked")
-    protected static ConcurrentHashMap<Class, DaoFactoryBean> mapDao = new ConcurrentHashMap<Class, DaoFactoryBean>();
+    protected static final ConcurrentHashMap<Class, DaoFactoryBean> mapDao = new ConcurrentHashMap<Class, DaoFactoryBean>();
+
+    protected static final DataAccessProvider mockProvider = new DataAccessProviderMock();
 
     private DataAccessProvider dataAccessProvider;
 
@@ -22,6 +25,10 @@ public class Jade implements DaoFactory {
 
         @Override
         public DataAccess createDataAccess(String dataSourceName) {
+
+            if (dataAccessProvider == null) {
+                return mockProvider.createDataAccess(dataSourceName);
+            }
 
             if (cacheProvider != null) {
                 // 含缓存逻辑的  DataAccess

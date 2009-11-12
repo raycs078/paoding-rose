@@ -34,23 +34,21 @@ public class JadeInitializer {
             if (logger.isWarnEnabled()) {
                 logger.warn("Jade initialize failed [ClassCastException]", e);
             }
-            throw new IllegalArgumentException("ClassCastException", e);
         } catch (ClassNotFoundException e) {
             if (logger.isWarnEnabled()) {
                 logger.warn("Jade initialize failed [ClassNotFoundException]", e);
             }
-            throw new IllegalArgumentException("ClassNotFoundException", e);
         } catch (InstantiationException e) {
             if (logger.isWarnEnabled()) {
                 logger.warn("Jade initialize failed [InstantiationException]", e);
             }
-            throw new IllegalArgumentException("InstantiationException", e);
         } catch (IllegalAccessException e) {
             if (logger.isWarnEnabled()) {
                 logger.warn("Jade initialize failed [IllegalAccessException]", e);
             }
-            throw new IllegalArgumentException("IllegalAccessException", e);
         }
+
+        return null;
     }
 
     /**
@@ -75,8 +73,10 @@ public class JadeInitializer {
             Class<?> dataAccessProviderClass = context.getClassOrName(
                     JadeInitContext.DATA_ACCESS_PROVIDER_CLASS, DataAccessProvider.class);
             if (dataAccessProviderClass == null) {
-                throw new IllegalArgumentException(
-                        "Config \"jadeDataAccessProviderClass\" not found.");
+                if (logger.isWarnEnabled()) {
+                    logger.warn("Config \"jadeDataAccessProviderClass\" not found.");
+                }
+                return null;
             }
 
             if (logger.isDebugEnabled()) {
