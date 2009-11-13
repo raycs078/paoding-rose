@@ -254,7 +254,8 @@ public class ControllerEngine implements Engine {
             }
         } else {
             restSetting.put("GET", new String[] { "/index", "/get", "/render" });
-            restSetting.put("POST", new String[] { "/post", "/update", });
+            restSetting.put("POST", new String[] { "/post", "/add", "/create", "/update", });
+            restSetting.put("PUT", new String[] { "/put", "/update", });
         }
     }
 

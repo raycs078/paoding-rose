@@ -57,21 +57,21 @@ public class ControllerInterceptorAdapter implements NamedControllerInterceptor,
 
     @Override
     public final boolean isForAction(Class<?> controllerClazz, Method actionMethod) {
-    	// 返回false，表示控制器或其方法没有标注本拦截器所要求的注解
-    	if (!checkRequiredAnnotations(controllerClazz, actionMethod)) {
-    		return false;
-    	}
-    	// 返回true，表示控制器或其方法标注了“拒绝”注解
-    	if (checkDenyAnnotations(controllerClazz, actionMethod)) {
-    		return false;
-    	}
-    	return isForAction(actionMethod, controllerClazz);
+        // 返回false，表示控制器或其方法没有标注本拦截器所要求的注解
+        if (!checkRequiredAnnotations(controllerClazz, actionMethod)) {
+            return false;
+        }
+        // 返回true，表示控制器或其方法标注了“拒绝”注解
+        if (checkDenyAnnotations(controllerClazz, actionMethod)) {
+            return false;
+        }
+        return isForAction(actionMethod, controllerClazz);
     }
 
     protected boolean isForAction(Method actionMethod, Class<?> controllerClazz) {
-    	return true;
+        return true;
     }
-    
+
     @Override
     public boolean isForDispatcher(Dispatcher dispatcher) {
         return true;
@@ -95,53 +95,91 @@ public class ControllerInterceptorAdapter implements NamedControllerInterceptor,
     public String toString() {
         return getName();
     }
+
+    protected static ListBuilder createList(int size) {
+        return new ListBuilder(size);
+    }
+
+    public static class ListBuilder {
+
+        List<Class<? extends Annotation>> list;
+
+        ListBuilder(int size) {
+            list = new ArrayList<Class<? extends Annotation>>(size);
+        }
+
+        public ListBuilder add(Class<? extends Annotation> a) {
+            list.add(a);
+            return this;
+        }
+
+        public List<Class<? extends Annotation>> getList() {
+            return list;
+        }
+    }
+
     /**
      * 返回false，表示控制器或其方法没有标注本拦截器所要求的注解
+     * 
      * @param controllerClazz 控制器类
      * @param actionMethod 控制器处理方法
-     * @return 
+     * @return
      */
     protected final boolean checkRequiredAnnotations(Class<?> controllerClazz, Method actionMethod) {
-    	List<Class<? extends Annotation>> annotations = getRequiredAnnotationClasses();
-    	if (annotations.size() == 0) {
-    		return true;
-    	}
-		for (Class<? extends Annotation> annotation : annotations) {
-			if (actionMethod.isAnnotationPresent(annotation) || controllerClazz.isAnnotationPresent(annotation)) {
-				return true;
-			}
-		}
-		return false;
-	}
+        List<Class<? extends Annotation>> annotations = getRequiredAnnotationClasses();
+        if (annotations == null || annotations.size() == 0) {
+            return true;
+        }
+        for (Class<? extends Annotation> annotation : annotations) {
+            if (annotation == null) {
+                continue;
+            }
+            if (actionMethod.isAnnotationPresent(annotation)
+                    || controllerClazz.isAnnotationPresent(annotation)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     /**
      * 返回true，表示控制器或其方法标注了“拒绝”注解
+     * 
      * @param controllerClazz
      * @param actionMethod
      * @return
      */
     protected final boolean checkDenyAnnotations(Class<?> controllerClazz, Method actionMethod) {
-    	List<Class<? extends Annotation>> annotations = getDenyAnnotationClasses();
-    	if (annotations.size() == 0) {
-    		return false;
-    	}
-		for (Class<? extends Annotation> annotation : annotations) {
-			if (actionMethod.isAnnotationPresent(annotation) || controllerClazz.isAnnotationPresent(annotation)) {
-				return true;
-			}
-		} 
-		return false;
-	}
+        List<Class<? extends Annotation>> annotations = getDenyAnnotationClasses();
+        if (annotations == null || annotations.size() == 0) {
+            return false;
+        }
+        for (Class<? extends Annotation> annotation : annotations) {
+            if (annotation == null) {
+                continue;
+            }
+            if (actionMethod.isAnnotationPresent(annotation)
+                    || controllerClazz.isAnnotationPresent(annotation)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
-	protected List<Class<? extends Annotation>> getRequiredAnnotationClasses() {
+    protected List<Class<? extends Annotation>> getRequiredAnnotationClasses() {
         Class<? extends Annotation> clazz = getRequiredAnnotationClass();
         if (clazz == null) {
-        	clazz = getAnnotationClass();
+            clazz = getAnnotationClass();
+            if (clazz != null) {
+                throw new IllegalStateException("please change method name from"
+                        + this.getClass().getName()
+                        + ".getAnnotationClass to getRequiredAnnotationClasses");
+            }
         }
         if (clazz != null) {
             List<Class<? extends Annotation>> list = new ArrayList<Class<? extends Annotation>>();
             list.add(clazz);
-            return list; 
+            return list;
         }
         return Collections.emptyList();
     }
@@ -149,9 +187,10 @@ public class ControllerInterceptorAdapter implements NamedControllerInterceptor,
     protected Class<? extends Annotation> getRequiredAnnotationClass() {
         return null;
     }
-    
+
     /**
      * 请改实现方法： {@link #getRequiredAnnotationClass()}
+     * 
      * @return
      */
     @Deprecated
@@ -159,12 +198,12 @@ public class ControllerInterceptorAdapter implements NamedControllerInterceptor,
         return null;
     }
 
-	protected List<Class<? extends Annotation>> getDenyAnnotationClasses() {
+    protected List<Class<? extends Annotation>> getDenyAnnotationClasses() {
         Class<? extends Annotation> clazz = getDenyAnnotationClass();
         if (clazz != null) {
             List<Class<? extends Annotation>> list = new ArrayList<Class<? extends Annotation>>();
             list.add(clazz);
-            return list; 
+            return list;
         }
         return Collections.emptyList();
     }
