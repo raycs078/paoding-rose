@@ -34,7 +34,7 @@ public @interface REST {
 
     String[] get() default { "/index", "/get", "/render" };
 
-    String[] post() default { "/post", "/create", "/update" };
+    String[] post() default { "/post", "/add", "/create", "/update" };
 
     String[] put() default { "/put", "/update" };
 
