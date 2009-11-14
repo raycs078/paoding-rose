@@ -67,10 +67,13 @@ public class ParameteredUriRequest extends HttpServletRequestWrapper {
     @Override
     public String[] getParameterValues(String name) {
         String[] value = super.getParameterValues(name);
-        if (value.length == 0) {
+        // javadoc: 
+        // Returns an array of String objects containing all of the values the given request parameter has,
+        // or null if the parameter does not exist.
+        if (value == null || value.length == 0) {
             value = inv.getMatchResultParameterValues(name);
         }
-        return value;
+        return value == null || value.length == 0 ? null : value;
     }
 
     @Override
