@@ -555,6 +555,8 @@ public class ResolverFactoryImpl implements ResolverFactory {
 
         private final static String datePattern2 = "yyyy/MM/dd";
 
+        private final static String datePattern3 = "yyyy-MM";
+
         private final static String timePattern = "HH:mm:ss";
 
         private final static String stimePattern = "HH:mm";
@@ -636,6 +638,8 @@ public class ResolverFactoryImpl implements ResolverFactory {
                 }
             } else if (text.length() == dateTimePattern3.length()) {
                 return new SimpleDateFormat(dateTimePattern3).parse(text);
+            } else if (text.length() == datePattern3.length()) {
+                return new SimpleDateFormat(datePattern3).parse(text);
             } else if (text.length() == datePattern.length()) {
                 if (text.charAt(4) == '-' && text.charAt(7) == '-') {
                     return new SimpleDateFormat(datePattern).parse(text);
