@@ -26,15 +26,12 @@ import javax.servlet.http.HttpSession;
 import junit.framework.TestCase;
 import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.InvocationUtils;
+import net.paoding.rose.web.RequestPath;
 import net.paoding.rose.web.annotation.Param;
 import net.paoding.rose.web.annotation.ParamConf;
-import net.paoding.rose.web.annotation.ReqMethod;
 import net.paoding.rose.web.impl.context.ResourceXmlWebApplicationContext;
-import net.paoding.rose.web.impl.mapping.MappingImpl;
-import net.paoding.rose.web.impl.mapping.MatchMode;
 import net.paoding.rose.web.impl.module.ControllerInfo;
 import net.paoding.rose.web.impl.module.ModuleBean;
-import net.paoding.rose.web.impl.thread.ActionEngine;
 import net.paoding.rose.web.impl.thread.ControllerEngine;
 import net.paoding.rose.web.impl.thread.InvocationBean;
 import net.paoding.rose.web.impl.validation.ParameterBindingResult;
@@ -83,9 +80,7 @@ public class MethodParameterResolverTest extends TestCase {
         response = new MockHttpServletResponse();
         ResourceXmlWebApplicationContext ctx = new ResourceXmlWebApplicationContext();
         module = new ModuleBean(null, null, "", "", ctx);
-        inv = new InvocationBean();
-        inv.setRequest(request);
-        inv.setResponse(response);
+        inv = new InvocationBean(request, response, new RequestPath(request));
         InvocationUtils.bindRequestToCurrentThread(request);
         InvocationUtils.bindInvocationToRequest(inv, new HttpServletRequestWrapper(request));
         paramenterBindingResult = new ParameterBindingResult(inv);
@@ -362,7 +357,8 @@ public class MethodParameterResolverTest extends TestCase {
     public void testMultiPartFile() throws Exception {
         inv.setRequest(multipartRequest);
         InvocationUtils.bindRequestToCurrentThread(multipartRequest);
-        InvocationUtils.bindInvocationToRequest(inv, new HttpServletRequestWrapper(multipartRequest));
+        InvocationUtils.bindInvocationToRequest(inv,
+                new HttpServletRequestWrapper(multipartRequest));
         Object[] parameters = resolveMethodParameters("multipart");
         assertNotNull(parameters);
         assertSame(file1, parameters[0]);
@@ -373,7 +369,8 @@ public class MethodParameterResolverTest extends TestCase {
     public void testMultiPartFile2() throws Exception {
         inv.setRequest(multipartRequest);
         InvocationUtils.bindRequestToCurrentThread(multipartRequest);
-        InvocationUtils.bindInvocationToRequest(inv, new HttpServletRequestWrapper(multipartRequest));
+        InvocationUtils.bindInvocationToRequest(inv,
+                new HttpServletRequestWrapper(multipartRequest));
         Object[] parameters = resolveMethodParameters("multipart2");
         assertNotNull(parameters);
         assertSame(multipartRequest, parameters[0]);
@@ -811,23 +808,15 @@ public class MethodParameterResolverTest extends TestCase {
 
         ControllerEngine controllerEngine = new ControllerEngine(module, "", new ControllerInfo(
                 MockController.class, "mock", new MockController()));
-        MappingImpl<ControllerEngine> controllerMapping = new MappingImpl<ControllerEngine>(
-                "/mock", MatchMode.PATH_STARTS_WITH, new ReqMethod[] { ReqMethod.ALL },
-                controllerEngine);
-        inv.setControllerMatchResult(controllerMapping.match("/mock/" + methodName, request
-                .getMethod()));
-        assertNotNull(inv.getControllerMatchResult());
 
-        ActionEngine actionEngine = new ActionEngine(controllerEngine, method);
-        MappingImpl<ActionEngine> actionMapping = new MappingImpl<ActionEngine>("/" + methodName,
-                MatchMode.PATH_STARTS_WITH, new ReqMethod[] { ReqMethod.ALL }, actionEngine);
-        inv.setActionMatchResult(actionMapping.match("/" + methodName, request.getMethod()));
-        assertNotNull(inv.getActionMatchResult());
+        inv.setController(controllerEngine.getController());
+
+        inv.setMethod(method);
 
         ParameterNameDiscovererImpl parameterNameDiscoverer = new ParameterNameDiscovererImpl();
         ResolverFactoryImpl resolverFactory = new ResolverFactoryImpl();
-        MethodParameterResolver resolver = new MethodParameterResolver(MockController.class, method,
-                parameterNameDiscoverer, resolverFactory);
+        MethodParameterResolver resolver = new MethodParameterResolver(MockController.class,
+                method, parameterNameDiscoverer, resolverFactory);
         return resolver.resolve(inv, paramenterBindingResult);
     }
 

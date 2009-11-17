@@ -16,12 +16,14 @@
 package net.paoding.rose.web.impl.mapping;
 
 import java.util.Arrays;
+import java.util.Set;
 
 import net.paoding.rose.web.annotation.ReqMethod;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 /**
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
@@ -38,6 +40,8 @@ public abstract class AbstractMapping<T> implements Mapping<T> {
     protected final String requestMethods; // 由methods转变而来
 
     protected final T target;
+
+    private Set<ReqMethod> resourceMethods;
 
     public AbstractMapping(String path, T target) {
         this(path, new ReqMethod[] { ReqMethod.ALL }, target);
@@ -113,6 +117,15 @@ public abstract class AbstractMapping<T> implements Mapping<T> {
 
     public ReqMethod[] getMethods() {
         return Arrays.copyOf(methods, methods.length);
+    }
+
+    @Override
+    public Set<ReqMethod> getResourceMethods() {
+        return resourceMethods;
+    }
+
+    public void setResourceMethods(Set<ReqMethod> resourceMethods) {
+        this.resourceMethods = resourceMethods;
     }
 
     protected int compareMethods(AbstractMapping<?> so) {

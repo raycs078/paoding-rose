@@ -34,7 +34,7 @@ public class ModuleInfo {
 
     private URL moduleUrl;
 
-    // 该模块相对于所在目录树controllers的地址，以'/'分隔，空串或以'/'开始
+    // 相对于controllers的地址，以'/'分隔，空串或以'/'开始
     private String relativePackagePath;
 
     private List<URL> contextResources = new LinkedList<URL>();

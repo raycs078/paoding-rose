@@ -15,6 +15,7 @@
  */
 package net.paoding.rose.web.impl.validation;
 
+import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.impl.thread.InvocationBean;
 
 import org.springframework.util.StringUtils;
@@ -33,14 +34,14 @@ public class ParameterBindingResult extends AbstractBindingResult {
 
     private static final long serialVersionUID = -592629554361073051L;
 
-    private transient InvocationBean inv;
+    private transient Invocation inv;
 
     /**
      * 
      * @param inv
      * @throws NullPointerException 如果给定的 {@link InvocationBean}参数为null
      */
-    public ParameterBindingResult(InvocationBean inv) {
+    public ParameterBindingResult(Invocation inv) {
         super(OBJECT_NAME);
         if (inv == null) {
             throw new NullPointerException();

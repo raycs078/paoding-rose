@@ -66,11 +66,13 @@ public class InstructionExecutorImpl implements InstructionExecutor {
 
             if (Thread.interrupted() || instruction == null) {
                 return null;
-            } else if (instruction.equals(">") || instruction.equals('>')) {
-                ControllerEngine controllerEngine = inv.getControllerEngine();
-                String viewPrefix = controllerEngine.getViewPrefix();
-                instruction = View.name(viewPrefix + inv.getMethod().getName());
-            } else {
+            } 
+//            else if (instruction.equals(">") || instruction.equals('>')) {
+//                ControllerEngine controllerEngine = (ControllerEngine) ((InvocationBean) inv).getControllerMatchResult().getMapping().getTarget();
+//                String viewPrefix = controllerEngine.getViewPrefix();
+//                instruction = View.name(viewPrefix + inv.getMethod().getName());
+//            }
+            else {
                 if (instruction.getClass() != String.class
                         && !ClassUtils.isPrimitiveOrWrapper(instruction.getClass())
                         && instruction.getClass().getComponentType() == null

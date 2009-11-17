@@ -46,7 +46,7 @@ public class RoseScanner {
 
     private static SoftReference<RoseScanner> softReference;
 
-    public synchronized static RoseScanner getRoseScanner() {
+    public synchronized static RoseScanner getInstance() {
         if (softReference == null || softReference.get() == null) {
             RoseScanner roseScanner = new RoseScanner();
             softReference = new SoftReference<RoseScanner>(roseScanner);

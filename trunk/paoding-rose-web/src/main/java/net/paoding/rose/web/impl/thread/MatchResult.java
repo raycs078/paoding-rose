@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Properties;
 
 import net.paoding.rose.web.impl.mapping.Mapping;
+import net.paoding.rose.web.impl.thread.tree.MappingNode;
 
 /**
  * 控制器的action path参数映射结果
@@ -37,26 +38,35 @@ public class MatchResult<T> {
 
     private Mapping<T> mapping;
 
+    private MappingNode node;
+
+    private boolean requestMethodSupported = true;
+
     protected MatchResult() {
     }
 
-    public MatchResult(String matchedString, Mapping<T> mapping) {
+    public MatchResult(String matchedString, Mapping<T> mapping, MappingNode node) {
         this.matchedString = matchedString;
         this.mapping = mapping;
+        this.node = node;
+    }
+
+    public MappingNode getNode() {
+        return node;
     }
 
     public static <T> MatchResult<T> changeMapping(MatchResult<?> src, Mapping<T> newMapping) {
         if (src == null) {
             return null;
         }
-        MatchResult<T> ret = new MatchResult<T>(src.getMatchedString(), newMapping);
+        MatchResult<T> ret = new MatchResult<T>(src.getMatchedString(), newMapping, src.node);
         ret.names = src.names;
         ret.properties = src.properties;
         return ret;
     }
 
-    public static <T> MatchResult<T> unmodifiable(String matchedString, Mapping<T> mapping) {
-        return new MatchResult<T>(matchedString, mapping) {
+    public static <T> MatchResult<T> unmodifiable(String matchedString, Mapping<T> mapping, MappingNode node) {
+        return new MatchResult<T>(matchedString, mapping, node) {
 
             @Override
             public void setMapping(Mapping<T> mapping) {
@@ -120,6 +130,14 @@ public class MatchResult<T> {
 
     public Mapping<T> getMapping() {
         return mapping;
+    }
+
+    public void setRequestMethodSupported(boolean requestMethodSupported) {
+        this.requestMethodSupported = requestMethodSupported;
+    }
+
+    public boolean isRequestMethodSupported() {
+        return requestMethodSupported;
     }
 
 }

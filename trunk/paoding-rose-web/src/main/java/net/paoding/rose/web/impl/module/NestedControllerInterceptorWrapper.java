@@ -21,6 +21,7 @@ import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.NamedControllerInterceptor;
 import net.paoding.rose.web.OncePerRequestInterceptorWrapper;
 import net.paoding.rose.web.annotation.Intercepted;
+import net.paoding.rose.web.impl.thread.tree.AfterCompletion;
 
 /**
  * {@link ControllerInterceptor}的一个简单封装，给被封装的拦截器一个命名。
@@ -34,8 +35,6 @@ public class NestedControllerInterceptorWrapper extends ControllerInterceptorWra
         ControllerInterceptor, NamedControllerInterceptor {
 
     public static class Builder {
-
-        private Object controller;
 
         private boolean oncePerRequest;
 
@@ -56,11 +55,6 @@ public class NestedControllerInterceptorWrapper extends ControllerInterceptorWra
             return this;
         }
 
-        public Builder controller(Object controller) {
-            this.controller = controller;
-            return this;
-        }
-
         public Builder oncePerRequest(boolean oncePerRequest) {
             this.oncePerRequest = oncePerRequest;
             return this;
@@ -74,48 +68,27 @@ public class NestedControllerInterceptorWrapper extends ControllerInterceptorWra
             NestedControllerInterceptorWrapper wrapper = new NestedControllerInterceptorWrapper(
                     interceptor);
             wrapper.setName(name);
-            if (controller != null) {
-                wrapper.setController(controller);
-            }
             return wrapper;
         }
     }
-
-    private Object controller;
 
     private NestedControllerInterceptorWrapper(ControllerInterceptor interceptor) {
         super(interceptor);
     }
 
-    public void setController(Object controller) {
-        this.controller = controller;
-    }
-
-    public Object getController() {
-        return controller;
-    }
-
     @Override
     public Object before(Invocation inv) throws Exception {
-        if (this.controller == null || inv.getController() == this.controller) {
-            return interceptor.before(inv);
-        }
-        return true;
+        return interceptor.before(inv);
     }
 
     @Override
     public Object after(Invocation inv, Object instruction) throws Exception {
-        if (this.controller == null || inv.getController() == this.controller) {
-            return interceptor.after(inv, instruction);
-        }
-        return instruction;
+        return interceptor.after(inv, instruction);
     }
 
     @Override
     public void afterCompletion(Invocation inv, Throwable ex) throws Exception {
-        if (this.controller == null || inv.getController() == this.controller) {
-            interceptor.afterCompletion(inv, ex);
-        }
+        interceptor.afterCompletion(inv, ex);
     }
 
     @Override

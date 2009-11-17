@@ -18,9 +18,9 @@ package net.paoding.rose.web.paramresolver;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 
+import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.annotation.FlashParam;
 import net.paoding.rose.web.annotation.Param;
-import net.paoding.rose.web.impl.thread.InvocationBean;
 import net.paoding.rose.web.impl.validation.ParameterBindingResult;
 
 import org.apache.commons.logging.Log;
@@ -60,7 +60,7 @@ public final class MethodParameterResolver {
         Annotation[][] parameterAnnotations = method.getParameterAnnotations();
         for (int i = 0; i < parameterTypes.length; i++) {
             ParamMetaDataImpl paramMetaData = new ParamMetaDataImpl(controllerClazz, method,
-                    parameterTypes[i], parameterNames[i]);
+                    parameterTypes[i], parameterNames[i], i);
             for (Annotation annotation : parameterAnnotations[i]) {
                 if (annotation instanceof Param) {
                     paramMetaData.setParamAnnotation(Param.class.cast(annotation));
@@ -87,7 +87,7 @@ public final class MethodParameterResolver {
 
     // ---------------------------------------------------------
 
-    public Object[] resolve(final InvocationBean inv,
+    public Object[] resolve(final Invocation inv,
             final ParameterBindingResult parameterBindingResult) throws Exception {
         Object[] parameters = new Object[paramMetaDatas.length];
         for (int i = 0; i < resolvers.length; i++) {

@@ -16,17 +16,7 @@
 package net.paoding.rose;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.util.Arrays;
-import java.util.BitSet;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -38,20 +28,24 @@ import javax.servlet.http.HttpServletResponse;
 import net.paoding.rose.scanner.ModuleInfo;
 import net.paoding.rose.scanner.RoseJarContextResources;
 import net.paoding.rose.scanner.RoseModuleInfos;
-import net.paoding.rose.web.ControllerInterceptor;
-import net.paoding.rose.web.Dispatcher;
 import net.paoding.rose.web.Invocation;
-import net.paoding.rose.web.InvocationUtils;
 import net.paoding.rose.web.NamedValidator;
 import net.paoding.rose.web.RequestPath;
 import net.paoding.rose.web.impl.context.ContextLoader;
 import net.paoding.rose.web.impl.mapping.Mapping;
+import net.paoding.rose.web.impl.mapping.MappingImpl;
+import net.paoding.rose.web.impl.mapping.MatchMode;
 import net.paoding.rose.web.impl.module.ControllerInfo;
 import net.paoding.rose.web.impl.module.Module;
 import net.paoding.rose.web.impl.module.ModulesBuilder;
 import net.paoding.rose.web.impl.module.NestedControllerInterceptorWrapper;
 import net.paoding.rose.web.impl.thread.InvocationBean;
-import net.paoding.rose.web.impl.thread.ParameteredUriRequest;
+import net.paoding.rose.web.impl.thread.WebEngine;
+import net.paoding.rose.web.impl.thread.tree.MappingNode;
+import net.paoding.rose.web.impl.thread.tree.Rose;
+import net.paoding.rose.web.impl.thread.tree.TreeBuilder;
+import net.paoding.rose.web.instruction.InstructionExecutor;
+import net.paoding.rose.web.instruction.InstructionExecutorImpl;
 import net.paoding.rose.web.paramresolver.ParamResolver;
 import net.paoding.rose.web.var.PrivateVar;
 
@@ -62,21 +56,9 @@ import org.springframework.core.io.Resource;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.filter.GenericFilterBean;
 import org.springframework.web.util.NestedServletException;
-import org.springframework.web.util.WebUtils;
 
 /**
- * Paoding Rose是一个MVC开发框架(这里的MVC概念更接近于Grails/RoR的MVC，而非传统的Java
- * MVC，前者范畴较广)。使用Rose框架开发，除了将<strong>paoding-rose.jar</strong>
- * 以及依赖的jar拷贝到classpath下，剩下的最大一项工作就是配置{@link RoseFilter}。
- * <p>
- * 您，作为Rose的使用者或评估者，您只需要按照下面介绍的方式将 {@link RoseFilter}
- * 拷贝配置在web.xml中，用以拦截<strong>所有</strong>的web请求即可。虽然{@link RoseFilter}
- * 会拦截所有请求，但是Rose能够判断所拦截的请求是否应该由对应的Controller控制器来处理(详见Referentce),
- * 如果Rose判断该请求不应在rose处理范围内，则 {@link RoseFilter}会让他“通过”不做任何处理。
- * <p>
- * 因为Rose使用Filter而非Servlet来接收并转发请求给控制器Controller，所以这里的配置必须满足一个很重要的注意点：
- * 即Rose过滤器必须配置在所有过滤器的
- * <strong>最后</strong>。只有这样，才能保证所有应该由控制器处理的web请求都能够通过其他可能的Filter拦截。
+ * Paoding Rose 是一个WEB开发框架。
  * <p>
  * 绝大多数情况，按以下配置即可：
  * 
@@ -96,9 +78,10 @@ import org.springframework.web.util.WebUtils;
  * 
  * </pre>
  * 
- * 再次重复一下稍微需要注意的地方：<br>
- * 1)如上所说的<strong>filter-mapping</strong>必须配置在所有Filter Mapping的最后。
- * 2)不能将以上dispatcher的forward去掉，否则forward的请求Rose框架将拦截不到。include也是如此<br>
+ * 注意：<br>
+ * 1)<strong>filter-mapping</strong>必须配置在所有Filter Mapping的最后。<br>
+ * 2)不能将<strong>FORWARD、INCLUDE</strong>的dispatcher去掉，否则forward、
+ * include的请求Rose框架将拦截不到<br>
  * <p>
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
@@ -106,46 +89,50 @@ import org.springframework.web.util.WebUtils;
 public class RoseFilter extends GenericFilterBean {
 
     /** 默认的applicationContext地址 */
-    public static final String DEFAULT_CONTEXT_CONFIG_LOCATION = ""
-            + "/WEB-INF/applicationContext*.xml,classpath:applicationContext*.xml";
+    public static final String DEFAULT_CONTEXT_CONFIG_LOCATION = //
+    "/WEB-INF/applicationContext*.xml,classpath:applicationContext*.xml";
 
     /** 使用的applicationContext地址 */
-    private String contextConfigLocation = DEFAULT_CONTEXT_CONFIG_LOCATION;
+    private String contextConfigLocation;
 
-    /** web模块 */
-    private List<Module> modules = Collections.emptyList();
+    private InstructionExecutor instructionExecutor = new InstructionExecutorImpl();
 
-    /** 所有的请求被RoseFilter过滤时，基本上都将转到该RoseEngine处理 */
-    private RoseEngine engine;
+    private List<Module> modules;
+
+    private MappingNode mappingTree;
 
     /**
      * 改变默认行为，告知Rose要读取的applicationContext地址
      */
-    public void setContextConfigLocation(final String contextConfigLocation) {
-        this.contextConfigLocation = contextConfigLocation;
+    public void setContextConfigLocation(String contextConfigLocation) {
+        if (StringUtils.isBlank(contextConfigLocation)) {
+            throw new IllegalArgumentException("contextConfigLocation");
+        }
+        this.contextConfigLocation = contextConfigLocation.trim();
     }
 
-    public RoseEngine getEngine() {
-        return engine;
+    public void setInstructionExecutor(InstructionExecutor instructionExecutor) {
+        this.instructionExecutor = instructionExecutor;
     }
 
     @Override
     protected final void initFilterBean() throws ServletException {
+        // TODO: 有必要把servletContext收藏成起来吗？ 
         // 把servletContext收藏成起来
         PrivateVar.servletContext(getServletContext());
 
-        // 如果没有通过Filter的init参数配置contextConfigLocation的话，
-        // 则看看是否使用Spring要求的方式配置了contextConfigLocation没有?
+        // 确认所使用的applicationContext配置
         if (StringUtils.isBlank(contextConfigLocation)) {
-            contextConfigLocation = getServletContext().getInitParameter("contextConfigLocation");
+            String webxmlContextConfigLocation = getServletContext().getInitParameter(
+                    "contextConfigLocation");
+            if (!StringUtils.isBlank(webxmlContextConfigLocation)) {
+                contextConfigLocation = webxmlContextConfigLocation;
+            } else {
+                contextConfigLocation = DEFAULT_CONTEXT_CONFIG_LOCATION;
+            }
         }
 
-        // 如果Filter和Context都没有配置contextConfigLocation，那就使用默认配置了
-        // 我们建议开发者兄弟们，其实您为什么要配置呢？除非特殊情况，否则就使用惯例好了，是吧？大家都轻松
-        if (StringUtils.isBlank(contextConfigLocation)) {
-            contextConfigLocation = DEFAULT_CONTEXT_CONFIG_LOCATION;
-        }
-
+        //
         try {
             // 创建Rose环境下的根WebApplicationContext对象
 
@@ -159,24 +146,31 @@ public class RoseFilter extends GenericFilterBean {
                 logger.info("jarMessageResources: " + ArrayUtils.toString(messageBasenames));
             }
             WebApplicationContext rootContext = null;
+
             rootContext = ContextLoader.createWebApplicationContext(getServletContext(),
                     rootContext, jarContextResources, messageBasenames, "rose.jars");
+
             rootContext = ContextLoader.createWebApplicationContext(getServletContext(),
                     rootContext, contextConfigLocation, new String[] { "classpath:messages",
                             "/WEB-INF/messages", }, "rose.root");
+
+            // TODO: 有必要否？
             PrivateVar.setRootWebApplicationContext(rootContext);
 
-            // 然后自动扫描识别并初始化Controller控制器:
-            // controller类应该放到package为xxx.controllers或其直接子package下(并以Controller结尾，请参考RoseConstaints.CONTROLLER_SUFFIXES)
-            // 按照这样的约定，Rose就能自动“挑”出他们出来。
-            List<ModuleInfo> moduleInfos = new RoseModuleInfos().findModuleInfos();
-            modules = new ModulesBuilder().build(rootContext, moduleInfos);
-            engine = new RoseEngine(modules);
+            // 自动扫描识别web层对象，纳入Rose管理
+            List<ModuleInfo> moduleInfoList = new RoseModuleInfos().findModuleInfos();
+            this.modules = new ModulesBuilder().build(rootContext, moduleInfoList);
+            //
+            WebEngine roseEngine = new WebEngine(instructionExecutor);
+            Mapping<WebEngine> rootMapping = new MappingImpl<WebEngine>("",
+                    MatchMode.PATH_STARTS_WITH, roseEngine);
+            this.mappingTree = new MappingNode(rootMapping, null);
+            //
+            new TreeBuilder().create(mappingTree, modules);
             if (logger.isInfoEnabled()) {
                 final StringBuilder sb = new StringBuilder(4096);
                 dumpModules(modules, sb);
                 String strModuleInfos = sb.toString();
-                logger.info(strModuleInfos);
                 getServletContext().log(strModuleInfos);
             }
             logger.info(String.format("Rose Initiated (version=%s)", RoseVersion.getVersion()));
@@ -202,231 +196,28 @@ public class RoseFilter extends GenericFilterBean {
         }
 
         // 创建RequestPath对象，用于记录对地址解析的结果
-        final RequestPath requestPath = new RequestPath();
-        if (!initRequestPath(httpRequest, requestPath)) {
-            forwardToWebContainer(filterChain, httpRequest, httpResponse, requestPath, null);
+        final RequestPath requestPath = new RequestPath(httpRequest);
+
+        // 
+        if (requestPath.getRosePath().startsWith(RoseConstants.VIEWS_PATH_WITH_END_SEP)
+                || "/favicon.ico".equals(requestPath.getUri())) {
+            forwardToWebContainer(filterChain, httpRequest, httpResponse, requestPath);
             return;
         }
 
         // 构造invocation对象，一个invocation对象用于封装和本次请求有关的匹配结果以及方法调用参数
-        final InvocationBean inv = new InvocationBean();
-        if (requestPath.isIncludeRequest() || requestPath.isForwardRequest()) {
-            inv.setPreInvocation(InvocationUtils.getInvocation(httpRequest));
-            // save before include
-            if (requestPath.isIncludeRequest()) {
-                saveAttributesBeforeInclude(inv, httpRequest);
-            }
-        }
-
-        // fill invocation 
-        inv.setRoseEngine(engine);
-        inv.setRequestPath(requestPath);
-        inv.setResponse(httpResponse);
-        inv.setRequest(httpRequest);
-
-        //
+        final Invocation inv = new InvocationBean(httpRequest, httpResponse, requestPath);
+        final Rose rose = new Rose(this.modules, mappingTree, inv);
         boolean matched = false;
         try {
-            matched = engine.match(inv);
+            matched = rose.execute(); // 渲染后的操作：拦截器的afterCompletion以及include属性快照的恢复等
         } catch (Throwable exception) {
-            throwServletException(inv, exception);
+            throwServletException(requestPath, exception);
         }
-
-        // 
+        // don't cache exception by request by forward 
         if (!matched) {
-            forwardToWebContainer(filterChain, httpRequest, httpResponse, requestPath, inv);
-            return;
-        } else {
-            try {
-                final List<String> parameterNames = inv.getMatchResultParameterNames();
-                if (parameterNames.size() > 0) {
-                    inv.setRequest(new ParameteredUriRequest(inv, parameterNames));
-                }
-                InvocationUtils.bindRequestToCurrentThread(inv.getRequest());
-                engine.invoke(inv);
-
-                // 渲染后的操作：拦截器的afterCompletion以及include属性快照的恢复等
-                afterCompletion(inv, (Exception) null);
-            } catch (Throwable exception) {
-                // 异常后的操作(可能还没渲染)：拦截器的afterCompletion以及include属性快照的恢复等
-                afterCompletion(inv, exception);
-                throwServletException(inv, exception);
-            }
+            forwardToWebContainer(filterChain, httpRequest, httpResponse, requestPath);
         }
-    }
-
-    private void throwServletException(final InvocationBean inv, Throwable exception)
-            throws ServletException {
-        //
-        final RequestPath requestPath = inv.getRequestPath();
-        StringBuilder sb = new StringBuilder(1024);
-        sb.append("error happended for request:").append(requestPath.getMethod());
-        sb.append(" ").append(requestPath.getUri());
-        if (inv.getActionMatchResult() != null) {
-            sb.append("->");
-            sb.append(inv.getActionEngine()).append(" params=");
-            sb.append(Arrays.toString(inv.getMethodParameters()));
-        }
-        ServletException servletException = new NestedServletException(sb.toString(), exception);
-        //
-        logger.error("", servletException);
-        //
-        throw servletException;
-    }
-
-    private boolean initRequestPath(final HttpServletRequest request, final RequestPath requestPath) {
-        // method
-        requestPath.setMethod(request.getMethod());
-
-        // ctxpath
-        requestPath.setCtxpath(request.getContextPath());
-        String invocationCtxpath = null; // 对include而言，invocationCtxPath指的是被include的ctxpath
-        // dispather, uri, ctxpath
-        String uri;
-        if (WebUtils.isIncludeRequest(request)) {
-            requestPath.setDispatcher(Dispatcher.INCLUDE);
-            uri = (String) request.getAttribute(WebUtils.INCLUDE_REQUEST_URI_ATTRIBUTE);
-            invocationCtxpath = ((String) request
-                    .getAttribute(WebUtils.INCLUDE_CONTEXT_PATH_ATTRIBUTE));
-            requestPath.setPathInfo((String) request
-                    .getAttribute(WebUtils.INCLUDE_SERVLET_PATH_ATTRIBUTE));
-        } else {
-            uri = request.getRequestURI();
-            requestPath.setPathInfo(request.getServletPath());
-            if (request.getAttribute(WebUtils.FORWARD_REQUEST_URI_ATTRIBUTE) == null) {
-                requestPath.setDispatcher(Dispatcher.REQUEST);
-            } else {
-                requestPath.setDispatcher(Dispatcher.FORWARD);
-            }
-        }
-        if (uri.indexOf('%') != -1) {
-            try {
-                String encoding = request.getCharacterEncoding();
-                if (encoding == null || encoding.length() == 0) {
-                    encoding = "UTF-8";
-                }
-                uri = URLDecoder.decode(uri, encoding);
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-            }
-        }
-        requestPath.setUri(uri);
-        // 记录到requestPath的ctxpath值在include的情况下是invocationCtxpath
-
-        if (requestPath.getCtxpath().length() <= 1) {
-            requestPath.setPathInfo(requestPath.getUri());
-        } else {
-            requestPath.setPathInfo(requestPath.getUri().substring(
-                    (invocationCtxpath == null ? requestPath.getCtxpath() : invocationCtxpath)
-                            .length()));
-        }
-        if (requestPath.getPathInfo().startsWith(RoseConstants.VIEWS_PATH_WITH_END_SEP)
-                || "/favicon.ico".equals(requestPath.getUri())) {
-            return false;
-        }
-        return true;
-    }
-
-    protected void forwardToWebContainer(final FilterChain filterChain,
-            final HttpServletRequest httpRequest, final HttpServletResponse httpResponse,
-            final RequestPath requestPath, InvocationBean inv) throws IOException, ServletException {
-        if (logger.isDebugEnabled()) {
-            logger.debug("not rose uri: " + requestPath.getUri());
-        }
-        // 调用其它Filter
-        filterChain.doFilter(httpRequest, httpResponse);
-    }
-
-    /**
-     * Keep a snapshot of the request attributes in case of an include, to
-     * be able to restore the original attributes after the include.
-     * 
-     * @param inv
-     */
-    private void saveAttributesBeforeInclude(final InvocationBean inv, ServletRequest request) {
-        logger.debug("Taking snapshot of request attributes before include");
-        Map<String, Object> attributesSnapshot = new HashMap<String, Object>();
-        Enumeration<?> attrNames = request.getAttributeNames();
-        while (attrNames.hasMoreElements()) {
-            String attrName = (String) attrNames.nextElement();
-            attributesSnapshot.put(attrName, request.getAttribute(attrName));
-        }
-        inv.setRequestAttributesBeforeInclude(attributesSnapshot);
-    }
-
-    private void afterCompletion(InvocationBean inv, Throwable e) {
-        // 触发拦截器的afterCompletion接口
-        triggerAfterCompletion(inv, e);
-
-        // 恢复include请求前的各种请求属性(包括Model对象)
-        if (inv.getRequestPath().isIncludeRequest()) {
-            restoreRequestAttributesAfterInclude(inv);
-        }
-        Invocation preInvocation = inv.getPreInvocation();
-        if (preInvocation != null) {
-            InvocationUtils.bindRequestToCurrentThread(preInvocation.getRequest());
-        } else {
-            InvocationUtils.unindRequestFromCurrentThread();
-        }
-    }
-
-    private void triggerAfterCompletion(InvocationBean inv, Throwable exceptionByModule) {
-        // Apply afterCompletion methods of registered interceptors.
-        ControllerInterceptor[] interceptors = inv.getActionEngine().getRegisteredInterceptors();
-        BitSet executedInterceptorBitSet = inv.getExecutedInterceptorBitSet();
-        for (int i = inv.getExecutedInterceptorIndex(); i >= 0; i--) {
-            if (!executedInterceptorBitSet.get(i)) {
-                continue;
-            }
-            ControllerInterceptor interceptor = interceptors[i];
-            try {
-                interceptor.afterCompletion(inv, exceptionByModule);
-            } catch (Throwable thisException) {
-                logger.error("ControllerInterceptor.afterCompletion", thisException);
-            }
-        }
-    }
-
-    /**
-     * Restore the request attributes after an include.
-     * 
-     * @param request current HTTP request
-     * @param attributesSnapshot the snapshot of the request attributes
-     *        before the include
-     */
-    private void restoreRequestAttributesAfterInclude(InvocationBean inv) {
-        logger.debug("Restoring snapshot of request attributes after include");
-        HttpServletRequest request = inv.getRequest();
-
-        Map<String, Object> attributesSnapshot = inv.getRequestAttributesBeforeInclude();
-
-        // Need to copy into separate Collection here, to avoid side effects
-        // on the Enumeration when removing attributes.
-        Set<String> attrsToCheck = new HashSet<String>();
-        Enumeration<?> attrNames = request.getAttributeNames();
-        while (attrNames.hasMoreElements()) {
-            String attrName = (String) attrNames.nextElement();
-            attrsToCheck.add(attrName);
-        }
-
-        // Iterate over the attributes to check, restoring the original value
-        // or removing the attribute, respectively, if appropriate.
-        for (String attrName : attrsToCheck) {
-            Object attrValue = attributesSnapshot.get(attrName);
-            if (attrValue != null) {
-                if (logger.isDebugEnabled()) {
-                    logger.debug("Restoring original value of attribute [" + attrName
-                            + "] after include");
-                }
-                request.setAttribute(attrName, attrValue);
-            } else {
-                if (logger.isDebugEnabled()) {
-                    logger.debug("Removing attribute [" + attrName + "] after include");
-                }
-                request.removeAttribute(attrName);
-            }
-        }
-
     }
 
     @Override
@@ -450,13 +241,60 @@ public class RoseFilter extends GenericFilterBean {
                 getServletContext().log("", e);
             }
         }
-        try {
-            engine.destroy();
-        } catch (Exception e) {
-            logger.error("", e);
-            getServletContext().log("", e);
+        MappingNode cur = mappingTree;
+        while (cur != null) {
+            try {
+                cur.mapping.getTarget().destroy();
+            } catch (Exception e) {
+                logger.error("", e);
+                getServletContext().log("", e);
+            }
+            if (cur.leftMostChild != null) {
+                cur = cur.leftMostChild;
+            } else if (cur.sibling != null) {
+                cur = cur.sibling;
+            } else {
+                while (true) {
+                    cur = cur.parent;
+                    if (cur == null) {
+                        break;
+                    } else {
+                        if (cur.sibling != null) {
+                            cur = cur.sibling;
+                            break;
+                        }
+                    }
+                }
+            }
         }
         super.destroy();
+    }
+
+    private void forwardToWebContainer(//
+            FilterChain filterChain, //
+            HttpServletRequest httpRequest,//
+            HttpServletResponse httpResponse,//
+            RequestPath requestPath)//
+            throws IOException, ServletException {
+        if (logger.isDebugEnabled()) {
+            logger.debug("not rose uri: " + requestPath.getUri());
+        }
+        // 调用其它Filter
+        filterChain.doFilter(httpRequest, httpResponse);
+    }
+
+    private void throwServletException(RequestPath requestPath, Throwable exception)
+            throws ServletException {
+        String msg = requestPath.getMethod() + " " + requestPath.getUri();
+        ServletException servletException;
+        if (exception instanceof ServletException) {
+            servletException = (ServletException) exception;
+        } else {
+            servletException = new NestedServletException(msg, exception);
+        }
+        logger.error(msg, exception);
+        getServletContext().log(msg, exception);
+        throw servletException;
     }
 
     //----------
