@@ -239,7 +239,7 @@ public class ModulesBuilder {
             final String namespace, final List<URL> contextResources,
             final String[] messageBasenames) throws IOException {
         return ContextLoader.createWebApplicationContext(parent == null ? null : parent
-                .getServletContext(), parent, ContextLoader.toResources(contextResources),
+                .getServletContext(), parent, ContextLoader.toResources(contextResources), "", 
                 messageBasenames, namespace);
     }
 

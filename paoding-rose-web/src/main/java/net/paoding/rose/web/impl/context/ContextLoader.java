@@ -36,8 +36,6 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
-import org.springframework.util.StringUtils;
-import org.springframework.web.context.ConfigurableWebApplicationContext;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.XmlWebApplicationContext;
 
@@ -48,45 +46,85 @@ import org.springframework.web.context.support.XmlWebApplicationContext;
  */
 public class ContextLoader {
 
-    private static final String PERSISTENCE_ANNOTATION_PROCESSOR_CLASS_NAME = // NL
-    "org.springframework.orm.jpa.support.PersistenceAnnotationBeanPostProcessor";
-
-    private static final boolean jpaPresent = ClassUtils.isPresent(
-            "javax.persistence.EntityManagerFactory", ContextLoader.class.getClassLoader())
-            && ClassUtils.isPresent(PERSISTENCE_ANNOTATION_PROCESSOR_CLASS_NAME,
-                    ContextLoader.class.getClassLoader());
-
+    // 
     private static final Log logger = LogFactory.getLog(ContextLoader.class);
 
     /**
+     * 将 {@link URL} 列表封装为 {@link Resource}列表，使调用者可以调用
+     * {@link #createWebApplicationContext(ServletContext, WebApplicationContext, List, String, String[], String)}
      * 
-     * @param servletContext
-     * @param parent
      * @param contextResources
+     * @return
+     */
+    public static List<Resource> toResources(List<URL> contextResources) {
+        List<Resource> resources = new ArrayList<Resource>();
+        for (URL url : contextResources) {
+            resources.add(new UrlResource(url));
+        }
+        return resources;
+    }
+
+    public static XmlWebApplicationContext createWebApplicationContext(
+            ServletContext servletContext, // 
+            List<Resource> contextResources,//
+            String configLocations, //
+            String[] messageBasenames, //
+            String namespace) throws IOException {
+        return createWebApplicationContext(servletContext, null, contextResources, configLocations,
+                messageBasenames, namespace);
+    }
+
+    public static XmlWebApplicationContext createWebApplicationContext(
+            WebApplicationContext parent, //
+            List<Resource> contextResources,//
+            String configLocations, //
+            String[] messageBasenames, //
+            String namespace) throws IOException {
+        return createWebApplicationContext(null, parent, contextResources, configLocations,
+                messageBasenames, namespace);
+    }
+
+    /**
+     * 
+     * @param servletContext 所在的ServletContext对象
+     * @param parent 上级applicationContext,为null代表没有
+     * @param contextResources 以Resource形式提供的 applicationContext文件资源
+     * @param configLocations 以字符串提供的 applicationContext文件地址资源，如
+     *        "/WEB-INF/applicationContext*.xml,classpath:applicationContext*.xml"
+     * @param messageBasenames 以字符串提供的 messages 资源
      * @param namespace
      * @return
      * @throws IOException
      */
     public static XmlWebApplicationContext createWebApplicationContext(
-            ServletContext servletContext, WebApplicationContext parent,
-            final List<Resource> contextResources, final String[] messageBasenames, String namespace)
-            throws IOException {
+            ServletContext servletContext, // 
+            WebApplicationContext parent, //
+            List<Resource> contextResources,//
+            String configLocations, //
+            String[] messageBasenames, //
+            String namespace) throws IOException {
 
         long startTime = System.currentTimeMillis();
-        logger.info(namespace + " WebApplicationContext: initialization started");
+
+        String loadingMsg = "Loading Spring '" + namespace + "' WebApplicationContext";
+        logger.info(loadingMsg);
+        if (servletContext == null && parent != null) {
+            servletContext = parent.getServletContext();
+        }
         if (servletContext != null) {
-            servletContext.log("Loading Spring " + namespace + " WebApplicationContext");
+            servletContext.log(loadingMsg);
         }
         ResourceXmlWebApplicationContext wac = new ResourceXmlWebApplicationContext();
+        wac.setServletContext(servletContext);
         wac.setContextResources(contextResources);
+        wac.setNamespace(namespace);
+        if (configLocations != null) {
+            wac.setConfigLocation(configLocations);
+        }
         wac.setMessageBaseNames(messageBasenames);
-        wac.setNamespace(namespace);
-        wac.setConfigLocations(new String[0]);
-        wac.setId("rose.ResourceXmlWebApplicationContext@" + namespace);
-        wac.setServletContext(servletContext);
         if (parent != null) {
             wac.setParent(parent);
-            wac.setId(namespace + "," + parent.getId());
+            wac.setId(parent.getId() + "::" + namespace);
         } else {
             wac.setId(namespace);
         }
@@ -95,64 +133,23 @@ public class ContextLoader {
 
         // 日志打印
         if (logger.isDebugEnabled()) {
+            long elapsedTime = System.currentTimeMillis() - startTime;
             logger.debug("Using context class [" + wac.getClass().getName() + "] for " + namespace
                     + " WebApplicationContext");
-        }
-        if (logger.isInfoEnabled()) {
-            long elapsedTime = System.currentTimeMillis() - startTime;
             logger.info(namespace + " WebApplicationContext: initialization completed in "
                     + elapsedTime + " ms");
         }
         return wac;
     }
 
-    /**
-     * 根据构造函数设置的配置文件地址，创建Spring应用上下文环境对象
-     * 
-     * @param servletContext
-     * @return
-     * @throws IOException
-     */
-    public static XmlWebApplicationContext createWebApplicationContext(
-            ServletContext servletContext, WebApplicationContext parent, String configLocation,
-            String[] messageBaseNames, String namespace) throws IOException {
-        long startTime = System.currentTimeMillis();
-        logger.info(namespace + " WebApplicationContext: initialization started");
-        servletContext.log("Loading Spring " + namespace + " WebApplicationContext");
+    // ---------------------------------------------------------------
 
-        ResourceXmlWebApplicationContext wac = new ResourceXmlWebApplicationContext();
-        wac.setConfigLocation(configLocation);
-        wac.setMessageBaseNames(messageBaseNames);
-        wac.setServletContext(servletContext);
-        wac.setNamespace(namespace);
-        if (parent != null) {
-            wac.setParent(parent);
-            wac.setId(namespace + "," + parent.getId());
-        } else {
-            wac.setId(namespace);
-        }
-        if (configLocation != null) {
-            String[] splits = StringUtils.tokenizeToStringArray(configLocation,
-                    ConfigurableWebApplicationContext.CONFIG_LOCATION_DELIMITERS);
-            wac.setConfigLocations(splits);
-        }
-        //        registerMessageSource(wac, messageResources);
-        wac.refresh();
-        addBeanPostProcessors(wac);
+    private static final String PERSISTENCE_ANNOTATION_PROCESSOR_CLASS_NAME = "org.springframework.orm.jpa.support.PersistenceAnnotationBeanPostProcessor";
 
-        // 日志打印
-        if (logger.isDebugEnabled()) {
-            logger.debug("Using context class [" + wac.getClass().getName() + "] for " + namespace
-                    + " WebApplicationContext");
-        }
-        if (logger.isInfoEnabled()) {
-            long elapsedTime = System.currentTimeMillis() - startTime;
-            logger.info(namespace + " WebApplicationContext: initialization completed in "
-                    + elapsedTime + " ms");
-        }
-        return wac;
-
-    }
+    private static final boolean jpaPresent = ClassUtils.isPresent(
+            "javax.persistence.EntityManagerFactory", ContextLoader.class.getClassLoader())
+            && ClassUtils.isPresent(PERSISTENCE_ANNOTATION_PROCESSOR_CLASS_NAME,
+                    ContextLoader.class.getClassLoader());
 
     // org.springframework.context.annotation.AnnotationConfigUtils有相似的处理，但通过它不可行
     private static void addBeanPostProcessors(XmlWebApplicationContext context) {
@@ -229,13 +226,5 @@ public class ContextLoader {
         context.getBeanFactory().addBeanPostProcessor(persistenceAnnotationBeanPostProcessor);
         logger.debug("context " + context.getNamespace()
                 + ": add persistenceAnnotationBeanPostProcessor");
-    }
-
-    public static List<Resource> toResources(List<URL> contextResources) {
-        List<Resource> resources = new ArrayList<Resource>();
-        for (URL url : contextResources) {
-            resources.add(new UrlResource(url));
-        }
-        return resources;
     }
 }

@@ -32,12 +32,12 @@ import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.InvocationUtils;
 import net.paoding.rose.web.RequestPath;
 import net.paoding.rose.web.impl.module.Module;
+import net.paoding.rose.web.impl.thread.tree.Rose;
 import net.paoding.rose.web.impl.validation.ParameterBindingResult;
 import net.paoding.rose.web.var.Flash;
 import net.paoding.rose.web.var.FlashImpl;
 import net.paoding.rose.web.var.Model;
 import net.paoding.rose.web.var.ModelImpl;
-import net.paoding.rose.web.var.PrivateVar;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
@@ -86,7 +86,7 @@ public final class InvocationBean implements Invocation {
 
     private List<String> bindingResultNames;
 
-    //    private boolean destroyed;
+    private Rose rose;
 
     public InvocationBean(HttpServletRequest request, HttpServletResponse response,
             RequestPath requestPath) {
@@ -95,13 +95,21 @@ public final class InvocationBean implements Invocation {
         setRequestPath(requestPath);
     }
 
+    public void setRose(Rose rose) {
+        this.rose = rose;
+    }
+
+    public Rose getRose() {
+        return rose;
+    }
+
     protected boolean isMethodParametersInitiated() {
         return methodParameters != UN_INITIATED_ARRAY;
     }
 
     @Override
     public WebApplicationContext getApplicationContext() {
-        return PrivateVar.getWebApplicationContext(getModule().getMappingPath());
+        return getModule().getApplicationContext();
     }
 
     public void setMethodParameters(Object[] methodParameters) {
@@ -360,7 +368,7 @@ public final class InvocationBean implements Invocation {
 
     @Override
     public ServletContext getServletContext() {
-        return PrivateVar.servletContext();
+        return getModule().getApplicationContext().getServletContext();
     }
 
     public void setResponse(HttpServletResponse response) {

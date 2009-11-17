@@ -3,8 +3,6 @@ package net.paoding.rose.web.impl.thread.tree;
 import static net.paoding.rose.web.impl.mapping.MatchMode.PATH_STARTS_WITH;
 import static net.paoding.rose.web.impl.mapping.ModifiedMapping.changeTarget;
 
-import java.io.File;
-import java.io.PrintWriter;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -18,8 +16,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import net.paoding.rose.scanner.ModuleInfo;
-import net.paoding.rose.scanner.RoseModuleInfos;
 import net.paoding.rose.web.annotation.AsSuperController;
 import net.paoding.rose.web.annotation.Ignored;
 import net.paoding.rose.web.annotation.REST;
@@ -37,13 +33,10 @@ import net.paoding.rose.web.impl.mapping.MappingImpl;
 import net.paoding.rose.web.impl.mapping.MatchMode;
 import net.paoding.rose.web.impl.module.ControllerInfo;
 import net.paoding.rose.web.impl.module.Module;
-import net.paoding.rose.web.impl.module.ModulesBuilder;
 import net.paoding.rose.web.impl.thread.ActionEngine;
 import net.paoding.rose.web.impl.thread.ControllerEngine;
 import net.paoding.rose.web.impl.thread.MatchResult;
 import net.paoding.rose.web.impl.thread.ModuleEngine;
-import net.paoding.rose.web.impl.thread.WebEngine;
-import net.paoding.rose.web.instruction.InstructionExecutorImpl;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
@@ -54,7 +47,7 @@ public class TreeBuilder {
         createModuleMappingNodes(head, modules);
     }
 
-    public void createModuleMappingNodes(MappingNode head, List<Module> modules) {
+    private void createModuleMappingNodes(MappingNode head, List<Module> modules) {
         List<Mapping<ModuleEngine>> mappings = new ArrayList<Mapping<ModuleEngine>>(modules.size());
         for (Module module : modules) {
             if (module == null) {
@@ -107,7 +100,7 @@ public class TreeBuilder {
         }
     }
 
-    protected List<Mapping<ActionEngine>> createActionMappings(Module module,
+    private List<Mapping<ActionEngine>> createActionMappings(Module module,
             Class<?> controllerClass, Object controller) {
         ArrayList<Mapping<ActionEngine>> actionMappings = new ArrayList<Mapping<ActionEngine>>();
         //        Class<?> clz = controllerClass;// 从clz得到的method不是aop后controller的clz阿!!!
@@ -292,7 +285,7 @@ public class TreeBuilder {
                     resouceMethods.add(reqMethod);
                 }
             }
-            ((MappingImpl) actionMapping).setResourceMethods(resouceMethods);
+            ((MappingImpl<?>) actionMapping).setResourceMethods(resouceMethods);
         }
         return actionMappings;
     }
@@ -429,51 +422,51 @@ public class TreeBuilder {
     //        out.flush();
     //        return head;
     //    }
+//
+//    private void println(MappingNode node, StringBuilder sb) {
+//        sb.append("<node path=\"").append(node.mapping.getPath());
+//        sb.append("\" target=\"").append(node.mapping.getTarget()).append("\">");
+//        MappingNode si = node.leftMostChild;
+//        if (si != null) {
+//            println(si, sb);
+//            while ((si = si.sibling) != null) {
+//                println(si, sb);
+//            }
+//        }
+//        sb.append("</node>");
+//    }
 
-    private void println(MappingNode node, StringBuilder sb) {
-        sb.append("<node path=\"").append(node.mapping.getPath());
-        sb.append("\" target=\"").append(node.mapping.getTarget()).append("\">");
-        MappingNode si = node.leftMostChild;
-        if (si != null) {
-            println(si, sb);
-            while ((si = si.sibling) != null) {
-                println(si, sb);
-            }
-        }
-        sb.append("</node>");
-    }
-
-    private static void println(MappingNode node, PrintWriter sb) {
-        sb.append("<node path=\"");
-        ReqMethod[] methods = node.mapping.getMethods();
-        for (int i = 0; i < methods.length; i++) {
-            if (i > 0) {
-                sb.append("/");
-            }
-            sb.append(String.valueOf(methods[i]));
-        }
-        sb.append("  ").append(node.mapping.getPath());
-        sb.append("\" target=\"").append(node.mapping.getTarget().toString()).append("\">");
-        MappingNode si = node.leftMostChild;
-        if (si != null) {
-            println(si, sb);
-            while ((si = si.sibling) != null) {
-                println(si, sb);
-            }
-        }
-        sb.append("</node>");
-    }
-
-    public static void main(String[] args) throws Exception {
-        List<ModuleInfo> moduleInfos = new RoseModuleInfos().findModuleInfos();
-        List<Module> modules = new ModulesBuilder().build(null, moduleInfos);
-        WebEngine roseEngine = new WebEngine(new InstructionExecutorImpl());
-        MappingNode head = new MappingNode(new MappingImpl<WebEngine>("",
-                MatchMode.PATH_STARTS_WITH, roseEngine), null);
-        new TreeBuilder().create(head, modules);
-        File f = new File("E:/my_documents/xml.xml");
-        PrintWriter out = new PrintWriter(f, "UTF-8");
-        println(head, out);
-        out.flush();
-    }
+//    private static void println(MappingNode node, PrintWriter sb) {
+//        sb.append("<node path=\"");
+//        ReqMethod[] methods = node.mapping.getMethods();
+//        for (int i = 0; i < methods.length; i++) {
+//            if (i > 0) {
+//                sb.append("/");
+//            }
+//            sb.append(String.valueOf(methods[i]));
+//        }
+//        sb.append("  ").append(node.mapping.getPath());
+//        sb.append("\" target=\"").append(node.mapping.getTarget().toString()).append("\">");
+//        MappingNode si = node.leftMostChild;
+//        if (si != null) {
+//            println(si, sb);
+//            while ((si = si.sibling) != null) {
+//                println(si, sb);
+//            }
+//        }
+//        sb.append("</node>");
+//    }
+//
+//    public static void main(String[] args) throws Exception {
+//        List<ModuleInfo> moduleInfos = new RoseModuleInfos().findModuleInfos();
+//        List<Module> modules = new ModulesBuilder().build(null, moduleInfos);
+//        WebEngine roseEngine = new WebEngine(new InstructionExecutorImpl());
+//        MappingNode head = new MappingNode(new MappingImpl<WebEngine>("",
+//                MatchMode.PATH_STARTS_WITH, roseEngine), null);
+//        new TreeBuilder().create(head, modules);
+//        File f = new File("E:/my_documents/xml.xml");
+//        PrintWriter out = new PrintWriter(f, "UTF-8");
+//        println(head, out);
+//        out.flush();
+//    }
 }

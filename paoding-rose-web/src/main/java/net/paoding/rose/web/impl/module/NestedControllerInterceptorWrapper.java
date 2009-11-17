@@ -21,7 +21,6 @@ import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.NamedControllerInterceptor;
 import net.paoding.rose.web.OncePerRequestInterceptorWrapper;
 import net.paoding.rose.web.annotation.Intercepted;
-import net.paoding.rose.web.impl.thread.tree.AfterCompletion;
 
 /**
  * {@link ControllerInterceptor}的一个简单封装，给被封装的拦截器一个命名。

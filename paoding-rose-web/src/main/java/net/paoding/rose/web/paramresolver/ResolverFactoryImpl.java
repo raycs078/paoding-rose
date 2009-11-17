@@ -373,7 +373,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
 
         @Override
         public Object resolve(Invocation inv, ParamMetaData metaData) throws Exception {
-            Rose rose = (Rose) inv.getAttribute("$$paoding-rose.roseThread");
+            Rose rose = ((InvocationBean) inv).getRose();
             return rose.lastMatcheResult().getNode();
         }
     }
@@ -387,8 +387,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
 
         @Override
         public Object resolve(Invocation inv, ParamMetaData metaData) throws Exception {
-            Rose rose = (Rose) inv.getAttribute("$$paoding-rose.roseThread");
-            return rose;
+            return ((InvocationBean) inv).getRose();
         }
     }
 
@@ -548,7 +547,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
         }
     }
 
-    private static Class[] compileGenericParameterTypesDetail(Method method, int index) {
+    private static Class<?>[] compileGenericParameterTypesDetail(Method method, int index) {
         Type genericParameterType = method.getGenericParameterTypes()[index];
         ArrayList<Class<?>> typeDetailList = new ArrayList<Class<?>>();
         if (genericParameterType instanceof ParameterizedType) {
