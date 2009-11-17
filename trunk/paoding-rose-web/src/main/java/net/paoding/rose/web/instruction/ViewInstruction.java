@@ -30,6 +30,7 @@ import net.paoding.rose.util.SpringUtils;
 import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.impl.thread.InvocationBean;
 import net.paoding.rose.web.impl.view.ViewDispatcher;
+import net.paoding.rose.web.impl.view.ViewDispatcherImpl;
 import net.paoding.rose.web.impl.view.ViewPathCache;
 
 import org.springframework.beans.factory.annotation.AnnotatedGenericBeanDefinition;
@@ -244,11 +245,11 @@ public class ViewInstruction extends AbstractInstruction {
         synchronized (applicationContext) {
             if (SpringUtils.getBean(applicationContext, viewDispatcherName) == null) {
                 GenericBeanDefinition beanDefinition = new AnnotatedGenericBeanDefinition(
-                        ViewDispatcher.class);
+                        ViewDispatcherImpl.class);
                 ((BeanDefinitionRegistry) applicationContext.getAutowireCapableBeanFactory())
                         .registerBeanDefinition(viewDispatcherName, beanDefinition);
                 if (logger.isDebugEnabled()) {
-                    logger.debug("registered bean definition:" + ViewDispatcher.class.getName());
+                    logger.debug("registered bean definition:" + ViewDispatcherImpl.class.getName());
                 }
             }
             return (ViewDispatcher) SpringUtils.getBean(applicationContext, viewDispatcherName);

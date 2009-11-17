@@ -239,20 +239,33 @@ public class ModulesBuilder {
             final String namespace, final List<URL> contextResources,
             final String[] messageBasenames) throws IOException {
         return ContextLoader.createWebApplicationContext(parent == null ? null : parent
-                .getServletContext(), parent, ContextLoader.toResources(contextResources), "", 
+                .getServletContext(), parent, ContextLoader.toResources(contextResources), "",
                 messageBasenames, namespace);
     }
 
     private void registerBeanDefinitions(XmlWebApplicationContext context, List<Class<?>> classes) {
         BeanDefinitionRegistry registry = (BeanDefinitionRegistry) context.getBeanFactory();
         for (Class<?> clazz : classes) {
-            if (context.getBeansOfType(clazz).size() > 0) {
+            // 排除重复controller
+            boolean clazzContinue = false;
+            @SuppressWarnings("unchecked")
+            Map<?, Object> beans = context.getBeansOfType(clazz);
+            for (Map.Entry<?, Object> entry : beans.entrySet()) {
+                if (entry.getValue().getClass() == clazz) {
+                    clazzContinue = true;
+                    break;
+                }
+            }
+            if (clazzContinue) {
+                logger.debug("ignores controller[bean in context]: " + clazz.getName());
                 continue;
             }
             if (Modifier.isAbstract(clazz.getModifiers())
                     || Modifier.isInterface(clazz.getModifiers())
                     || !Modifier.isPublic(clazz.getModifiers())
                     || clazz.isAnnotationPresent(Ignored.class)) {
+                logger.debug("ignores controller[abstract?interface?not public?Ignored?]: "
+                        + clazz.getName());
                 continue;
             }
             //
