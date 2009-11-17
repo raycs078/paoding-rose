@@ -16,6 +16,7 @@
 package net.paoding.rose;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.servlet.FilterChain;
@@ -28,7 +29,6 @@ import javax.servlet.http.HttpServletResponse;
 import net.paoding.rose.scanner.ModuleInfo;
 import net.paoding.rose.scanner.RoseJarContextResources;
 import net.paoding.rose.scanner.RoseModuleInfos;
-import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.NamedValidator;
 import net.paoding.rose.web.RequestPath;
 import net.paoding.rose.web.impl.context.ContextLoader;
@@ -47,13 +47,13 @@ import net.paoding.rose.web.impl.thread.tree.TreeBuilder;
 import net.paoding.rose.web.instruction.InstructionExecutor;
 import net.paoding.rose.web.instruction.InstructionExecutorImpl;
 import net.paoding.rose.web.paramresolver.ParamResolver;
-import net.paoding.rose.web.var.PrivateVar;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.core.io.Resource;
 import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.context.support.WebApplicationContextUtils;
 import org.springframework.web.filter.GenericFilterBean;
 import org.springframework.web.util.NestedServletException;
 
@@ -108,7 +108,7 @@ public class RoseFilter extends GenericFilterBean {
         if (StringUtils.isBlank(contextConfigLocation)) {
             throw new IllegalArgumentException("contextConfigLocation");
         }
-        this.contextConfigLocation = contextConfigLocation.trim();
+        this.contextConfigLocation = contextConfigLocation;
     }
 
     public void setInstructionExecutor(InstructionExecutor instructionExecutor) {
@@ -117,66 +117,17 @@ public class RoseFilter extends GenericFilterBean {
 
     @Override
     protected final void initFilterBean() throws ServletException {
-        // TODO: 有必要把servletContext收藏成起来吗？ 
-        // 把servletContext收藏成起来
-        PrivateVar.servletContext(getServletContext());
-
-        // 确认所使用的applicationContext配置
-        if (StringUtils.isBlank(contextConfigLocation)) {
-            String webxmlContextConfigLocation = getServletContext().getInitParameter(
-                    "contextConfigLocation");
-            if (!StringUtils.isBlank(webxmlContextConfigLocation)) {
-                contextConfigLocation = webxmlContextConfigLocation;
-            } else {
-                contextConfigLocation = DEFAULT_CONTEXT_CONFIG_LOCATION;
-            }
-        }
-
-        //
         try {
-            // 创建Rose环境下的根WebApplicationContext对象
+            // 识别 Rose 程序模块
+            this.modules = prepareModules(prepareRootApplicationContext());
 
-            List<Resource> jarContextResources = RoseJarContextResources.findContextResources();
-            if (logger.isInfoEnabled()) {
-                logger.info("jarContextResources: "
-                        + ArrayUtils.toString(jarContextResources.toArray()));
-            }
-            String[] messageBasenames = RoseJarContextResources.findMessageBasenames();
-            if (logger.isInfoEnabled()) {
-                logger.info("jarMessageResources: " + ArrayUtils.toString(messageBasenames));
-            }
-            WebApplicationContext rootContext = null;
+            // 映射 Rose 程序模块
+            this.mappingTree = prepareMappingTree(modules);
 
-            rootContext = ContextLoader.createWebApplicationContext(getServletContext(),
-                    rootContext, jarContextResources, messageBasenames, "rose.jars");
+            // 打印提示信息
+            printRoseInfos();
 
-            rootContext = ContextLoader.createWebApplicationContext(getServletContext(),
-                    rootContext, contextConfigLocation, new String[] { "classpath:messages",
-                            "/WEB-INF/messages", }, "rose.root");
-
-            // TODO: 有必要否？
-            PrivateVar.setRootWebApplicationContext(rootContext);
-
-            // 自动扫描识别web层对象，纳入Rose管理
-            List<ModuleInfo> moduleInfoList = new RoseModuleInfos().findModuleInfos();
-            this.modules = new ModulesBuilder().build(rootContext, moduleInfoList);
             //
-            WebEngine roseEngine = new WebEngine(instructionExecutor);
-            Mapping<WebEngine> rootMapping = new MappingImpl<WebEngine>("",
-                    MatchMode.PATH_STARTS_WITH, roseEngine);
-            this.mappingTree = new MappingNode(rootMapping, null);
-            //
-            new TreeBuilder().create(mappingTree, modules);
-            if (logger.isInfoEnabled()) {
-                final StringBuilder sb = new StringBuilder(4096);
-                dumpModules(modules, sb);
-                String strModuleInfos = sb.toString();
-                getServletContext().log(strModuleInfos);
-            }
-            logger.info(String.format("Rose Initiated (version=%s)", RoseVersion.getVersion()));
-            // 控制台提示
-            getServletContext().log(
-                    String.format("Rose Initiated (version=%s)", RoseVersion.getVersion()));
         } catch (final Exception e) {
             logger.error("", e);
             throw new NestedServletException(e.getMessage(), e);
@@ -190,7 +141,7 @@ public class RoseFilter extends GenericFilterBean {
         final HttpServletRequest httpRequest = (HttpServletRequest) request;
         final HttpServletResponse httpResponse = (HttpServletResponse) response;
 
-        // debug
+        // 打开DEBUG级别信息能看到所有进入RoseFilter的请求
         if (logger.isDebugEnabled()) {
             logger.debug(httpRequest.getMethod() + " " + httpRequest.getRequestURL());
         }
@@ -198,31 +149,109 @@ public class RoseFilter extends GenericFilterBean {
         // 创建RequestPath对象，用于记录对地址解析的结果
         final RequestPath requestPath = new RequestPath(httpRequest);
 
-        // 
-        if (requestPath.getRosePath().startsWith(RoseConstants.VIEWS_PATH_WITH_END_SEP)
-                || "/favicon.ico".equals(requestPath.getUri())) {
+        //  简单、快速判断本次请求，如果不应由Rose执行，返回true
+        if (quicklyPass(requestPath)) {
             forwardToWebContainer(filterChain, httpRequest, httpResponse, requestPath);
             return;
         }
 
-        // 构造invocation对象，一个invocation对象用于封装和本次请求有关的匹配结果以及方法调用参数
-        final Invocation inv = new InvocationBean(httpRequest, httpResponse, requestPath);
-        final Rose rose = new Rose(this.modules, mappingTree, inv);
+        // matched为true代表本次请求被Rose匹配，不需要转发给容器的其他 flter 或 servlet
         boolean matched = false;
         try {
-            matched = rose.execute(); // 渲染后的操作：拦截器的afterCompletion以及include属性快照的恢复等
+            // invocation 对象 代表一次请求以及响应
+            final InvocationBean inv = new InvocationBean(httpRequest, httpResponse, requestPath);
+
+            // rose 对象 代表Rose框架对一次请求的执行
+            final Rose rose = new Rose(this.modules, mappingTree, inv);
+
+            // 对请求进行匹配、处理、渲染以及渲染后的操作，如果找不到映配则返回false
+            matched = rose.execute();
+
+            // 
         } catch (Throwable exception) {
             throwServletException(requestPath, exception);
         }
-        // don't cache exception by request by forward 
+
+        // 非Rose的请求转发给WEB容器的其他组件处理，而且不放到上面的try-catch块中
         if (!matched) {
             forwardToWebContainer(filterChain, httpRequest, httpResponse, requestPath);
         }
     }
 
+    /**
+     * 创建最根级别的 ApplicationContext 对象，比如WEB-INF、WEB-INF/classes、
+     * jar中的spring配置文件所组成代表的、整合为一个 ApplicationContext 对象
+     * 
+     * @return
+     * @throws IOException
+     */
+    private WebApplicationContext prepareRootApplicationContext() throws IOException {
+        String contextConfigLocation = this.contextConfigLocation;
+        // 确认所使用的applicationContext配置
+        if (StringUtils.isBlank(contextConfigLocation)) {
+            String webxmlContextConfigLocation = getServletContext().getInitParameter(
+                    "contextConfigLocation");
+            if (!StringUtils.isBlank(webxmlContextConfigLocation)) {
+                contextConfigLocation = webxmlContextConfigLocation;
+            } else {
+                contextConfigLocation = DEFAULT_CONTEXT_CONFIG_LOCATION;
+            }
+        }
+        List<Resource> jarContextResources = RoseJarContextResources.findContextResources();
+        String[] messageBasenames = RoseJarContextResources.findMessageBasenames();
+        if (logger.isInfoEnabled()) {
+            logger.info("jarContextResources: "
+                    + ArrayUtils.toString(jarContextResources.toArray()));
+            logger.info("jarMessageResources: " + ArrayUtils.toString(messageBasenames));
+        }
+
+        messageBasenames = Arrays.copyOf(messageBasenames, messageBasenames.length + 2);
+        messageBasenames[messageBasenames.length - 2] = "classpath:messages";
+        messageBasenames[messageBasenames.length - 1] = "/WEB-INF/messages";
+
+        WebApplicationContext rootContext = ContextLoader.createWebApplicationContext(
+                getServletContext(), jarContextResources, contextConfigLocation, messageBasenames,
+                "rose.root");
+
+        /* enable: WebApplicationContextUtils.getWebApplicationContext() */
+        getServletContext().setAttribute(
+                WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE, rootContext);
+        logger.info("Published rose.root WebApplicationContext [" + rootContext
+                + "] as ServletContext attribute with name ["
+                + WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE + "]");
+        return rootContext;
+    }
+
+    private List<Module> prepareModules(WebApplicationContext rootContext) throws Exception {
+        // 自动扫描识别web层对象，纳入Rose管理
+        List<ModuleInfo> moduleInfoList = new RoseModuleInfos().findModuleInfos();
+        return new ModulesBuilder().build(rootContext, moduleInfoList);
+    }
+
+    private MappingNode prepareMappingTree(List<Module> modules2) {
+        WebEngine roseEngine = new WebEngine(instructionExecutor);
+        Mapping<WebEngine> rootMapping = new MappingImpl<WebEngine>("", MatchMode.PATH_STARTS_WITH,
+                roseEngine);
+        MappingNode mappingTree = new MappingNode(rootMapping, null);
+        new TreeBuilder().create(mappingTree, modules);
+        return mappingTree;
+    }
+
+    /**
+     * 简单、快速判断本次请求，如果不应由Rose执行，返回true
+     * 
+     * @param requestPath
+     * @return
+     */
+    private boolean quicklyPass(final RequestPath requestPath) {
+        return requestPath.getRosePath().startsWith(RoseConstants.VIEWS_PATH_WITH_END_SEP)
+                || "/favicon.ico".equals(requestPath.getUri());
+    }
+
     @Override
     public void destroy() {
-        WebApplicationContext rootContext = PrivateVar.getRootWebApplicationContext();
+        WebApplicationContext rootContext = WebApplicationContextUtils
+                .getWebApplicationContext(getServletContext());
         if (rootContext != null) {
             AbstractApplicationContext roseJarsContext = (AbstractApplicationContext) rootContext
                     .getParent();
@@ -295,6 +324,19 @@ public class RoseFilter extends GenericFilterBean {
         logger.error(msg, exception);
         getServletContext().log(msg, exception);
         throw servletException;
+    }
+
+    private void printRoseInfos() {
+        if (logger.isInfoEnabled()) {
+            final StringBuilder sb = new StringBuilder(4096);
+            dumpModules(modules, sb);
+            String strModuleInfos = sb.toString();
+            getServletContext().log(strModuleInfos);
+        }
+        logger.info(String.format("Rose Initiated (version=%s)", RoseVersion.getVersion()));
+        // 控制台提示
+        getServletContext().log(
+                String.format("Rose Initiated (version=%s)", RoseVersion.getVersion()));
     }
 
     //----------

@@ -103,13 +103,13 @@ public class ViewInstruction extends AbstractInstruction {
     @Override
     public void doRender(Invocation inv) throws Exception {
         String name = resolvePlaceHolder(this.name, inv);
-        ViewResolver viewResolver = getViewDispatcher(inv);
+        ViewDispatcher viewResolver = getViewDispatcher(inv);
         String viewPath = getViewPath((InvocationBean) inv, name);
         if (viewPath != null) {
             HttpServletRequest request = inv.getRequest();
             HttpServletResponse response = inv.getResponse();
             //
-            View view = viewResolver.resolveViewName(viewPath, request.getLocale());
+            View view = viewResolver.resolveViewName(inv, viewPath, request.getLocale());
             //
             if (contentType != null) {
                 String contentType = resolvePlaceHolder(this.contentType, inv);
@@ -225,8 +225,8 @@ public class ViewInstruction extends AbstractInstruction {
 
     //-------------------------------------------
 
-    protected ViewResolver getViewDispatcher(Invocation inv) {
-        ViewResolver viewDispatcher = (ViewResolver) SpringUtils.getBean(inv
+    protected ViewDispatcher getViewDispatcher(Invocation inv) {
+        ViewDispatcher viewDispatcher = (ViewDispatcher) SpringUtils.getBean(inv
                 .getApplicationContext(), viewDispatcherName);
         if (viewDispatcher == null) {
             viewDispatcher = registerViewDispatcher(inv.getApplicationContext());

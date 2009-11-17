@@ -18,8 +18,6 @@ package net.paoding.rose.util;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.paoding.rose.web.var.PrivateVar;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactoryUtils;
@@ -74,14 +72,6 @@ public class SpringUtils {
             logger.debug("create spring bean: " + bean.getClass() + "@" + bean.hashCode());
         }
         return bean;
-    }
-
-    public static <T> T autowire(T bean) {
-        return autowire(bean, PrivateVar.getRootWebApplicationContext());
-    }
-
-    public static <T> T autowire(T bean, String modulePath) {
-        return autowire(bean, PrivateVar.getWebApplicationContext(modulePath));
     }
 
     /**

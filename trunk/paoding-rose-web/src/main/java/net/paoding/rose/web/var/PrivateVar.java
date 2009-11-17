@@ -23,9 +23,8 @@ import java.util.Properties;
 
 import javax.servlet.ServletContext;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.context.support.WebApplicationContextUtils;
 
 /**
  * 仅仅提供Rose框架内部使用，外部程序请勿调用.
@@ -34,43 +33,10 @@ import org.springframework.web.context.WebApplicationContext;
  */
 public final class PrivateVar {
 
-    private static Log logger = LogFactory.getLog(PrivateVar.class);
-
     // 当前环境的ServletContext对象，由RoseFilter初始化时设置通过servletContext(ServlerContext)设置进来
-    private static ServletContext servletContext;
+    //    private static ServletContext servletContext;
 
-    //---------------------------------------------------------------
-
-    /**
-     * 设置当前环境的 {@link ServletContext}环境对象.该设置方法在只能被调用一次.
-     * <p>
-     * 设置成功后，Rose框架内部的程序将调用 {@link #servletContext()}方法返回之.
-     * 
-     * @param servletContext
-     * @throws AssertionError 如果已经成功设置过，外部程序又要重复设置时
-     * @throws NullPointerException 如果所给的servletContext 为null时
-     * @see #servletContext()
-     */
-    public static void servletContext(ServletContext servletContext) {
-        if (servletContext == null) {
-            throw new NullPointerException("ServletContext");
-        }
-        PrivateVar.servletContext = servletContext;
-    }
-
-    /**
-     * 返回当前环境的 {@link ServletContext}对象，在RoseFilter初始化成功后有效
-     * 
-     * @return
-     * @throws IllegalStateException 如果还未初始化成功时
-     * @see #servletContext(ServletContext)
-     */
-    public static ServletContext servletContext() {
-        if (PrivateVar.servletContext == null) {
-            throw new IllegalStateException();
-        }
-        return PrivateVar.servletContext;
-    }
+    // ---------------------------------------------------------------
 
     /**
      * 获取当前Web应用的根Spring上下文环境.
@@ -79,33 +45,8 @@ public final class PrivateVar {
      * 
      * @return
      */
-    public static WebApplicationContext getRootWebApplicationContext() {
-        return (WebApplicationContext) servletContext
-                .getAttribute(WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE);
-    }
-
-    public static void setRootWebApplicationContext(WebApplicationContext rootContext) {
-        servletContext.setAttribute(WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE,
-                rootContext);
-        logger.debug("Published rose.root WebApplicationContext [" + rootContext
-                + "] as ServletContext attribute with name ["
-                + WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE + "]");
-    }
-
-    /**
-     * 获取某个module的上下文环境,这个上下文环境包括了module本身特有的上下文，还包括各个module共享的根环境.
-     * 
-     * @param modulePath module地址，如果为null等价于
-     *        {@link #getRootWebApplicationContext()}
-     * @return null,如果给定module的不存在
-     */
-    public static WebApplicationContext getWebApplicationContext(String modulePath) {
-        if (modulePath == null) {
-            return getRootWebApplicationContext();
-        }
-        return (WebApplicationContext) servletContext.getAttribute(WebApplicationContext.class
-                .getName()
-                + ".module-" + modulePath);
+    public static WebApplicationContext getRootWebApplicationContext(ServletContext servletContext) {
+        return WebApplicationContextUtils.getWebApplicationContext(servletContext);
     }
 
     /**
@@ -117,8 +58,8 @@ public final class PrivateVar {
 
     private static Properties roseProperties;
 
-    public static String getProperty(String name) {
-        return getProperty(name, null);
+    public static String getProperty(ServletContext servletContext, String name) {
+        return getProperty(servletContext, name, null);
     }
 
     /**
@@ -126,7 +67,7 @@ public final class PrivateVar {
      * @param name
      * @return
      */
-    public static String getProperty(String name, String def) {
+    public static String getProperty(ServletContext servletContext, String name, String def) {
         if (roseProperties == null) {
             String rosePropertiesPath = "rose.properties";
             if (servletContext != null) {

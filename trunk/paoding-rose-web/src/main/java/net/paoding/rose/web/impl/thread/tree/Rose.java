@@ -9,12 +9,12 @@ import java.util.Set;
 
 import javax.servlet.http.HttpServletResponse;
 
-import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.InvocationUtils;
 import net.paoding.rose.web.annotation.ReqMethod;
 import net.paoding.rose.web.impl.module.Module;
 import net.paoding.rose.web.impl.thread.Engine;
 import net.paoding.rose.web.impl.thread.EngineChain;
+import net.paoding.rose.web.impl.thread.InvocationBean;
 import net.paoding.rose.web.impl.thread.MatchResult;
 import net.paoding.rose.web.impl.thread.ParameteredUriRequest;
 
@@ -27,7 +27,7 @@ public class Rose implements EngineChain {
 
     private List<Module> modules;
 
-    private Invocation invocation;
+    private InvocationBean invocation;
 
     private ArrayList<MatchResult<? extends Engine>> matchResults = new ArrayList<MatchResult<? extends Engine>>(
             4);
@@ -36,14 +36,14 @@ public class Rose implements EngineChain {
 
     private int nextIndexOfChain = 0;
 
-    public Rose(List<Module> modules, MappingNode mappingTree, Invocation invocation) {
+    public Rose(List<Module> modules, MappingNode mappingTree, InvocationBean invocation) {
         this.mappingTree = mappingTree;
         this.modules = modules;
         this.invocation = invocation;
-        this.invocation.setAttribute("$$paoding-rose.roseThread", (Rose) this);
+        invocation.setRose((Rose) this);
     }
 
-    public Invocation getInvocation() {
+    public InvocationBean getInvocation() {
         return invocation;
     }
 

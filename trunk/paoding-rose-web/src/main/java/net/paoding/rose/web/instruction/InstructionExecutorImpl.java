@@ -23,7 +23,6 @@ import javax.servlet.ServletException;
 
 import net.paoding.rose.util.SpringUtils;
 import net.paoding.rose.web.Invocation;
-import net.paoding.rose.web.impl.thread.ControllerEngine;
 import net.paoding.rose.web.impl.thread.InvocationBean;
 
 import org.apache.commons.logging.Log;
@@ -66,18 +65,18 @@ public class InstructionExecutorImpl implements InstructionExecutor {
 
             if (Thread.interrupted() || instruction == null) {
                 return null;
-            } 
-//            else if (instruction.equals(">") || instruction.equals('>')) {
-//                ControllerEngine controllerEngine = (ControllerEngine) ((InvocationBean) inv).getControllerMatchResult().getMapping().getTarget();
-//                String viewPrefix = controllerEngine.getViewPrefix();
-//                instruction = View.name(viewPrefix + inv.getMethod().getName());
-//            }
+            }
+            //            else if (instruction.equals(">") || instruction.equals('>')) {
+            //                ControllerEngine controllerEngine = (ControllerEngine) ((InvocationBean) inv).getControllerMatchResult().getMapping().getTarget();
+            //                String viewPrefix = controllerEngine.getViewPrefix();
+            //                instruction = View.name(viewPrefix + inv.getMethod().getName());
+            //            }
             else {
                 if (instruction.getClass() != String.class
                         && !ClassUtils.isPrimitiveOrWrapper(instruction.getClass())
                         && instruction.getClass().getComponentType() == null
                         && instruction.getClass().getAnnotation(Component.class) != null) {
-                    SpringUtils.autowire(instruction, inv.getRequestPath().getModulePath());
+                    SpringUtils.autowire(instruction, inv.getApplicationContext());
                 }
                 instruction = parseInstruction(inv, instruction);
             }
