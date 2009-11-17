@@ -106,8 +106,8 @@ public final class MethodParameterResolver {
                     ((InitializingBean) parameters[i]).afterPropertiesSet();
                 }
             } catch (TypeMismatchException e) {
-                if (logger.isWarnEnabled()) {
-                    logger.warn("", e);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("", e);
                 }
                 parameterBindingResult.rejectValue(parameterNames[i], "convert.failed",
                         new Object[] { parameterNames[i], e }, e.getMessage());
