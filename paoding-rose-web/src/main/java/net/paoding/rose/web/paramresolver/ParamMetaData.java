@@ -70,4 +70,10 @@ public interface ParamMetaData {
      */
     public FlashParam getFlashParamAnnotation();
 
+    public int getIndex();
+
+    public void setUserObject(Object userObject);
+
+    public Object getUserObject();
+
 }

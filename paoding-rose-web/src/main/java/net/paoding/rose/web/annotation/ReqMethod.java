@@ -26,4 +26,33 @@ public enum ReqMethod {
 
     ALL, GET, HEAD, POST, PUT, DELETE, OPTIONS, TRACE;
 
+    public static ReqMethod map(String method) {
+        method = method.toUpperCase();
+        if ("*".equals(method)) {
+            return ALL;
+        }
+        if ("GET".equals(method)) {
+            return GET;
+        }
+        if ("HEAD".equals(method)) {
+            return HEAD;
+        }
+        if ("POST".equals(method)) {
+            return POST;
+        }
+        if ("PUT".equals(method)) {
+            return PUT;
+        }
+        if ("DELETE".equals(method)) {
+            return DELETE;
+        }
+        if ("OPTIONS".equals(method)) {
+            return OPTIONS;
+        }
+        if ("TRACE".equals(method)) {
+            return TRACE;
+        }
+        throw new IllegalArgumentException(method);
+    }
+
 }

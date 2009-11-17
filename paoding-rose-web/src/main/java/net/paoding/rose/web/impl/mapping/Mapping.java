@@ -15,9 +15,12 @@
  */
 package net.paoding.rose.web.impl.mapping;
 
+import java.util.Set;
+
 import net.paoding.rose.web.annotation.ReqMapping;
 import net.paoding.rose.web.annotation.ReqMethod;
 import net.paoding.rose.web.impl.thread.MatchResult;
+import net.paoding.rose.web.impl.thread.tree.MappingNode;
 
 /**
  * {@link Mapping}用于封装表示一个地址到一个目标的映射。
@@ -63,6 +66,9 @@ public interface Mapping<T> extends Comparable<Mapping<?>> {
      */
     public ReqMethod[] getMethods();
 
+    // TODO: 应该抽象为一个对象处理
+    public Set<ReqMethod> getResourceMethods();
+
     /**
      * 返回该匹配的目标对象
      * 
@@ -79,5 +85,5 @@ public interface Mapping<T> extends Comparable<Mapping<?>> {
      * @param requestMethod 请求的方法，应为大写
      * @return
      */
-    public MatchResult<T> match(String path, String requestMethod);
+    public MatchResult<T> match(String path, String requestMethod, MappingNode node);
 }

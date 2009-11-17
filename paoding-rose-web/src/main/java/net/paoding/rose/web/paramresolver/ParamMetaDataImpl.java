@@ -39,12 +39,32 @@ class ParamMetaDataImpl implements ParamMetaData {
 
     private FlashParam flashParamAnnotation;
 
+    private Object userObject;
+
+    private int index;
+
     public ParamMetaDataImpl(Class<?> controllerClass, Method method, Class<?> paramType,
-            String paramName) {
+            String paramName, int index) {
         this.controllerClass = controllerClass;
         this.method = method;
         this.paramName = paramName;
         this.paramType = paramType;
+        this.index = index;
+    }
+
+    @Override
+    public int getIndex() {
+        return index;
+    }
+
+    @Override
+    public void setUserObject(Object userObject) {
+        this.userObject = userObject;
+    }
+
+    @Override
+    public Object getUserObject() {
+        return userObject;
     }
 
     public Class<?> getControllerClass() {

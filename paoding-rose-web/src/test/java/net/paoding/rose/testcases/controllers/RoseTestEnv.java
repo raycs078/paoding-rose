@@ -5,7 +5,6 @@ import java.io.File;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 
-import net.paoding.rose.RoseEngine;
 import net.paoding.rose.RoseFilter;
 import net.paoding.rose.mock.web.instruction.MockInstructionExecutor;
 
@@ -32,11 +31,11 @@ public class RoseTestEnv {
         File file = new File("target/test");
         ServletContext servletContext = new MockServletContext(file.getPath(),
                 new FileSystemResourceLoader());
-        roseFilter = new RoseFilter();
-        roseFilter.init(new MockFilterConfig(servletContext, "roseFilter"));
         instructionExecutor = new MockInstructionExecutor();
         instructionExecutor.setStoresInstructionInRequest(true);
-        ((RoseEngine) roseFilter.getEngine()).setInstructionExecutor(instructionExecutor);
+        roseFilter = new RoseFilter();
+        roseFilter.setInstructionExecutor(instructionExecutor);
+        roseFilter.init(new MockFilterConfig(servletContext, "roseFilter"));
     }
 
     public RoseFilter getRoseFilter() {

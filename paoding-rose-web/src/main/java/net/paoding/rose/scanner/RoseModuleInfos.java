@@ -69,7 +69,7 @@ public class RoseModuleInfos {
             moduleInfoList = new LinkedList<ModuleInfo>();
             moduleInfoMap = new HashMap<FileObject, ModuleInfo>();
             //
-            RoseScanner roseScanner = RoseScanner.getRoseScanner();
+            RoseScanner roseScanner = RoseScanner.getInstance();
             List<ResourceInfo> resources = new ArrayList<ResourceInfo>();
             resources.addAll(roseScanner.getClassesFolderResources());
             resources.addAll(roseScanner.getJarResources());

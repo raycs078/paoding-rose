@@ -16,14 +16,13 @@
 package net.paoding.rose.web.controllers.roseInfo;
 
 import java.util.Arrays;
+import java.util.List;
 
-import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.annotation.rest.Get;
 import net.paoding.rose.web.impl.mapping.Mapping;
 import net.paoding.rose.web.impl.module.ControllerInfo;
 import net.paoding.rose.web.impl.module.Module;
-import net.paoding.rose.web.impl.thread.InvocationBean;
-import net.paoding.rose.web.impl.thread.ModuleEngine;
+import net.paoding.rose.web.impl.thread.tree.Rose;
 
 /**
  * 
@@ -33,15 +32,14 @@ import net.paoding.rose.web.impl.thread.ModuleEngine;
 public class ModuleController implements BaseController {
 
     @Get
-    public Object list(Invocation inv) throws Exception {
-        InvocationBean invimpl = ((InvocationBean) inv);
-        Mapping<ModuleEngine>[] mappings = invimpl.getRoseEngine().getModuleMappings();
+    public Object list(Rose rose) throws Exception {
+        List<Module> modules = rose.getModules();
         StringBuilder sb = new StringBuilder(2048);
-        for (int i = 0; i < mappings.length; i++) {
-            Module module = mappings[i].getTarget().getModule();
+        int i = 1;
+        for (Module module : modules) {
             sb.append("<div style=\"margin-top:5px;border-top:solid black 1px;\"><table>");
             // number
-            sb.append("<tr valign=\"top\"><td>").append(i + 1).append("</td><td></td></tr>");
+            sb.append("<tr valign=\"top\"><td>").append(i++).append("</td><td></td></tr>");
             // mappingPath
             sb.append("<tr><td>mappingPath</td><td>").append(module.getMappingPath()).append(
                     "</td></tr>");

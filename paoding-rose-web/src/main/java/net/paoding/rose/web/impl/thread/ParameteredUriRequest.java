@@ -15,14 +15,15 @@
  */
 package net.paoding.rose.web.impl.thread;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 
 /**
@@ -32,14 +33,11 @@ import javax.servlet.http.HttpServletRequestWrapper;
  */
 public class ParameteredUriRequest extends HttpServletRequestWrapper {
 
-    private final List<String> parameterNames;
+    private final Map<String, String> parameters;
 
-    private final InvocationBean inv;
-
-    public ParameteredUriRequest(InvocationBean inv, List<String> parameterNames) {
-        super(inv.getRequest());
-        this.inv = inv;
-        this.parameterNames = parameterNames;
+    public ParameteredUriRequest(HttpServletRequest request, Map<String, String> parameters) {
+        super(request);
+        this.parameters = parameters;
     }
 
     // 优先获取queryString或forward之后的请求的参数，只有获取不到时，才从URI里获取
@@ -47,7 +45,7 @@ public class ParameteredUriRequest extends HttpServletRequestWrapper {
     public String getParameter(String name) {
         String value = super.getParameter(name);
         if (value == null) {
-            value = inv.getMatchResultParameter(name);
+            value = parameters.get(name);
         }
         return value;
     }
@@ -56,9 +54,9 @@ public class ParameteredUriRequest extends HttpServletRequestWrapper {
     @SuppressWarnings("unchecked")
     public Map getParameterMap() {
         Map<String, String[]> map = new HashMap<String, String[]>(super.getParameterMap());
-        for (String name : parameterNames) {
-            if (!map.containsKey(name)) {
-                map.put(name, inv.getMethodParameterNames());
+        for (Map.Entry<String, String> entry : parameters.entrySet()) {
+            if (!map.containsKey(entry.getKey())) {
+                map.put(entry.getKey(), new String[] { parameters.get(entry.getKey()) });
             }
         }
         return Collections.unmodifiableMap(map);
@@ -67,12 +65,15 @@ public class ParameteredUriRequest extends HttpServletRequestWrapper {
     @Override
     public String[] getParameterValues(String name) {
         String[] value = super.getParameterValues(name);
+        if (value == null || value.length == 0) {
+            String _value = parameters.get(name);
+            if (_value != null) {
+                value = new String[] { _value };
+            }
+        }
         // javadoc: 
         // Returns an array of String objects containing all of the values the given request parameter has,
         // or null if the parameter does not exist.
-        if (value == null || value.length == 0) {
-            value = inv.getMatchResultParameterValues(name);
-        }
         return value == null || value.length == 0 ? null : value;
     }
 
@@ -80,9 +81,11 @@ public class ParameteredUriRequest extends HttpServletRequestWrapper {
     @SuppressWarnings("unchecked")
     public Enumeration getParameterNames() {
         final Enumeration<String> requestParamNames = super.getParameterNames();
+
         return new Enumeration<String>() {
 
-            final Iterator<String> matchResultParamNames = parameterNames.iterator();
+            final Iterator<String> matchResultParamNames = new ArrayList<String>(parameters
+                    .keySet()).iterator();
 
             @Override
             public boolean hasMoreElements() {

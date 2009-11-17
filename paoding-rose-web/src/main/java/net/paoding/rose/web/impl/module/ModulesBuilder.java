@@ -16,7 +16,6 @@
 package net.paoding.rose.web.impl.module;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Proxy;
 import java.net.URL;
@@ -84,8 +83,9 @@ public class ModulesBuilder {
                             .getMessageBasenames());
             final String contextAttrKey = WebApplicationContext.class.getName() + "."
                     + contextNamespace;
-            context.getServletContext().setAttribute(contextAttrKey, context);
-
+            if (context.getServletContext() != null) {
+                context.getServletContext().setAttribute(contextAttrKey, context);
+            }
             // 创建module对象
             ModuleBean module = new ModuleBean(parentModule, moduleInfo.getModuleUrl(),
                     moduleMappingPath, moduleInfo.getRelativePackagePath(), context);
@@ -213,10 +213,6 @@ public class ModulesBuilder {
         // 这个Controller是否已经在Context中配置了?
         // 如果使用Context配置，就不需要在这里实例化
         Object controller = context.getBean(beanName);
-        Object rawController = null;
-        if (clazz.isAssignableFrom(controller.getClass())) {
-            rawController = controller;
-        }
         for (int i = 0; i < controllerPaths.length; i++) {
             if (methods.length > 0) {
                 module.addController(//
@@ -236,24 +232,15 @@ public class ModulesBuilder {
                                 + controller.getClass().getName());
             }
         }
-        if (rawController != null) {
-            if (controllerPaths.length > 0) {
-                // 实现注意：内部拦截器对控制器字段的引用，最好使用控制器提供getXxx()方法获取，而非直接获取!
-                checkInnerInterceptors(module, clazz, controllerPaths[0], controller, rawController);
-            }
-        } else {
-            if (logger.isDebugEnabled()) {
-                logger.debug("skip checking controller inner intercetpors: " + clazz.getName());
-            }
-        }
         return true;
     }
 
     private XmlWebApplicationContext createModuleContext(WebApplicationContext parent,
             final String namespace, final List<URL> contextResources,
             final String[] messageBasenames) throws IOException {
-        return ContextLoader.createWebApplicationContext(parent.getServletContext(), parent,
-                ContextLoader.toResources(contextResources), messageBasenames, namespace);
+        return ContextLoader.createWebApplicationContext(parent == null ? null : parent
+                .getServletContext(), parent, ContextLoader.toResources(contextResources),
+                messageBasenames, namespace);
     }
 
     private void registerBeanDefinitions(XmlWebApplicationContext context, List<Class<?>> classes) {
@@ -314,8 +301,7 @@ public class ModulesBuilder {
     private List<ParamResolver> findContextResolvers(XmlWebApplicationContext context) {
         String[] resolverNames = SpringUtils.getBeanNames(context.getBeanFactory(),
                 ParamResolver.class);
-        ArrayList<ParamResolver> resolvers = new ArrayList<ParamResolver>(
-                resolverNames.length);
+        ArrayList<ParamResolver> resolvers = new ArrayList<ParamResolver>(resolverNames.length);
         for (String beanName : resolverNames) {
             ParamResolver resolver = (ParamResolver) context.getBean(beanName);
             Class<?> userClass = ClassUtils.getUserClass(resolver);
@@ -418,102 +404,6 @@ public class ModulesBuilder {
             }
         }
         return globalValidators;
-    }
-
-    private void checkInnerInterceptors(ModuleBean module, Class<?> clazz, String controllerPath,
-            Object controller, Object rawController) throws IllegalAccessException {
-        // 控制器特有的拦截器
-        Class<?> _clazz = clazz;
-        while (true) {
-            if (_clazz == Object.class || _clazz == null
-                    || Modifier.isInterface(_clazz.getModifiers())) {
-                break;
-            }
-            Field[] fields = _clazz.getDeclaredFields();
-            for (Field field : fields) {
-                // 只对本类声明或父类声明的公共或保护的字段(也就是子类可以引用的字段)
-                // !!和控制器是否暴露父类的方法不一样的地方，这里不需要父类声明@AsSuperController标注
-                if (clazz == _clazz || Modifier.isPublic(field.getModifiers())
-                        || Modifier.isProtected(field.getModifiers())) {
-                    if (Modifier.isStatic(field.getModifiers())) {
-                        continue;
-                    }
-                    // 
-                    if (field.getAnnotation(Ignored.class) == null) {
-                        field.setAccessible(true);
-                        Object fieldValue = field.get(rawController);
-                        if (fieldValue == null) {
-                            continue;
-                        }
-                        if (fieldValue instanceof ControllerInterceptor) {
-                            ControllerInterceptor unwrapperInterceptor = (ControllerInterceptor) fieldValue;
-                            NestedControllerInterceptorWrapper.Builder builder = new NestedControllerInterceptorWrapper.Builder(
-                                    unwrapperInterceptor);
-                            Interceptor annotation = field.getAnnotation(Interceptor.class);
-                            if (annotation != null) {
-                                builder.oncePerRequest(annotation.oncePerRequest());
-                            }
-                            if (annotation != null && StringUtils.isNotBlank(annotation.name())) {
-                                builder.name(controllerPath + "." + annotation.name());
-                            } else {
-                                builder.name(controllerPath + "." + field.getName());
-                            }
-                            //
-                            NestedControllerInterceptorWrapper interceptor = builder.controller(
-                                    controller).build();
-                            module.addControllerInterceptor(interceptor);
-                            if (logger.isDebugEnabled()) {
-                                logger.debug("module '" + module.getMappingPath()
-                                        + "': add intercetpor [" + interceptor.getPriority() + "]:"
-                                        + interceptor.getName() + "="
-                                        + fieldValue.getClass().getName());
-                            }
-                        } else {
-                            ArrayList<ControllerInterceptor> list = new ArrayList<ControllerInterceptor>();
-                            if (fieldValue.getClass().isArray()
-                                    && fieldValue.getClass().getComponentType().isAssignableFrom(
-                                            ControllerInterceptor.class)) {
-                                ControllerInterceptor[] array = (ControllerInterceptor[]) fieldValue;
-                                for (ControllerInterceptor object : array) {
-                                    if (object != null) {
-                                        list.add(object);
-                                    }
-                                }
-                            } else if (fieldValue instanceof Iterable<?>) {
-                                for (Object elem : (Iterable<?>) fieldValue) {
-                                    if (elem != null && !(elem instanceof ControllerInterceptor)) {
-                                        list.clear();
-                                        break;
-                                    }
-                                    if (elem != null) {
-                                        list.add((ControllerInterceptor) elem);
-                                    }
-                                }
-                            }
-                            // 具有相同名字的多个拦截器
-                            for (ControllerInterceptor unwrapperInterceptor : list) {
-                                String name = controllerPath + "." + field.getName();
-                                NestedControllerInterceptorWrapper interceptor = new NestedControllerInterceptorWrapper.Builder(
-                                        unwrapperInterceptor).name(name).controller(controller)
-                                        .build();
-                                module.addControllerInterceptor(interceptor);
-                                if (logger.isDebugEnabled()) {
-                                    logger.debug("module '"
-                                            + module.getMappingPath()
-                                            + "': add intercetpor ["
-                                            + unwrapperInterceptor.getPriority()
-                                            + "]="
-                                            + interceptor.getName()
-                                            + ClassUtils.getUserClass(unwrapperInterceptor)
-                                                    .getName());
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            _clazz = _clazz.getSuperclass();
-        }
     }
 
     private MultipartResolver initMultipartResolver(ApplicationContext context) {

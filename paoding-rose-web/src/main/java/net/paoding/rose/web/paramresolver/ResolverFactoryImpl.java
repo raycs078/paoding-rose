@@ -18,7 +18,10 @@ package net.paoding.rose.web.paramresolver;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -44,6 +47,8 @@ import net.paoding.rose.web.annotation.Param;
 import net.paoding.rose.web.annotation.ParamConf;
 import net.paoding.rose.web.impl.module.Module;
 import net.paoding.rose.web.impl.thread.InvocationBean;
+import net.paoding.rose.web.impl.thread.tree.MappingNode;
+import net.paoding.rose.web.impl.thread.tree.Rose;
 import net.paoding.rose.web.var.Flash;
 import net.paoding.rose.web.var.Model;
 
@@ -89,6 +94,8 @@ public class ResolverFactoryImpl implements ResolverFactory {
 
     private static final ParamResolver[] buildinResolvers = new ParamResolver[] {//
     new InvocationResolver(), //
+            new MappingNodeResolver(),//
+            new RoseResolver(), //
             new ApplicationContextResolver(), //
             new MessageSourceResolver(), //
             new ModelResolver(), //
@@ -357,6 +364,34 @@ public class ResolverFactoryImpl implements ResolverFactory {
         }
     }
 
+    static final class MappingNodeResolver implements ParamResolver {
+
+        @Override
+        public boolean supports(ParamMetaData metaData) {
+            return metaData.getParamType() == MappingNode.class;
+        }
+
+        @Override
+        public Object resolve(Invocation inv, ParamMetaData metaData) throws Exception {
+            Rose rose = (Rose) inv.getAttribute("$$paoding-rose.roseThread");
+            return rose.lastMatcheResult().getNode();
+        }
+    }
+
+    static final class RoseResolver implements ParamResolver {
+
+        @Override
+        public boolean supports(ParamMetaData metaData) {
+            return metaData.getParamType() == Rose.class;
+        }
+
+        @Override
+        public Object resolve(Invocation inv, ParamMetaData metaData) throws Exception {
+            Rose rose = (Rose) inv.getAttribute("$$paoding-rose.roseThread");
+            return rose;
+        }
+    }
+
     static final class BeanResolver implements ParamResolver {
 
         @Override
@@ -427,10 +462,21 @@ public class ResolverFactoryImpl implements ResolverFactory {
     static abstract class CollectionResolver<T extends Collection<?>> implements ParamResolver {
 
         @Override
+        public final boolean supports(ParamMetaData metaData) {
+            if (innerSupports(metaData)) {
+                metaData.setUserObject(compileGenericParameterTypesDetail(metaData.getMethod(),
+                        metaData.getIndex()));
+                return true;
+            }
+            return false;
+        }
+
+        public abstract boolean innerSupports(ParamMetaData metaData);
+
+        @Override
         public T resolve(Invocation inv, ParamMetaData paramMetaData) throws Exception {
             if (StringUtils.isNotEmpty(paramMetaData.getParamName())) {
-                Class<?> componentType = ((InvocationBean) inv).getActionEngine()
-                        .getParameterGenericTypes(paramMetaData.getParamName())[0];
+                Class<?> componentType = ((Class[]) paramMetaData.getUserObject())[0];
                 Object toConvert = inv.getRequest()
                         .getParameterValues(paramMetaData.getParamName());
                 if (toConvert != null) {
@@ -454,7 +500,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
     static final class ListResolver extends CollectionResolver<List<?>> {
 
         @Override
-        public boolean supports(ParamMetaData paramMetaData) {
+        public boolean innerSupports(ParamMetaData paramMetaData) {
             return List.class == paramMetaData.getParamType()
                     || Collection.class == paramMetaData.getParamType()
                     || (!Modifier.isAbstract(paramMetaData.getParamType().getModifiers()) && List.class
@@ -480,7 +526,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
     static final class SetResolver extends CollectionResolver<Set<?>> {
 
         @Override
-        public boolean supports(ParamMetaData paramMetaData) {
+        public boolean innerSupports(ParamMetaData paramMetaData) {
             return Set.class == paramMetaData.getParamType()
                     || (!Modifier.isAbstract(paramMetaData.getParamType().getModifiers()) && Set.class
                             .isAssignableFrom(paramMetaData.getParamType()));
@@ -502,19 +548,43 @@ public class ResolverFactoryImpl implements ResolverFactory {
         }
     }
 
+    private static Class[] compileGenericParameterTypesDetail(Method method, int index) {
+        Type genericParameterType = method.getGenericParameterTypes()[index];
+        ArrayList<Class<?>> typeDetailList = new ArrayList<Class<?>>();
+        if (genericParameterType instanceof ParameterizedType) {
+            ParameterizedType aType = (ParameterizedType) genericParameterType;
+            Type[] parameterArgTypes = aType.getActualTypeArguments();
+            for (Type parameterArgType : parameterArgTypes) {
+                if (parameterArgType instanceof Class) {
+                    typeDetailList.add((Class<?>) parameterArgType);
+                } else {
+                    typeDetailList.add(String.class);
+                }
+            }
+            Class<?>[] types = new Class[typeDetailList.size()];
+            typeDetailList.toArray(types);
+            return types;
+        }
+        return null;
+    }
+
     static final class MapResolver implements ParamResolver {
 
         @Override
         public boolean supports(ParamMetaData paramMetaData) {
-            return Map.class == paramMetaData.getParamType()
+            boolean supports = Map.class == paramMetaData.getParamType()
                     || HashMap.class == paramMetaData.getParamType();
+            if (supports) {
+                paramMetaData.setUserObject(compileGenericParameterTypesDetail(paramMetaData
+                        .getMethod(), paramMetaData.getIndex()));
+            }
+            return supports;
         }
 
         @Override
         public Map<?, ?> resolve(Invocation inv, ParamMetaData paramMetaData) {
             if (StringUtils.isNotEmpty(paramMetaData.getParamName())) {
-                Class<?>[] genericTypes = ((InvocationBean) inv).getActionEngine()
-                        .getParameterGenericTypes(paramMetaData.getParamName());
+                Class<?>[] genericTypes = (Class[]) paramMetaData.getUserObject();
                 Class<?> keyType = genericTypes[0];
                 Class<?> valueType = genericTypes[1];
                 Map<?, ?> toConvert = WebUtils.getParametersStartingWith(inv.getRequest(),

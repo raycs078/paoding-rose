@@ -31,7 +31,7 @@ public class JarController implements BaseController {
 
     @Get
     public String list() throws Exception {
-        List<ResourceInfo> infos = RoseScanner.getRoseScanner().getJarResources();
+        List<ResourceInfo> infos = RoseScanner.getInstance().getJarResources();
         StringBuilder sb = new StringBuilder(1024).append("<ul>");
         for (ResourceInfo info : infos) {
             sb.append("<li>");

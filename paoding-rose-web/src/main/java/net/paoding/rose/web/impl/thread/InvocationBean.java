@@ -17,7 +17,6 @@ package net.paoding.rose.web.impl.thread;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.BitSet;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -29,7 +28,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 
-import net.paoding.rose.RoseEngine;
 import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.InvocationUtils;
 import net.paoding.rose.web.RequestPath;
@@ -58,8 +56,6 @@ public final class InvocationBean implements Invocation {
 
     private static final Log logger = LogFactory.getLog(InvocationBean.class);
 
-    private RoseEngine roseEngine;
-
     private Object[] methodParameters = UN_INITIATED_ARRAY; // 在还没有设置方法参数进来时为UN_INITIATED_ARRAY
 
     private Map<String, Object> attributes;
@@ -72,25 +68,19 @@ public final class InvocationBean implements Invocation {
 
     private RequestPath requestPath;
 
+    private Module module;
+
+    private Object controller;
+
+    private Method method;
+
     private transient Model model;
 
     private transient Flash flash;
 
-    private MatchResult<ModuleEngine> moduleMatchResult;
-
-    private MatchResult<ControllerEngine> controllerMatchResult;
-
-    private MatchResult<ActionEngine> actionMatchResult;
-
-    private Map<String, Object> requestAttributesBeforeInclude;
-
     private Invocation preInvocation;
 
     private boolean multiPartRequest;
-
-    private int executedInterceptorIndex = -1;
-
-    private BitSet executedInterceptorBitSet;
 
     private List<BindingResult> bindingResults;
 
@@ -98,15 +88,11 @@ public final class InvocationBean implements Invocation {
 
     //    private boolean destroyed;
 
-    public InvocationBean() {
-    }
-
-    public void setRoseEngine(RoseEngine roseEngine) {
-        this.roseEngine = roseEngine;
-    }
-
-    public RoseEngine getRoseEngine() {
-        return roseEngine;
+    public InvocationBean(HttpServletRequest request, HttpServletResponse response,
+            RequestPath requestPath) {
+        setRequest(request);
+        setResponse(response);
+        setRequestPath(requestPath);
     }
 
     protected boolean isMethodParametersInitiated() {
@@ -124,24 +110,42 @@ public final class InvocationBean implements Invocation {
 
     @Override
     public Object getController() {
-        return getControllerEngine().getController();
+        return this.controller;
+    }
+
+    public void setController(Object controller) {
+        this.controller = controller;
     }
 
     @Override
     public Class<?> getControllerClass() {
-        return getControllerEngine().getControllerClass();
+        return this.controller.getClass();
+    }
+
+    public void setModule(Module module) {
+        this.module = module;
     }
 
     @Override
     public Method getMethod() {
-        return getActionEngine().getMethod();
+        return method;
     }
+
+    public void setMethod(Method method) {
+        this.method = method;
+    }
+
+    private String[] methodParameterNames;
 
     @Override
     public String[] getMethodParameterNames() {
-        String[] copy = new String[getActionEngine().getParameterNames().length];
-        System.arraycopy(getActionEngine().getParameterNames(), 0, copy, 0, copy.length);
-        return copy;
+        return methodParameterNames;
+    }
+
+    public void setMethodParameterNames(String[] methodParameterNames) {
+        String[] copy = new String[methodParameterNames.length];
+        System.arraycopy(methodParameterNames, 0, copy, 0, copy.length);
+        this.methodParameterNames = copy;
     }
 
     @Override
@@ -154,7 +158,7 @@ public final class InvocationBean implements Invocation {
         if (!isMethodParametersInitiated()) {
             throw new IllegalStateException();
         }
-        String[] names = getActionEngine().getParameterNames();
+        String[] names = this.methodParameterNames;
         for (int i = 0; i < names.length; i++) {
             if (name != null && name.equals(names[i])) {
                 return methodParameters[i];
@@ -169,7 +173,7 @@ public final class InvocationBean implements Invocation {
         if (isMethodParametersInitiated()) {
             value = getMethodParameter(name);
         }
-        if (value == null && !ArrayUtils.contains(getActionEngine().getParameterNames(), name)) {
+        if (value == null && !ArrayUtils.contains(methodParameterNames, name)) {
             value = getRawParameter(name);
         }
         return value;
@@ -177,17 +181,7 @@ public final class InvocationBean implements Invocation {
 
     @Override
     public String getRawParameter(String name) {
-        String value = actionMatchResult == null ? null : actionMatchResult.getParameter(name);
-        if (value == null) {
-            value = controllerMatchResult == null ? null : controllerMatchResult.getParameter(name);
-        }
-        if (value == null) {
-            value = moduleMatchResult == null ? null : moduleMatchResult.getParameter(name);
-        }
-        if (value == null) {
-            value = request.getParameter(name);
-        }
-        return value;
+        return request.getParameter(name);
     }
 
     @Override
@@ -197,9 +191,9 @@ public final class InvocationBean implements Invocation {
         }
         if (value != this.methodParameters[index]) {
             if (logger.isDebugEnabled()) {
-                logger.debug("change method parameter "
-                        + this.getActionEngine().getParameterNames()[index] + " (index=" + index
-                        + ") from '" + this.methodParameters[index] + "' to '" + value + "'");
+                logger.debug("change method parameter " + this.methodParameterNames[index]
+                        + " (index=" + index + ") from '" + this.methodParameters[index] + "' to '"
+                        + value + "'");
             }
             Object oldValue = this.methodParameters[index];
             this.methodParameters[index] = value;
@@ -217,67 +211,13 @@ public final class InvocationBean implements Invocation {
         if (StringUtils.isEmpty(name)) {
             throw new NullPointerException("parameter name");
         }
-        String[] names = this.getActionEngine().getParameterNames();
+        String[] names = methodParameterNames;
         for (int i = 0; i < names.length; i++) {
             if (name.equals(names[i])) {
                 changeMethodParameter(i, value);
                 return;
             }
         }
-    }
-
-    public String getMatchResultParameter(String name) {
-        return getMatchResultParameter(name, null);
-    }
-
-    public String getMatchResultParameter(String name, String defValue) {
-        String[] values = getMatchResultParameterValues(name);
-        return values.length == 0 ? defValue : values[0];
-    }
-
-    public String[] getMatchResultParameterValues(String name) {
-        String[] values = new String[3];
-        values[0] = actionMatchResult == null ? null : actionMatchResult.getParameter(name);
-        values[1] = controllerMatchResult == null ? null : controllerMatchResult.getParameter(name);
-        values[2] = moduleMatchResult == null ? null : moduleMatchResult.getParameter(name);
-        int count = 0;
-        for (String value : values) {
-            if (value != null) {
-                count++;
-            }
-        }
-        String[] ret = new String[count];
-        count = 0;
-        for (String value : values) {
-            if (value != null) {
-                ret[count++] = value;
-            }
-        }
-        return ret;
-    }
-
-    public MatchResult<ModuleEngine> getModuleMatchResult() {
-        return moduleMatchResult;
-    }
-
-    public void setModuleMatchResult(MatchResult<ModuleEngine> moduleMatchResult) {
-        this.moduleMatchResult = moduleMatchResult;
-    }
-
-    public MatchResult<?> getControllerMatchResult() {
-        return controllerMatchResult;
-    }
-
-    public void setControllerMatchResult(MatchResult<ControllerEngine> controllerMatchResult) {
-        this.controllerMatchResult = controllerMatchResult;
-    }
-
-    public MatchResult<?> getActionMatchResult() {
-        return actionMatchResult;
-    }
-
-    public void setActionMatchResult(MatchResult<ActionEngine> actionMatchResult) {
-        this.actionMatchResult = actionMatchResult;
     }
 
     @Override
@@ -403,30 +343,6 @@ public final class InvocationBean implements Invocation {
         return response;
     }
 
-    public ControllerEngine getControllerEngine() {
-        return getActionEngine().getControllerEngine();
-    }
-
-    public ActionEngine getActionEngine() {
-        if (actionMatchResult == null) {
-            throw new NullPointerException("actionMatchResult");
-        }
-        return actionMatchResult.getMapping().getTarget();
-    }
-
-    public List<String> getMatchResultParameterNames() {
-        int count = moduleMatchResult.getParameterCount()
-                + controllerMatchResult.getParameterCount() + actionMatchResult.getParameterCount();
-        if (count == 0) {
-            return Collections.emptyList();
-        }
-        ArrayList<String> parameterNames = new ArrayList<String>(count);
-        parameterNames.addAll(moduleMatchResult.getParameterNames());
-        parameterNames.addAll(controllerMatchResult.getParameterNames());
-        parameterNames.addAll(actionMatchResult.getParameterNames());
-        return parameterNames;
-    }
-
     public void setRequest(HttpServletRequest request) {
         if (request == null) {
             throw new NullPointerException("request");
@@ -456,15 +372,7 @@ public final class InvocationBean implements Invocation {
     }
 
     public Module getModule() {
-        return this.moduleMatchResult.getMapping().getTarget().getModule();
-    }
-
-    public Map<String, Object> getRequestAttributesBeforeInclude() {
-        return requestAttributesBeforeInclude;
-    }
-
-    public void setRequestAttributesBeforeInclude(Map<String, Object> attributesSnapshot) {
-        this.requestAttributesBeforeInclude = attributesSnapshot;
+        return this.module;
     }
 
     public Invocation getPreInvocation() {
@@ -481,22 +389,6 @@ public final class InvocationBean implements Invocation {
 
     public boolean isMultiPartRequest() {
         return multiPartRequest;
-    }
-
-    public void setExecutedInterceptorIndex(int executedInterceptorIndex) {
-        this.executedInterceptorIndex = executedInterceptorIndex;
-    }
-
-    public int getExecutedInterceptorIndex() {
-        return executedInterceptorIndex;
-    }
-
-    public BitSet getExecutedInterceptorBitSet() {
-        return executedInterceptorBitSet;
-    }
-
-    public void setExecutedInterceptorBitSet(BitSet executedInterceptorBitSet) {
-        this.executedInterceptorBitSet = executedInterceptorBitSet;
     }
 
     @Override
@@ -530,7 +422,7 @@ public final class InvocationBean implements Invocation {
                         BindingResult.MODEL_KEY_PREFIX + ParameterBindingResult.OBJECT_NAME);
             }
             Object[] params = methodParameters;
-            String[] names = getActionEngine().getParameterNames();
+            String[] names = methodParameterNames;
             for (int i = 0; i < params.length; i++) {
                 if (bean.equals(params[i])) {
                     return getBindingResult(names[i]);
@@ -539,25 +431,6 @@ public final class InvocationBean implements Invocation {
         }
         return null;
     }
-
-    public ModuleEngine getModuleEngine() {
-        if (moduleMatchResult == null) {
-            throw new NullPointerException("moduleMatchResult");
-        }
-        return moduleMatchResult.getMapping().getTarget();
-    }
-
-    //    @Override
-    //    public boolean isDestroyed() {
-    //        return destroyed;
-    //    }
-    //
-    //    public void destroy() {
-    //        destroyed = true;
-    //        if (this.request == InvocationUtils.getCurrentThreadRequest()) {
-    //            InvocationUtils.bindRequestToCurrentThread(null);
-    //        }
-    //    }
 
     protected void fetchBindingResults() {
         if (this.bindingResults == null) {

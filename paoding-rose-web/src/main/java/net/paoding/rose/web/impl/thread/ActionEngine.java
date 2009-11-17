@@ -18,24 +18,26 @@ package net.paoding.rose.web.impl.thread;
 import static org.springframework.validation.BindingResult.MODEL_KEY_PREFIX;
 
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Proxy;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.BitSet;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.NamedValidator;
+import net.paoding.rose.web.RequestPath;
 import net.paoding.rose.web.annotation.HttpFeatures;
 import net.paoding.rose.web.annotation.Intercepted;
 import net.paoding.rose.web.annotation.Return;
+import net.paoding.rose.web.impl.mapping.MappingImpl;
+import net.paoding.rose.web.impl.mapping.MatchMode;
 import net.paoding.rose.web.impl.module.Module;
 import net.paoding.rose.web.impl.module.NestedControllerInterceptorWrapper;
+import net.paoding.rose.web.impl.thread.tree.Rose;
 import net.paoding.rose.web.impl.validation.ParameterBindingResult;
 import net.paoding.rose.web.paramresolver.MethodParameterResolver;
 import net.paoding.rose.web.paramresolver.ParamResolver;
@@ -55,7 +57,11 @@ public final class ActionEngine implements Engine {
 
     private static Log logger = LogFactory.getLog(ActionEngine.class);
 
-    private final ControllerEngine controllerEngine;
+    private final Module module;
+
+    private final Class<?> controllerClass;
+
+    private final Object controller;
 
     private final Method method;
 
@@ -65,28 +71,27 @@ public final class ActionEngine implements Engine {
 
     private final MethodParameterResolver methodParameterResolver;
 
-    @SuppressWarnings("unchecked")
-    private final Class[][] genericParameterTypesDetail;
-
     private transient String toStringCache;
 
-    public ActionEngine(ControllerEngine controllerEngine, Method method) {
-        this.controllerEngine = controllerEngine;
+    private final MatchResult<Method> unmodifiableMatchResult;
+
+    public ActionEngine(Module module, Class<?> controllerClass, Object controller, Method method) {
+        this.module = module;
+        this.controllerClass = controllerClass;
+        this.controller = controller;
         this.method = method;
         interceptors = compileInterceptors();
         methodParameterResolver = compileParamResolvers();
         validators = compileValidators();
-        genericParameterTypesDetail = compileGenericParameterTypesDetail();
+        unmodifiableMatchResult = MatchResult.unmodifiable("", new MappingImpl<Method>("",
+                MatchMode.PATH_EQUALS, method), null);
         if (logger.isDebugEnabled()) {
-            logger.debug("action info: " + controllerEngine.getControllerClass().getName() + "."
-                    + method.getName() + ":");
+            logger
+                    .debug("action info: " + controllerClass.getName() + "." + method.getName()
+                            + ":");
             logger.debug("\t interceptors:" + Arrays.toString(interceptors));
             logger.debug("\t validators:" + Arrays.toString(validators));
         }
-    }
-
-    public ControllerEngine getControllerEngine() {
-        return controllerEngine;
     }
 
     public NestedControllerInterceptorWrapper[] getRegisteredInterceptors() {
@@ -101,55 +106,18 @@ public final class ActionEngine implements Engine {
         return methodParameterResolver.getParameterNames();
     }
 
-    public Class<?>[] getParameterGenericTypes(String paramName) {
-        String[] parameterNames = methodParameterResolver.getParameterNames();
-        for (int i = 0; i < parameterNames.length; i++) {
-            if (parameterNames[i] != null && parameterNames[i].equals(paramName)) {
-                return genericParameterTypesDetail[i];
-            }
-        }
-        return new Class[0];
-    }
-
     private MethodParameterResolver compileParamResolvers() {
-        Module module = controllerEngine.getModule();
         ParameterNameDiscovererImpl parameterNameDiscoverer = new ParameterNameDiscovererImpl();
         ResolverFactoryImpl resolverFactory = new ResolverFactoryImpl();
         for (ParamResolver resolver : module.getCustomerResolvers()) {
             resolverFactory.addCustomerResolver(resolver);
         }
-        return new MethodParameterResolver(controllerEngine.getControllerClass(), method,
-                parameterNameDiscoverer, resolverFactory);
-    }
-
-    @SuppressWarnings("unchecked")
-    private Class[][] compileGenericParameterTypesDetail() {
-        Type[] genericParameterTypes = this.method.getGenericParameterTypes();
-        Class[][] genericParameterTypesDetail = new Class[genericParameterTypes.length][];
-        for (int j = 0; j < genericParameterTypes.length; j++) {
-            Type genericParameterType = genericParameterTypes[j];
-            ArrayList<Class<?>> typeDetailList = new ArrayList<Class<?>>();
-            if (genericParameterType instanceof ParameterizedType) {
-                ParameterizedType aType = (ParameterizedType) genericParameterType;
-                Type[] parameterArgTypes = aType.getActualTypeArguments();
-                for (Type parameterArgType : parameterArgTypes) {
-                    if (parameterArgType instanceof Class) {
-                        typeDetailList.add((Class<?>) parameterArgType);
-                    } else {
-                        typeDetailList.add(String.class);
-                    }
-                }
-                Class<?>[] types = new Class[typeDetailList.size()];
-                typeDetailList.toArray(types);
-                genericParameterTypesDetail[j] = types;
-            }
-        }
-        return genericParameterTypesDetail;
+        return new MethodParameterResolver(this.controllerClass, method, parameterNameDiscoverer,
+                resolverFactory);
     }
 
     @SuppressWarnings("unchecked")
     private NamedValidator[] compileValidators() {
-        Module module = controllerEngine.getModule();
         Class[] parameterTypes = method.getParameterTypes();
         List<NamedValidator> validators = module.getValidators();
         NamedValidator[] registeredValidators = new NamedValidator[parameterTypes.length];
@@ -169,32 +137,18 @@ public final class ActionEngine implements Engine {
     }
 
     private NestedControllerInterceptorWrapper[] compileInterceptors() {
-        Module module = controllerEngine.getModule();
         List<NestedControllerInterceptorWrapper> interceptors = module.getInterceptors();
         List<NestedControllerInterceptorWrapper> registeredInterceptors = new ArrayList<NestedControllerInterceptorWrapper>(
                 interceptors.size());
         for (NestedControllerInterceptorWrapper interceptor : interceptors) {
-            if (interceptor.getController() != null) {
-                // interceptor.getController()非空的，表示该拦截器是控制器的一个field
-                // 此时该拦截器只能拦截这个控制器的方法，不拦截其他控制器的方法
-                if (interceptor.getController() != controllerEngine.getController()) {
-                    continue;
-                }
-            }
-
             // 确定本拦截器的名字
             String name = interceptor.getName();
             String nameForUser = name;
-            if (nameForUser.indexOf('.') != -1) {
-                nameForUser = nameForUser.replace(controllerEngine.getControllerPath() + ".",
-                        "this.");
-            }
             // 获取@Intercepted注解 (@Intercepted注解配置于控制器或其方法中，决定一个拦截器是否应该拦截之。没有配置按“需要”处理)
             Intercepted intercepted = method.getAnnotation(Intercepted.class);
             if (intercepted == null) {
-                Class<?> clazz = controllerEngine.getControllerClass();
                 // 对于标注@Inherited的annotation，class.getAnnotation可以保证：如果本类没有，自动会从父类判断是否具有
-                intercepted = clazz.getAnnotation(Intercepted.class);
+                intercepted = this.controllerClass.getAnnotation(Intercepted.class);
             }
             // 通过@Intercepted注解的allow和deny排除拦截器
             if (intercepted != null) {
@@ -210,7 +164,7 @@ public final class ActionEngine implements Engine {
                 }
             }
             // 取得拦截器同意后，注册到这个控制器方法中
-            if (interceptor.isForAction(controllerEngine.getControllerClass(), method)) {
+            if (interceptor.isForAction(controllerClass, method)) {
                 registeredInterceptors.add(interceptor);
             }
         }
@@ -219,19 +173,34 @@ public final class ActionEngine implements Engine {
                 .toArray(new NestedControllerInterceptorWrapper[registeredInterceptors.size()]);
     }
 
-    public boolean match(final InvocationBean inv) {
-        return true;
+    public MatchResult<Method> match(final InvocationBean inv) {
+        return unmodifiableMatchResult;
     }
 
-    public Object invoke(final InvocationBean inv) throws Throwable {
+    @Override
+    public Object invoke(Rose rose, MatchResult<? extends Engine> mr, Object instruction,
+            EngineChain chain) throws Throwable {
+        try {
+            return innerInvoke(rose, mr, instruction, chain);
+        } catch (Throwable local) {
+            throw createException(rose, local);
+        }
+    }
+
+    public Object innerInvoke(Rose rose, MatchResult<? extends Engine> mr, Object instruction,
+            EngineChain chain) throws Throwable {
+        Invocation inv = rose.getInvocation();
+        inv.getRequestPath().setActionPath(mr.getMatchedString());
+        ((InvocationBean) inv).setMethod(method);
+        ((InvocationBean) inv).setMethodParameterNames(this.methodParameterResolver
+                .getParameterNames());
 
         // applies http features before the resolvers
         applyHttpFeatures(inv);
 
         //
-        for (String matchResultParam : inv.getActionMatchResult().getParameterNames()) {
-            inv.addModel(matchResultParam, inv.getActionMatchResult()
-                    .getParameter(matchResultParam));
+        for (String matchResultParam : mr.getParameterNames()) {
+            inv.addModel(matchResultParam, mr.getParameter(matchResultParam));
         }
 
         // creates parameter binding result (not bean, just simple type, like int, Integer, int[] ...
@@ -241,7 +210,7 @@ public final class ActionEngine implements Engine {
 
         // resolves method parameters, adds the method parameters to model
         Object[] methodParameters = methodParameterResolver.resolve(inv, paramBindingResult);
-        inv.setMethodParameters(methodParameters);
+        ((InvocationBean) inv).setMethodParameters(methodParameters);
         String[] parameterNames = methodParameterResolver.getParameterNames();
         for (int i = 0; i < parameterNames.length; i++) {
             if (parameterNames[i] != null && methodParameters[i] != null
@@ -263,25 +232,19 @@ public final class ActionEngine implements Engine {
             }
         }
 
-        // returned by interceptors or action
-        Object instruction = null;
-        int intercetporIndex = 0;
-
         // invokes before-interceptors
-        BitSet bitSet = new BitSet(interceptors.length);
-        inv.setExecutedInterceptorBitSet(bitSet);
         boolean broken = false;
-        for (; intercetporIndex < interceptors.length; intercetporIndex++) {
-
-            NestedControllerInterceptorWrapper interceptor = interceptors[intercetporIndex];
+        boolean[] bitSt = new boolean[interceptors.length];
+        for (int i = 0; i < interceptors.length; i++) {
+            final NestedControllerInterceptorWrapper interceptor = interceptors[i];
             if (!interceptor.isForDispatcher(inv.getRequestPath().getDispatcher())) {
                 continue;
             }
 
             // returned by before method
+            chain.addAfterCompletion(interceptor);
             instruction = interceptor.before(inv);
-            bitSet.set(intercetporIndex);
-
+            bitSt[i] = true;
             if (logger.isDebugEnabled()) {
                 logger.debug("interceptor[" + interceptor.getName() + "] do before and return '"
                         + instruction + "'");
@@ -304,20 +267,9 @@ public final class ActionEngine implements Engine {
         }
 
         // intercetporIndex负数代表被中断
-        if (broken) {
-            inv.setExecutedInterceptorIndex(intercetporIndex);
-        } else {
-            intercetporIndex--;
-            inv.setExecutedInterceptorIndex(intercetporIndex); // just copy the setXxx Code
-
+        if (!broken) {
             // invoke
-            final Object controller = controllerEngine.getController();
-            if (controllerEngine.isProxiedController()) {
-                instruction = Proxy.getInvocationHandler(controller).invoke(controller, method,
-                        methodParameters);
-            } else {
-                instruction = method.invoke(controller, methodParameters);
-            }
+            instruction = method.invoke(controller, methodParameters);
 
             // @Return
             if (instruction == null) {
@@ -331,14 +283,14 @@ public final class ActionEngine implements Engine {
         Object orginInstruction = instruction;
 
         // after the inv
-        for (int i = intercetporIndex; i >= 0; i--) {
-            if (!bitSet.get(i)) {
+        for (int i = bitSt.length - 1; i >= 0; i--) {
+            if (!bitSt[i]) {
                 continue;
             }
             instruction = interceptors[i].after(inv, instruction);
             if (logger.isDebugEnabled()) {
-                logger.debug("interceptor[" + interceptors[i].getName() + "] do after and return '"
-                        + instruction + "'");
+                logger.debug("invoke interceptor.after: [" + interceptors[i].getName()
+                        + "] and return '" + instruction + "'");
             }
             // 拦截器返回null的，要恢复为原instruction
             // 这个功能非常有用!!
@@ -349,12 +301,25 @@ public final class ActionEngine implements Engine {
         return instruction;
     }
 
-    private void applyHttpFeatures(final InvocationBean inv) throws UnsupportedEncodingException {
+    private Exception createException(Rose rose, Throwable exception) {
+        final RequestPath requestPath = rose.getInvocation().getRequestPath();
+        StringBuilder sb = new StringBuilder(1024);
+        sb.append("error happended: ").append(requestPath.getMethod());
+        sb.append(" ").append(requestPath.getUri());
+        sb.append("->");
+        sb.append(this).append(" params=");
+        sb.append(Arrays.toString(rose.getInvocation().getMethodParameters()));
+        InvocationTargetException servletException = new InvocationTargetException(exception, sb
+                .toString());
+        return servletException;
+    }
+
+    private void applyHttpFeatures(final Invocation inv) throws UnsupportedEncodingException {
         HttpServletRequest request = inv.getRequest();
         HttpServletResponse response = inv.getResponse();
         HttpFeatures httpFeatures = method.getAnnotation(HttpFeatures.class);
         if (httpFeatures == null) {
-            httpFeatures = controllerEngine.getControllerClass().getAnnotation(HttpFeatures.class);
+            httpFeatures = this.controllerClass.getAnnotation(HttpFeatures.class);
         }
         if (httpFeatures != null) {
             if (StringUtils.isNotBlank(httpFeatures.contentType())) {
@@ -399,7 +364,7 @@ public final class ActionEngine implements Engine {
     public String toString() {
         if (toStringCache == null) {
             Class<?>[] parameterTypes = method.getParameterTypes();
-            String appPackageName = controllerEngine.getControllerClass().getPackage().getName();
+            String appPackageName = this.controllerClass.getPackage().getName();
             if (appPackageName.indexOf('.') != -1) {
                 appPackageName = appPackageName.substring(0, appPackageName.lastIndexOf('.'));
             }
@@ -412,11 +377,13 @@ public final class ActionEngine implements Engine {
                             + showSimpleName(parameterTypes[i], appPackageName);
                 }
             }
-            toStringCache = controllerEngine.getControllerClass().getName() //
-                    + "." + method.getName() //
+            toStringCache = ""//
+                    //                    + this.controllerClass.getName() //
+                    + showSimpleName(method.getReturnType(), appPackageName)
+                    + " "
+                    + method.getName() //
                     + "(" + methodParamNames + ")" //
-                    + ":" + showSimpleName(method.getReturnType(), appPackageName) //
-                    + "]";
+            ;
         }
         return toStringCache;
     }

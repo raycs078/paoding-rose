@@ -219,4 +219,9 @@ public class InvocationLocalImpl implements InvocationLocal {
     public void setRequest(HttpServletRequest request) {
         required().setRequest(request);
     }
+
+    @Override
+    public Flash getFlash(boolean create) {
+        return required().getFlash(create);
+    }
 }

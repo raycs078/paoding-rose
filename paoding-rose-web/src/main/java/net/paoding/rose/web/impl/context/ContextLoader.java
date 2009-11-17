@@ -74,8 +74,9 @@ public class ContextLoader {
 
         long startTime = System.currentTimeMillis();
         logger.info(namespace + " WebApplicationContext: initialization started");
-        servletContext.log("Loading Spring " + namespace + " WebApplicationContext");
-
+        if (servletContext != null) {
+            servletContext.log("Loading Spring " + namespace + " WebApplicationContext");
+        }
         ResourceXmlWebApplicationContext wac = new ResourceXmlWebApplicationContext();
         wac.setContextResources(contextResources);
         wac.setMessageBaseNames(messageBasenames);

@@ -15,6 +15,13 @@
  */
 package net.paoding.rose.web;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.web.util.WebUtils;
+
 /**
  * @author 王志亮 [qieqie.wang@gmail.com]
  */
@@ -22,11 +29,11 @@ public class RequestPath {
 
     private String method;
 
-    private String uri; // = contextPath + ctxpath
+    private String uri; // = contextPath + ctxpath + pathInfo
 
     private String ctxpath; // by servlet container
 
-    private String pathInfo; // = modulePath + controllerPath + actionPath
+    private String rosePath; // = modulePath + controllerPath + actionPath
 
     private String modulePath; //
 
@@ -37,6 +44,52 @@ public class RequestPath {
     private String actionPath;
 
     private Dispatcher dispatcher;
+
+    public RequestPath(HttpServletRequest request) {
+        // method
+        setMethod(request.getMethod());
+
+        // ctxpath
+        setCtxpath(request.getContextPath());
+        String invocationCtxpath = null; // 对include而言，invocationCtxPath指的是被include的ctxpath
+        // dispather, uri, ctxpath
+        String uri;
+        if (WebUtils.isIncludeRequest(request)) {
+            setDispatcher(Dispatcher.INCLUDE);
+            uri = (String) request.getAttribute(WebUtils.INCLUDE_REQUEST_URI_ATTRIBUTE);
+            invocationCtxpath = ((String) request
+                    .getAttribute(WebUtils.INCLUDE_CONTEXT_PATH_ATTRIBUTE));
+            setRosePath((String) request.getAttribute(WebUtils.INCLUDE_SERVLET_PATH_ATTRIBUTE));
+        } else {
+            uri = request.getRequestURI();
+            this.setRosePath(request.getServletPath());
+            if (request.getAttribute(WebUtils.FORWARD_REQUEST_URI_ATTRIBUTE) == null) {
+                this.setDispatcher(Dispatcher.REQUEST);
+            } else {
+                this.setDispatcher(Dispatcher.FORWARD);
+            }
+        }
+        if (uri.indexOf('%') != -1) {
+            try {
+                String encoding = request.getCharacterEncoding();
+                if (encoding == null || encoding.length() == 0) {
+                    encoding = "UTF-8";
+                }
+                uri = URLDecoder.decode(uri, encoding);
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        }
+        this.setUri(uri);
+        // 记录到requestPath的ctxpath值在include的情况下是invocationCtxpath
+
+        if (getCtxpath().length() <= 1) {
+            setRosePath(getUri());
+        } else {
+            setRosePath(getUri().substring(
+                    (invocationCtxpath == null ? getCtxpath() : invocationCtxpath).length()));
+        }
+    }
 
     public boolean isIncludeRequest() {
         return dispatcher == Dispatcher.INCLUDE;
@@ -78,12 +131,12 @@ public class RequestPath {
         this.ctxpath = ctxpath;
     }
 
-    public String getPathInfo() {
-        return pathInfo;
+    public String getRosePath() {
+        return rosePath;
     }
 
-    public void setPathInfo(String pathInfo) {
-        this.pathInfo = pathInfo;
+    public void setRosePath(String rosePath) {
+        this.rosePath = rosePath;
     }
 
     public String getModulePath() {
@@ -96,7 +149,7 @@ public class RequestPath {
 
     public String getControllerPathInfo() {
         if (controllerPathInfo == null) {
-            controllerPathInfo = pathInfo.substring(modulePath.length());
+            controllerPathInfo = rosePath.substring(modulePath.length());
         }
         return controllerPathInfo;
     }
@@ -119,7 +172,7 @@ public class RequestPath {
 
     @Override
     public String toString() {
-        return "ctxpath=" + ctxpath + "; pathInfo=" + pathInfo + "; modulePath=" + modulePath
+        return "ctxpath=" + ctxpath + "; pathInfo=" + rosePath + "; modulePath=" + modulePath
                 + "; controllerPath=" + controllerPath + "; actionPath=" + actionPath;
     }
 

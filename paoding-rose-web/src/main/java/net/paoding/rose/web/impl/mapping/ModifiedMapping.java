@@ -15,8 +15,11 @@
  */
 package net.paoding.rose.web.impl.mapping;
 
+import java.util.Set;
+
 import net.paoding.rose.web.annotation.ReqMethod;
 import net.paoding.rose.web.impl.thread.MatchResult;
+import net.paoding.rose.web.impl.thread.tree.MappingNode;
 
 /**
  * 
@@ -66,8 +69,8 @@ public class ModifiedMapping<S, N> implements Mapping<N> {
     }
 
     @Override
-    public MatchResult<N> match(String path, String requestMethod) {
-        return MatchResult.changeMapping(src.match(path, requestMethod), this);
+    public MatchResult<N> match(String path, String requestMethod, MappingNode node) {
+        return MatchResult.changeMapping(src.match(path, requestMethod, node), this);
     }
 
     @Override
@@ -97,6 +100,11 @@ public class ModifiedMapping<S, N> implements Mapping<N> {
     @Override
     public String toString() {
         return src + " ->target: " + newTarget;
+    }
+
+    @Override
+    public Set<ReqMethod> getResourceMethods() {
+        return src.getResourceMethods();
     }
 
 }

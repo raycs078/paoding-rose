@@ -75,7 +75,7 @@ public interface Invocation {
     public Method getMethod();
 
     /**
-     * 将要调用的方法的参数的名字(这个名字不是String id的userId这样的名字，而是@Param("userId") String
+     * 将要调用的方法的参数的名字(这个名字不是String id的id这样的名字，而是@Param("userId") String
      * id的userId)
      * 
      * @see Param
@@ -304,5 +304,8 @@ public interface Invocation {
      * @param request
      */
     public void setRequest(HttpServletRequest request);
+
+    public Flash getFlash(boolean create);
+
 
 }
