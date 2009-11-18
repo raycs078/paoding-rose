@@ -1,6 +1,5 @@
 package net.paoding.rose.web.impl.thread;
 
-import net.paoding.rose.web.impl.thread.tree.AfterCompletion;
 import net.paoding.rose.web.impl.thread.tree.Rose;
 
 public interface EngineChain {

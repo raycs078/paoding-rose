@@ -18,7 +18,6 @@ package net.paoding.rose.web;
 import java.lang.reflect.Method;
 
 import net.paoding.rose.web.annotation.Intercepted;
-import net.paoding.rose.web.impl.thread.tree.AfterCompletion;
 import net.paoding.rose.web.instruction.Instruction;
 
 /**
@@ -42,7 +41,7 @@ import net.paoding.rose.web.instruction.Instruction;
  * @see Intercepted
  * @see ControllerInterceptorAdapter
  */
-public interface ControllerInterceptor extends AfterCompletion {
+public interface ControllerInterceptor {
 
     /**
      * 作为候选拦截器，这个拦截器是否应拦截所指的控制器或其方法？

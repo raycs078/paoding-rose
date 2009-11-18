@@ -25,7 +25,9 @@ import java.util.List;
 
 import net.paoding.rose.web.annotation.ReqMethod;
 import net.paoding.rose.web.impl.thread.MatchResult;
-import net.paoding.rose.web.impl.thread.tree.MappingNode;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * {@link MappingImpl}实现了使用<strong>正则表达式</strong>定义匹配字符串的 {@link Mapping}
@@ -39,6 +41,8 @@ import net.paoding.rose.web.impl.thread.tree.MappingNode;
  * @param <T>
  */
 public class MappingImpl<T> extends AbstractMapping<T> {
+
+    private static final Log logger = LogFactory.getLog(MappingImpl.class);
 
     private static final String DEFAULT_REGEX = "([^/]+)";
 
@@ -61,7 +65,7 @@ public class MappingImpl<T> extends AbstractMapping<T> {
     }
 
     @Override
-    public MatchResult<T> match(String path, String requestMethod, MappingNode node) {
+    public MatchResult<T> match(String path, String requestMethod) {
         java.util.regex.MatchResult regexMatchResult = mappingPattern.match(path);
         if (regexMatchResult == null) {
             return null;
@@ -70,7 +74,7 @@ public class MappingImpl<T> extends AbstractMapping<T> {
         while (string.endsWith("/")) {
             string = string.substring(0, string.length() - 1);
         }
-        MatchResult<T> matchResult = new MatchResult<T>(string, this, node);
+        MatchResult<T> matchResult = new MatchResult<T>(string, this);
         if (paramNames.length != 0) {
             for (int i = 0; i < this.paramNames.length; i++) {
                 matchResult.putParameter(paramNames[i], regexMatchResult.group(i + 1));
@@ -270,11 +274,6 @@ public class MappingImpl<T> extends AbstractMapping<T> {
                 + "; params=" + Arrays.toString(this.paramNames) // NL
                 + "; constants=" + Arrays.toString(this.constants)// NL
                 + "; target=" + target;
-    }
-
-    public MatchResult<T> match(String path, String requestMethod) {
-        // TODO Auto-generated method stub
-        return match(path, requestMethod, null);
     }
 
 }

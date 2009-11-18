@@ -31,7 +31,6 @@ import net.paoding.rose.RoseFilter;
 import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.InvocationUtils;
 import net.paoding.rose.web.RequestPath;
-import net.paoding.rose.web.impl.thread.tree.AfterCompletion;
 import net.paoding.rose.web.impl.thread.tree.Rose;
 import net.paoding.rose.web.instruction.InstructionExecutor;
 import net.paoding.rose.web.var.FlashImpl;

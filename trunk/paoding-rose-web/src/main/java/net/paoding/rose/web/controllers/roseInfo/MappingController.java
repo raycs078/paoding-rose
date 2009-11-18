@@ -18,7 +18,9 @@ package net.paoding.rose.web.controllers.roseInfo;
 import net.paoding.rose.web.annotation.HttpFeatures;
 import net.paoding.rose.web.annotation.ReqMethod;
 import net.paoding.rose.web.annotation.rest.Get;
-import net.paoding.rose.web.impl.thread.tree.MappingNode;
+import net.paoding.rose.web.impl.mapping.MappingNode;
+import net.paoding.rose.web.impl.thread.MatchResult;
+import net.paoding.rose.web.impl.thread.tree.Rose;
 
 /**
  * 
@@ -29,11 +31,9 @@ public class MappingController {
 
     @Get
     @HttpFeatures(contentType = "text/xml; charset=UTF-8")
-    public String list(MappingNode leaf) throws Exception {
-        MappingNode root = leaf;
-        while (root.parent != null) {
-            root = root.parent;
-        }
+    public String list(Rose rose) throws Exception {
+        MatchResult<?> mr = rose.getMatchResults().get(0);
+        MappingNode root = mr.getNode();
         StringBuilder sb = new StringBuilder(2048);
         sb.append("@<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
         println(root, sb);

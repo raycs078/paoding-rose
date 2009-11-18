@@ -30,6 +30,7 @@ import net.paoding.rose.web.annotation.rest.Put;
 import net.paoding.rose.web.annotation.rest.Trace;
 import net.paoding.rose.web.impl.mapping.Mapping;
 import net.paoding.rose.web.impl.mapping.MappingImpl;
+import net.paoding.rose.web.impl.mapping.MappingNode;
 import net.paoding.rose.web.impl.mapping.MatchMode;
 import net.paoding.rose.web.impl.module.ControllerInfo;
 import net.paoding.rose.web.impl.module.Module;
@@ -194,7 +195,7 @@ public class TreeBuilder {
         for (int i = 1; i < actionMappings.size(); i++) {
             Mapping<ActionEngine> mapping = actionMappings.get(i);
             MatchResult<?> mr;
-            if (!showIdExists && (mr = mapping.match("/198107", "GET", null)) != null
+            if (!showIdExists && (mr = mapping.match("/198107", "GET")) != null
                     && mr.isRequestMethodSupported()) {
                 showIdExists = true;
             }
@@ -268,7 +269,7 @@ public class TreeBuilder {
             for (Mapping<ActionEngine> actionMapping : actionMappings) {
                 String[] candidates = entry.getValue();
                 for (String candidate : candidates) {
-                    matchResult = actionMapping.match(candidate, entry.getKey(), null);
+                    matchResult = actionMapping.match(candidate, entry.getKey());
                     if (matchResult != null && matchResult.isRequestMethodSupported()) {
                         if (matchResult.getMatchedString().length() > 0) {
                             actionMappings.add(new MappingImpl<ActionEngine>("",

@@ -10,9 +10,10 @@ import java.util.Set;
 import javax.servlet.http.HttpServletResponse;
 
 import net.paoding.rose.web.InvocationUtils;
-import net.paoding.rose.web.RequestPath;
 import net.paoding.rose.web.annotation.ReqMethod;
+import net.paoding.rose.web.impl.mapping.MappingNode;
 import net.paoding.rose.web.impl.module.Module;
+import net.paoding.rose.web.impl.thread.AfterCompletion;
 import net.paoding.rose.web.impl.thread.Engine;
 import net.paoding.rose.web.impl.thread.EngineChain;
 import net.paoding.rose.web.impl.thread.InvocationBean;
@@ -30,8 +31,7 @@ public class Rose implements EngineChain {
 
     private InvocationBean invocation;
 
-    private ArrayList<MatchResult<? extends Engine>> matchResults = new ArrayList<MatchResult<? extends Engine>>(
-            4);
+    private ArrayList<MatchResult<? extends Engine>> matchResults;
 
     private MappingNode mappingTree;
 
@@ -52,9 +52,18 @@ public class Rose implements EngineChain {
         return modules;
     }
 
+    public List<MatchResult<? extends Engine>> getMatchResults() {
+        return matchResults;
+    }
+
     public boolean execute() throws Throwable {
-        MatchResult<? extends Engine> mr = treeSearch();
-        if (mr == null) {
+        ArrayList<MatchResult<? extends Engine>> matchResults = mappingTree.match(invocation
+                .getRequestPath());
+        if (matchResults.size() == 0) {
+            return false;
+        }
+        MatchResult<?> mr = matchResults.get(matchResults.size() - 1);
+        if (!mr.isLeaf()) {
             return false;
         }
         if (!mr.isRequestMethodSupported()) {
@@ -77,6 +86,7 @@ public class Rose implements EngineChain {
             response.addHeader("Allow", allow);
             response.sendError(405, invocation.getRequestPath().getUri());
         } else {
+            this.matchResults = matchResults;
             Map<String, String> mrParameters = null;
             for (int i = 0; i < this.matchResults.size(); i++) {
                 MatchResult<?> tmr = this.matchResults.get(i);
@@ -123,79 +133,6 @@ public class Rose implements EngineChain {
         MatchResult<? extends Engine> mr = matchResults.get(nextIndexOfChain++);
         Engine engine = mr.getMapping().getTarget();
         return engine.invoke(rose, mr, instruction, (EngineChain) this);
-    }
-
-    /*
-     * 树的深度遍历：
-     * 
-     */
-    private MatchResult<? extends Engine> treeSearch() {
-        RequestPath requestPath = invocation.getRequestPath();
-        String path = requestPath.getRosePath();
-        MappingNode cur = mappingTree;
-        MatchResult<? extends Engine> mrIngoresRequestMethod = null;
-        while (true) {
-            MatchResult<? extends Engine> mr = cur.match(path, requestPath.getMethod());
-            if (mr != null && cur.leftMostChild == null) {
-                mrIngoresRequestMethod = mr;
-            }
-            if (logger.isDebugEnabled() && mr != null) {
-                logger.debug("searching [" + (matchResults.size() + 1) + "] '" + path + "': rule='"
-                        + mr.getNode().mapping.getPath() + "'; target="
-                        + mr.getNode().mapping.getTarget());
-            }
-            if (mr == null || !mr.isRequestMethodSupported()) {
-                if (cur.sibling != null) {
-                    cur = cur.sibling;
-                } else {
-                    while (true) {
-                        MatchResult<? extends Engine> last = lastMatcheResult();
-                        if (last != null) {
-                            if (last.getMatchedString().length() > 0) {
-                                path = last.getMatchedString() + path;
-                            }
-                        }
-                        backward();
-                        cur = cur.parent;
-                        if (cur == null) {
-                            if (logger.isDebugEnabled()) {
-                                logger.debug("not matched: " + requestPath.getUri());
-                            }
-                            return mrIngoresRequestMethod;
-                        } else {
-                            if (cur.sibling != null) {
-                                cur = cur.sibling;
-                                break;
-                            }
-                        }
-                    }
-                }
-            } else {
-                forward(mr);
-                path = path.substring(mr.getMatchedString().length());
-                if (cur.leftMostChild != null) {
-                    cur = cur.leftMostChild;
-                } else {
-                    logger.debug("matched '" + requestPath.getUri() + "': target="
-                            + mr.getNode().mapping.getTarget());
-                    return mr;
-                }
-            }
-        }
-    }
-
-    private void forward(MatchResult<? extends Engine> result) {
-        this.matchResults.add(result);
-    }
-
-    private void backward() {
-        if (matchResults.size() > 0) {
-            this.matchResults.remove(matchResults.size() - 1);
-        }
-    }
-
-    public MatchResult<? extends Engine> lastMatcheResult() {
-        return matchResults.size() == 0 ? null : matchResults.get(matchResults.size() - 1);
     }
 
     private LinkedList<AfterCompletion> afterCompletions = new LinkedList<AfterCompletion>();

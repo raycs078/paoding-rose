@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Properties;
 
 import net.paoding.rose.web.impl.mapping.Mapping;
-import net.paoding.rose.web.impl.thread.tree.MappingNode;
+import net.paoding.rose.web.impl.mapping.MappingNode;
 
 /**
  * 控制器的action path参数映射结果
@@ -45,28 +45,36 @@ public class MatchResult<T> {
     protected MatchResult() {
     }
 
-    public MatchResult(String matchedString, Mapping<T> mapping, MappingNode node) {
+    public MatchResult(String matchedString, Mapping<T> mapping) {
         this.matchedString = matchedString;
         this.mapping = mapping;
-        this.node = node;
     }
 
     public MappingNode getNode() {
         return node;
     }
 
+    public void setNode(MappingNode node) {
+        this.node = node;
+    }
+
+    public boolean isLeaf() {
+        return node.leftMostChild == null;
+    }
+
     public static <T> MatchResult<T> changeMapping(MatchResult<?> src, Mapping<T> newMapping) {
         if (src == null) {
             return null;
         }
-        MatchResult<T> ret = new MatchResult<T>(src.getMatchedString(), newMapping, src.node);
+        MatchResult<T> ret = new MatchResult<T>(src.getMatchedString(), newMapping);
+        ret.node = src.node;
         ret.names = src.names;
         ret.properties = src.properties;
         return ret;
     }
 
-    public static <T> MatchResult<T> unmodifiable(String matchedString, Mapping<T> mapping, MappingNode node) {
-        return new MatchResult<T>(matchedString, mapping, node) {
+    public static <T> MatchResult<T> unmodifiable(String matchedString, Mapping<T> mapping) {
+        return new MatchResult<T>(matchedString, mapping) {
 
             @Override
             public void setMapping(Mapping<T> mapping) {
@@ -83,6 +91,7 @@ public class MatchResult<T> {
                 throw new UnsupportedOperationException();
             }
         };
+
     }
 
     /**

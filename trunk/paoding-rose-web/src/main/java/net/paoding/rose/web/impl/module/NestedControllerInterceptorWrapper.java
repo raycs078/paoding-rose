@@ -21,6 +21,7 @@ import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.NamedControllerInterceptor;
 import net.paoding.rose.web.OncePerRequestInterceptorWrapper;
 import net.paoding.rose.web.annotation.Intercepted;
+import net.paoding.rose.web.impl.thread.AfterCompletion;
 
 /**
  * {@link ControllerInterceptor}的一个简单封装，给被封装的拦截器一个命名。
@@ -31,7 +32,7 @@ import net.paoding.rose.web.annotation.Intercepted;
  * @author 王志亮 [qieqie.wang@gmail.com]
  */
 public class NestedControllerInterceptorWrapper extends ControllerInterceptorWrapper implements
-        ControllerInterceptor, NamedControllerInterceptor {
+        ControllerInterceptor, NamedControllerInterceptor, AfterCompletion {
 
     public static class Builder {
 
