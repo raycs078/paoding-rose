@@ -51,7 +51,7 @@ public class RoseDomainClasses {
     public synchronized List<Class<?>> findDomainClasses() throws IOException {
         if (domainClasses == null) {
             domainClasses = new ArrayList<Class<?>>();
-            RoseScanner roseScanner = RoseScanner.getRoseScanner();
+            RoseScanner roseScanner = RoseScanner.getInstance();
             List<ResourceInfo> resources = new ArrayList<ResourceInfo>();
             resources.addAll(roseScanner.getClassesFolderResources());
             resources.addAll(roseScanner.getJarResources());
