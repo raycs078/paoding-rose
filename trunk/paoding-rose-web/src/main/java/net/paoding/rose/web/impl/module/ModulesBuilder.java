@@ -41,6 +41,7 @@ import net.paoding.rose.web.annotation.ReqMethod;
 import net.paoding.rose.web.impl.context.ContextLoader;
 import net.paoding.rose.web.paramresolver.ParamResolver;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -48,7 +49,7 @@ import org.springframework.beans.factory.CannotLoadBeanClassException;
 import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.beans.factory.annotation.AnnotatedGenericBeanDefinition;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
-import org.springframework.beans.factory.support.BeanDefinitionRegistry;
+import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ClassUtils;
@@ -244,28 +245,27 @@ public class ModulesBuilder {
     }
 
     private void registerBeanDefinitions(XmlWebApplicationContext context, List<Class<?>> classes) {
-        BeanDefinitionRegistry registry = (BeanDefinitionRegistry) context.getBeanFactory();
+        DefaultListableBeanFactory bf = (DefaultListableBeanFactory) context.getBeanFactory();
+        String[] definedClasses = new String[bf.getBeanDefinitionCount()];
+        String[] definitionNames = bf.getBeanDefinitionNames();
+        for (int i = 0; i < definedClasses.length; i++) {
+            String name = definitionNames[i];
+            definedClasses[i] = bf.getBeanDefinition(name).getBeanClassName();
+        }
         for (Class<?> clazz : classes) {
-            // 排除重复controller
-            boolean clazzContinue = false;
-            @SuppressWarnings("unchecked")
-            Map<?, Object> beans = context.getBeansOfType(clazz);
-            for (Map.Entry<?, Object> entry : beans.entrySet()) {
-                if (entry.getValue().getClass() == clazz) {
-                    clazzContinue = true;
-                    break;
-                }
-            }
-            if (clazzContinue) {
-                logger.debug("ignores controller[bean in context]: " + clazz.getName());
-                continue;
-            }
+            // 排除非规范的类
             if (Modifier.isAbstract(clazz.getModifiers())
                     || Modifier.isInterface(clazz.getModifiers())
                     || !Modifier.isPublic(clazz.getModifiers())
                     || clazz.isAnnotationPresent(Ignored.class)) {
                 logger.debug("ignores controller[abstract?interface?not public?Ignored?]: "
                         + clazz.getName());
+                continue;
+            }
+            // 排除手动定义的bean
+            String clazzName = clazz.getName();
+            if (ArrayUtils.contains(definedClasses, clazzName)) {
+                logger.debug("ignores controller[bean in context]: " + clazz.getName());
                 continue;
             }
             //
@@ -283,7 +283,8 @@ public class ModulesBuilder {
             if (StringUtils.isEmpty(beanName)) {
                 beanName = ClassUtils.getShortNameAsProperty(clazz);
             }
-            registry.registerBeanDefinition(beanName, new AnnotatedGenericBeanDefinition(clazz));
+
+            bf.registerBeanDefinition(beanName, new AnnotatedGenericBeanDefinition(clazz));
         }
     }
 

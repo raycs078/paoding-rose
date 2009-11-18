@@ -10,6 +10,7 @@ import java.util.Set;
 import javax.servlet.http.HttpServletResponse;
 
 import net.paoding.rose.web.InvocationUtils;
+import net.paoding.rose.web.RequestPath;
 import net.paoding.rose.web.annotation.ReqMethod;
 import net.paoding.rose.web.impl.module.Module;
 import net.paoding.rose.web.impl.thread.Engine;
@@ -129,18 +130,19 @@ public class Rose implements EngineChain {
      * 
      */
     private MatchResult<? extends Engine> treeSearch() {
-        String path = invocation.getRequestPath().getRosePath();
-        String method = invocation.getRequestPath().getMethod();
+        RequestPath requestPath = invocation.getRequestPath();
+        String path = requestPath.getRosePath();
         MappingNode cur = mappingTree;
         MatchResult<? extends Engine> mrIngoresRequestMethod = null;
         while (true) {
-            MatchResult<? extends Engine> mr = cur.match(path, method);
+            MatchResult<? extends Engine> mr = cur.match(path, requestPath.getMethod());
             if (mr != null && cur.leftMostChild == null) {
                 mrIngoresRequestMethod = mr;
             }
             if (logger.isDebugEnabled() && mr != null) {
-                logger.debug("searching '" + path + "': rule=" + mr.getNode().mapping.getPath()
-                        + "; target=" + mr.getNode().mapping.getTarget());
+                logger.debug("searching [" + (matchResults.size() + 1) + "] '" + path + "': rule='"
+                        + mr.getNode().mapping.getPath() + "'; target="
+                        + mr.getNode().mapping.getTarget());
             }
             if (mr == null || !mr.isRequestMethodSupported()) {
                 if (cur.sibling != null) {
@@ -156,6 +158,9 @@ public class Rose implements EngineChain {
                         backward();
                         cur = cur.parent;
                         if (cur == null) {
+                            if (logger.isDebugEnabled()) {
+                                logger.debug("not matched: " + requestPath.getUri());
+                            }
                             return mrIngoresRequestMethod;
                         } else {
                             if (cur.sibling != null) {
@@ -171,6 +176,8 @@ public class Rose implements EngineChain {
                 if (cur.leftMostChild != null) {
                     cur = cur.leftMostChild;
                 } else {
+                    logger.debug("matched '" + requestPath.getUri() + "': target="
+                            + mr.getNode().mapping.getTarget());
                     return mr;
                 }
             }
