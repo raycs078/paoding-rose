@@ -38,7 +38,7 @@ public class LoginRequiredInterceptor extends ControllerInterceptorAdapter {
 
     // 覆盖这个方法，表示只有标注@LoginRequired的控制器或方法才会被此拦截器拦截
     @Override
-    public Class<? extends Annotation> getAnnotationClass() {
+    public Class<? extends Annotation> getRequiredAnnotationClass() {
         return LoginRequired.class;
     }
 
