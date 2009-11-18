@@ -40,8 +40,12 @@ import net.paoding.rose.web.impl.thread.ModuleEngine;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 public class TreeBuilder {
+
+    private Log logger = LogFactory.getLog(getClass());
 
     public void create(MappingNode head, List<Module> modules) {
         createModuleMappingNodes(head, modules);
@@ -101,38 +105,47 @@ public class TreeBuilder {
     }
 
     private List<Mapping<ActionEngine>> createActionMappings(Module module,
-            Class<?> controllerClass, Object controller) {
+            final Class<?> controllerClass, Object controller) {
+        if (logger.isDebugEnabled()) {
+            logger.debug("creating action mappings for controller: " + controllerClass.getName());
+        }
         ArrayList<Mapping<ActionEngine>> actionMappings = new ArrayList<Mapping<ActionEngine>>();
-        //        Class<?> clz = controllerClass;// 从clz得到的method不是aop后controller的clz阿!!!
+        Class<?> clz = controllerClass;
         //
         List<Method> pastMethods = new LinkedList<Method>();
         while (true) {
-            Method[] declaredMethods = controllerClass.getDeclaredMethods();
+            Method[] declaredMethods = clz.getDeclaredMethods();
             for (Method method : declaredMethods) {
-                // public, not static, not abstract
+                // public, not static, not abstract, @Ignored
                 if (!Modifier.isPublic(method.getModifiers())
                         || Modifier.isAbstract(method.getModifiers())
-                        || Modifier.isStatic(method.getModifiers())) {
-                    continue;
-                }
-                // 去除已经标志不作为接口的方法
-                if (method.getAnnotation(Ignored.class) != null) {
+                        || Modifier.isStatic(method.getModifiers())
+                        || method.isAnnotationPresent(Ignored.class)) {
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("ignores methods of controller " + controllerClass.getName()
+                                + "." + method.getName()
+                                + "  [@ignored?not public?abstract?static?]");
+                    }
                     continue;
                 }
                 if (ignoresCommonMethod(method)) {
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("ignores common methods of controller "
+                                + controllerClass.getName() + "." + method.getName());
+                    }
                     continue;
                 }
                 // 刚才在继承类(子类)已经声明的方法，不必重复处理了
-                boolean broken = false;
+                boolean beanAddBySubClass = false;
                 for (Method past : pastMethods) {
                     if (past.getName().equals(method.getName())) {
                         if (Arrays.equals(past.getParameterTypes(), method.getParameterTypes())) {
-                            broken = true;
+                            beanAddBySubClass = true;
                             break;
                         }
                     }
                 }
-                if (broken) {
+                if (beanAddBySubClass) {
                     continue;
                 }
                 String methodPath = "/" + method.getName();
@@ -172,9 +185,8 @@ public class TreeBuilder {
             for (int i = 0; i < declaredMethods.length; i++) {
                 pastMethods.add(declaredMethods[i]);
             }
-            controllerClass = controllerClass.getSuperclass();
-            if (controllerClass == null
-                    || controllerClass.getAnnotation(AsSuperController.class) == null) {
+            clz = clz.getSuperclass();
+            if (clz == null || clz.getAnnotation(AsSuperController.class) == null) {
                 break;
             }
         }
@@ -210,12 +222,11 @@ public class TreeBuilder {
         REST rest = controllerClass.getAnnotation(REST.class);
         Map<String, String[]> restSetting = new HashMap<String, String[]>();
         if (rest != null) {
+            if (logger.isDebugEnabled()) {
+                logger.debug(controllerClass.getName() + "@REST is present; use it;");
+            }
             Method[] restMethods = rest.getClass().getMethods();
             for (Method restMethod : restMethods) {
-                if (!ArrayUtils.contains(new String[] { "get", "post", "put", "options", "trace",
-                        "delete", "head" }, restMethod.getName())) {
-                    continue;
-                }
                 if (restMethod.getParameterTypes().length != 0) {
                     continue;
                 }
@@ -230,12 +241,19 @@ public class TreeBuilder {
                             candidates[i] = '/' + candidates[i];
                         }
                     }
+                    if (logger.isDebugEnabled()) {
+                        logger.debug(controllerClass.getName() + "@REST." + restMethod.getName()
+                                + "=" + Arrays.toString(candidates));
+                    }
                     restSetting.put(restMethod.getName().toUpperCase(), candidates);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
         } else {
+            if (logger.isDebugEnabled()) {
+                logger.debug(controllerClass.getName() + "@REST is not present; use default");
+            }
             restSetting.put("GET", new String[] { "/index", "/get", "/render" });
             restSetting.put("POST", new String[] { "/post", "/add", "/create", "/update", });
             restSetting.put("PUT", new String[] { "/put", "/update", });
@@ -256,11 +274,15 @@ public class TreeBuilder {
                             actionMappings.add(new MappingImpl<ActionEngine>("",
                                     MatchMode.PATH_EQUALS, new ReqMethod[] { ReqMethod.map(entry
                                             .getKey()) }, actionMapping.getTarget()));
+                            if (logger.isDebugEnabled()) {
+                                logger.debug(controllerClass.getName() + "add @REST Mapping: "
+                                        + entry.getKey() + "=" + Arrays.toString(candidates));
+                            }
                         }
                         break;
                     }
                 }
-                if (matchResult != null) {
+                if (matchResult != null && matchResult.isRequestMethodSupported()) {
                     break;
                 }
             }
@@ -422,51 +444,51 @@ public class TreeBuilder {
     //        out.flush();
     //        return head;
     //    }
-//
-//    private void println(MappingNode node, StringBuilder sb) {
-//        sb.append("<node path=\"").append(node.mapping.getPath());
-//        sb.append("\" target=\"").append(node.mapping.getTarget()).append("\">");
-//        MappingNode si = node.leftMostChild;
-//        if (si != null) {
-//            println(si, sb);
-//            while ((si = si.sibling) != null) {
-//                println(si, sb);
-//            }
-//        }
-//        sb.append("</node>");
-//    }
+    //
+    //    private void println(MappingNode node, StringBuilder sb) {
+    //        sb.append("<node path=\"").append(node.mapping.getPath());
+    //        sb.append("\" target=\"").append(node.mapping.getTarget()).append("\">");
+    //        MappingNode si = node.leftMostChild;
+    //        if (si != null) {
+    //            println(si, sb);
+    //            while ((si = si.sibling) != null) {
+    //                println(si, sb);
+    //            }
+    //        }
+    //        sb.append("</node>");
+    //    }
 
-//    private static void println(MappingNode node, PrintWriter sb) {
-//        sb.append("<node path=\"");
-//        ReqMethod[] methods = node.mapping.getMethods();
-//        for (int i = 0; i < methods.length; i++) {
-//            if (i > 0) {
-//                sb.append("/");
-//            }
-//            sb.append(String.valueOf(methods[i]));
-//        }
-//        sb.append("  ").append(node.mapping.getPath());
-//        sb.append("\" target=\"").append(node.mapping.getTarget().toString()).append("\">");
-//        MappingNode si = node.leftMostChild;
-//        if (si != null) {
-//            println(si, sb);
-//            while ((si = si.sibling) != null) {
-//                println(si, sb);
-//            }
-//        }
-//        sb.append("</node>");
-//    }
-//
-//    public static void main(String[] args) throws Exception {
-//        List<ModuleInfo> moduleInfos = new RoseModuleInfos().findModuleInfos();
-//        List<Module> modules = new ModulesBuilder().build(null, moduleInfos);
-//        WebEngine roseEngine = new WebEngine(new InstructionExecutorImpl());
-//        MappingNode head = new MappingNode(new MappingImpl<WebEngine>("",
-//                MatchMode.PATH_STARTS_WITH, roseEngine), null);
-//        new TreeBuilder().create(head, modules);
-//        File f = new File("E:/my_documents/xml.xml");
-//        PrintWriter out = new PrintWriter(f, "UTF-8");
-//        println(head, out);
-//        out.flush();
-//    }
+    //    private static void println(MappingNode node, PrintWriter sb) {
+    //        sb.append("<node path=\"");
+    //        ReqMethod[] methods = node.mapping.getMethods();
+    //        for (int i = 0; i < methods.length; i++) {
+    //            if (i > 0) {
+    //                sb.append("/");
+    //            }
+    //            sb.append(String.valueOf(methods[i]));
+    //        }
+    //        sb.append("  ").append(node.mapping.getPath());
+    //        sb.append("\" target=\"").append(node.mapping.getTarget().toString()).append("\">");
+    //        MappingNode si = node.leftMostChild;
+    //        if (si != null) {
+    //            println(si, sb);
+    //            while ((si = si.sibling) != null) {
+    //                println(si, sb);
+    //            }
+    //        }
+    //        sb.append("</node>");
+    //    }
+    //
+    //    public static void main(String[] args) throws Exception {
+    //        List<ModuleInfo> moduleInfos = new RoseModuleInfos().findModuleInfos();
+    //        List<Module> modules = new ModulesBuilder().build(null, moduleInfos);
+    //        WebEngine roseEngine = new WebEngine(new InstructionExecutorImpl());
+    //        MappingNode head = new MappingNode(new MappingImpl<WebEngine>("",
+    //                MatchMode.PATH_STARTS_WITH, roseEngine), null);
+    //        new TreeBuilder().create(head, modules);
+    //        File f = new File("E:/my_documents/xml.xml");
+    //        PrintWriter out = new PrintWriter(f, "UTF-8");
+    //        println(head, out);
+    //        out.flush();
+    //    }
 }

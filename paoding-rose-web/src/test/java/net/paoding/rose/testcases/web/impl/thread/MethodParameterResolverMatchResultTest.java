@@ -1,21 +1,7 @@
 package net.paoding.rose.testcases.web.impl.thread;
 
-import java.lang.reflect.Method;
-
 import net.paoding.rose.testcases.AbstractControllerTest;
 import net.paoding.rose.web.Invocation;
-import net.paoding.rose.web.annotation.Param;
-import net.paoding.rose.web.annotation.ReqMethod;
-import net.paoding.rose.web.impl.mapping.MappingImpl;
-import net.paoding.rose.web.impl.mapping.MatchMode;
-import net.paoding.rose.web.impl.thread.ActionEngine;
-import net.paoding.rose.web.impl.thread.ControllerEngine;
-import net.paoding.rose.web.impl.thread.MatchResult;
-import net.paoding.rose.web.paramresolver.MethodParameterResolver;
-import net.paoding.rose.web.paramresolver.ParameterNameDiscovererImpl;
-import net.paoding.rose.web.paramresolver.ResolverFactoryImpl;
-
-import org.springframework.mock.web.MockFilterChain;
 
 public class MethodParameterResolverMatchResultTest extends AbstractControllerTest {
 

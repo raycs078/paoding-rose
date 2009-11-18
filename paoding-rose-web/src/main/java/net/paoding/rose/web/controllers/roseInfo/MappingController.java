@@ -16,6 +16,7 @@
 package net.paoding.rose.web.controllers.roseInfo;
 
 import net.paoding.rose.web.annotation.HttpFeatures;
+import net.paoding.rose.web.annotation.ReqMethod;
 import net.paoding.rose.web.annotation.rest.Get;
 import net.paoding.rose.web.impl.thread.tree.MappingNode;
 
@@ -40,7 +41,15 @@ public class MappingController {
     }
 
     private void println(MappingNode node, StringBuilder sb) {
-        sb.append("<node path=\"").append(node.mapping.getPath());
+        sb.append("<node path=\"");
+        ReqMethod[] methods = node.mapping.getMethods();
+        for (int i = 0; i < methods.length; i++) {
+            if (i > 0) {
+                sb.append("/");
+            }
+            sb.append(String.valueOf(methods[i]));
+        }
+        sb.append("  ").append(node.mapping.getPath());
         sb.append("\" target=\"").append(node.mapping.getTarget()).append("\">");
         MappingNode si = node.leftMostChild;
         if (si != null) {
