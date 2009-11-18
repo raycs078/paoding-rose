@@ -21,20 +21,36 @@ import org.apache.commons.jexl.JexlHelper;
  */
 public class ExprResolverImpl implements ExprResolver {
 
-    // 正则表达式
-    private static final Pattern PREFIX = Pattern.compile("\\:([a-zA-Z0-9_\\.]*)");
-
     // 表达式的缓存
     protected static final ConcurrentHashMap<String, Expression> cache = new ConcurrentHashMap<String, Expression>();
 
-    // Jexl 上下文
-    protected final JexlContext context;
+    // 正则表达式
+    private static final Pattern PREFIX_PATTERN = Pattern.compile( // NL
+            "(\\:|\\$)([a-zA-Z0-9_]+)(\\.[a-zA-Z0-9_]+)*");
+
+    // 常量前缀
+    private static final String CONST_PREFIX = "_jadeconst";
+
+    // 参数前缀
+    private static final String VAR_PREFIX = "_jadevar";
+
+    // 参数表
+    protected final HashMap<String, Object> mapVars = new HashMap<String, Object>();
+
+    // 常量表
+    protected final HashMap<String, Object> mapConsts = new HashMap<String, Object>();
+
+    // Common Jexl 上下文
+    protected final JexlContext context = JexlHelper.createContext();
 
     /**
      * 构造表达式处理器。
      */
+    @SuppressWarnings("unchecked")
     public ExprResolverImpl() {
-        context = JexlHelper.createContext();
+        Map map = context.getVars();
+        map.put(VAR_PREFIX, mapVars);
+        map.put(CONST_PREFIX, mapConsts);
     }
 
     /**
@@ -43,8 +59,20 @@ public class ExprResolverImpl implements ExprResolver {
      * @param map - 初始的参数表
      */
     public ExprResolverImpl(Map<String, ?> map) {
-        context = JexlHelper.createContext();
-        context.setVars(map);
+        this();
+        this.mapVars.putAll(map);
+    }
+
+    /**
+     * 构造表达式处理器。
+     * 
+     * @param mapVars - 初始的参数表
+     * @param mapConsts - 初始的常量表
+     */
+    public ExprResolverImpl(Map<String, ?> mapVars, Map<String, ?> mapConsts) {
+        this();
+        this.mapVars.putAll(mapVars);
+        this.mapConsts.putAll(mapConsts);
     }
 
     /**
@@ -52,9 +80,8 @@ public class ExprResolverImpl implements ExprResolver {
      * 
      * @return 处理器的参数表
      */
-    @SuppressWarnings("unchecked")
     public Map<String, Object> getVars() {
-        return context.getVars();
+        return mapVars;
     }
 
     /**
@@ -63,7 +90,25 @@ public class ExprResolverImpl implements ExprResolver {
      * @param map - 处理器的参数表
      */
     public void setVars(Map<String, Object> map) {
-        context.setVars(map);
+        mapVars.putAll(map);
+    }
+
+    /**
+     * 返回表达式处理器的常量表。
+     * 
+     * @return 处理器的常量表
+     */
+    public Map<String, Object> getConstants() {
+        return mapConsts;
+    }
+
+    /**
+     * 设置表达式处理器的常量表。
+     * 
+     * @param map - 处理器的常量表
+     */
+    public void setConstants(Map<String, Object> map) {
+        mapConsts.putAll(map);
     }
 
     @Override
@@ -74,17 +119,34 @@ public class ExprResolverImpl implements ExprResolver {
 
         if (expr == null) {
 
-            // 删除表达式中的  ':' 字符, 保证可编译
+            // 转换表达式中的前缀字符, 保证可编译
             StringBuilder builder = new StringBuilder(expression.length());
 
             int index = 0;
 
             // 匹配正则表达式, 并替换内容
-            Matcher matcher = PREFIX.matcher(expression);
+            Matcher matcher = PREFIX_PATTERN.matcher(expression);
             while (matcher.find()) {
+
                 builder.append(expression.substring(index, matcher.start()));
-                builder.append(matcher.group(1));
-                index = matcher.end();
+
+                String prefix = matcher.group(1);
+                if (":".equals(prefix)) {
+                    // 拼出变量访问语句
+                    builder.append(VAR_PREFIX);
+                    builder.append("[\'");
+                    builder.append(matcher.group(2));
+                    builder.append("\']");
+
+                } else if ("$".equals(prefix)) {
+                    // 拼出常量访问语句
+                    builder.append(CONST_PREFIX);
+                    builder.append("[\'");
+                    builder.append(matcher.group(2));
+                    builder.append("\']");
+                }
+
+                index = matcher.end(2);
             }
 
             builder.append(expression.substring(index));
@@ -100,13 +162,12 @@ public class ExprResolverImpl implements ExprResolver {
 
     @Override
     public Object getVar(String variant) {
-        return context.getVars().get(variant);
+        return mapVars.get(variant);
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public void setVar(String variant, Object value) {
-        context.getVars().put(variant, value);
+        mapVars.put(variant, value);
     }
 
     // 进行简单测试
@@ -116,9 +177,9 @@ public class ExprResolverImpl implements ExprResolver {
 
         map.put("current", new Date());
 
-        ExprResolver exprResolver = new ExprResolverImpl(map);
+        ExprResolver exprResolver = new ExprResolverImpl(map, map);
 
-        Object obj = exprResolver.executeExpr(":current.year - (:current.month + :current.day)");
+        Object obj = exprResolver.executeExpr(":current.year - ($current.month + $current.day)");
 
         System.out.println(obj);
     }
