@@ -4,7 +4,7 @@
 	<groupId>net.paoding</groupId>
 	<artifactId>paoding-rose-ar</artifactId>
 	<packaging>jar</packaging>
-	<version>0.9.4</version>
+	<version>0.9-SNAPSHOT</version>
 	<name>paoding-rose-ar</name>
 	<url>http://maven.apache.org</url>
 	<distributionManagement>
@@ -70,8 +70,8 @@
 					<archive>
 						<manifestEntries>
 							<Implementation-Title>Paoding Rose Ar</Implementation-Title>
-							<Implementation-Version>0.9.4-20090923</Implementation-Version>
-							<Rose-Version>0.9.4-20090923</Rose-Version>
+							<Implementation-Version>0.9.5-20091018</Implementation-Version>
+							<Rose-Version>0.9.5-20091018</Rose-Version>
 						</manifestEntries>
 					</archive>
 				</configuration>
@@ -106,7 +106,7 @@
 		<dependency>
 			<groupId>net.paoding</groupId>
 			<artifactId>paoding-rose</artifactId>
-			<version>0.9.4</version>
+			<version>0.9-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.hibernate</groupId>

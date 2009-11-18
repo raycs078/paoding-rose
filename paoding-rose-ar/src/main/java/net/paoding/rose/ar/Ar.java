@@ -27,7 +27,7 @@ import java.util.Map;
 
 import javax.persistence.Id;
 
-import net.paoding.rose.web.var.PrivateVar;
+import net.paoding.rose.ar.init.SessionFactorySetterCallback;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -40,7 +40,6 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.proxy.HibernateProxy;
-import org.springframework.beans.factory.BeanFactoryUtils;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
@@ -48,7 +47,6 @@ import org.springframework.orm.hibernate3.HibernateCallback;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.util.ClassUtils;
-import org.springframework.web.context.support.XmlWebApplicationContext;
 
 /**
  * {@link Ar}底层使用了{@link HibernateTemplate}
@@ -84,16 +82,13 @@ public class Ar {
         };
     }
 
+    /**
+     * @see SessionFactorySetterCallback
+     * @return
+     */
     public static HibernateTemplate getHibernateTemplate() {
         if (hibernateTemplate == null) {
-            XmlWebApplicationContext applicationContext = (XmlWebApplicationContext) PrivateVar
-                    .getRootWebApplicationContext();
-            String[] names = BeanFactoryUtils.beanNamesForTypeIncludingAncestors(applicationContext
-                    .getBeanFactory(), SessionFactory.class);
-            if (names.length == 0) {
-                throw new NullPointerException("coun't found sessionFactory in applicationContext");
-            }
-            setSessionFactory((SessionFactory) applicationContext.getBean(names[0]));
+            throw new NullPointerException("coun't found sessionFactory in applicationContext");
         }
         return hibernateTemplate;
     }

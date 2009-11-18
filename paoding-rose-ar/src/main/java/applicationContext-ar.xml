@@ -14,7 +14,7 @@ http://www.springframework.org/schema/aop http://www.springframework.org/schema/
 
 	<context:annotation-config />
 	<tx:annotation-driven transaction-manager="transactionManager" />
-	
+
 	<context:component-scan base-package="net.paoding.rose.ar.hibernate.interceptors">
 		<context:include-filter type="regex"
 			expression=".*Interceptor" />
@@ -24,13 +24,15 @@ http://www.springframework.org/schema/aop http://www.springframework.org/schema/
 		class="org.springframework.orm.hibernate3.HibernateTransactionManager">
 		<property name="sessionFactory" ref="sessionFactory"></property>
 	</bean>
-	
+
 	<bean id="sessionFactory"
 		class="net.paoding.rose.ar.hibernate.AutoScanningSessionFactoryBean"
 		autowire="default">
 		<property name="hibernateProperties" ref="hibernateProperties" />
 	</bean>
-	
+
+
+
 	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource"
 		destroy-method="close">
 		<property name="driverClassName" value="${jdbc.driverClassName}" />
@@ -49,4 +51,6 @@ http://www.springframework.org/schema/aop http://www.springframework.org/schema/
 			</list>
 		</property>
 	</bean>
+
+	<bean id="sessionFactorySetterCallback" class="net.paoding.rose.ar.init.SessionFactorySetterCallback" />
 </beans>
