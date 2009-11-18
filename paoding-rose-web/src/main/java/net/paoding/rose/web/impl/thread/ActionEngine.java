@@ -33,8 +33,6 @@ import net.paoding.rose.web.RequestPath;
 import net.paoding.rose.web.annotation.HttpFeatures;
 import net.paoding.rose.web.annotation.Intercepted;
 import net.paoding.rose.web.annotation.Return;
-import net.paoding.rose.web.impl.mapping.MappingImpl;
-import net.paoding.rose.web.impl.mapping.MatchMode;
 import net.paoding.rose.web.impl.module.Module;
 import net.paoding.rose.web.impl.module.NestedControllerInterceptorWrapper;
 import net.paoding.rose.web.impl.thread.tree.Rose;
@@ -73,8 +71,6 @@ public final class ActionEngine implements Engine {
 
     private transient String toStringCache;
 
-    private final MatchResult<Method> unmodifiableMatchResult;
-
     public ActionEngine(Module module, Class<?> controllerClass, Object controller, Method method) {
         this.module = module;
         this.controllerClass = controllerClass;
@@ -83,8 +79,6 @@ public final class ActionEngine implements Engine {
         interceptors = compileInterceptors();
         methodParameterResolver = compileParamResolvers();
         validators = compileValidators();
-        unmodifiableMatchResult = MatchResult.unmodifiable("", new MappingImpl<Method>("",
-                MatchMode.PATH_EQUALS, method), null);
         if (logger.isDebugEnabled()) {
             logger
                     .debug("action info: " + controllerClass.getName() + "." + method.getName()
@@ -171,10 +165,6 @@ public final class ActionEngine implements Engine {
         //
         return registeredInterceptors
                 .toArray(new NestedControllerInterceptorWrapper[registeredInterceptors.size()]);
-    }
-
-    public MatchResult<Method> match(final InvocationBean inv) {
-        return unmodifiableMatchResult;
     }
 
     @Override

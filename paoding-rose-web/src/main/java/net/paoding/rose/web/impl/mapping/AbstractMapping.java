@@ -21,8 +21,6 @@ import java.util.Set;
 import net.paoding.rose.web.annotation.ReqMethod;
 
 import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 /**
  * 
@@ -30,8 +28,6 @@ import org.apache.commons.logging.LogFactory;
  * 
  */
 public abstract class AbstractMapping<T> implements Mapping<T> {
-
-    protected final Log logger = LogFactory.getLog(getClass());
 
     protected final String path;
 

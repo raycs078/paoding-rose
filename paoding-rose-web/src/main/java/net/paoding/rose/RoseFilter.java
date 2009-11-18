@@ -34,6 +34,7 @@ import net.paoding.rose.web.RequestPath;
 import net.paoding.rose.web.impl.context.ContextLoader;
 import net.paoding.rose.web.impl.mapping.Mapping;
 import net.paoding.rose.web.impl.mapping.MappingImpl;
+import net.paoding.rose.web.impl.mapping.MappingNode;
 import net.paoding.rose.web.impl.mapping.MatchMode;
 import net.paoding.rose.web.impl.module.ControllerInfo;
 import net.paoding.rose.web.impl.module.Module;
@@ -41,7 +42,6 @@ import net.paoding.rose.web.impl.module.ModulesBuilder;
 import net.paoding.rose.web.impl.module.NestedControllerInterceptorWrapper;
 import net.paoding.rose.web.impl.thread.InvocationBean;
 import net.paoding.rose.web.impl.thread.WebEngine;
-import net.paoding.rose.web.impl.thread.tree.MappingNode;
 import net.paoding.rose.web.impl.thread.tree.Rose;
 import net.paoding.rose.web.impl.thread.tree.TreeBuilder;
 import net.paoding.rose.web.instruction.InstructionExecutor;
@@ -72,12 +72,17 @@ import org.springframework.web.util.NestedServletException;
  * Filter可以拿到相应的Request和Response对象
  * ，当Filter认为自己已经能够完成整个处理，它可以不调用整个处理链的下个组件处理.
  * <p>
- * 使用过滤器的好处是，Rose可以很好地和其他web框架兼容。这在改造遗留系统、继承其他uri具有天然优越性。正是使用过滤器，
+ * 使用过滤器的好处是，Rose可以很好地和其他web框架兼容。这在改造遗留系统、对各种uri的支持具有天然优越性。正是使用过滤器，
  * Rose不在要求请求地址具有特殊的后缀。
  * <p>
+ * 为了更好地理解，可以把Rose过滤器看成能将某些请求其它Filter或Servlet传递的Servlet。这个刚好是普通Servlet无法做到的
+ * ： 如果一个请求以后缀名配置给他处理时候
+ * ，一旦该Servlet处理不了，Servlet规范没有提供机制使得可以由配置在web.xml的其他正常组件处理
+ * (除404，500等错误处理组件之外)。
+ * <p>
  * 
- * 一个web.xml中可能具有不只一个的Filter，Filter的先后顺序对系统具有重要影响，特别是在Rose自己的过滤器。
- * 如果一个请求在被Rose处理前应该被某些过滤器过滤，请把这些过滤器的mapping配置在Rose过滤器之前。
+ * 一个web.xml中可能具有不只一个的Filter，Filter的先后顺序对系统具有重要影响，特别的，Rose自己的过滤器的配置顺序更是需要讲究
+ * 。 如果一个请求在被Rose处理前应该被某些过滤器过滤，请把这些过滤器的mapping配置在Rose过滤器之前。
  * <p>
  * 
  * RoseFilter的配置，建议按以下配置即可：
@@ -96,16 +101,15 @@ import org.springframework.web.util.NestedServletException;
  * 	&lt;/filter-mapping&gt;
  * </pre>
  * 
- * 说明：<br>
- * 1)大多数请况下，<strong>filter-mapping</strong>应配置在所有Filter Mapping的最后。<br>
- * 2)不能将<strong>FORWARD、INCLUDE</strong>的dispatcher去掉，否则forward、
+ * 1) 大多数请况下，<strong>filter-mapping</strong> 应配置在所有Filter Mapping的最后。<br>
+ * 2) 不能将 <strong>FORWARD、INCLUDE</strong> 的 dispatcher 去掉，否则forward、
  * include的请求Rose框架将拦截不到<br>
  * <p>
  * 
- * 
- * Rose框架内部采用"匹配->执行"两阶段逻辑。Rose内部结构具有一个匹配树，这个数据结构可以快速判断一个请求是否应该由Rose处理并进行，
- * 没有找到匹配的请求交给过滤器的下一个组件处理。匹配成功的请求将进入”执行“阶段。 执行阶段需要经过6个步骤处理：“参数解析 -> 验证器 ->
- * 拦截器 -> 控制器 -> 视图渲染 -> 渲染后"的处理链。
+ * Rose框架内部采用<strong>"匹配->执行"</strong>两阶段逻辑。Rose内部结构具有一个匹配树，
+ * 这个数据结构可以快速判断一个请求是否应该由Rose处理并进行， 没有找到匹配的请求交给过滤器的下一个组件处理。匹配成功的请求将进入”执行“阶段。
+ * 执行阶段需要经过6个步骤处理：<strong>“参数解析 -〉 验证器 -〉 拦截器 -〉 控制器 -〉 视图渲染
+ * -〉渲染后"</strong>的处理链。
  * <p>
  * 
  * <strong>匹配树</strong>: <br>
@@ -114,19 +118,23 @@ import org.springframework.web.util.NestedServletException;
  * 。这个匹配树的每个节点都定义了自己的匹配地址、匹配目标以及”执行逻辑“。值得注意的是，对于每个匹配节点而言它的下级节点是有序的
  * ，这个顺序可以保证请求地址被正确地匹配给所期望的控制器方法处理。
  * <p>
+ * 
  * <strong>匹配过程</strong>: <br>
  * Rose以请求的地址作为处理输入(不包含Query串，即问号后的字符串)。如果这个匹配树存在某个树的路径和请求匹配成功,
  * 表示这个请求应由Rose处理。在算法上，采用的是基于左儿子有兄弟的可回溯的匹配过程。
  * <P>
+ * 
  * <strong>参数解析</strong>: <br>
  * 在调用验证器、拦截器
  * 控制器之前，Rose完成2个解析：解析匹配树上动态的参数出实际值，解析控制器方法中参数实际的值。参数可能会解析失败(例如转化异常等等
  * )，此时该参数以默认值进行代替，同时Rose解析失败和异常记录起来放到专门的类中，继续下一个过程而不打断执行。
  * <P>
+ * 
  * <strong>拦截器</strong>: <br>
  * Rose使用自定义的拦截器接口而非一般的拦截器接口这是有理由的。使用Rose自定义的拦截器接口可以更容易地操作、控制Rose拦截。
- * 所谓拦截即是对已经匹配的控制器调用进行拦截，在其调用之前、之后以及页面渲染之后执行某些逻辑。设计良好的拦截器可以被多个控制器使用。FF
+ * 所谓拦截即是对已经匹配的控制器调用进行拦截，在其调用之前、之后以及页面渲染之后执行某些逻辑。设计良好的拦截器可以被多个控制器使用。
  * <P>
+ * 
  * <strong>控制器</strong>: <br>
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
@@ -169,10 +177,10 @@ public class RoseFilter extends GenericFilterBean {
             // 识别 Rose 程序模块
             this.modules = prepareModules(prepareRootApplicationContext());
 
-            // 映射 Rose 程序模块
+            // 创建匹配树以及各个结点的上的执行逻辑(Engine)
             this.mappingTree = prepareMappingTree(modules);
 
-            // 打印提示信息
+            // 打印启动信息
             printRoseInfos();
 
             //
@@ -305,18 +313,10 @@ public class RoseFilter extends GenericFilterBean {
         WebApplicationContext rootContext = WebApplicationContextUtils
                 .getWebApplicationContext(getServletContext());
         if (rootContext != null) {
-            AbstractApplicationContext roseJarsContext = (AbstractApplicationContext) rootContext
-                    .getParent();
-            if (roseJarsContext != null) {
-                try {
-                    roseJarsContext.close();
-                } catch (Throwable e) {
-                    logger.error("", e);
-                    getServletContext().log("", e);
-                }
-            }
             try {
-                ((AbstractApplicationContext) rootContext).close(); // rose.root
+                if (rootContext instanceof AbstractApplicationContext) {
+                    ((AbstractApplicationContext) rootContext).close(); // rose.root
+                }
             } catch (Throwable e) {
                 logger.error("", e);
                 getServletContext().log("", e);

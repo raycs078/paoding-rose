@@ -47,7 +47,6 @@ import net.paoding.rose.web.annotation.Param;
 import net.paoding.rose.web.annotation.ParamConf;
 import net.paoding.rose.web.impl.module.Module;
 import net.paoding.rose.web.impl.thread.InvocationBean;
-import net.paoding.rose.web.impl.thread.tree.MappingNode;
 import net.paoding.rose.web.impl.thread.tree.Rose;
 import net.paoding.rose.web.var.Flash;
 import net.paoding.rose.web.var.Model;
@@ -94,7 +93,6 @@ public class ResolverFactoryImpl implements ResolverFactory {
 
     private static final ParamResolver[] buildinResolvers = new ParamResolver[] {//
     new InvocationResolver(), //
-            new MappingNodeResolver(),//
             new RoseResolver(), //
             new ApplicationContextResolver(), //
             new MessageSourceResolver(), //
@@ -361,20 +359,6 @@ public class ResolverFactoryImpl implements ResolverFactory {
                 }
             }
             return multipartFile;
-        }
-    }
-
-    static final class MappingNodeResolver implements ParamResolver {
-
-        @Override
-        public boolean supports(ParamMetaData metaData) {
-            return metaData.getParamType() == MappingNode.class;
-        }
-
-        @Override
-        public Object resolve(Invocation inv, ParamMetaData metaData) throws Exception {
-            Rose rose = ((InvocationBean) inv).getRose();
-            return rose.lastMatcheResult().getNode();
         }
     }
 
