@@ -27,8 +27,8 @@ import org.springframework.jdbc.support.JdbcUtils;
  */
 public class RowMapperFactoryImpl implements RowMapperFactory {
 
-    public RowMapper getRowMapper(Class<?> daoClass, Method method, ResultSet resultSet,
-            Class<?> rowType) throws SQLException {
+    @Override
+    public RowMapper getRowMapper(Class<?> daoClass, Method method, Class<?> rowType) {
 
         // BUGFIX: SingleColumnRowMapper 处理  Primitive Type 抛异常
         if (rowType.isPrimitive()) {
@@ -45,8 +45,8 @@ public class RowMapperFactoryImpl implements RowMapperFactory {
             ColumnMapRowMapper mapper = new ColumnMapRowMapper();
             rowMapper = mapper;
         } else if (rowType.isArray()) {
-            rowMapper = new ArrayRowMapper(rowType.getComponentType());
-        } else if (rowType == List.class || rowType == Collection.class) {
+            rowMapper = new ArrayRowMapper(rowType);
+        } else if ((rowType == List.class) || (rowType == Collection.class)) {
             rowMapper = new ListRowMapper(method);
         } else if (rowType == Set.class) {
             rowMapper = new ListRowMapper(method);
@@ -62,7 +62,8 @@ public class RowMapperFactoryImpl implements RowMapperFactory {
         return rowMapper;
     }
 
-    static class ArrayRowMapper implements RowMapper {
+    // 用数组返回每一列
+    protected static class ArrayRowMapper implements RowMapper {
 
         private Class<?> componentType;
 
@@ -75,13 +76,14 @@ public class RowMapperFactoryImpl implements RowMapperFactory {
             int columnSize = rs.getMetaData().getColumnCount();
             Object array = Array.newInstance(componentType, columnSize);
             for (int i = 0; i < columnSize; i++) {
-                Array.set(array, i, JdbcUtils.getResultSetValue(rs, i));
+                Array.set(array, i, JdbcUtils.getResultSetValue(rs, i, componentType));
             }
             return array;
         }
     }
 
-    class KeyValuePairMapper implements RowMapper {
+    // 用  Map<K, V> 返回每一列
+    protected static class KeyValuePairMapper implements RowMapper {
 
         private final RowMapper mapper;
 
@@ -112,31 +114,36 @@ public class RowMapperFactoryImpl implements RowMapperFactory {
         }
     }
 
-    class ListRowMapper extends CollectionRowMapper {
+    // 用  List<T> 返回每一列
+    protected static class ListRowMapper extends CollectionRowMapper {
 
         public ListRowMapper(Method method) {
             super(method);
         }
 
+        @Override
         @SuppressWarnings("unchecked")
         protected Collection createCollection(int columnSize) {
             return new ArrayList(columnSize);
         }
     }
 
-    class SetRowMapper extends CollectionRowMapper {
+    // 用  Set<T> 返回每一列
+    protected static class SetRowMapper extends CollectionRowMapper {
 
         public SetRowMapper(Method method) {
             super(method);
         }
 
+        @Override
         @SuppressWarnings("unchecked")
         protected Collection createCollection(int columnSize) {
             return new HashSet(columnSize);
         }
     }
 
-    abstract static class CollectionRowMapper implements RowMapper {
+    // 用  Collection<T> 返回每一列, 这是基类
+    protected abstract static class CollectionRowMapper implements RowMapper {
 
         private Class<?> elementType;
 

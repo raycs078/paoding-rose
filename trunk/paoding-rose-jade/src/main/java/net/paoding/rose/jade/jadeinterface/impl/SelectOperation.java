@@ -8,78 +8,93 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import net.paoding.rose.jade.jadeinterface.annotation.SQL;
 import net.paoding.rose.jade.jadeinterface.annotation.SQLParam;
 import net.paoding.rose.jade.jadeinterface.provider.DataAccess;
 import net.paoding.rose.jade.jadeinterface.provider.Modifier;
 
 import org.apache.commons.lang.ClassUtils;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.util.NumberUtils;
 
 /**
- * 
+ * 实现  SELECT 查询。
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
+ * @author han.liao
  */
 public class SelectOperation implements JdbcOperation {
 
-    private RowMapperFactory mapperFactory;
+    private final Class<?> daoClass;
 
-    public void setRowMapperFactory(RowMapperFactory mapperFactory) {
-        this.mapperFactory = mapperFactory;
-    }
+    private final Method method;
 
-    public RowMapperFactory getRowMapperFactory() {
-        return mapperFactory;
-    }
+    private final String jdQL;
 
-    @Override
-    public Object execute(DataAccess dataAccess, Class<?> daoClass, Method method, Object[] args) {
+    private final SQLParam[] annotations;
 
-        SQL sqlCommand = method.getAnnotation(SQL.class);
+    private final RowMapper rowMapper;
 
-        // 将参数放入  Map
+    private final Class<?> returnType;
+
+    private final Modifier modifier;
+
+    public SelectOperation(String jdQL, Class<?> daoClass, Method method, // NL
+            RowMapper rowMapper) {
+
+        this.jdQL = jdQL;
+        this.daoClass = daoClass;
+        this.method = method;
+
+        // 获得参数注释列表
         Annotation[][] parameterAnnotations = method.getParameterAnnotations();
-        Map<String, Object> parameters = new HashMap<String, Object>();
-
+        this.annotations = new SQLParam[parameterAnnotations.length];
         for (int i = 0; i < parameterAnnotations.length; i++) {
-
-            Annotation[] annotations = parameterAnnotations[i];
-            for (Annotation annotation : annotations) {
+            for (Annotation annotation : parameterAnnotations[i]) {
                 if (annotation instanceof SQLParam) {
-                    parameters.put(((SQLParam) annotation).value(), args[i]);
+                    this.annotations[i] = (SQLParam) annotation;
                     continue;
                 }
             }
         }
 
-        // 获得  RowMapper 封装
-        RowMapperDelegate mapperDelegate = new RowMapperDelegate(mapperFactory, // NL
-                daoClass, method);
+        this.rowMapper = rowMapper;
+        this.returnType = method.getReturnType();
+        this.modifier = new Modifier(method);
+    }
+
+    @Override
+    public Object execute(DataAccess dataAccess, Object[] args) {
+
+        // 将参数放入  Map
+        HashMap<String, Object> parameters = new HashMap<String, Object>(args.length);
+        for (int i = 0; i < annotations.length; i++) {
+            SQLParam annotation = annotations[i];
+            if (annotation != null) {
+                parameters.put(annotation.value(), args[i]);
+            }
+        }
 
         // 执行查询
-        List<?> listResult = dataAccess.select(sqlCommand.value(), new Modifier(method), // NL
-                parameters, mapperDelegate);
+        List<?> listResult = dataAccess.select(jdQL, modifier, // NL
+                parameters, rowMapper);
         final int sizeResult = listResult.size();
 
         // 将 Result 转成方法的返回类型
-        Class<?> returnClazz = method.getReturnType();
-
-        if (returnClazz.isAssignableFrom(List.class)) {
+        if (returnType.isAssignableFrom(List.class)) {
 
             // 返回  List 集合
             return listResult;
 
-        } else if (returnClazz.isArray()) {
+        } else if (returnType.isArray()) {
 
             // 返回数组
-            Class<?> componentClazz = returnClazz.getComponentType();
+            Class<?> componentClazz = returnType.getComponentType();
 
             if (componentClazz.isPrimitive()) {
 
                 // 返回 Primitive 类型数组
-                Object array = Array.newInstance(returnClazz.getComponentType(), sizeResult);
+                Object array = Array.newInstance(returnType.getComponentType(), sizeResult);
 
                 int index = 0;
                 for (Object value : listResult) {
@@ -93,7 +108,7 @@ public class SelectOperation implements JdbcOperation {
                 return listResult.toArray();
             }
 
-        } else if (returnClazz == Map.class) {
+        } else if (returnType == Map.class) {
 
             HashMap<Object, Object> map = new HashMap<Object, Object>();
             for (Object value : listResult) {
@@ -102,7 +117,7 @@ public class SelectOperation implements JdbcOperation {
             }
             return map;
 
-        } else if (returnClazz.isAssignableFrom(HashSet.class)) {
+        } else if (returnType.isAssignableFrom(HashSet.class)) {
 
             // 返回  Set 集合
             return new HashSet<Object>(listResult);
@@ -116,12 +131,14 @@ public class SelectOperation implements JdbcOperation {
             } else if (sizeResult == 0) {
 
                 // 返回  0 (Primitive Type) 或者  null.
-                if (returnClazz.isPrimitive()) {
-                    if (returnClazz == boolean.class) {
+                if (returnType.isPrimitive()) {
+                    Class<?> wrapperType = ClassUtils.primitiveToWrapper(returnType);
+                    if (wrapperType == Boolean.class) {
                         return Boolean.FALSE;
+                    } else {
+                        return NumberUtils.convertNumberToTargetClass( // NL
+                                Integer.valueOf(0), wrapperType);
                     }
-                    return NumberUtils.convertNumberToTargetClass( // NL
-                            Integer.valueOf(0), ClassUtils.primitiveToWrapper(returnClazz));
                 }
 
                 return null;

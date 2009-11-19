@@ -162,7 +162,7 @@ public class JadeDaoProcessor implements BeanFactoryPostProcessor, ApplicationCo
             throws FileSystemException {
         FileName fileName = resource.getName();
         String bn = fileName.getBaseName();
-        if (bn.endsWith(".class") && bn.indexOf('$') == -1) {
+        if (bn.endsWith(".class") && (bn.indexOf('$') == -1)) {
             addDAOClass(rootObject, resource);
         }
     }

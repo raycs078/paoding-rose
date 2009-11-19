@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import net.paoding.rose.jade.jadeinterface.Identity;
-import net.paoding.rose.jade.jadeinterface.annotation.SQL;
 import net.paoding.rose.jade.jadeinterface.annotation.SQLParam;
 import net.paoding.rose.jade.jadeinterface.provider.DataAccess;
 import net.paoding.rose.jade.jadeinterface.provider.Modifier;
@@ -17,83 +16,100 @@ import org.apache.commons.lang.ClassUtils;
 import org.springframework.util.NumberUtils;
 
 /**
- * 
+ * 实现 INSERT / UPDATE / DELETE 查询。
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
+ * @author han.liao
  */
 public class UpdateOperation implements JdbcOperation {
 
-    private RowMapperFactory rowMapperFactory;
+    private final Class<?> daoClass;
 
-    public void setRowMapperFactory(RowMapperFactory rowMapperFactory) {
-        this.rowMapperFactory = rowMapperFactory;
-    }
+    private final Method method;
 
-    public RowMapperFactory getRowMapperFactory() {
-        return rowMapperFactory;
+    private final String jdQL;
+
+    private final SQLParam[] annotations;
+
+    private final Class<?> returnType;
+
+    private final Modifier modifier;
+
+    public UpdateOperation(String jdQL, Class<?> daoClass, Method method) {
+
+        this.jdQL = jdQL;
+        this.daoClass = daoClass;
+        this.method = method;
+
+        // 获得参数注释列表
+        Annotation[][] parameterAnnotations = method.getParameterAnnotations();
+        this.annotations = new SQLParam[parameterAnnotations.length];
+        for (int i = 0; i < parameterAnnotations.length; i++) {
+            for (Annotation annotation : parameterAnnotations[i]) {
+                if (annotation instanceof SQLParam) {
+                    this.annotations[i] = (SQLParam) annotation;
+                    continue;
+                }
+            }
+        }
+
+        this.returnType = method.getReturnType();
+        this.modifier = new Modifier(method);
     }
 
     @Override
-    public Object execute(DataAccess dataAccess, Class<?> daoClass, Method method, Object[] args) {
+    public Object execute(DataAccess dataAccess, Object[] args) {
 
         // 将参数放入  Map, 并且检查是否需要批量执行
-        Annotation[][] parameterAnnotations = method.getParameterAnnotations();
-        Map<String, Object> parameters = new HashMap<String, Object>();
+        Map<String, Object> parameters = new HashMap<String, Object>(args.length);
 
         // 批量执行的参数与集合
         SQLParam batchParam = null;
         Collection<?> collection = null;
 
-        for (int i = 0; i < parameterAnnotations.length; i++) {
+        for (int i = 0; i < annotations.length; i++) {
 
             // 检查参数的 Annotation
-            Annotation[] annotations = parameterAnnotations[i];
-            for (Annotation annotation : annotations) {
+            SQLParam annotation = annotations[i];
 
-                // 参数必须用  @SQLParam 标注
-                if (annotation instanceof SQLParam) {
+            // 参数必须用  @SQLParam 标注
+            if (args[i] instanceof Collection<?>) {
 
-                    if (args[i] instanceof Collection<?>) {
-
-                        if (batchParam != null) {
-                            throw new IllegalArgumentException(
-                                    "Too many collection arguments in a batch method");
-                        }
-
-                        // 纪录批量
-                        batchParam = (SQLParam) annotation;
-                        collection = (Collection<?>) args[i];
-
-                    } else {
-                        // 纪录参数
-                        parameters.put(((SQLParam) annotation).value(), args[i]);
-                    }
-
-                    break;
+                if (batchParam != null) {
+                    throw new IllegalArgumentException(daoClass.getName() + "#" + method.getName()
+                            + ": Too many collection arguments in batch method");
                 }
+
+                // 批量的第一个参数必须是集合
+                if (i == 0) {
+                    batchParam = annotation;
+                    collection = (Collection<?>) args[i];
+                } else {
+                    parameters.put(annotation.value(), args[i]);
+                }
+            } else {
+                // 纪录参数
+                parameters.put(annotation.value(), args[i]);
             }
         }
 
         if (batchParam != null) {
             // 批量执行查询
-            return executeBatch(dataAccess, batchParam.value(), collection, method, parameters);
+            return executeBatch(dataAccess, batchParam.value(), collection, parameters);
         } else {
             // 单个执行查询
-            return execute(dataAccess, method, parameters, method.getReturnType());
+            return execute(dataAccess, parameters);
         }
     }
 
     private Object executeBatch(DataAccess dataAccess, String parameterName,
-            Collection<?> collection, Method method, Map<String, Object> parameters) {
+            Collection<?> collection, Map<String, Object> parameters) {
 
-        Class<?> batchReturnClazz = method.getReturnType();
-
+        Class<?> batchReturnClazz = returnType;
         Class<?> returnClazz = batchReturnClazz;
 
         Object returnArray = null;
-
         boolean successful = true;
-
         int updated = 0;
 
         // 转换基本类型
@@ -108,7 +124,7 @@ public class UpdateOperation implements JdbcOperation {
         } else if (batchReturnClazz == Boolean.class) {
             // 返回成功与否
             returnClazz = Boolean.class;
-        } else if (batchReturnClazz == Integer.class || batchReturnClazz == Long.class
+        } else if ((batchReturnClazz == Integer.class) || (batchReturnClazz == Long.class)
                 || Number.class.isAssignableFrom(batchReturnClazz)) {
             // 返回更新纪录数
             returnClazz = Integer.class;
@@ -122,7 +138,7 @@ public class UpdateOperation implements JdbcOperation {
             // 更新执行参数
             parameters.put(parameterName, arg);
 
-            Object value = execute(dataAccess, method, parameters, returnClazz);
+            Object value = execute(dataAccess, parameters);
 
             if (batchReturnClazz.isArray()) {
                 Array.set(returnArray, index, value);
@@ -148,16 +164,14 @@ public class UpdateOperation implements JdbcOperation {
         return null;
     }
 
-    private Object execute(DataAccess dataAccess, Method method, Map<String, Object> parameters,
-            Class<?> returnClazz) {
+    private Object execute(DataAccess dataAccess, Map<String, Object> parameters) {
 
-        SQL sqlCommand = method.getAnnotation(SQL.class);
+        Class<?> returnClazz = returnType;
 
         if (returnClazz == Identity.class) {
 
             // 执行 INSERT 查询
-            Number number = dataAccess.insertReturnId(sqlCommand.value(), new Modifier(method),
-                    parameters);
+            Number number = dataAccess.insertReturnId(jdQL, modifier, parameters);
 
             // 将结果转成方法的返回类型
             return new Identity(number);
@@ -165,7 +179,7 @@ public class UpdateOperation implements JdbcOperation {
         } else {
 
             // 执行 UPDATE / DELETE 查询
-            int updated = dataAccess.update(sqlCommand.value(), new Modifier(method), parameters);
+            int updated = dataAccess.update(jdQL, modifier, parameters);
 
             // 转换基本类型
             if (returnClazz.isPrimitive()) {

@@ -3,11 +3,9 @@ package net.paoding.rose.jade.jadeinterface.impl;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.util.regex.Pattern;
+import java.util.concurrent.ConcurrentHashMap;
 
 import net.paoding.rose.jade.jadeinterface.annotation.Dao;
-import net.paoding.rose.jade.jadeinterface.annotation.SQL;
-import net.paoding.rose.jade.jadeinterface.annotation.SQLType;
 import net.paoding.rose.jade.jadeinterface.provider.DataAccess;
 import net.paoding.rose.jade.jadeinterface.provider.DataAccessProvider;
 
@@ -22,9 +20,11 @@ import org.springframework.util.ClassUtils;
  */
 public class DaoFactoryBean<T> implements FactoryBean, InitializingBean {
 
-    private DataAccessProvider dataAccessProvider;
+    private static JdbcOperationFactory jdbcOperationFactory = new JdbcOperationFactoryImpl();
 
-    private static RowMapperFactory rowMapperFactory = new RowMapperFactoryImpl();
+    private ConcurrentHashMap<Method, JdbcOperation> jdbcOperations = new ConcurrentHashMap<Method, JdbcOperation>();
+
+    private DataAccessProvider dataAccessProvider;
 
     private T dao;
 
@@ -60,6 +60,7 @@ public class DaoFactoryBean<T> implements FactoryBean, InitializingBean {
 
     @SuppressWarnings("unchecked")
     private T createDao(final Class<T> daoClass) {
+
         if (!daoClass.isInterface()) {
             throw new IllegalArgumentException("daoClass should be a interface");
         }
@@ -76,55 +77,27 @@ public class DaoFactoryBean<T> implements FactoryBean, InitializingBean {
                 new Class[] { daoClass }, new InvocationHandler() {
 
                     @Override
+                    public String toString() {
+                        return daoClass.getName() + "@"
+                                + Integer.toHexString(System.identityHashCode(this));
+                    }
+
+                    @Override
                     public Object invoke(Object proxy, Method method, Object[] args)
                             throws Throwable {
 
-                        SQL sql = method.getAnnotation(SQL.class);
-                        if (sql == null) {
-                            // toString
-                            if (method.getName().equals("toString")
-                                    && method.getReturnType() == String.class
-                                    && method.getParameterTypes().length == 0) {
-                                return daoClass.getName() + "@"
-                                        + Integer.toHexString(System.identityHashCode(this));
-                            }
-                            if (method.getDeclaringClass() == Object.class) {
-                                return method.invoke(this, args);
-                            } else {
-                                throw new UnsupportedOperationException(
-                                        "not a sql command method: " + method.getName());
-                            }
+                        if (method.getDeclaringClass() == Object.class) {
+                            return method.invoke(this, args);
                         }
 
-                        JdbcOperation operation = getJdbcOperation(sql);
-                        return operation.execute(dataAccess, daoClass, method, args);
+                        JdbcOperation operation = jdbcOperations.get(method);
+                        if (operation == null) {
+                            operation = jdbcOperationFactory.getJdbcOperation(daoClass, method);
+                            jdbcOperations.putIfAbsent(method, operation);
+                        }
+
+                        return operation.execute(dataAccess, args);
                     }
                 });
-    }
-
-    protected static Pattern SELECT = Pattern.compile("^\\s*SELECT", Pattern.CASE_INSENSITIVE);
-
-    protected JdbcOperation getJdbcOperation(SQL sqlCommand) {
-        SQLType command = sqlCommand.type();
-        if (command == SQLType.AUTO_DETECT) {
-            String sql = sqlCommand.value();
-            // 用正则表达式匹配  SELECT 语句
-            if (SELECT.matcher(sql).find()) {
-                command = SQLType.SELECT;
-            } else {
-                command = SQLType.UPDATE;
-            }
-        }
-        if (SQLType.SELECT == command) {
-            SelectOperation select = new SelectOperation();
-            select.setRowMapperFactory(rowMapperFactory);
-            return select;
-        } else if (SQLType.UPDATE == command) {
-            UpdateOperation update = new UpdateOperation();
-            update.setRowMapperFactory(rowMapperFactory);
-            return update;
-        }
-        // 抛出检查异常
-        throw new AssertionError("unknown command");
     }
 }

@@ -29,7 +29,7 @@ public class DAOScanner {
     private static SoftReference<DAOScanner> softReference;
 
     public synchronized static DAOScanner getRoseScanner() {
-        if (softReference == null || softReference.get() == null) {
+        if ((softReference == null) || (softReference.get() == null)) {
             DAOScanner roseScanner = new DAOScanner();
             softReference = new SoftReference<DAOScanner>(roseScanner);
         }

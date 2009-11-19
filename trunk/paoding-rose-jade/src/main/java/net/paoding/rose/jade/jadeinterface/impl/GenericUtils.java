@@ -3,11 +3,8 @@ package net.paoding.rose.jade.jadeinterface.impl;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * 实现工具类，检查参数化类型的参数类型。
@@ -16,6 +13,15 @@ import java.util.Set;
  */
 public class GenericUtils {
 
+    private static final Class<?>[] EMPTY_CLASSES = new Class<?>[0];
+
+    /**
+     * 从参数, 返回值, 基类的: Generic 类型信息获取传入的实际类信息。
+     * 
+     * @param genericType - Generic 类型信息
+     * 
+     * @return 实际类信息
+     */
     public static Class<?>[] getActualClass(Type genericType) {
 
         if (genericType instanceof ParameterizedType) {
@@ -36,24 +42,13 @@ public class GenericUtils {
             return argClasses;
         }
 
-        return new Class<?>[0];
+        return EMPTY_CLASSES;
     }
-
-    public interface Test extends List<Boolean> {
-
-        public List<Integer> toList();
-
-        public Set<Integer> toSet();
-
-        public Collection<Integer> toCollection();
-
-        public Map<Long, String> toMap();
-    };
 
     // 测试代码。
     public static void main(String... args) {
 
-        Class<?> clazz = Test.class;
+        Class<?> clazz = ArrayList.class;
 
         for (Method method : clazz.getMethods()) {
 
