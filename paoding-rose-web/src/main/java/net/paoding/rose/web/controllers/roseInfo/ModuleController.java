@@ -19,8 +19,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import net.paoding.rose.web.annotation.rest.Get;
-import net.paoding.rose.web.impl.mapping.Mapping;
-import net.paoding.rose.web.impl.module.ControllerInfo;
+import net.paoding.rose.web.impl.module.ControllerRef;
 import net.paoding.rose.web.impl.module.Module;
 import net.paoding.rose.web.impl.thread.tree.Rose;
 
@@ -44,15 +43,15 @@ public class ModuleController implements BaseController {
             sb.append("<tr><td>mappingPath</td><td>").append(module.getMappingPath()).append(
                     "</td></tr>");
             // relativePackagePath
-            sb.append("<tr><td>relativePackagePath</td><td>").append(
-                    module.getRelativePackagePath()).append("</td></tr>");
+            sb.append("<tr><td>relativePackagePath</td><td>").append(module.getModulePath())
+                    .append("</td></tr>");
             // url
             sb.append("<tr valign=\"top\"><td>url</td><td>").append(module.getUrl()).append(
                     "</td></tr>");
             sb.append("<tr valign=\"top\"><td>controllers</td><td>");
-            for (Mapping<ControllerInfo> info : module.getControllerMappings()) {
-                sb.append("'").append(info.getPath()).append("'=").append(
-                        info.getTarget().getControllerClass().getName()).append(";<br>");
+            for (ControllerRef controller : module.getControllers()) {
+                sb.append("'").append(Arrays.toString(controller.getMappingPaths())).append("'=")
+                        .append(controller.getControllerClass().getName()).append(";<br>");
             }
             sb.append("</td></tr>");
             // resolvers
@@ -67,12 +66,7 @@ public class ModuleController implements BaseController {
             // errorhandler
             sb.append("<tr><td>errorHanlder</td><td>").append(
                     module.getErrorHandler() == null ? "" : module.getErrorHandler()).append(
-                    "</td></tr valign=\"top\">");
-            // defaultHanlder
-            Mapping<ControllerInfo> defaultController = module.getDefaultController();
-            sb.append("<tr valign=\"top\"><td>defaultController</td><td>").append(
-                    defaultController == null ? "" : defaultController.getTarget()
-                            .getControllerClass().getName()).append("</td></tr>");
+                    "</td></tr>");
             // end
             sb.append("</table></div>");
         }

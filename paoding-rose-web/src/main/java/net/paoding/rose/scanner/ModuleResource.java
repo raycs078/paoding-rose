@@ -28,14 +28,14 @@ import java.util.Set;
  * 
  */
 
-public class ModuleInfo {
+public class ModuleResource {
 
     private String mappingPath;
 
     private URL moduleUrl;
 
     // 相对于controllers的地址，以'/'分隔，空串或以'/'开始
-    private String relativePackagePath;
+    private String modulePath;
 
     private List<URL> contextResources = new LinkedList<URL>();
 
@@ -43,7 +43,7 @@ public class ModuleInfo {
 
     private List<Class<?>> moduleClasses = new LinkedList<Class<?>>();
 
-    private ModuleInfo parent;
+    private ModuleResource parent;
 
     public URL getModuleUrl() {
         return moduleUrl;
@@ -53,25 +53,25 @@ public class ModuleInfo {
         this.moduleUrl = moduleUrl;
     }
 
-    public void setRelativePackagePath(String relativePackagePath) {
-        if (".".equals(relativePackagePath)) {
-            relativePackagePath = "";
+    public void setRelativePackagePath(String modulePath) {
+        if (".".equals(modulePath)) {
+            modulePath = "";
         }
-        if (relativePackagePath.length() > 0 && !relativePackagePath.startsWith("/")) {
-            relativePackagePath = "/" + relativePackagePath;
+        if (modulePath.length() > 0 && !modulePath.startsWith("/")) {
+            modulePath = "/" + modulePath;
         }
-        this.relativePackagePath = relativePackagePath;
+        this.modulePath = modulePath;
     }
 
-    public String getRelativePackagePath() {
-        return relativePackagePath;
+    public String getModulePath() {
+        return modulePath;
     }
 
-    public ModuleInfo getParent() {
+    public ModuleResource getParent() {
         return parent;
     }
 
-    public void setParent(ModuleInfo parent) {
+    public void setParent(ModuleResource parent) {
         this.parent = parent;
     }
 

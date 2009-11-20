@@ -74,8 +74,8 @@
 						<manifestEntries>
 							<Rose>controllers, applicationContext, messages</Rose>
 							<Implementation-Title>Paoding Rose</Implementation-Title>
-							<Implementation-Version>0.9.4-20091117-developing</Implementation-Version>
-							<Rose-Version>0.9.4-200901117-developing</Rose-Version>
+							<Implementation-Version>0.9.5-20091121</Implementation-Version>
+							<Rose-Version>0.9.5-200901121</Rose-Version>
 						</manifestEntries>
 					</archive>
 				</configuration>

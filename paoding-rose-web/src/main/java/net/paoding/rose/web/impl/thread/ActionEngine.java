@@ -34,7 +34,7 @@ import net.paoding.rose.web.annotation.HttpFeatures;
 import net.paoding.rose.web.annotation.Intercepted;
 import net.paoding.rose.web.annotation.Return;
 import net.paoding.rose.web.impl.module.Module;
-import net.paoding.rose.web.impl.module.NestedControllerInterceptorWrapper;
+import net.paoding.rose.web.impl.module.NestedControllerInterceptor;
 import net.paoding.rose.web.impl.thread.tree.Rose;
 import net.paoding.rose.web.impl.validation.ParameterBindingResult;
 import net.paoding.rose.web.paramresolver.MethodParameterResolver;
@@ -63,7 +63,7 @@ public final class ActionEngine implements Engine {
 
     private final Method method;
 
-    private final NestedControllerInterceptorWrapper[] interceptors;
+    private final NestedControllerInterceptor[] interceptors;
 
     private final NamedValidator[] validators;
 
@@ -88,8 +88,17 @@ public final class ActionEngine implements Engine {
         }
     }
 
-    public NestedControllerInterceptorWrapper[] getRegisteredInterceptors() {
+    public NestedControllerInterceptor[] getRegisteredInterceptors() {
         return interceptors;
+    }
+    
+    
+    public Class<?> getControllerClass() {
+        return controllerClass;
+    }
+    
+    public Object getController() {
+        return controller;
     }
 
     public Method getMethod() {
@@ -130,11 +139,11 @@ public final class ActionEngine implements Engine {
         return registeredValidators;
     }
 
-    private NestedControllerInterceptorWrapper[] compileInterceptors() {
-        List<NestedControllerInterceptorWrapper> interceptors = module.getInterceptors();
-        List<NestedControllerInterceptorWrapper> registeredInterceptors = new ArrayList<NestedControllerInterceptorWrapper>(
+    private NestedControllerInterceptor[] compileInterceptors() {
+        List<NestedControllerInterceptor> interceptors = module.getInterceptors();
+        List<NestedControllerInterceptor> registeredInterceptors = new ArrayList<NestedControllerInterceptor>(
                 interceptors.size());
-        for (NestedControllerInterceptorWrapper interceptor : interceptors) {
+        for (NestedControllerInterceptor interceptor : interceptors) {
             // 确定本拦截器的名字
             String name = interceptor.getName();
             String nameForUser = name;
@@ -164,27 +173,21 @@ public final class ActionEngine implements Engine {
         }
         //
         return registeredInterceptors
-                .toArray(new NestedControllerInterceptorWrapper[registeredInterceptors.size()]);
+                .toArray(new NestedControllerInterceptor[registeredInterceptors.size()]);
     }
 
     @Override
-    public Object invoke(Rose rose, MatchResult<? extends Engine> mr, Object instruction,
-            EngineChain chain) throws Throwable {
+    public Object invoke(Rose rose, MatchResult mr, Object instruction) throws Throwable {
         try {
-            return innerInvoke(rose, mr, instruction, chain);
+            return innerInvoke(rose, mr, instruction);
         } catch (Throwable local) {
             throw createException(rose, local);
         }
     }
 
-    public Object innerInvoke(Rose rose, MatchResult<? extends Engine> mr, Object instruction,
-            EngineChain chain) throws Throwable {
+    public Object innerInvoke(Rose rose, MatchResult mr, Object instruction) throws Throwable {
         Invocation inv = rose.getInvocation();
         inv.getRequestPath().setActionPath(mr.getMatchedString());
-        ((InvocationBean) inv).setMethod(method);
-        ((InvocationBean) inv).setMethodParameterNames(this.methodParameterResolver
-                .getParameterNames());
-
         // applies http features before the resolvers
         applyHttpFeatures(inv);
 
@@ -226,13 +229,13 @@ public final class ActionEngine implements Engine {
         boolean broken = false;
         boolean[] bitSt = new boolean[interceptors.length];
         for (int i = 0; i < interceptors.length; i++) {
-            final NestedControllerInterceptorWrapper interceptor = interceptors[i];
+            final NestedControllerInterceptor interceptor = interceptors[i];
             if (!interceptor.isForDispatcher(inv.getRequestPath().getDispatcher())) {
                 continue;
             }
 
             // returned by before method
-            chain.addAfterCompletion(interceptor);
+            rose.addAfterCompletion(interceptor);
             instruction = interceptor.before(inv);
             bitSt[i] = true;
             if (logger.isDebugEnabled()) {

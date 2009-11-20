@@ -33,6 +33,7 @@ import net.paoding.rose.web.InvocationUtils;
 import net.paoding.rose.web.RequestPath;
 import net.paoding.rose.web.impl.thread.tree.Rose;
 import net.paoding.rose.web.instruction.InstructionExecutor;
+import net.paoding.rose.web.instruction.InstructionExecutorImpl;
 import net.paoding.rose.web.var.FlashImpl;
 
 import org.apache.commons.logging.Log;
@@ -42,7 +43,7 @@ import org.apache.commons.logging.LogFactory;
  * {@link WebEngine}从{@link RoseFilter}接收web请求，并按照Rose规则进行处理.
  * <p>
  * {@link WebEngine}会判断该web请求是否是本{@link WebEngine}
- * 应该处理的，如果是进行后续的委派和处理，如果不是则{@link #match(InvocationBean)}返回false给上层.
+ * 应该处理的，如果是进行后续的委派和处理，如果不是则{@link #matches(InvocationBean)}返回false给上层.
  * <p>
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
@@ -54,7 +55,7 @@ public class WebEngine implements Engine, AfterCompletion {
     protected final Log logger = LogFactory.getLog(getClass());
 
     /** 由它最终负责执行模块返回给Rose的指令，进行页面渲染等 */
-    protected InstructionExecutor instructionExecutor;
+    protected InstructionExecutor instructionExecutor = new InstructionExecutorImpl();
 
     // ------------------------------------------------------------
 
@@ -68,10 +69,9 @@ public class WebEngine implements Engine, AfterCompletion {
      * @throws NullPointerException 如果所传入的模块集合为null时
      */
     public WebEngine(InstructionExecutor instructionExecutor) {
-        if (instructionExecutor == null) {
-            throw new NullPointerException("instructionExecutor");
+        if (instructionExecutor != null) {
+            this.instructionExecutor = instructionExecutor;
         }
-        this.instructionExecutor = instructionExecutor;
     }
 
     // ------------------------------------------------------------
@@ -87,10 +87,9 @@ public class WebEngine implements Engine, AfterCompletion {
      */
 
     @Override
-    public Object invoke(Rose rose, MatchResult<? extends Engine> mr, Object instruction,
-            EngineChain chain) throws Throwable {
+    public Object invoke(Rose rose, MatchResult mr, Object instruction) throws Throwable {
 
-        chain.addAfterCompletion(this);
+        rose.addAfterCompletion(this);
         Invocation inv = rose.getInvocation();
         //
         final RequestPath requestPath = inv.getRequestPath();
@@ -108,7 +107,7 @@ public class WebEngine implements Engine, AfterCompletion {
         inv.addModel("ctxpath", requestPath.getCtxpath());
 
         // instruction是控制器action方法的返回结果或其对应的Instruction对象(也可能是拦截器、错误处理器返回的)
-        instruction = chain.invokeNext(rose, instruction);
+        instruction = rose.invokeNext(rose, instruction);
 
         // 写flash消息到Cookie (被include的请求不会有功能)
         if (!requestPath.isIncludeRequest()) {

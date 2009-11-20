@@ -29,10 +29,6 @@ import net.paoding.rose.web.InvocationUtils;
 import net.paoding.rose.web.RequestPath;
 import net.paoding.rose.web.annotation.Param;
 import net.paoding.rose.web.annotation.ParamConf;
-import net.paoding.rose.web.impl.context.ResourceXmlWebApplicationContext;
-import net.paoding.rose.web.impl.module.ControllerInfo;
-import net.paoding.rose.web.impl.module.ModuleBean;
-import net.paoding.rose.web.impl.thread.ControllerEngine;
 import net.paoding.rose.web.impl.thread.InvocationBean;
 import net.paoding.rose.web.impl.validation.ParameterBindingResult;
 import net.paoding.rose.web.paramresolver.MethodParameterResolver;
@@ -70,16 +66,12 @@ public class MethodParameterResolverTest extends TestCase {
 
     MultipartFile file2;
 
-    private ModuleBean module;
-
     @Override
     protected void setUp() throws Exception {
         servletcontext = new MockServletContext();
         request = new MockHttpServletRequest(servletcontext);
         request.setMethod("GET");
         response = new MockHttpServletResponse();
-        ResourceXmlWebApplicationContext ctx = new ResourceXmlWebApplicationContext();
-        module = new ModuleBean(null, null, "", "", ctx);
         inv = new InvocationBean(request, response, new RequestPath(request));
         InvocationUtils.bindRequestToCurrentThread(request);
         InvocationUtils.bindInvocationToRequest(inv, new HttpServletRequestWrapper(request));
@@ -806,12 +798,13 @@ public class MethodParameterResolverTest extends TestCase {
         Method method = findMethod(methodName);
         assertNotNull("not found method named: " + methodName, method);
 
-        ControllerEngine controllerEngine = new ControllerEngine(module, "", new ControllerInfo(
-                MockController.class, "mock", new MockController()));
+        //        ControllerEngine controllerEngine = new ControllerEngine(module, "/mock", new ControllerRef(
+        //                new String[] { "/mock" }, "mock", new MockController(), MockController.class,
+        //                ReqMethod.ALL.parse()));
 
-        inv.setController(controllerEngine.getController());
-
-        inv.setMethod(method);
+        //        inv.setController(controllerEngine.getController());
+        //
+        //        inv.setMethod(method);
 
         ParameterNameDiscovererImpl parameterNameDiscoverer = new ParameterNameDiscovererImpl();
         ResolverFactoryImpl resolverFactory = new ResolverFactoryImpl();

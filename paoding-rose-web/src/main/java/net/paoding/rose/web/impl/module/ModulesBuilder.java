@@ -28,7 +28,7 @@ import java.util.Map;
 import javax.annotation.Resource;
 
 import net.paoding.rose.RoseConstants;
-import net.paoding.rose.scanner.ModuleInfo;
+import net.paoding.rose.scanner.ModuleResource;
 import net.paoding.rose.util.SpringUtils;
 import net.paoding.rose.web.ControllerErrorHandler;
 import net.paoding.rose.web.ControllerInterceptor;
@@ -37,7 +37,6 @@ import net.paoding.rose.web.annotation.Ignored;
 import net.paoding.rose.web.annotation.Interceptor;
 import net.paoding.rose.web.annotation.NotForSubModules;
 import net.paoding.rose.web.annotation.ReqMapping;
-import net.paoding.rose.web.annotation.ReqMethod;
 import net.paoding.rose.web.impl.context.ContextLoader;
 import net.paoding.rose.web.paramresolver.ParamResolver;
 
@@ -50,14 +49,11 @@ import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.beans.factory.annotation.AnnotatedGenericBeanDefinition;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
-import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ClassUtils;
 import org.springframework.validation.Validator;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.XmlWebApplicationContext;
-import org.springframework.web.multipart.MultipartResolver;
-import org.springframework.web.multipart.commons.CommonsMultipartResolver;
 
 /**
  * 根据输入的module类信息，构造出具体的Module结构出来
@@ -68,19 +64,19 @@ public class ModulesBuilder {
 
     private Log logger = LogFactory.getLog(getClass());
 
-    public List<Module> build(WebApplicationContext rootContext, List<ModuleInfo> moduleInfos)
+    public List<Module> build(WebApplicationContext rootContext, List<ModuleResource> moduleInfos)
             throws Exception {
         List<Module> modules = new ArrayList<Module>(moduleInfos.size());
-        Map<ModuleInfo, Module> moduleMap = new HashMap<ModuleInfo, Module>();
-        for (ModuleInfo moduleInfo : moduleInfos) {
-            Module parentModule = moduleInfo.getParent() == null ? null : moduleMap.get(moduleInfo
+        Map<ModuleResource, Module> moduleMap = new HashMap<ModuleResource, Module>();
+        for (ModuleResource resource : moduleInfos) {
+            Module parentModule = resource.getParent() == null ? null : moduleMap.get(resource
                     .getParent());
             WebApplicationContext parentContext = (parentModule == null) ? rootContext
                     : parentModule.getApplicationContext();
-            String moduleMappingPath = moduleInfo.getMappingPath();
+            String moduleMappingPath = resource.getMappingPath();
             final String contextNamespace = "module-" + moduleMappingPath;
             final XmlWebApplicationContext context = createModuleContext(// NL
-                    parentContext, contextNamespace, moduleInfo.getContextResources(), moduleInfo
+                    parentContext, contextNamespace, resource.getContextResources(), resource
                             .getMessageBasenames());
             final String contextAttrKey = WebApplicationContext.class.getName() + "."
                     + contextNamespace;
@@ -88,16 +84,16 @@ public class ModulesBuilder {
                 context.getServletContext().setAttribute(contextAttrKey, context);
             }
             // 创建module对象
-            ModuleBean module = new ModuleBean(parentModule, moduleInfo.getModuleUrl(),
-                    moduleMappingPath, moduleInfo.getRelativePackagePath(), context);
-            moduleMap.put(moduleInfo, module);
+            ModuleImpl module = new ModuleImpl(parentModule, resource.getModuleUrl(),
+                    moduleMappingPath, resource.getModulePath(), context);
+            moduleMap.put(resource, module);
 
             // 扫描找到的类...定义到applicationContext
-            registerBeanDefinitions(context, moduleInfo.getModuleClasses());
+            registerBeanDefinitions(context, resource.getModuleClasses());
 
             // 从Spring应用环境中找出全局resolver, interceptors, errorHanlder
             List<ParamResolver> customerResolvers = findContextResolvers(context);
-            List<NestedControllerInterceptorWrapper> interceptors = findContextInterceptors(context);
+            List<NestedControllerInterceptor> interceptors = findContextInterceptors(context);
             List<NamedValidator> validators = findContextValidators(context);
             ControllerErrorHandler errorHandler = getContextErrorHandler(context);
 
@@ -111,7 +107,7 @@ public class ModulesBuilder {
             }
 
             // 将拦截器设置到module中
-            for (NestedControllerInterceptorWrapper interceptor : interceptors) {
+            for (NestedControllerInterceptor interceptor : interceptors) {
                 module.addControllerInterceptor(interceptor);
             }
             if (logger.isDebugEnabled()) {
@@ -141,9 +137,6 @@ public class ModulesBuilder {
                 }
             }
 
-            // multipart resolver
-            module.setMultipartResolver(initMultipartResolver(context));
-
             // controllers
             final ListableBeanFactory beanFactory = context.getBeanFactory();
             for (String beanName : beanFactory.getBeanDefinitionNames()) {
@@ -158,7 +151,7 @@ public class ModulesBuilder {
     }
 
     private boolean checkController(final XmlWebApplicationContext context, String beanName,
-            ModuleBean module) throws IllegalAccessException {
+            ModuleImpl module) throws IllegalAccessException {
         AbstractBeanDefinition beanDefinition = (AbstractBeanDefinition) context.getBeanFactory()
                 .getBeanDefinition(beanName);
         String beanClassName = beanDefinition.getBeanClassName();
@@ -178,7 +171,6 @@ public class ModulesBuilder {
             return false;
         }
         String[] controllerPaths = null;
-        ReqMethod[] methods;
         if (!beanDefinition.hasBeanClass()) {
             try {
                 beanDefinition.resolveBeanClass(Thread.currentThread().getContextClassLoader());
@@ -192,10 +184,7 @@ public class ModulesBuilder {
                 .getShortNameAsProperty(clazz), controllerSuffix);
         ReqMapping reqMappingAnnotation = clazz.getAnnotation(ReqMapping.class);
         if (reqMappingAnnotation != null) {
-            methods = reqMappingAnnotation.methods();
             controllerPaths = reqMappingAnnotation.path();
-        } else {
-            methods = new ReqMethod[] { ReqMethod.ALL };
         }
         if (controllerPaths != null) {
             // 如果controllerPaths.length==0，表示没有任何path可以映射到这个controller了
@@ -214,12 +203,8 @@ public class ModulesBuilder {
         // 这个Controller是否已经在Context中配置了?
         // 如果使用Context配置，就不需要在这里实例化
         Object controller = context.getBean(beanName);
-        for (int i = 0; i < controllerPaths.length; i++) {
-            if (methods.length > 0) {
-                module.addController(//
-                        controllerPaths[i], methods, clazz, controllerName, controller);
-            }
-        }
+        module.addController(//
+                controllerPaths, clazz, controllerName, controller);
         if (Proxy.isProxyClass(controller.getClass())) {
             if (logger.isDebugEnabled()) {
                 logger.debug("module '" + module.getMappingPath() + "': add controller "
@@ -340,11 +325,11 @@ public class ModulesBuilder {
         return resolvers;
     }
 
-    private List<NestedControllerInterceptorWrapper> findContextInterceptors(
+    private List<NestedControllerInterceptor> findContextInterceptors(
             XmlWebApplicationContext context) {
         String[] interceptorNames = SpringUtils.getBeanNames(context.getBeanFactory(),
                 ControllerInterceptor.class);
-        ArrayList<NestedControllerInterceptorWrapper> globalInterceptors = new ArrayList<NestedControllerInterceptorWrapper>(
+        ArrayList<NestedControllerInterceptor> globalInterceptors = new ArrayList<NestedControllerInterceptor>(
                 interceptorNames.length);
         for (String beanName : interceptorNames) {
             ControllerInterceptor interceptor = (ControllerInterceptor) context.getBean(beanName);
@@ -362,7 +347,7 @@ public class ModulesBuilder {
                 }
                 continue;
             }
-            NestedControllerInterceptorWrapper.Builder builder = new NestedControllerInterceptorWrapper.Builder(
+            NestedControllerInterceptor.Builder builder = new NestedControllerInterceptor.Builder(
                     interceptor);
             Interceptor annotation = userClass.getAnnotation(Interceptor.class);
             if (annotation != null) {
@@ -373,7 +358,7 @@ public class ModulesBuilder {
             } else {
                 builder.name(asShortPropertyName(userClass.getSimpleName(), "Interceptor"));
             }
-            NestedControllerInterceptorWrapper wrapper = builder.build();
+            NestedControllerInterceptor wrapper = builder.build();
             globalInterceptors.add(wrapper);
             if (logger.isDebugEnabled()) {
                 logger.debug("context interceptor[" + interceptor.getPriority() + "]: " // \r\n
@@ -418,23 +403,6 @@ public class ModulesBuilder {
             }
         }
         return globalValidators;
-    }
-
-    private MultipartResolver initMultipartResolver(ApplicationContext context) {
-        MultipartResolver multipartResolver = (MultipartResolver) SpringUtils.getBean(context,
-                MultipartResolver.class);
-        if (multipartResolver != null) {
-            if (logger.isDebugEnabled()) {
-                logger.debug("Using MultipartResolver [" + multipartResolver + "]");
-            }
-        } else {
-            multipartResolver = new CommonsMultipartResolver();
-            if (logger.isDebugEnabled()) {
-                logger.debug("No found MultipartResolver in context, "
-                        + "Using MultipartResolver by default [" + multipartResolver + "]");
-            }
-        }
-        return multipartResolver;
     }
 
     static String asShortPropertyName(String beanName, String suffixToRemove) {

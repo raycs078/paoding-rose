@@ -18,7 +18,7 @@ package net.paoding.rose.web.impl.thread;
 import java.lang.reflect.Proxy;
 
 import net.paoding.rose.web.Invocation;
-import net.paoding.rose.web.impl.module.ControllerInfo;
+import net.paoding.rose.web.impl.module.ControllerRef;
 import net.paoding.rose.web.impl.module.Module;
 import net.paoding.rose.web.impl.thread.tree.Rose;
 
@@ -44,12 +44,12 @@ public class ControllerEngine implements Engine {
 
     private final String viewPrefix;
 
-    public ControllerEngine(Module module, String controllerPath, ControllerInfo controller) {
+    public ControllerEngine(Module module, String controllerPath, ControllerRef controllerRef) {
         this.module = module;
         this.controllerPath = controllerPath;
-        this.controller = controller.getControllerObject();
-        this.controllerClass = controller.getControllerClass();
-        this.viewPrefix = controller.getControllerName() + "-";
+        this.controller = controllerRef.getControllerObject();
+        this.controllerClass = controllerRef.getControllerClass();
+        this.viewPrefix = controllerRef.getControllerName() + "-";
         this.proxiedController = Proxy.isProxyClass(this.controller.getClass());
         if (proxiedController && logger.isDebugEnabled()) {
             logger.debug("it's a proxied controller: " + controllerClass.getName());
@@ -81,15 +81,13 @@ public class ControllerEngine implements Engine {
     }
 
     @Override
-    public Object invoke(Rose rose, MatchResult<? extends Engine> mr, Object instruction,
-            EngineChain chain) throws Throwable {
+    public Object invoke(Rose rose, MatchResult mr, Object instruction) throws Throwable {
         Invocation inv = rose.getInvocation();
         inv.getRequestPath().setControllerPath(mr.getMatchedString());
-        ((InvocationBean) inv).setController(controller);
         for (String matchResultParam : mr.getParameterNames()) {
             inv.addModel(matchResultParam, mr.getParameter(matchResultParam));
         }
-        return chain.invokeNext(rose, instruction);
+        return rose.invokeNext(rose, instruction);
     }
 
     public void destroy() {

@@ -19,8 +19,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
+import net.paoding.rose.web.annotation.ReqMethod;
 import net.paoding.rose.web.impl.mapping.Mapping;
-import net.paoding.rose.web.impl.mapping.MappingNode;
+import net.paoding.rose.web.impl.resource.WebResource;
 
 /**
  * 控制器的action path参数映射结果
@@ -28,7 +29,7 @@ import net.paoding.rose.web.impl.mapping.MappingNode;
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
-public class MatchResult<T> {
+public class MatchResult {
 
     private String matchedString;
 
@@ -36,66 +37,31 @@ public class MatchResult<T> {
 
     private ArrayList<String> names = new ArrayList<String>(2);
 
-    private Mapping<T> mapping;
+    private Mapping mapping;
 
-    private MappingNode node;
-
-    private boolean requestMethodSupported = true;
+    private WebResource resource;
 
     protected MatchResult() {
     }
 
-    public MatchResult(String matchedString, Mapping<T> mapping) {
+    public MatchResult(String matchedString, Mapping mapping) {
         this.matchedString = matchedString;
         this.mapping = mapping;
     }
 
-    public MappingNode getNode() {
-        return node;
+    public void setResource(WebResource resource) {
+        this.resource = resource;
     }
 
-    public void setNode(MappingNode node) {
-        this.node = node;
+    public WebResource getResource() {
+        return resource;
     }
 
-    public boolean isLeaf() {
-        return node.leftMostChild == null;
-    }
-
-    public static <T> MatchResult<T> changeMapping(MatchResult<?> src, Mapping<T> newMapping) {
-        if (src == null) {
-            return null;
-        }
-        MatchResult<T> ret = new MatchResult<T>(src.getMatchedString(), newMapping);
-        ret.node = src.node;
-        ret.names = src.names;
-        ret.properties = src.properties;
-        return ret;
-    }
-
-    public static <T> MatchResult<T> unmodifiable(String matchedString, Mapping<T> mapping) {
-        return new MatchResult<T>(matchedString, mapping) {
-
-            @Override
-            public void setMapping(Mapping<T> mapping) {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public void setMatchedString(String matchedString) {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public void putParameter(String name, String value) {
-                throw new UnsupportedOperationException();
-            }
-        };
-
+    public boolean isMethodAllowed(ReqMethod method) {
+        return resource.isMethodAllowed(method);
     }
 
     /**
-     * 
      * 
      * @param name
      * @param value
@@ -133,20 +99,38 @@ public class MatchResult<T> {
         return matchedString;
     }
 
-    public void setMapping(Mapping<T> mapping) {
+    public void setMapping(Mapping mapping) {
         this.mapping = mapping;
     }
 
-    public Mapping<T> getMapping() {
+    public Mapping getMapping() {
         return mapping;
     }
 
-    public void setRequestMethodSupported(boolean requestMethodSupported) {
-        this.requestMethodSupported = requestMethodSupported;
-    }
+    public static MatchResult unmodifiable(String matchedString, Mapping mapping) {
+        return new MatchResult(matchedString, mapping) {
 
-    public boolean isRequestMethodSupported() {
-        return requestMethodSupported;
+            @Override
+            public void setMapping(Mapping mapping) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public void setResource(WebResource resource) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public void setMatchedString(String matchedString) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public void putParameter(String name, String value) {
+                throw new UnsupportedOperationException();
+            }
+        };
+
     }
 
 }

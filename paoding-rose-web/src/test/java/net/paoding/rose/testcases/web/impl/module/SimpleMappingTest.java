@@ -1,45 +1,40 @@
 package net.paoding.rose.testcases.web.impl.module;
 
 import junit.framework.TestCase;
-import net.paoding.rose.web.annotation.ReqMethod;
 import net.paoding.rose.web.impl.mapping.MappingImpl;
 import net.paoding.rose.web.impl.mapping.MatchMode;
 
 public class SimpleMappingTest extends TestCase {
 
-	public void testStartsWith() {
-		MappingImpl<?> mapping = new MappingImpl<Object>("/user",
-				MatchMode.PATH_STARTS_WITH,
-				new ReqMethod[] { ReqMethod.ALL }, new Object());
-		// expected: not null
-		assertNotNull(mapping.match("/user", "GET"));
-		assertNotNull(mapping.match("/user", "POST"));
-		assertNotNull(mapping.match("/user/", "GET"));
-		assertNotNull(mapping.match("/user/", "POST"));
-		assertNotNull(mapping.match("/user/1", "GET"));
-		assertNotNull(mapping.match("/user/1", "POST"));
+    public void testStartsWith() {
+        MappingImpl mapping = new MappingImpl("/user", MatchMode.PATH_STARTS_WITH);
+        // expected: not null
+        assertNotNull(mapping.match("/user"));
+        assertNotNull(mapping.match("/user"));
+        assertNotNull(mapping.match("/user/"));
+        assertNotNull(mapping.match("/user/"));
+        assertNotNull(mapping.match("/user/1"));
+        assertNotNull(mapping.match("/user/1"));
 
-		// expected: null
-		assertNull(mapping.match("/user_001", "GET"));
-		assertNull(mapping.match("/topic", "GET"));
-		assertNull(mapping.match("", "GET"));
-	}
+        // expected: null
+        assertNull(mapping.match("/user_001"));
+        assertNull(mapping.match("/topic"));
+        assertNull(mapping.match(""));
+    }
 
-	public void testEquals() {
-		MappingImpl<?> mapping = new MappingImpl<Object>("/user",
-				MatchMode.PATH_EQUALS, new ReqMethod[] { ReqMethod.ALL },
-				new Object());
-		// expected: not null
-		assertNotNull(mapping.match("/user", "GET"));
-		assertNotNull(mapping.match("/user", "POST"));
-		assertNotNull(mapping.match("/user/", "GET"));
-		assertNotNull(mapping.match("/user/", "POST"));
+    public void testEquals() {
+        MappingImpl mapping = new MappingImpl("/user", MatchMode.PATH_EQUALS);
+        // expected: not null
+        assertNotNull(mapping.match("/user"));
+        assertNotNull(mapping.match("/user"));
+        assertNotNull(mapping.match("/user/"));
+        assertNotNull(mapping.match("/user/"));
 
-		// expected: null
-		assertNull(mapping.match("/user/1", "GET"));
-		assertNull(mapping.match("/user/1", "POST"));
-		assertNull(mapping.match("/user_001", "GET"));
-		assertNull(mapping.match("/topic", "GET")); // /topic.len = /user.len + 1
-		assertNull(mapping.match("", "GET"));
-	}
+        // expected: null
+        assertNull(mapping.match("/user/1"));
+        assertNull(mapping.match("/user/1"));
+        assertNull(mapping.match("/user_001"));
+        assertNull(mapping.match("/topic")); // /topic.len = /user.len + 1
+        assertNull(mapping.match(""));
+    }
 }
