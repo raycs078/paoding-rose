@@ -114,7 +114,7 @@ public class InvocationLocalImpl implements InvocationLocal {
     public Class<?> getControllerClass() {
         return required().getControllerClass();
     }
-    
+
     @Override
     public void addFlash(String name, String msg) {
         required().addFlash(name, msg);
@@ -185,15 +185,6 @@ public class InvocationLocalImpl implements InvocationLocal {
         return required().getServletContext();
     }
 
-    //    @Override
-    //    public boolean isDestroyed() {
-    //        Invocation inv = getCurrent(false);
-    //        if (inv != null) {
-    //            return inv.isDestroyed();
-    //        }
-    //        return true;
-    //    }
-
     @Override
     public void removeAttribute(String name) {
         required().removeAttribute(name);
@@ -223,5 +214,10 @@ public class InvocationLocalImpl implements InvocationLocal {
     @Override
     public Flash getFlash(boolean create) {
         return required().getFlash(create);
+    }
+
+    @Override
+    public Invocation getPreInvocation() {
+        return required().getPreInvocation();
     }
 }

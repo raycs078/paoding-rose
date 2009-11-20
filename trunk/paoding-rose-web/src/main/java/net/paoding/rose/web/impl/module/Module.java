@@ -24,7 +24,6 @@ import net.paoding.rose.web.impl.mapping.Mapping;
 import net.paoding.rose.web.paramresolver.ParamResolver;
 
 import org.springframework.web.context.WebApplicationContext;
-import org.springframework.web.multipart.MultipartResolver;
 
 /**
  * {@link Module}代表了在同一个web程序中的一个模块。不同的模块包含一些特定的控制器对象、控制器拦截器、控制器异常处理器。
@@ -43,70 +42,82 @@ import org.springframework.web.multipart.MultipartResolver;
 public interface Module {
 
     /**
-     * 该module负责的请求的URL(context path剔除外)的起始地址
-     * 
-     * @return
-     */
-    public String getMappingPath();
-
-    /**
+     * 该模块相关资源路径(即控制器“类文件”存在本地计算机的什么目录下，包括package名所表示的路径)
      * 
      * @return
      */
     public URL getUrl();
 
     /**
-     * 当URI没有指明控制器名时，默认使用哪个控制器？
+     * 该模块的映射地址定义
+     * 
+     * @see Mapping#getPath()
      * 
      * @return
      */
-    public Mapping<ControllerInfo> getDefaultController();
+    public String getMappingPath();
 
     /**
-     * @return
-     */
-    public List<Mapping<ControllerInfo>> getControllerMappings();
-
-    /**
-     * 返回本module所使用的拦截器。
+     * 上级模块，返回null表示为最顶级模块。
+     * <p>
+     * 模块之间的上下级和URI的分层上下级没有必然联系，虽然大多数应该有一致的表现。
      * 
      * @return
      */
-    public List<NestedControllerInterceptorWrapper> getInterceptors();
+    public Module getParent();
 
     /**
+     * 模块地址。
+     * <p>
+     * 如果是最顶级模块其地址是一个长度为0的串。<br>
+     * 下级模块的地址是上级模块的地址 + "/" + 本模块所在package的简单包名(package最后一级)。
+     * 
+     * @return
+     */
+    public String getModulePath();
+
+    /**
+     * 本模块的ApplicationContext对象。
+     * <p>
+     * 如果模块具有上级模块，这2个模块的ApplicationContext也会体现这个上下级关系
+     * 
+     * @return
+     */
+    public WebApplicationContext getApplicationContext();
+
+    /**
+     * 本模块使用的有效外设参数解析器对象
      * 
      * @return
      */
     public List<ParamResolver> getCustomerResolvers();
 
     /**
+     * 本模块使用的验证器
+     * 
      * @return
      */
-    public WebApplicationContext getApplicationContext();
+    public List<NamedValidator> getValidators();
 
     /**
-     * 该模块的异常处理类，这个异常处理类处理的是控制器抛出的异常，开发者可以利用这个特性记录控制器抛出的异常并重新返回一个友好的页面给用户
+     * 本模块使用的有效拦截器对象
+     * 
+     * @return
+     */
+    public List<NestedControllerInterceptor> getInterceptors();
+
+    /**
+     * 本模块有效的控制器对象
+     * 
+     * @return
+     */
+    public List<ControllerRef> getControllers();
+
+    /**
+     * 本模块使用的错误处理器
      * 
      * @return
      */
     public ControllerErrorHandler getErrorHandler();
-
-    /**
-     * @return
-     */
-    public MultipartResolver getMultipartResolver();
-
-    /**
-     * 
-     * @return
-     */
-    public Module getParent();
-
-    public String getRelativePackagePath();
-
-    Module addValidator(NamedValidator validator);
-
-    List<NamedValidator> getValidators();
 
 }

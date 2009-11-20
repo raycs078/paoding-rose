@@ -26,20 +26,22 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import net.paoding.rose.scanner.ModuleInfo;
+import net.paoding.rose.scanner.ModuleResource;
 import net.paoding.rose.scanner.RoseJarContextResources;
 import net.paoding.rose.scanner.RoseModuleInfos;
 import net.paoding.rose.web.NamedValidator;
 import net.paoding.rose.web.RequestPath;
+import net.paoding.rose.web.annotation.ReqMethod;
 import net.paoding.rose.web.impl.context.ContextLoader;
 import net.paoding.rose.web.impl.mapping.Mapping;
 import net.paoding.rose.web.impl.mapping.MappingImpl;
 import net.paoding.rose.web.impl.mapping.MappingNode;
 import net.paoding.rose.web.impl.mapping.MatchMode;
-import net.paoding.rose.web.impl.module.ControllerInfo;
+import net.paoding.rose.web.impl.module.ControllerRef;
 import net.paoding.rose.web.impl.module.Module;
 import net.paoding.rose.web.impl.module.ModulesBuilder;
-import net.paoding.rose.web.impl.module.NestedControllerInterceptorWrapper;
+import net.paoding.rose.web.impl.module.NestedControllerInterceptor;
+import net.paoding.rose.web.impl.resource.WebResource;
 import net.paoding.rose.web.impl.thread.InvocationBean;
 import net.paoding.rose.web.impl.thread.WebEngine;
 import net.paoding.rose.web.impl.thread.tree.Rose;
@@ -222,7 +224,9 @@ public class RoseFilter extends GenericFilterBean {
             final InvocationBean inv = new InvocationBean(httpRequest, httpResponse, requestPath);
 
             // rose 对象 代表Rose框架对一次请求的执行
-            final Rose rose = new Rose(this.modules, mappingTree, inv);
+            final Rose rose = new Rose(modules, mappingTree, inv);
+            
+            inv.setRose(rose);
 
             // 对请求进行匹配、处理、渲染以及渲染后的操作，如果找不到映配则返回false
             matched = rose.execute();
@@ -284,15 +288,17 @@ public class RoseFilter extends GenericFilterBean {
 
     private List<Module> prepareModules(WebApplicationContext rootContext) throws Exception {
         // 自动扫描识别web层对象，纳入Rose管理
-        List<ModuleInfo> moduleInfoList = new RoseModuleInfos().findModuleInfos();
+        List<ModuleResource> moduleInfoList = new RoseModuleInfos().findModuleInfos();
         return new ModulesBuilder().build(rootContext, moduleInfoList);
     }
 
     private MappingNode prepareMappingTree(List<Module> modules) {
-        WebEngine roseEngine = new WebEngine(instructionExecutor);
-        Mapping<WebEngine> rootMapping = new MappingImpl<WebEngine>("", MatchMode.PATH_STARTS_WITH,
-                roseEngine);
-        MappingNode mappingTree = new MappingNode(rootMapping, null);
+        WebEngine rootEngine = new WebEngine(instructionExecutor);
+        WebResource rootResource = new WebResource(null, "");
+        rootResource.setEndResource(false);
+        rootResource.addEngine(ReqMethod.ALL, rootEngine);
+        Mapping rootMapping = new MappingImpl("", MatchMode.PATH_STARTS_WITH);
+        MappingNode mappingTree = new MappingNode(rootMapping, rootResource);
         new TreeBuilder().create(mappingTree, modules);
         return mappingTree;
     }
@@ -325,7 +331,7 @@ public class RoseFilter extends GenericFilterBean {
         MappingNode cur = mappingTree;
         while (cur != null) {
             try {
-                cur.mapping.getTarget().destroy();
+                cur.resource.destroy();
             } catch (Exception e) {
                 logger.error("", e);
                 getServletContext().log("", e);
@@ -381,7 +387,7 @@ public class RoseFilter extends GenericFilterBean {
     private void printRoseInfos() {
         if (logger.isInfoEnabled()) {
             final StringBuilder sb = new StringBuilder(4096);
-            dumpModules(modules, sb);
+            dumpModules(sb);
             String strModuleInfos = sb.toString();
             getServletContext().log(strModuleInfos);
         }
@@ -394,20 +400,21 @@ public class RoseFilter extends GenericFilterBean {
     //----------
 
     // 后续可以提取出来放到什么地方，是不是采用模板语言来定义?
-    private void dumpModules(final List<Module> modules, final StringBuilder sb) {
+    private void dumpModules(final StringBuilder sb) {
         sb.append("\n--------Modules(Total ").append(modules.size()).append(")--------");
         sb.append("\n");
         for (int i = 0; i < modules.size(); i++) {
             final Module module = modules.get(i);
             sb.append("module ").append(i + 1).append(":");
             sb.append("\n\tmappingPath='").append(module.getMappingPath());
-            sb.append("';\n\tpackageRelativePath='").append(module.getRelativePackagePath());
+            sb.append("';\n\tpackageRelativePath='").append(module.getModulePath());
             sb.append("';\n\turl='").append(module.getUrl());
             sb.append("';\n\tcontrollers=[");
-            final List<Mapping<ControllerInfo>> controllerMappings = module.getControllerMappings();
-            for (final Mapping<ControllerInfo> mapping : controllerMappings) {
-                sb.append("'").append(mapping.getPath()).append("'=").append(
-                        mapping.getTarget().getControllerClass().getSimpleName()).append(", ");
+            final List<ControllerRef> controllerMappings = module.getControllers();
+
+            for (final ControllerRef controller : controllerMappings) {
+                sb.append("'").append(Arrays.toString(controller.getMappingPaths())).append("'=")
+                        .append(controller.getControllerClass().getSimpleName()).append(", ");
             }
             if (!controllerMappings.isEmpty()) {
                 sb.setLength(sb.length() - 2);
@@ -427,7 +434,7 @@ public class RoseFilter extends GenericFilterBean {
                 sb.setLength(sb.length() - 2);
             }
             sb.append("];\n\tinterceptors=[");
-            for (NestedControllerInterceptorWrapper interceptor : module.getInterceptors()) {
+            for (NestedControllerInterceptor interceptor : module.getInterceptors()) {
                 sb.append(interceptor.getName()).append("(").append(interceptor.getPriority())
                         .append("), ");
             }
@@ -436,8 +443,8 @@ public class RoseFilter extends GenericFilterBean {
             }
             sb.append("];\n\terrorHander=").append(
                     module.getErrorHandler() == null ? "<null>" : module.getErrorHandler());
-            final Mapping<ControllerInfo> def = module.getDefaultController();
-            sb.append(";\n\tdefaultController=").append(def == null ? "<null>" : def.getPath());
+            // final Mapping<Controller> def = module.getDefaultController();
+            // sb.append(";\n\tdefaultController=").append(def == null ? "<null>" : def.getPath());
             sb.append("\n\n");
         }
         sb.append("--------end--------");

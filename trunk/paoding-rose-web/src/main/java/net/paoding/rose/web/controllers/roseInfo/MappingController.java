@@ -15,11 +15,16 @@
  */
 package net.paoding.rose.web.controllers.roseInfo;
 
+import java.io.PrintWriter;
+import java.lang.reflect.Method;
+
 import net.paoding.rose.web.annotation.HttpFeatures;
+import net.paoding.rose.web.annotation.ReqMapping;
 import net.paoding.rose.web.annotation.ReqMethod;
 import net.paoding.rose.web.annotation.rest.Get;
 import net.paoding.rose.web.impl.mapping.MappingNode;
-import net.paoding.rose.web.impl.thread.MatchResult;
+import net.paoding.rose.web.impl.thread.ActionEngine;
+import net.paoding.rose.web.impl.thread.Engine;
 import net.paoding.rose.web.impl.thread.tree.Rose;
 
 /**
@@ -27,37 +32,60 @@ import net.paoding.rose.web.impl.thread.tree.Rose;
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
+@ReqMapping(path = "mapping.xml")
 public class MappingController {
 
     @Get
     @HttpFeatures(contentType = "text/xml; charset=UTF-8")
     public String list(Rose rose) throws Exception {
-        MatchResult<?> mr = rose.getMatchResults().get(0);
-        MappingNode root = mr.getNode();
+        MappingNode root = rose.getMappingTree();
         StringBuilder sb = new StringBuilder(2048);
         sb.append("@<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
+        sb.append("<rose-web>");
         println(root, sb);
+        sb.append("</rose-web>");
         return sb.toString();
     }
+//
+//    private void println(MappingNode node, StringBuilder sb) {
+//        sb.append("<node resource=\"").append(node.getResource()).append("\">");
+//        MappingNode si = node.leftMostChild;
+//        if (si != null) {
+//            println(si, sb);
+//            while ((si = si.sibling) != null) {
+//                println(si, sb);
+//            }
+//        }
+//        sb.append("</node>");
+//    }
+//    
 
-    private void println(MappingNode node, StringBuilder sb) {
-        sb.append("<node path=\"");
-        ReqMethod[] methods = node.mapping.getMethods();
-        for (int i = 0; i < methods.length; i++) {
-            if (i > 0) {
-                sb.append("/");
-            }
-            sb.append(String.valueOf(methods[i]));
+    private static void println(MappingNode node, StringBuilder sb) {
+        if (node.leftMostChild == null) {
+            sb.append("<resource path=\"").append(node.getResource().getAbsolutePath()).append(
+                    "\">");
         }
-        sb.append("  ").append(node.mapping.getPath());
-        sb.append("\" target=\"").append(node.mapping.getTarget()).append("\">");
         MappingNode si = node.leftMostChild;
         if (si != null) {
             println(si, sb);
             while ((si = si.sibling) != null) {
                 println(si, sb);
             }
+        } else {
+            for (ReqMethod method : node.getResource().getAllowedMethods()) {
+                Engine engine = node.getResource().getEngine(method);
+                ActionEngine action = (ActionEngine) engine;
+                Method m = action.getMethod();
+                Class<?> cc = action.getControllerClass();
+                String rm = method.toString();
+                sb.append("<allowed ");
+                sb.append(rm + "=\"" + cc.getSimpleName() + " ." + m.getName() + "\" ");
+                sb.append("package=\"" + m.getDeclaringClass().getPackage().getName() + "\" ");
+                sb.append(" />");
+            }
         }
-        sb.append("</node>");
+        if (node.leftMostChild == null) {
+            sb.append("</resource>");
+        }
     }
 }

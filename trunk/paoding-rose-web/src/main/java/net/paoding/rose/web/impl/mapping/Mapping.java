@@ -15,10 +15,7 @@
  */
 package net.paoding.rose.web.impl.mapping;
 
-import java.util.Set;
-
 import net.paoding.rose.web.annotation.ReqMapping;
-import net.paoding.rose.web.annotation.ReqMethod;
 import net.paoding.rose.web.impl.thread.MatchResult;
 
 /**
@@ -37,14 +34,7 @@ import net.paoding.rose.web.impl.thread.MatchResult;
  * @param <T> 映射的目标
  * @see ReqMapping
  */
-public interface Mapping<T> extends Comparable<Mapping<?>> {
-
-    /**
-     * 该Mapping支持的请求方法
-     * 
-     * @return
-     */
-    public ReqMethod[] getMethods();
+public interface Mapping extends Comparable<Mapping> {
 
     /**
      * 返回Mapping的地址定义,如: <br>
@@ -55,34 +45,6 @@ public interface Mapping<T> extends Comparable<Mapping<?>> {
     public String getPath();
 
     /**
-     * 返回Mapping地址中含有的常量字符串数，如:<br>
-     * /blog/$userId-$blogId/list的常量字符串是："/blog/"、"-"、"/list"，数目是3<br>
-     * /application/$appName的常量字符串是："/applicaiton/"，数目是1
-     * 
-     * @return
-     */
-    public int getConstantCount();
-
-    /**
-     * 返回Mapping地址中含有的参数字符串数，如：<br>
-     * /blog/$userId-$blogId/list的常量字符串是："userId"、"blogId"，数目是2<br>
-     * /application/$appName的常量字符串是："appName"，数目是1
-     * 
-     * @return
-     */
-    public int getParameterCount();
-
-    // TODO: 应该抽象为一个对象处理
-    public Set<ReqMethod> getResourceMethods();
-
-    /**
-     * 返回该匹配的目标对象
-     * 
-     * @return
-     */
-    public T getTarget();
-
-    /**
      * 判断给定的请求的地址<code>path</code>以及请求方法是否能够和本 {@link Mapping}对象相匹配。
      * <p>
      * 若能够匹配，返回非null的 {@link MatchResult}对象；否则返回null。
@@ -91,5 +53,12 @@ public interface Mapping<T> extends Comparable<Mapping<?>> {
      * @param requestMethod 请求的方法，应为大写
      * @return
      */
-    public MatchResult<T> match(String path, String requestMethod);
+    public MatchResult match(String path);
+
+    /**
+     * 返回规范化后的地址字符串
+     * 
+     * @return
+     */
+    public String toString();
 }

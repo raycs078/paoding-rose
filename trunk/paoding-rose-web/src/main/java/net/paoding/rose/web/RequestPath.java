@@ -20,6 +20,8 @@ import java.net.URLDecoder;
 
 import javax.servlet.http.HttpServletRequest;
 
+import net.paoding.rose.web.annotation.ReqMethod;
+
 import org.springframework.web.util.WebUtils;
 
 /**
@@ -27,7 +29,7 @@ import org.springframework.web.util.WebUtils;
  */
 public class RequestPath {
 
-    private String method;
+    private ReqMethod method;
 
     private String uri; // = contextPath + ctxpath + pathInfo
 
@@ -47,7 +49,7 @@ public class RequestPath {
 
     public RequestPath(HttpServletRequest request) {
         // method
-        setMethod(request.getMethod());
+        setMethod(ReqMethod.parse(request.getMethod()));
 
         // ctxpath
         setCtxpath(request.getContextPath());
@@ -107,11 +109,11 @@ public class RequestPath {
         return dispatcher;
     }
 
-    public String getMethod() {
+    public ReqMethod getMethod() {
         return method;
     }
 
-    public void setMethod(String method) {
+    public void setMethod(ReqMethod method) {
         this.method = method;
     }
 

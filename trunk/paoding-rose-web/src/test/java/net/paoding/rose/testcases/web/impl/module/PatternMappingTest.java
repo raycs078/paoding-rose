@@ -3,9 +3,8 @@ package net.paoding.rose.testcases.web.impl.module;
 import java.util.Arrays;
 
 import junit.framework.TestCase;
-import net.paoding.rose.web.annotation.ReqMethod;
-import net.paoding.rose.web.impl.mapping.MatchMode;
 import net.paoding.rose.web.impl.mapping.MappingImpl;
+import net.paoding.rose.web.impl.mapping.MatchMode;
 
 public class PatternMappingTest extends TestCase {
 
@@ -22,25 +21,22 @@ public class PatternMappingTest extends TestCase {
     }
 
     private void _testStartsWith1(String pattern) {
-        Object target = new Object();
-        MappingImpl<?> mapping = new MappingImpl<Object>(pattern, MatchMode.PATH_STARTS_WITH,
-                new ReqMethod[] { ReqMethod.ALL }, target);
+        MappingImpl mapping = new MappingImpl(pattern, MatchMode.PATH_STARTS_WITH);
         // expected: not null
-        assertNotNull(mapping.match("/user", "GET"));
-        assertSame(target, mapping.match("/user", "GET").getMapping().getTarget());
-        assertNotNull(mapping.match("/user", "POST"));
-        assertNotNull(mapping.match("/user/", "GET"));
-        assertNotNull(mapping.match("/user/", "POST"));
-        assertNotNull(mapping.match("/user/1", "GET"));
-        assertNotNull(mapping.match("/user/1", "POST"));
-        assertNotNull(mapping.match("/topic/1/", "GET"));
-        assertNotNull(mapping.match("/topic/1/", "POST"));
-        assertNotNull(mapping.match("/topic/123/134", "GET"));
-        assertNotNull(mapping.match("/topic", "GET"));
+        assertNotNull(mapping.match("/user"));
+        assertNotNull(mapping.match("/user"));
+        assertNotNull(mapping.match("/user/"));
+        assertNotNull(mapping.match("/user/"));
+        assertNotNull(mapping.match("/user/1"));
+        assertNotNull(mapping.match("/user/1"));
+        assertNotNull(mapping.match("/topic/1/"));
+        assertNotNull(mapping.match("/topic/1/"));
+        assertNotNull(mapping.match("/topic/123/134"));
+        assertNotNull(mapping.match("/topic"));
 
         // expected: null
-        assertNull(mapping.match("", "GET"));
-        assertNull(mapping.match("", "POST"));
+        assertNull(mapping.match(""));
+        assertNull(mapping.match(""));
     }
 
     public void testStartsWith21() {
@@ -68,28 +64,25 @@ public class PatternMappingTest extends TestCase {
     }
 
     private void _testStartsWith2(String pattern) {
-        Object target = new Object();
-        MappingImpl<?> mapping = new MappingImpl<Object>(pattern, MatchMode.PATH_STARTS_WITH,
-                new ReqMethod[] { ReqMethod.ALL }, target);
+        MappingImpl mapping = new MappingImpl(pattern, MatchMode.PATH_STARTS_WITH);
         // expected: not null
-        assertNotNull(mapping.match("/hiuser/123", "POST"));
-        assertSame(target, mapping.match("/hiuser/123", "GET").getMapping().getTarget());
-        assertNotNull(mapping.match("/hiuser/abc", "GET"));
-        assertNotNull(mapping.match("/hiuser/123/", "GET"));
-        assertNotNull(mapping.match("/hiuser/abc/", "POST"));
-        assertNotNull(mapping.match("/hiuser/123/456", "POST"));
-        assertNotNull(mapping.match("/hiuser/abc/def", "GET"));
-        assertNotNull(mapping.match("/hiuser/123/456/", "GET"));
-        assertNotNull(mapping.match("/hiuser/abc/def/", "POST"));
+        assertNotNull(mapping.match("/hiuser/123"));
+        assertNotNull(mapping.match("/hiuser/abc"));
+        assertNotNull(mapping.match("/hiuser/123/"));
+        assertNotNull(mapping.match("/hiuser/abc/"));
+        assertNotNull(mapping.match("/hiuser/123/456"));
+        assertNotNull(mapping.match("/hiuser/abc/def"));
+        assertNotNull(mapping.match("/hiuser/123/456/"));
+        assertNotNull(mapping.match("/hiuser/abc/def/"));
 
         // expected: null
-        assertNull(mapping.match("/hiuser", "GET"));
-        assertNull(mapping.match("/hiuser", "POST"));
-        assertNull(mapping.match("/hiuser/", "GET"));;
-        assertNull(mapping.match("/user/1", "GET"));
-        assertNull(mapping.match("/user/1", "POST"));
-        assertNull(mapping.match("", "GET"));
-        assertNull(mapping.match("", "POST"));
+        assertNull(mapping.match("/hiuser"));
+        assertNull(mapping.match("/hiuser"));
+        assertNull(mapping.match("/hiuser/"));;
+        assertNull(mapping.match("/user/1"));
+        assertNull(mapping.match("/user/1"));
+        assertNull(mapping.match(""));
+        assertNull(mapping.match(""));
     }
 
     public void testStartsWith31() {
@@ -117,26 +110,23 @@ public class PatternMappingTest extends TestCase {
     }
 
     private void _testStartsWith3(String pattern) {
-        Object target = new Object();
-        MappingImpl<?> mapping = new MappingImpl<Object>(pattern, MatchMode.PATH_STARTS_WITH,
-                new ReqMethod[] { ReqMethod.ALL }, target);
-        assertNotNull(mapping.match("/hiuser/123", "POST"));
-        assertSame(target, mapping.match("/hiuser/123", "GET").getMapping().getTarget());
-        assertNull(mapping.match("/hiuser/abc", "GET"));
-        assertNotNull(mapping.match("/hiuser/123/", "GET"));
-        assertNull(mapping.match("/hiuser/abc/", "POST"));
-        assertNotNull(mapping.match("/hiuser/123/456", "POST"));
-        assertNull(mapping.match("/hiuser/abc/def", "GET"));
-        assertNotNull(mapping.match("/hiuser/123/456/", "GET"));
-        assertNull(mapping.match("/hiuser/abc/def/", "POST"));
+        MappingImpl mapping = new MappingImpl(pattern, MatchMode.PATH_STARTS_WITH);
+        assertNotNull(mapping.match("/hiuser/123"));
+        assertNull(mapping.match("/hiuser/abc"));
+        assertNotNull(mapping.match("/hiuser/123/"));
+        assertNull(mapping.match("/hiuser/abc/"));
+        assertNotNull(mapping.match("/hiuser/123/456"));
+        assertNull(mapping.match("/hiuser/abc/def"));
+        assertNotNull(mapping.match("/hiuser/123/456/"));
+        assertNull(mapping.match("/hiuser/abc/def/"));
 
-        assertNull(mapping.match("/hiuser", "GET"));
-        assertNull(mapping.match("/hiuser", "POST"));
-        assertNull(mapping.match("/hiuser/", "GET"));
-        assertNull(mapping.match("/user/1", "GET"));
-        assertNull(mapping.match("/user/1", "POST"));
-        assertNull(mapping.match("", "GET"));
-        assertNull(mapping.match("", "POST"));
+        assertNull(mapping.match("/hiuser"));
+        assertNull(mapping.match("/hiuser"));
+        assertNull(mapping.match("/hiuser/"));
+        assertNull(mapping.match("/user/1"));
+        assertNull(mapping.match("/user/1"));
+        assertNull(mapping.match(""));
+        assertNull(mapping.match(""));
     }
 
     public void testStartsWith41() {
@@ -164,30 +154,27 @@ public class PatternMappingTest extends TestCase {
     }
 
     private void _testStartsWith4(String pattern) {
-        Object target = new Object();
-        MappingImpl<?> mapping = new MappingImpl<Object>(pattern, MatchMode.PATH_STARTS_WITH,
-                new ReqMethod[] { ReqMethod.ALL }, target);
-        assertNotNull(mapping.match("/hiabc/123", "GET"));
-        assertSame(target, mapping.match("/hiabc/123", "GET").getMapping().getTarget());
-        assertNotNull(mapping.match("/hiaaa/456", "POST"));
-        assertNotNull(mapping.match("/hibbb/789", "GET"));
-        assertNotNull(mapping.match("/hiccc/0123", "POST"));
-        assertNotNull(mapping.match("/hibac/456769", "GET"));
-        assertNotNull(mapping.match("/hiaaa/456/", "POST"));
-        assertNotNull(mapping.match("/hibbb/789/asdfa", "GET"));
-        assertNotNull(mapping.match("/hiccc/0123/a", "POST"));
-        assertNotNull(mapping.match("/hibac/456769/bc", "GET"));
+        MappingImpl mapping = new MappingImpl(pattern, MatchMode.PATH_STARTS_WITH);
+        assertNotNull(mapping.match("/hiabc/123"));
+        assertNotNull(mapping.match("/hiaaa/456"));
+        assertNotNull(mapping.match("/hibbb/789"));
+        assertNotNull(mapping.match("/hiccc/0123"));
+        assertNotNull(mapping.match("/hibac/456769"));
+        assertNotNull(mapping.match("/hiaaa/456/"));
+        assertNotNull(mapping.match("/hibbb/789/asdfa"));
+        assertNotNull(mapping.match("/hiccc/0123/a"));
+        assertNotNull(mapping.match("/hibac/456769/bc"));
 
-        assertNull(mapping.match("/hiabc", "GET"));
-        assertNull(mapping.match("/hiaaa/", "POST"));
-        assertNull(mapping.match("/hibbb/abc", "GET"));
-        assertNull(mapping.match("/hiccc/abc", "POST"));
-        assertNull(mapping.match("/hibac/abc", "GET"));
-        assertNull(mapping.match("/hi/456", "GET"));
-        assertNull(mapping.match("/hia/789", "GET"));
+        assertNull(mapping.match("/hiabc"));
+        assertNull(mapping.match("/hiaaa/"));
+        assertNull(mapping.match("/hibbb/abc"));
+        assertNull(mapping.match("/hiccc/abc"));
+        assertNull(mapping.match("/hibac/abc"));
+        assertNull(mapping.match("/hi/456"));
+        assertNull(mapping.match("/hia/789"));
 
-        assertNull(mapping.match("", "GET"));
-        assertNull(mapping.match("", "POST"));
+        assertNull(mapping.match(""));
+        assertNull(mapping.match(""));
     }
 
     public void testEquals11() {
@@ -199,25 +186,18 @@ public class PatternMappingTest extends TestCase {
     }
 
     private void _testEquals1(String pattern) {
-        Object target = new Object();
-        MappingImpl<?> mapping = new MappingImpl<Object>(pattern, MatchMode.PATH_EQUALS,
-                new ReqMethod[] { ReqMethod.ALL }, target);
+        MappingImpl mapping = new MappingImpl(pattern, MatchMode.PATH_EQUALS);
         // expected: not null
-        assertNotNull(mapping.match("/user", "GET"));
-        assertSame(target, mapping.match("/user", "GET").getMapping().getTarget());
-        assertNotNull(mapping.match("/user", "POST"));
-        assertNotNull(mapping.match("/user/", "GET"));
-        assertNotNull(mapping.match("/user/", "POST"));
-        assertNull(mapping.match("/user/1", "GET"));
-        assertNull(mapping.match("/user/1", "POST"));
-        assertNull(mapping.match("/topic/1/", "GET"));
-        assertNull(mapping.match("/topic/1/", "POST"));
-        assertNull(mapping.match("/topic/123/134", "GET"));
-        assertNotNull(mapping.match("/topic", "GET"));
+        assertNotNull(mapping.match("/user"));
+        assertNotNull(mapping.match("/user"));
+        assertNull(mapping.match("/user/1"));
+        assertNull(mapping.match("/topic/1/"));
+        assertNull(mapping.match("/topic/123/134"));
+        assertNotNull(mapping.match("/topic"));
 
         // expected: null
-        assertNull(mapping.match("", "GET"));
-        assertNull(mapping.match("", "POST"));
+        assertNull(mapping.match(""));
+        assertNull(mapping.match(""));
     }
 
     public void testEquals21() {
@@ -245,28 +225,25 @@ public class PatternMappingTest extends TestCase {
     }
 
     private void _testEquals2(String pattern) {
-        Object target = new Object();
-        MappingImpl<?> mapping = new MappingImpl<Object>(pattern, MatchMode.PATH_EQUALS,
-                new ReqMethod[] { ReqMethod.ALL }, target);
+        MappingImpl mapping = new MappingImpl(pattern, MatchMode.PATH_EQUALS);
         // expected: not null
-        assertNotNull(mapping.match("/hiuser/123", "POST"));
-        assertSame(target, mapping.match("/hiuser/123", "GET").getMapping().getTarget());
-        assertNotNull(mapping.match("/hiuser/abc", "GET"));
-        assertNotNull(mapping.match("/hiuser/123/", "GET"));
-        assertNotNull(mapping.match("/hiuser/abc/", "POST"));
-        assertNull(mapping.match("/hiuser/123/456", "POST"));
-        assertNull(mapping.match("/hiuser/abc/def", "GET"));
-        assertNull(mapping.match("/hiuser/123/456/", "GET"));
-        assertNull(mapping.match("/hiuser/abc/def/", "POST"));
+        assertNotNull(mapping.match("/hiuser/123"));
+        assertNotNull(mapping.match("/hiuser/abc"));
+        assertNotNull(mapping.match("/hiuser/123/"));
+        assertNotNull(mapping.match("/hiuser/abc/"));
+        assertNull(mapping.match("/hiuser/123/456"));
+        assertNull(mapping.match("/hiuser/abc/def"));
+        assertNull(mapping.match("/hiuser/123/456/"));
+        assertNull(mapping.match("/hiuser/abc/def/"));
 
         // expected: null
-        assertNull(mapping.match("/hiuser", "GET"));
-        assertNull(mapping.match("/hiuser", "POST"));
-        assertNull(mapping.match("/hiuser/", "GET"));;
-        assertNull(mapping.match("/user/1", "GET"));
-        assertNull(mapping.match("/user/1", "POST"));
-        assertNull(mapping.match("", "GET"));
-        assertNull(mapping.match("", "POST"));
+        assertNull(mapping.match("/hiuser"));
+        assertNull(mapping.match("/hiuser"));
+        assertNull(mapping.match("/hiuser/"));;
+        assertNull(mapping.match("/user/1"));
+        assertNull(mapping.match("/user/1"));
+        assertNull(mapping.match(""));
+        assertNull(mapping.match(""));
     }
 
     public void testEquals31() {
@@ -294,26 +271,23 @@ public class PatternMappingTest extends TestCase {
     }
 
     private void _testEquals3(String pattern) {
-        Object target = new Object();
-        MappingImpl<?> mapping = new MappingImpl<Object>(pattern, MatchMode.PATH_EQUALS,
-                new ReqMethod[] { ReqMethod.ALL }, target);
-        assertNotNull(mapping.match("/hiuser/123", "POST"));
-        assertSame(target, mapping.match("/hiuser/123", "GET").getMapping().getTarget());
-        assertNull(mapping.match("/hiuser/abc", "GET"));
-        assertNotNull(mapping.match("/hiuser/123/", "GET"));
-        assertNull(mapping.match("/hiuser/abc/", "POST"));
-        assertNull(mapping.match("/hiuser/123/456", "POST"));
-        assertNull(mapping.match("/hiuser/abc/def", "GET"));
-        assertNull(mapping.match("/hiuser/123/456/", "GET"));
-        assertNull(mapping.match("/hiuser/abc/def/", "POST"));
+        MappingImpl mapping = new MappingImpl(pattern, MatchMode.PATH_EQUALS);
+        assertNotNull(mapping.match("/hiuser/123"));
+        assertNull(mapping.match("/hiuser/abc"));
+        assertNotNull(mapping.match("/hiuser/123/"));
+        assertNull(mapping.match("/hiuser/abc/"));
+        assertNull(mapping.match("/hiuser/123/456"));
+        assertNull(mapping.match("/hiuser/abc/def"));
+        assertNull(mapping.match("/hiuser/123/456/"));
+        assertNull(mapping.match("/hiuser/abc/def/"));
 
-        assertNull(mapping.match("/hiuser", "GET"));
-        assertNull(mapping.match("/hiuser", "POST"));
-        assertNull(mapping.match("/hiuser/", "GET"));;
-        assertNull(mapping.match("/user/1", "GET"));
-        assertNull(mapping.match("/user/1", "POST"));
-        assertNull(mapping.match("", "GET"));
-        assertNull(mapping.match("", "POST"));
+        assertNull(mapping.match("/hiuser"));
+        assertNull(mapping.match("/hiuser"));
+        assertNull(mapping.match("/hiuser/"));;
+        assertNull(mapping.match("/user/1"));
+        assertNull(mapping.match("/user/1"));
+        assertNull(mapping.match(""));
+        assertNull(mapping.match(""));
     }
 
     public void testEquals41() {
@@ -341,30 +315,27 @@ public class PatternMappingTest extends TestCase {
     }
 
     private void _testEquals4(String pattern) {
-        Object target = new Object();
-        MappingImpl<?> mapping = new MappingImpl<Object>(pattern, MatchMode.PATH_EQUALS,
-                new ReqMethod[] { ReqMethod.ALL }, target);
-        assertNotNull(mapping.match("/hiabc/123", "GET"));
-        assertSame(target, mapping.match("/hiabc/123", "GET").getMapping().getTarget());
-        assertNotNull(mapping.match("/hiaaa/456", "POST"));
-        assertNotNull(mapping.match("/hibbb/789", "GET"));
-        assertNotNull(mapping.match("/hiccc/0123", "POST"));
-        assertNotNull(mapping.match("/hibac/456769", "GET"));
-        assertNotNull(mapping.match("/hiaaa/456/", "POST"));
-        assertNull(mapping.match("/hibbb/789/asdfa", "GET"));
-        assertNull(mapping.match("/hiccc/0123/a", "POST"));
-        assertNull(mapping.match("/hibac/456769/bc", "GET"));
+        MappingImpl mapping = new MappingImpl(pattern, MatchMode.PATH_EQUALS);
+        assertNotNull(mapping.match("/hiabc/123"));
+        assertNotNull(mapping.match("/hiaaa/456"));
+        assertNotNull(mapping.match("/hibbb/789"));
+        assertNotNull(mapping.match("/hiccc/0123"));
+        assertNotNull(mapping.match("/hibac/456769"));
+        assertNotNull(mapping.match("/hiaaa/456/"));
+        assertNull(mapping.match("/hibbb/789/asdfa"));
+        assertNull(mapping.match("/hiccc/0123/a"));
+        assertNull(mapping.match("/hibac/456769/bc"));
 
-        assertNull(mapping.match("/hiabc", "GET"));
-        assertNull(mapping.match("/hiaaa/", "POST"));
-        assertNull(mapping.match("/hibbb/abc", "GET"));
-        assertNull(mapping.match("/hiccc/abc", "POST"));
-        assertNull(mapping.match("/hibac/abc", "GET"));
-        assertNull(mapping.match("/hi/456", "GET"));
-        assertNull(mapping.match("/hia/789", "GET"));
+        assertNull(mapping.match("/hiabc"));
+        assertNull(mapping.match("/hiaaa/"));
+        assertNull(mapping.match("/hibbb/abc"));
+        assertNull(mapping.match("/hiccc/abc"));
+        assertNull(mapping.match("/hibac/abc"));
+        assertNull(mapping.match("/hi/456"));
+        assertNull(mapping.match("/hia/789"));
 
-        assertNull(mapping.match("", "GET"));
-        assertNull(mapping.match("", "POST"));
+        assertNull(mapping.match(""));
+        assertNull(mapping.match(""));
     }
 
     public void testParamAndConstaint11() {
@@ -392,9 +363,7 @@ public class PatternMappingTest extends TestCase {
     }
 
     private void _testParamAndConstaint1(String pattern) {
-        Object target = new Object();
-        MappingImpl<?> mapping = new MappingImpl<Object>(pattern, MatchMode.PATH_EQUALS,
-                new ReqMethod[] { ReqMethod.ALL }, target);
+        MappingImpl mapping = new MappingImpl(pattern, MatchMode.PATH_EQUALS);
         assertTrue(Arrays.equals(new String[] { "name", "id" }, mapping.getParamNames()));
         assertTrue(Arrays.equals(new String[] { "/hi", "/", "" }, mapping.getConstants()));
     }
@@ -412,9 +381,7 @@ public class PatternMappingTest extends TestCase {
     }
 
     private void _testParamAndConstaint2(String pattern) {
-        Object target = new Object();
-        MappingImpl<?> mapping = new MappingImpl<Object>(pattern, MatchMode.PATH_EQUALS,
-                new ReqMethod[] { ReqMethod.ALL }, target);
+        MappingImpl mapping = new MappingImpl(pattern, MatchMode.PATH_EQUALS);
         assertTrue(Arrays.equals(new String[] { "name" }, mapping.getParamNames()));
         assertTrue(Arrays.equals(new String[] { "/", "" }, mapping.getConstants()));
     }

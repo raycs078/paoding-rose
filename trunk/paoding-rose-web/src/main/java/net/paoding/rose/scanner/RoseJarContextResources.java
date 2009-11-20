@@ -41,11 +41,11 @@ public class RoseJarContextResources {
     }
 
     public static List<Resource> findContextResources() throws IOException {
-        List<ResourceInfo> jarResources = RoseScanner.getInstance().getJarResources();
+        List<ResourceRef> jarResources = RoseScanner.getInstance().getJarResources();
         ResourcePatternResolver resourcePatternResolver = new PathMatchingResourcePatternResolver(
                 ClassUtils.getDefaultClassLoader());
         List<Resource> ctxResources = new LinkedList<Resource>();
-        for (ResourceInfo resourceInfo : jarResources) {
+        for (ResourceRef resourceInfo : jarResources) {
             if (resourceInfo.hasModifier("applicationContext")) {
                 Resource resource = resourceInfo.getResource();
                 String jarPath = resource.getFile().getAbsolutePath();
@@ -60,9 +60,9 @@ public class RoseJarContextResources {
     }
 
     public static String[] findMessageBasenames() throws IOException {
-        List<ResourceInfo> jarResources = RoseScanner.getInstance().getJarResources();
+        List<ResourceRef> jarResources = RoseScanner.getInstance().getJarResources();
         List<String> ctxResources = new LinkedList<String>();
-        for (ResourceInfo resourceInfo : jarResources) {
+        for (ResourceRef resourceInfo : jarResources) {
             if (resourceInfo.hasModifier("messages")) {
                 Resource resource = resourceInfo.getResource();
                 String jarPath = resource.getFile().getAbsolutePath();

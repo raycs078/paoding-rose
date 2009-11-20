@@ -52,30 +52,31 @@ public class RoseModuleInfos {
 
     public static void main(String[] args) throws IOException {
         Log4jConfigurer.initLogging("src/test/java/log4j.properties");
-        List<ModuleInfo> moduleInfos = new RoseModuleInfos().findModuleInfos();
+        List<ModuleResource> moduleInfos = new RoseModuleInfos().findModuleInfos();
         System.out.println("context resource="
-                + Arrays.toString(moduleInfos.toArray(new ModuleInfo[0])));
+                + Arrays.toString(moduleInfos.toArray(new ModuleResource[0])));
     }
 
     protected Log logger = LogFactory.getLog(RoseModuleInfos.class);
 
-    private List<ModuleInfo> moduleInfoList;
+    private List<ModuleResource> moduleInfoList;
 
-    private Map<FileObject, ModuleInfo> moduleInfoMap;
+    private Map<FileObject, ModuleResource> moduleInfoMap;
 
-    public synchronized List<ModuleInfo> findModuleInfos() throws IOException {
+    public synchronized List<ModuleResource> findModuleInfos() throws IOException {
         if (moduleInfoList == null) {
             //
-            moduleInfoList = new LinkedList<ModuleInfo>();
-            moduleInfoMap = new HashMap<FileObject, ModuleInfo>();
+            moduleInfoList = new LinkedList<ModuleResource>();
+            moduleInfoMap = new HashMap<FileObject, ModuleResource>();
             //
             RoseScanner roseScanner = RoseScanner.getInstance();
-            List<ResourceInfo> resources = new ArrayList<ResourceInfo>();
+            List<ResourceRef> resources = new ArrayList<ResourceRef>();
             resources.addAll(roseScanner.getClassesFolderResources());
             resources.addAll(roseScanner.getJarResources());
             List<FileObject> rootObjects = new ArrayList<FileObject>();
             FileSystemManager fsManager = VFS.getManager();
-            for (ResourceInfo resourceInfo : resources) {
+            for (ResourceRef resourceInfo : resources) {
+                
                 if (resourceInfo.hasModifier("controllers")) {
                     Resource resource = resourceInfo.getResource();
                     File resourceFile = resource.getFile();
@@ -104,7 +105,7 @@ public class RoseModuleInfos {
                 fsManager.closeFileSystem(fileObject.getFileSystem());
             }
         }
-        return new ArrayList<ModuleInfo>(moduleInfoList);
+        return new ArrayList<ModuleResource>(moduleInfoList);
     }
 
     protected void deepScanImpl(FileObject rootObject, FileObject fileObject) {
@@ -136,7 +137,7 @@ public class RoseModuleInfos {
     protected void handleWithFolder(FileObject rootObject, FileObject matchedRootFolder,
             FileObject thisFolder) throws IOException {
         String mappingPath = null;
-        ModuleInfo parentModuleInfo = moduleInfoMap.get(thisFolder.getParent());
+        ModuleResource parentModuleInfo = moduleInfoMap.get(thisFolder.getParent());
         // 如果rose.properties设置了controllers的module.path?
         FileObject rosePropertiesFile = thisFolder.getChild("rose.properties");// (null if there is no such child.)
         if (rosePropertiesFile != null) {
@@ -199,7 +200,7 @@ public class RoseModuleInfos {
                 mappingPath = "";
             }
         }
-        ModuleInfo moduleInfo = new ModuleInfo();
+        ModuleResource moduleInfo = new ModuleResource();
         moduleInfo.setMappingPath(mappingPath);
         moduleInfo.setModuleUrl(thisFolder.getURL());
         String relativePackagePath = matchedRootFolder.getName().getRelativeName(
@@ -244,7 +245,7 @@ public class RoseModuleInfos {
 
     private void addModuleContext(FileObject rootObject, FileObject thisFolder, FileObject resource)
             throws FileSystemException {
-        ModuleInfo moduleInfo = moduleInfoMap.get(thisFolder);
+        ModuleResource moduleInfo = moduleInfoMap.get(thisFolder);
         moduleInfo.addContextResource(resource.getURL());
         if (logger.isDebugEnabled()) {
             logger.debug("module '" + moduleInfo.getMappingPath() + "': found context file, url="
@@ -254,7 +255,7 @@ public class RoseModuleInfos {
 
     private void addModuleMessage(FileObject rootObject, FileObject thisFolder, FileObject resource)
             throws FileSystemException {
-        ModuleInfo moduleInfo = moduleInfoMap.get(thisFolder);
+        ModuleResource moduleInfo = moduleInfoMap.get(thisFolder);
         moduleInfo.addMessageResource(resource.getParent().getURL() + "/messages");
         if (logger.isDebugEnabled()) {
             logger.debug("module '" + moduleInfo.getMappingPath() + "': found messages file, url="
@@ -267,7 +268,7 @@ public class RoseModuleInfos {
         String className = rootObject.getName().getRelativeName(resource.getName());
         className = StringUtils.removeEnd(className, ".class");
         className = className.replace('/', '.');
-        ModuleInfo moduleInfo = moduleInfoMap.get(thisFolder);
+        ModuleResource moduleInfo = moduleInfoMap.get(thisFolder);
         try {
             // TODO: classloader...
             moduleInfo.addModuleClass(Class.forName(className));
@@ -281,7 +282,7 @@ public class RoseModuleInfos {
     }
 
     protected void afterScanning() {
-        for (ModuleInfo moduleInfo : moduleInfoMap.values()) {
+        for (ModuleResource moduleInfo : moduleInfoMap.values()) {
             if (moduleInfo.getContextResources().size() == 0
                     && moduleInfo.getModuleClasses().size() == 0) {
                 moduleInfoList.remove(moduleInfo);

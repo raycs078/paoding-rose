@@ -68,12 +68,6 @@ public final class InvocationBean implements Invocation {
 
     private RequestPath requestPath;
 
-    private Module module;
-
-    private Object controller;
-
-    private Method method;
-
     private transient Model model;
 
     private transient Flash flash;
@@ -118,42 +112,46 @@ public final class InvocationBean implements Invocation {
 
     @Override
     public Object getController() {
-        return this.controller;
-    }
-
-    public void setController(Object controller) {
-        this.controller = controller;
+        ControllerEngine engine = getControllerEngine();
+        return engine.getController();
     }
 
     @Override
     public Class<?> getControllerClass() {
-        return this.controller.getClass();
+        ControllerEngine engine = getControllerEngine();
+        return engine.getControllerClass();
     }
 
-    public void setModule(Module module) {
-        this.module = module;
+    public Module getModule() {
+        return getModuleEngine().getModule();
     }
 
     @Override
     public Method getMethod() {
-        return method;
+        return getActionEngine().getMethod();
     }
 
-    public void setMethod(Method method) {
-        this.method = method;
+    private ModuleEngine getModuleEngine() {
+        List<MatchResult> mrs = rose.getMatchResults();
+        MatchResult mr = mrs.get(1);
+        return (ModuleEngine) mr.getResource().getEngine(requestPath.getMethod());
     }
 
-    private String[] methodParameterNames;
+    private ControllerEngine getControllerEngine() {
+        List<MatchResult> mrs = rose.getMatchResults();
+        MatchResult mr = mrs.get(2);
+        return (ControllerEngine) mr.getResource().getEngine(requestPath.getMethod());
+    }
+
+    private ActionEngine getActionEngine() {
+        List<MatchResult> mrs = rose.getMatchResults();
+        MatchResult mr = mrs.get(3);
+        return (ActionEngine) mr.getResource().getEngine(requestPath.getMethod());
+    }
 
     @Override
     public String[] getMethodParameterNames() {
-        return methodParameterNames;
-    }
-
-    public void setMethodParameterNames(String[] methodParameterNames) {
-        String[] copy = new String[methodParameterNames.length];
-        System.arraycopy(methodParameterNames, 0, copy, 0, copy.length);
-        this.methodParameterNames = copy;
+        return (String[]) ArrayUtils.clone(getActionEngine().getParameterNames());
     }
 
     @Override
@@ -166,7 +164,7 @@ public final class InvocationBean implements Invocation {
         if (!isMethodParametersInitiated()) {
             throw new IllegalStateException();
         }
-        String[] names = this.methodParameterNames;
+        String[] names = getActionEngine().getParameterNames();
         for (int i = 0; i < names.length; i++) {
             if (name != null && name.equals(names[i])) {
                 return methodParameters[i];
@@ -181,7 +179,7 @@ public final class InvocationBean implements Invocation {
         if (isMethodParametersInitiated()) {
             value = getMethodParameter(name);
         }
-        if (value == null && !ArrayUtils.contains(methodParameterNames, name)) {
+        if (value == null && !ArrayUtils.contains(getActionEngine().getParameterNames(), name)) {
             value = getRawParameter(name);
         }
         return value;
@@ -199,9 +197,9 @@ public final class InvocationBean implements Invocation {
         }
         if (value != this.methodParameters[index]) {
             if (logger.isDebugEnabled()) {
-                logger.debug("change method parameter " + this.methodParameterNames[index]
-                        + " (index=" + index + ") from '" + this.methodParameters[index] + "' to '"
-                        + value + "'");
+                String[] names = getActionEngine().getParameterNames();
+                logger.debug("change method parameter " + names[index] + " (index=" + index
+                        + ") from '" + this.methodParameters[index] + "' to '" + value + "'");
             }
             Object oldValue = this.methodParameters[index];
             this.methodParameters[index] = value;
@@ -219,7 +217,7 @@ public final class InvocationBean implements Invocation {
         if (StringUtils.isEmpty(name)) {
             throw new NullPointerException("parameter name");
         }
-        String[] names = methodParameterNames;
+        String[] names = getActionEngine().getParameterNames();
         for (int i = 0; i < names.length; i++) {
             if (name.equals(names[i])) {
                 changeMethodParameter(i, value);
@@ -379,10 +377,6 @@ public final class InvocationBean implements Invocation {
         this.requestPath = requestPath;
     }
 
-    public Module getModule() {
-        return this.module;
-    }
-
     public Invocation getPreInvocation() {
         return preInvocation;
     }
@@ -430,7 +424,7 @@ public final class InvocationBean implements Invocation {
                         BindingResult.MODEL_KEY_PREFIX + ParameterBindingResult.OBJECT_NAME);
             }
             Object[] params = methodParameters;
-            String[] names = methodParameterNames;
+            String[] names = getActionEngine().getParameterNames();
             for (int i = 0; i < params.length; i++) {
                 if (bean.equals(params[i])) {
                     return getBindingResult(names[i]);

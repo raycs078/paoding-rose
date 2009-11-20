@@ -29,4 +29,5 @@ import java.lang.annotation.Target;
 @Documented
 public @interface Put {
 
+    String[] value() default { "" };
 }

@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import net.paoding.rose.web.annotation.ReqMethod;
 import net.paoding.rose.web.impl.thread.MatchResult;
 
 import org.apache.commons.logging.Log;
@@ -40,7 +39,7 @@ import org.apache.commons.logging.LogFactory;
  * @author 王志亮 [qieqie.wang@gmail.com]
  * @param <T>
  */
-public class MappingImpl<T> extends AbstractMapping<T> {
+public class MappingImpl extends AbstractMapping {
 
     private static final Log logger = LogFactory.getLog(MappingImpl.class);
 
@@ -54,18 +53,23 @@ public class MappingImpl<T> extends AbstractMapping<T> {
 
     protected String[] paramNames = EMPTY;
 
-    public MappingImpl(String path, MatchMode mode, T target) {
-        super(path, target);
+    private Object target;
+
+    public MappingImpl(String path, MatchMode mode) {
+        super(path);
         initPattern(mode);
     }
 
-    public MappingImpl(String path, MatchMode mode, ReqMethod[] methods, T target) {
-        super(path, methods, target);
-        initPattern(mode);
+    public void setTarget(Object target) {
+        this.target = target;
+    }
+
+    public Object getTarget() {
+        return target;
     }
 
     @Override
-    public MatchResult<T> match(String path, String requestMethod) {
+    public MatchResult match(String path/*, String requestMethod*/) {
         java.util.regex.MatchResult regexMatchResult = mappingPattern.match(path);
         if (regexMatchResult == null) {
             return null;
@@ -74,13 +78,12 @@ public class MappingImpl<T> extends AbstractMapping<T> {
         while (string.endsWith("/")) {
             string = string.substring(0, string.length() - 1);
         }
-        MatchResult<T> matchResult = new MatchResult<T>(string, this);
+        MatchResult matchResult = new MatchResult(string, this);
         if (paramNames.length != 0) {
             for (int i = 0; i < this.paramNames.length; i++) {
                 matchResult.putParameter(paramNames[i], regexMatchResult.group(i + 1));
             }
         }
-        matchResult.setRequestMethodSupported(isRequestMethodSupported(requestMethod));
         return matchResult;
     }
 
@@ -137,12 +140,18 @@ public class MappingImpl<T> extends AbstractMapping<T> {
                             regex = buf.substring(i + 1, endIndex);
                             if (regex.length() == 0) {
                                 regex = DEFAULT_REGEX;
-                            } else if ("*".equals(regex)) {
-                                regex = "(.*)";
                             } else if ("+".equals(regex)) {
                                 regex = "(.+)";
                             } else if ("?".equals(regex)) {
                                 regex = "(.?)";
+                            } else if ("*".equals(regex)) {
+                                regex = "(.*)";
+                            } else if ("n".equals(regex) || "number".equals(regex)) {
+                                regex = "([0-9]+)";
+                            } else if ("w".equals(regex) || "word".equals(regex)) {
+                                regex = "(\\w+)";
+                            } else if ("id".equals(regex)) {
+                                regex = "([0-9a-zA-Z_-]+)";
                             } else if (regex.charAt(0) != '(') {
                                 regex = '(' + regex + ')';
                             }
@@ -208,22 +217,34 @@ public class MappingImpl<T> extends AbstractMapping<T> {
         return Arrays.copyOf(this.paramNames, paramNames.length);
     }
 
-    @Override
+    /**
+     * 返回Mapping地址中含有的常量字符串数，如:<br>
+     * /blog/$userId-$blogId/list的常量字符串是："/blog/"、"-"、"/list"，数目是3<br>
+     * /application/$appName的常量字符串是："/applicaiton/"、""，数目是2
+     * 
+     * @return
+     */
     public int getConstantCount() {
         return this.constants.length;
     }
 
-    @Override
+    /**
+     * 返回Mapping地址中含有的参数字符串数，如：<br>
+     * /blog/$userId-$blogId/list的常量字符串是："userId"、"blogId"，数目是2<br>
+     * /application/$appName的常量字符串是："appName"，数目是1
+     * 
+     * @return
+     */
     public int getParameterCount() {
         return this.paramNames.length;
     }
 
     @Override
-    public int compareTo(Mapping<?> o) {
+    public int compareTo(Mapping o) {
         if (!(o instanceof MappingImpl)) {
             return -o.compareTo(this);
         }
-        MappingImpl<?> pm = (MappingImpl<?>) o;
+        MappingImpl pm = (MappingImpl) o;
         // /user排在/{id}前面
         // /user_{id}排在/user前面
         // ab{id}排在a{id}前面
@@ -244,7 +265,7 @@ public class MappingImpl<T> extends AbstractMapping<T> {
                 return this.constants[i].compareTo(pm.constants[i]);
             }
         }
-        return compareMethods((MappingImpl<?>) o);
+        return 0;
     }
 
     @Override
@@ -255,7 +276,7 @@ public class MappingImpl<T> extends AbstractMapping<T> {
         if (!(obj instanceof Mapping)) {
             return false;
         }
-        return this.compareTo((Mapping<?>) obj) == 0;
+        return this.compareTo((Mapping) obj) == 0;
     }
 
     @Override
@@ -269,11 +290,15 @@ public class MappingImpl<T> extends AbstractMapping<T> {
 
     @Override
     public String toString() {
-        return "mapping: path=" + this.path + // NL
-                "; pattern=" + this.mappingPattern // NL
-                + "; params=" + Arrays.toString(this.paramNames) // NL
-                + "; constants=" + Arrays.toString(this.constants)// NL
-                + "; target=" + target;
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < this.constants.length; i++) {
+            sb.append(constants[i]);
+            if (i < this.paramNames.length) {
+                sb.append("${").append(this.paramNames[i]).append("}");
+            }
+        }
+        sb.append("[pattern=").append(mappingPattern).append("]");
+        return sb.toString();
     }
 
 }

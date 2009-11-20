@@ -171,9 +171,9 @@ public class ControllerInterceptorAdapter implements NamedControllerInterceptor,
         if (clazz == null) {
             clazz = getAnnotationClass();
             if (clazz != null) {
-                throw new IllegalStateException("please change method name from"
-                        + this.getClass().getName()
-                        + ".getAnnotationClass to getRequiredAnnotationClasses");
+                throw new IllegalStateException(
+                        "please change method name from getAnnotationClass to getRequiredAnnotationClass ["
+                                + this.getClass().getName() + "]");
             }
         }
         if (clazz != null) {

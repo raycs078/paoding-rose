@@ -31,7 +31,7 @@ import net.paoding.rose.web.impl.thread.AfterCompletion;
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  */
-public class NestedControllerInterceptorWrapper extends ControllerInterceptorWrapper implements
+public class NestedControllerInterceptor extends ControllerInterceptorWrapper implements
         ControllerInterceptor, NamedControllerInterceptor, AfterCompletion {
 
     public static class Builder {
@@ -60,19 +60,19 @@ public class NestedControllerInterceptorWrapper extends ControllerInterceptorWra
             return this;
         }
 
-        public NestedControllerInterceptorWrapper build() {
+        public NestedControllerInterceptor build() {
             ControllerInterceptor interceptor = this.interceptor;
             if (oncePerRequest) {
                 interceptor = new OncePerRequestInterceptorWrapper(interceptor);
             }
-            NestedControllerInterceptorWrapper wrapper = new NestedControllerInterceptorWrapper(
+            NestedControllerInterceptor wrapper = new NestedControllerInterceptor(
                     interceptor);
             wrapper.setName(name);
             return wrapper;
         }
     }
 
-    private NestedControllerInterceptorWrapper(ControllerInterceptor interceptor) {
+    private NestedControllerInterceptor(ControllerInterceptor interceptor) {
         super(interceptor);
     }
 

@@ -24,27 +24,35 @@ package net.paoding.rose.web.annotation;
  */
 public enum ReqMethod {
 
-    ALL, GET, HEAD, POST, PUT, DELETE, OPTIONS, TRACE;
+    GET, POST, DELETE, PUT, HEAD, OPTIONS, TRACE, ALL;
 
-    public static ReqMethod map(String method) {
-        method = method.toUpperCase();
-        if ("*".equals(method)) {
-            return ALL;
+    public ReqMethod[] parse() {
+        if (this == ALL) {
+            return new ReqMethod[] { GET, POST, DELETE, PUT, HEAD, OPTIONS, TRACE };
+        } else {
+            return new ReqMethod[] { this };
         }
+    }
+
+    public static ReqMethod parse(String method) {
+        method = method.toUpperCase();
         if ("GET".equals(method)) {
             return GET;
-        }
-        if ("HEAD".equals(method)) {
-            return HEAD;
         }
         if ("POST".equals(method)) {
             return POST;
         }
-        if ("PUT".equals(method)) {
-            return PUT;
+        if ("*".equals(method) || "ALL".equals(method)) {
+            return ALL;
         }
         if ("DELETE".equals(method)) {
             return DELETE;
+        }
+        if ("PUT".equals(method)) {
+            return PUT;
+        }
+        if ("HEAD".equals(method)) {
+            return HEAD;
         }
         if ("OPTIONS".equals(method)) {
             return OPTIONS;

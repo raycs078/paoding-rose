@@ -29,4 +29,5 @@ import java.lang.annotation.Target;
 @Documented
 public @interface Head {
 
+    String[] value() default { "" };
 }

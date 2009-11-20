@@ -61,9 +61,9 @@ public class RoseScanner {
     protected ResourcePatternResolver resourcePatternResolver = new PathMatchingResourcePatternResolver(
             Thread.currentThread().getContextClassLoader());
 
-    private List<ResourceInfo> classesFolderResources;
+    private List<ResourceRef> classesFolderResources;
 
-    private List<ResourceInfo> jarResources;
+    private List<ResourceRef> jarResources;
 
     // -------------------------------------------------------------
 
@@ -80,9 +80,9 @@ public class RoseScanner {
      * @throws IOException
      * @throws URISyntaxException
      */
-    public List<ResourceInfo> getClassesFolderResources() throws IOException {
+    public List<ResourceRef> getClassesFolderResources() throws IOException {
         if (classesFolderResources == null) {
-            List<ResourceInfo> classesFolderResources = new ArrayList<ResourceInfo>();
+            List<ResourceRef> classesFolderResources = new ArrayList<ResourceRef>();
             Enumeration<URL> found = resourcePatternResolver.getClassLoader().getResources("");
             while (found.hasMoreElements()) {
                 URL urlObject = found.nextElement();
@@ -99,20 +99,20 @@ public class RoseScanner {
                         }
                         continue;
                     }
-                    classesFolderResources.add(new ResourceInfo(new FileSystemResource(file),
-                            new String[] { "*" }));
+                    Resource resource = new FileSystemResource(file);
+                    classesFolderResources.add(new ResourceRef(resource, new String[] { "**" }));
                     if (logger.isDebugEnabled()) {
                         logger.debug("add classes folder: " + urlObject);
                     }
                 }
             }
             //
-            List<ResourceInfo> toRemove = new LinkedList<ResourceInfo>();
-            for (int i = 0; i < classesFolderResources.size(); i ++) {
-                ResourceInfo resourceInfo = classesFolderResources.get(i);
+            List<ResourceRef> toRemove = new LinkedList<ResourceRef>();
+            for (int i = 0; i < classesFolderResources.size(); i++) {
+                ResourceRef resourceInfo = classesFolderResources.get(i);
                 String path = resourceInfo.getResource().getFile().getAbsolutePath();
-                for (int j = i + 1; j < classesFolderResources.size(); j ++) {
-                    ResourceInfo toCheck = classesFolderResources.get(j);
+                for (int j = i + 1; j < classesFolderResources.size(); j++) {
+                    ResourceRef toCheck = classesFolderResources.get(j);
                     String toCheckPath = toCheck.getResource().getFile().getAbsolutePath();
                     if (path.startsWith(toCheckPath)) {
                         toRemove.add(toCheck);
@@ -124,10 +124,10 @@ public class RoseScanner {
             }
             classesFolderResources.removeAll(toRemove);
             //
-            this.classesFolderResources = new ArrayList<ResourceInfo>(classesFolderResources);
+            this.classesFolderResources = new ArrayList<ResourceRef>(classesFolderResources);
             if (logger.isInfoEnabled()) {
-                ResourceInfo[] ret = classesFolderResources
-                        .toArray(new ResourceInfo[classesFolderResources.size()]);
+                ResourceRef[] ret = classesFolderResources
+                        .toArray(new ResourceRef[classesFolderResources.size()]);
                 logger.info("found classes resources: " + Arrays.toString(ret));
             }
         }
@@ -141,9 +141,9 @@ public class RoseScanner {
      * @return
      * @throws IOException
      */
-    public List<ResourceInfo> getJarResources() throws IOException {
+    public List<ResourceRef> getJarResources() throws IOException {
         if (jarResources == null) {
-            List<ResourceInfo> jarResources = new LinkedList<ResourceInfo>();
+            List<ResourceRef> jarResources = new LinkedList<ResourceRef>();
             Enumeration<URL> found = resourcePatternResolver.getClassLoader().getResources(
                     "META-INF");
             while (found.hasMoreElements()) {
@@ -159,7 +159,7 @@ public class RoseScanner {
                         Resource resource = new FileSystemResource(path);
                         String[] modifier = getManifestRoseValue(resource.getFile());
                         if (modifier.length > 0) {
-                            jarResources.add(new ResourceInfo(resource, modifier));
+                            jarResources.add(new ResourceRef(resource, modifier));
                             if (logger.isDebugEnabled()) {
                                 logger.debug("add jar resource: " + path);
                             }
@@ -175,7 +175,7 @@ public class RoseScanner {
             }
             this.jarResources = jarResources;
             if (logger.isInfoEnabled()) {
-                ResourceInfo[] ret = jarResources.toArray(new ResourceInfo[jarResources.size()]);
+                ResourceRef[] ret = jarResources.toArray(new ResourceRef[jarResources.size()]);
                 logger.info("found rose jar resources: " + Arrays.toString(ret));
             }
         }

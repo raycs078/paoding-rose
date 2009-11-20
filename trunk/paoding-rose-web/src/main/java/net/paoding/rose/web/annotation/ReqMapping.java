@@ -20,6 +20,10 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.Collections;
+import java.util.List;
+
+import org.springframework.util.CollectionUtils;
 
 /**
  * 标注 {@link ReqMapping}设置对控制器、action方法的自定义映射规则。
@@ -60,6 +64,10 @@ public @interface ReqMapping {
      * 
      * @return
      */
-    ReqMethod[] methods() default { ReqMethod.ALL };
+    ReqMethod[] methods() default { ReqMethod.GET, ReqMethod.POST };
+
+    @SuppressWarnings("unchecked")
+    List<ReqMethod> defDefinition = Collections.unmodifiableList(CollectionUtils
+            .arrayToList(new ReqMethod[] { ReqMethod.GET, ReqMethod.POST }));
 
 }

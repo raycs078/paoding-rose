@@ -307,5 +307,6 @@ public interface Invocation {
 
     public Flash getFlash(boolean create);
 
+    public Invocation getPreInvocation();
 
 }

@@ -22,17 +22,26 @@ import org.apache.commons.lang.ArrayUtils;
 import org.springframework.core.io.Resource;
 
 /**
+ * 
+ * 
  * @author zhiliang.wang 王志亮 [qieqie.wang@gmail.com]
  */
-public class ResourceInfo {
+public class ResourceRef {
 
     private Resource resource;
 
     private String[] modifiers;
 
-    public ResourceInfo(Resource resource, String[] modifiers) {
+    public ResourceRef() {
+    }
+
+    public ResourceRef(Resource resource, String[] modifiers) {
+        setResource(resource);
+        setModifiers(modifiers);
+    }
+
+    public void setResource(Resource resource) {
         this.resource = resource;
-        this.modifiers = modifiers;
     }
 
     public Resource getResource() {
@@ -43,14 +52,19 @@ public class ResourceInfo {
         return modifiers;
     }
 
+    public void setModifiers(String[] modifiers) {
+        this.modifiers = modifiers;
+    }
+
     public boolean hasModifier(String modifier) {
-        return ArrayUtils.contains(modifiers, "*") || ArrayUtils.contains(modifiers, modifier);
+        return ArrayUtils.contains(modifiers, "**") || ArrayUtils.contains(modifiers, "*")
+                || ArrayUtils.contains(modifiers, modifier);
     }
 
     @Override
     public String toString() {
         try {
-            return resource.getURL() + Arrays.toString(modifiers);
+            return resource.getURL().getFile() + Arrays.toString(modifiers);
         } catch (IOException e) {
             return resource + Arrays.toString(modifiers);
         }

@@ -18,7 +18,7 @@ package net.paoding.rose.web.controllers.roseInfo;
 import java.util.Arrays;
 import java.util.List;
 
-import net.paoding.rose.scanner.ResourceInfo;
+import net.paoding.rose.scanner.ResourceRef;
 import net.paoding.rose.scanner.RoseScanner;
 import net.paoding.rose.web.annotation.rest.Get;
 
@@ -31,9 +31,9 @@ public class JarController implements BaseController {
 
     @Get
     public String list() throws Exception {
-        List<ResourceInfo> infos = RoseScanner.getInstance().getJarResources();
+        List<ResourceRef> infos = RoseScanner.getInstance().getJarResources();
         StringBuilder sb = new StringBuilder(1024).append("<ul>");
-        for (ResourceInfo info : infos) {
+        for (ResourceRef info : infos) {
             sb.append("<li>");
             sb.append(info.getResource().getURL());
             sb.append(Arrays.toString(info.getModifiers()));

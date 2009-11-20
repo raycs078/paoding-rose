@@ -42,8 +42,7 @@ public interface Engine {
      * @param chain
      * @throws Throwable
      */
-    public Object invoke(Rose rose, MatchResult<? extends Engine> mr, Object instruction,
-            EngineChain chain) throws Throwable;
+    public Object invoke(Rose rose, MatchResult mr, Object instruction) throws Throwable;
 
     /**
      * 销毁该引擎，在系统关闭或其他情况时

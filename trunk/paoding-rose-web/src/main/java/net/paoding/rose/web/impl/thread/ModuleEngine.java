@@ -18,6 +18,7 @@ package net.paoding.rose.web.impl.thread;
 import java.lang.reflect.InvocationTargetException;
 
 import net.paoding.rose.RoseConstants;
+import net.paoding.rose.util.SpringUtils;
 import net.paoding.rose.web.ControllerErrorHandler;
 import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.impl.module.Module;
@@ -25,11 +26,13 @@ import net.paoding.rose.web.impl.thread.tree.Rose;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.multipart.MultipartException;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.multipart.MultipartResolver;
+import org.springframework.web.multipart.commons.CommonsMultipartResolver;
 
 /**
  * {@link ModuleEngine} 负责从表示的模块中找出可匹配的 控制器引擎 {@link ControllerEngine}
@@ -50,6 +53,8 @@ public class ModuleEngine implements Engine {
     /** 模块对象 */
     private final Module module;
 
+    private MultipartResolver multipartResolver;
+
     // ---------------------------------------------------------------------
 
     /**
@@ -63,6 +68,7 @@ public class ModuleEngine implements Engine {
             throw new NullPointerException("module");
         }
         this.module = module;
+        this.multipartResolver = initMultipartResolver(module.getApplicationContext());
     }
 
     /**
@@ -83,12 +89,8 @@ public class ModuleEngine implements Engine {
     }
 
     @Override
-    public Object invoke(Rose rose, MatchResult<? extends Engine> mr, Object instruction,
-            EngineChain chain) throws Throwable {
-
+    public Object invoke(Rose rose, MatchResult mr, Object instruction) throws Throwable {
         Invocation inv = rose.getInvocation();
-
-        ((InvocationBean) inv).setModule(module);
         inv.getRequestPath().setModulePath(mr.getMatchedString());
 
         // 按照Spring规范，设置当前的applicationContext对象到request对象中,用于messageSource/国际化等功能
@@ -103,7 +105,7 @@ public class ModuleEngine implements Engine {
             if (isMultiPartRequest = checkMultipart(inv)) {
                 inv.setAttribute("$$paoding-rose.isMultiPartRequest", Boolean.TRUE);
             }
-            return innerInvoke(rose, mr, instruction, chain);
+            return innerInvoke(rose, mr, instruction);
         } finally {
             if (isMultiPartRequest) {
                 cleanupMultipart(inv);
@@ -111,10 +113,9 @@ public class ModuleEngine implements Engine {
         }
     }
 
-    private Object innerInvoke(Rose rose, MatchResult<? extends Engine> mr, Object instruction,
-            EngineChain chain) throws Throwable {
+    private Object innerInvoke(Rose rose, MatchResult mr, Object instruction) throws Throwable {
         try {
-            return chain.invokeNext(rose, instruction);
+            return rose.invokeNext(rose, instruction);
         } catch (Throwable invException) {
             // 抛出异常了(可能是拦截器或控制器抛出的)，此时让该控制器所在模块的ControllerErrorHanlder处理
 
@@ -159,19 +160,18 @@ public class ModuleEngine implements Engine {
      */
     @Override
     public String toString() {
-        //return this.module.getMappingPath();
+        //return this.multipartResolverodule.getMappingPath();
         return this.module.getUrl().toString();
     }
 
     //------------------------------------------------------
 
     protected boolean checkMultipart(Invocation inv) throws MultipartException {
-        if ((module.getMultipartResolver() != null)
-                && module.getMultipartResolver().isMultipart(inv.getRequest())) {
+        if (this.multipartResolver.isMultipart(inv.getRequest())) {
             if (inv.getRequest() instanceof MultipartHttpServletRequest) {
                 logger.debug("Request is already a MultipartHttpServletRequest");
             } else {
-                inv.setRequest(module.getMultipartResolver().resolveMultipart(inv.getRequest()));
+                inv.setRequest(this.multipartResolver.resolveMultipart(inv.getRequest()));
             }
             return true;
         }
@@ -185,9 +185,25 @@ public class ModuleEngine implements Engine {
      */
     protected void cleanupMultipart(Invocation inv) {
         if (inv.getRequest() instanceof MultipartHttpServletRequest) {
-            module.getMultipartResolver().cleanupMultipart(
-                    (MultipartHttpServletRequest) inv.getRequest());
+            this.multipartResolver.cleanupMultipart((MultipartHttpServletRequest) inv.getRequest());
         }
+    }
+
+    private static MultipartResolver initMultipartResolver(ApplicationContext context) {
+        MultipartResolver multipartResolver = (MultipartResolver) SpringUtils.getBean(context,
+                MultipartResolver.class);
+        if (multipartResolver != null) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Using MultipartResolver [" + multipartResolver + "]");
+            }
+        } else {
+            multipartResolver = new CommonsMultipartResolver();
+            if (logger.isDebugEnabled()) {
+                logger.debug("No found MultipartResolver in context, "
+                        + "Using MultipartResolver by default [" + multipartResolver + "]");
+            }
+        }
+        return multipartResolver;
     }
 
 }
