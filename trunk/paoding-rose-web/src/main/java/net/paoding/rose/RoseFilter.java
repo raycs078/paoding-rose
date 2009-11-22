@@ -37,15 +37,15 @@ import net.paoding.rose.web.impl.mapping.Mapping;
 import net.paoding.rose.web.impl.mapping.MappingImpl;
 import net.paoding.rose.web.impl.mapping.MappingNode;
 import net.paoding.rose.web.impl.mapping.MatchMode;
+import net.paoding.rose.web.impl.mapping.TreeBuilder;
+import net.paoding.rose.web.impl.mapping.WebResource;
 import net.paoding.rose.web.impl.module.ControllerRef;
 import net.paoding.rose.web.impl.module.Module;
 import net.paoding.rose.web.impl.module.ModulesBuilder;
 import net.paoding.rose.web.impl.module.NestedControllerInterceptor;
-import net.paoding.rose.web.impl.resource.WebResource;
 import net.paoding.rose.web.impl.thread.InvocationBean;
+import net.paoding.rose.web.impl.thread.Rose;
 import net.paoding.rose.web.impl.thread.WebEngine;
-import net.paoding.rose.web.impl.thread.tree.Rose;
-import net.paoding.rose.web.impl.thread.tree.TreeBuilder;
 import net.paoding.rose.web.instruction.InstructionExecutor;
 import net.paoding.rose.web.instruction.InstructionExecutorImpl;
 import net.paoding.rose.web.paramresolver.ParamResolver;
@@ -225,7 +225,7 @@ public class RoseFilter extends GenericFilterBean {
 
             // rose 对象 代表Rose框架对一次请求的执行
             final Rose rose = new Rose(modules, mappingTree, inv);
-            
+
             inv.setRose(rose);
 
             // 对请求进行匹配、处理、渲染以及渲染后的操作，如果找不到映配则返回false
@@ -295,10 +295,9 @@ public class RoseFilter extends GenericFilterBean {
     private MappingNode prepareMappingTree(List<Module> modules) {
         WebEngine rootEngine = new WebEngine(instructionExecutor);
         WebResource rootResource = new WebResource(null, "");
-        rootResource.setEndResource(false);
         rootResource.addEngine(ReqMethod.ALL, rootEngine);
-        Mapping rootMapping = new MappingImpl("", MatchMode.PATH_STARTS_WITH);
-        MappingNode mappingTree = new MappingNode(rootMapping, rootResource);
+        Mapping rootMapping = new MappingImpl("", MatchMode.STARTS_WITH, rootResource);
+        MappingNode mappingTree = new MappingNode(rootMapping);
         new TreeBuilder().create(mappingTree, modules);
         return mappingTree;
     }
@@ -328,30 +327,12 @@ public class RoseFilter extends GenericFilterBean {
                 getServletContext().log("", e);
             }
         }
-        MappingNode cur = mappingTree;
-        while (cur != null) {
+        for (MappingNode cur : mappingTree) {
             try {
-                cur.resource.destroy();
+                cur.getResource().destroy();
             } catch (Exception e) {
                 logger.error("", e);
                 getServletContext().log("", e);
-            }
-            if (cur.leftMostChild != null) {
-                cur = cur.leftMostChild;
-            } else if (cur.sibling != null) {
-                cur = cur.sibling;
-            } else {
-                while (true) {
-                    cur = cur.parent;
-                    if (cur == null) {
-                        break;
-                    } else {
-                        if (cur.sibling != null) {
-                            cur = cur.sibling;
-                            break;
-                        }
-                    }
-                }
             }
         }
         super.destroy();

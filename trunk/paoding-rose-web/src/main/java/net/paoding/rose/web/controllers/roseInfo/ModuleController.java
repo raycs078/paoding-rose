@@ -21,7 +21,7 @@ import java.util.List;
 import net.paoding.rose.web.annotation.rest.Get;
 import net.paoding.rose.web.impl.module.ControllerRef;
 import net.paoding.rose.web.impl.module.Module;
-import net.paoding.rose.web.impl.thread.tree.Rose;
+import net.paoding.rose.web.impl.thread.Rose;
 
 /**
  * 

@@ -21,8 +21,8 @@ import net.paoding.rose.RoseConstants;
 import net.paoding.rose.util.SpringUtils;
 import net.paoding.rose.web.ControllerErrorHandler;
 import net.paoding.rose.web.Invocation;
+import net.paoding.rose.web.impl.mapping.MatchResult;
 import net.paoding.rose.web.impl.module.Module;
-import net.paoding.rose.web.impl.thread.tree.Rose;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -91,15 +91,12 @@ public class ModuleEngine implements Engine {
     @Override
     public Object invoke(Rose rose, MatchResult mr, Object instruction) throws Throwable {
         Invocation inv = rose.getInvocation();
-        inv.getRequestPath().setModulePath(mr.getMatchedString());
+        inv.getRequestPath().setModulePath(mr.getValue());
 
         // 按照Spring规范，设置当前的applicationContext对象到request对象中,用于messageSource/国际化等功能
         inv.getRequest().setAttribute(RoseConstants.WEB_APPLICATION_CONTEXT_ATTRIBUTE,
                 module.getApplicationContext());
 
-        for (String matchResultParam : mr.getParameterNames()) {
-            inv.addModel(matchResultParam, mr.getParameter(matchResultParam));
-        }
         boolean isMultiPartRequest = false;
         try {
             if (isMultiPartRequest = checkMultipart(inv)) {

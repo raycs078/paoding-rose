@@ -21,7 +21,7 @@ public class PatternMappingTest extends TestCase {
     }
 
     private void _testStartsWith1(String pattern) {
-        MappingImpl mapping = new MappingImpl(pattern, MatchMode.PATH_STARTS_WITH);
+        MappingImpl mapping = new MappingImpl(pattern, MatchMode.STARTS_WITH);
         // expected: not null
         assertNotNull(mapping.match("/user"));
         assertNotNull(mapping.match("/user"));
@@ -64,7 +64,7 @@ public class PatternMappingTest extends TestCase {
     }
 
     private void _testStartsWith2(String pattern) {
-        MappingImpl mapping = new MappingImpl(pattern, MatchMode.PATH_STARTS_WITH);
+        MappingImpl mapping = new MappingImpl(pattern, MatchMode.STARTS_WITH);
         // expected: not null
         assertNotNull(mapping.match("/hiuser/123"));
         assertNotNull(mapping.match("/hiuser/abc"));
@@ -110,7 +110,7 @@ public class PatternMappingTest extends TestCase {
     }
 
     private void _testStartsWith3(String pattern) {
-        MappingImpl mapping = new MappingImpl(pattern, MatchMode.PATH_STARTS_WITH);
+        MappingImpl mapping = new MappingImpl(pattern, MatchMode.STARTS_WITH);
         assertNotNull(mapping.match("/hiuser/123"));
         assertNull(mapping.match("/hiuser/abc"));
         assertNotNull(mapping.match("/hiuser/123/"));
@@ -154,7 +154,7 @@ public class PatternMappingTest extends TestCase {
     }
 
     private void _testStartsWith4(String pattern) {
-        MappingImpl mapping = new MappingImpl(pattern, MatchMode.PATH_STARTS_WITH);
+        MappingImpl mapping = new MappingImpl(pattern, MatchMode.STARTS_WITH);
         assertNotNull(mapping.match("/hiabc/123"));
         assertNotNull(mapping.match("/hiaaa/456"));
         assertNotNull(mapping.match("/hibbb/789"));
@@ -186,7 +186,7 @@ public class PatternMappingTest extends TestCase {
     }
 
     private void _testEquals1(String pattern) {
-        MappingImpl mapping = new MappingImpl(pattern, MatchMode.PATH_EQUALS);
+        MappingImpl mapping = new MappingImpl(pattern, MatchMode.EQUALS);
         // expected: not null
         assertNotNull(mapping.match("/user"));
         assertNotNull(mapping.match("/user"));
@@ -225,7 +225,7 @@ public class PatternMappingTest extends TestCase {
     }
 
     private void _testEquals2(String pattern) {
-        MappingImpl mapping = new MappingImpl(pattern, MatchMode.PATH_EQUALS);
+        MappingImpl mapping = new MappingImpl(pattern, MatchMode.EQUALS);
         // expected: not null
         assertNotNull(mapping.match("/hiuser/123"));
         assertNotNull(mapping.match("/hiuser/abc"));
@@ -271,7 +271,7 @@ public class PatternMappingTest extends TestCase {
     }
 
     private void _testEquals3(String pattern) {
-        MappingImpl mapping = new MappingImpl(pattern, MatchMode.PATH_EQUALS);
+        MappingImpl mapping = new MappingImpl(pattern, MatchMode.EQUALS);
         assertNotNull(mapping.match("/hiuser/123"));
         assertNull(mapping.match("/hiuser/abc"));
         assertNotNull(mapping.match("/hiuser/123/"));
@@ -315,7 +315,7 @@ public class PatternMappingTest extends TestCase {
     }
 
     private void _testEquals4(String pattern) {
-        MappingImpl mapping = new MappingImpl(pattern, MatchMode.PATH_EQUALS);
+        MappingImpl mapping = new MappingImpl(pattern, MatchMode.EQUALS);
         assertNotNull(mapping.match("/hiabc/123"));
         assertNotNull(mapping.match("/hiaaa/456"));
         assertNotNull(mapping.match("/hibbb/789"));
@@ -363,7 +363,7 @@ public class PatternMappingTest extends TestCase {
     }
 
     private void _testParamAndConstaint1(String pattern) {
-        MappingImpl mapping = new MappingImpl(pattern, MatchMode.PATH_EQUALS);
+        MappingImpl mapping = new MappingImpl(pattern, MatchMode.EQUALS);
         assertTrue(Arrays.equals(new String[] { "name", "id" }, mapping.getParamNames()));
         assertTrue(Arrays.equals(new String[] { "/hi", "/", "" }, mapping.getConstants()));
     }
@@ -381,7 +381,7 @@ public class PatternMappingTest extends TestCase {
     }
 
     private void _testParamAndConstaint2(String pattern) {
-        MappingImpl mapping = new MappingImpl(pattern, MatchMode.PATH_EQUALS);
+        MappingImpl mapping = new MappingImpl(pattern, MatchMode.EQUALS);
         assertTrue(Arrays.equals(new String[] { "name" }, mapping.getParamNames()));
         assertTrue(Arrays.equals(new String[] { "/", "" }, mapping.getConstants()));
     }

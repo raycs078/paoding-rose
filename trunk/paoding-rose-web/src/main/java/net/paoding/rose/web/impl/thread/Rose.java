@@ -13,7 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package net.paoding.rose.web.impl.thread.tree;
+package net.paoding.rose.web.impl.thread;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,13 +27,9 @@ import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.InvocationUtils;
 import net.paoding.rose.web.annotation.ReqMethod;
 import net.paoding.rose.web.impl.mapping.MappingNode;
+import net.paoding.rose.web.impl.mapping.MatchResult;
+import net.paoding.rose.web.impl.mapping.WebResource;
 import net.paoding.rose.web.impl.module.Module;
-import net.paoding.rose.web.impl.resource.WebResource;
-import net.paoding.rose.web.impl.thread.AfterCompletion;
-import net.paoding.rose.web.impl.thread.Engine;
-import net.paoding.rose.web.impl.thread.EngineChain;
-import net.paoding.rose.web.impl.thread.MatchResult;
-import net.paoding.rose.web.impl.thread.ParameteredUriRequest;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -80,7 +76,7 @@ public class Rose implements EngineChain {
     }
 
     public boolean execute() throws Throwable {
-        ArrayList<MatchResult> matchResults = mappingTree.matches(inv.getRequestPath());
+        ArrayList<MatchResult> matchResults = mappingTree.match(inv.getRequestPath());
         if (matchResults.size() == 0) {
             return false;
         }
@@ -88,7 +84,7 @@ public class Rose implements EngineChain {
         if (!mr.getResource().isEndResource()) {
             return false;
         }
-        if (!mr.isMethodAllowed(inv.getRequestPath().getMethod())) {
+        if (!mr.getResource().isMethodAllowed(inv.getRequestPath().getMethod())) {
             /* 405 Method Not Allowed
              * The method specified in the Request-Line is not allowed for the
              * resource identified by the Request-URI. The response MUST include an

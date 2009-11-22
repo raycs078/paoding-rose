@@ -26,7 +26,7 @@ import java.util.regex.Pattern;
  */
 public enum MatchMode {
 
-    PATH_STARTS_WITH {
+    STARTS_WITH {
 
         public MappingPattern compile(final String conf, boolean regex) {
             if (regex) {
@@ -70,7 +70,7 @@ public enum MatchMode {
         }
     },
 
-    PATH_EQUALS {
+    EQUALS {
 
         @Override
         public MappingPattern compile(final String conf, boolean regex) {

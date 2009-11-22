@@ -19,7 +19,7 @@
 package net.paoding.rose.web.impl.thread;
 
 import net.paoding.rose.web.impl.mapping.Mapping;
-import net.paoding.rose.web.impl.thread.tree.Rose;
+import net.paoding.rose.web.impl.mapping.MatchResult;
 
 /**
  * 一个 {@link Engine} 封装了对某种符合要求的请求的某种处理。Rose 对一次WEB请求的处理最终落实为对一些列的
