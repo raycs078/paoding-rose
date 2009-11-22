@@ -17,10 +17,10 @@ package net.paoding.rose.testcases.resource;
 
 import junit.framework.TestCase;
 import net.paoding.rose.web.annotation.ReqMethod;
-import net.paoding.rose.web.impl.resource.WebResource;
+import net.paoding.rose.web.impl.mapping.MatchResult;
+import net.paoding.rose.web.impl.mapping.WebResource;
 import net.paoding.rose.web.impl.thread.Engine;
-import net.paoding.rose.web.impl.thread.MatchResult;
-import net.paoding.rose.web.impl.thread.tree.Rose;
+import net.paoding.rose.web.impl.thread.Rose;
 
 /**
  * 

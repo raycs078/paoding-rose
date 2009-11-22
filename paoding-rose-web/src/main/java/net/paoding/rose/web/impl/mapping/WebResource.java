@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.paoding.rose.web.impl.resource;
+package net.paoding.rose.web.impl.mapping;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -26,7 +26,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * {@link WebResource} 代表一个资源及其支持的操作逻辑
+ * {@link WebResource} 代表一个可参数化的资源及其支持的操作逻辑。
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
@@ -42,9 +42,11 @@ public class WebResource {
 
     private boolean isEndResource = true;
 
+    private transient String identityCache;
+
     private transient String toStringCache;
 
-    private transient List<ReqMethod> allowedMethodsCacheUnmodifiable;
+    private transient List<ReqMethod> allowedMethodsCache;
 
     /**
      * 该资源支持的操作逻辑，如果不支持某种操作对应位置的元素为null
@@ -67,7 +69,7 @@ public class WebResource {
     public void setParent(WebResource parent) {
         this.parent = parent;
         if (this.parent != null) {
-            parent.setEndResource(false);
+            parent.isEndResource = false;
         }
     }
 
@@ -75,12 +77,15 @@ public class WebResource {
         return name;
     }
 
-    public String getAbsolutePath() {
-        if (parent == null) {
-            return getName();
-        } else {
-            return parent.getAbsolutePath() + getName();
+    public String getIdentiy() {
+        if (identityCache == null) {
+            if (parent == null) {
+                identityCache = getName();
+            } else {
+                identityCache = parent.getIdentiy() + getName();
+            }
         }
+        return identityCache;
     }
 
     public void setName(String name) {
@@ -133,26 +138,23 @@ public class WebResource {
         return isEndResource;
     }
 
-    public void setEndResource(boolean isEndResource) {
-        this.isEndResource = isEndResource;
-    }
-
     protected void clearCache() {
-        allowedMethodsCacheUnmodifiable = null;
+        allowedMethodsCache = null;
         toStringCache = null;
+        identityCache = null;
     }
 
     public List<ReqMethod> getAllowedMethods() {
-        if (allowedMethodsCacheUnmodifiable == null) {
+        if (allowedMethodsCache == null) {
             List<ReqMethod> allowedMethods = new ArrayList<ReqMethod>();
             for (ReqMethod method : ReqMethod.ALL.parse()) {
                 if (getEngine(method) != null) {
                     allowedMethods.add(method);
                 }
             }
-            allowedMethodsCacheUnmodifiable = Collections.unmodifiableList(allowedMethods);
+            allowedMethodsCache = Collections.unmodifiableList(allowedMethods);
         }
-        return allowedMethodsCacheUnmodifiable;
+        return allowedMethodsCache;
     }
 
     /**
@@ -180,7 +182,7 @@ public class WebResource {
     public String toString() {
         if (this.toStringCache == null) {
             StringBuilder sb = new StringBuilder();
-            sb.append(getName()).append(" [");
+            sb.append(getIdentiy()).append(" [");
             int oriLen = sb.length();
             for (ReqMethod method : getAllowedMethods()) {
                 sb.append(method.toString()).append(", ");

@@ -47,7 +47,7 @@ import net.paoding.rose.web.annotation.Param;
 import net.paoding.rose.web.annotation.ParamConf;
 import net.paoding.rose.web.impl.module.Module;
 import net.paoding.rose.web.impl.thread.InvocationBean;
-import net.paoding.rose.web.impl.thread.tree.Rose;
+import net.paoding.rose.web.impl.thread.Rose;
 import net.paoding.rose.web.var.Flash;
 import net.paoding.rose.web.var.Model;
 

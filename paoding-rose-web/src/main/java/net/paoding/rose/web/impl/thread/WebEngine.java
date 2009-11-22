@@ -31,7 +31,7 @@ import net.paoding.rose.RoseFilter;
 import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.InvocationUtils;
 import net.paoding.rose.web.RequestPath;
-import net.paoding.rose.web.impl.thread.tree.Rose;
+import net.paoding.rose.web.impl.mapping.MatchResult;
 import net.paoding.rose.web.instruction.InstructionExecutor;
 import net.paoding.rose.web.instruction.InstructionExecutorImpl;
 import net.paoding.rose.web.var.FlashImpl;
@@ -43,7 +43,7 @@ import org.apache.commons.logging.LogFactory;
  * {@link WebEngine}从{@link RoseFilter}接收web请求，并按照Rose规则进行处理.
  * <p>
  * {@link WebEngine}会判断该web请求是否是本{@link WebEngine}
- * 应该处理的，如果是进行后续的委派和处理，如果不是则{@link #matches(InvocationBean)}返回false给上层.
+ * 应该处理的，如果是进行后续的委派和处理，如果不是则{@link #match(InvocationBean)}返回false给上层.
  * <p>
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]

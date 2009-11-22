@@ -33,9 +33,9 @@ import net.paoding.rose.web.RequestPath;
 import net.paoding.rose.web.annotation.HttpFeatures;
 import net.paoding.rose.web.annotation.Intercepted;
 import net.paoding.rose.web.annotation.Return;
+import net.paoding.rose.web.impl.mapping.MatchResult;
 import net.paoding.rose.web.impl.module.Module;
 import net.paoding.rose.web.impl.module.NestedControllerInterceptor;
-import net.paoding.rose.web.impl.thread.tree.Rose;
 import net.paoding.rose.web.impl.validation.ParameterBindingResult;
 import net.paoding.rose.web.paramresolver.MethodParameterResolver;
 import net.paoding.rose.web.paramresolver.ParamResolver;
@@ -187,14 +187,9 @@ public final class ActionEngine implements Engine {
 
     public Object innerInvoke(Rose rose, MatchResult mr, Object instruction) throws Throwable {
         Invocation inv = rose.getInvocation();
-        inv.getRequestPath().setActionPath(mr.getMatchedString());
+        inv.getRequestPath().setActionPath(mr.getValue());
         // applies http features before the resolvers
         applyHttpFeatures(inv);
-
-        //
-        for (String matchResultParam : mr.getParameterNames()) {
-            inv.addModel(matchResultParam, mr.getParameter(matchResultParam));
-        }
 
         // creates parameter binding result (not bean, just simple type, like int, Integer, int[] ...
         ParameterBindingResult paramBindingResult = new ParameterBindingResult(inv);

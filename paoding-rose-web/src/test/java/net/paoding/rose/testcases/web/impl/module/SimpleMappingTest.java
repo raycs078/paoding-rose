@@ -7,7 +7,7 @@ import net.paoding.rose.web.impl.mapping.MatchMode;
 public class SimpleMappingTest extends TestCase {
 
     public void testStartsWith() {
-        MappingImpl mapping = new MappingImpl("/user", MatchMode.PATH_STARTS_WITH);
+        MappingImpl mapping = new MappingImpl("/user", MatchMode.STARTS_WITH);
         // expected: not null
         assertNotNull(mapping.match("/user"));
         assertNotNull(mapping.match("/user"));
@@ -23,7 +23,7 @@ public class SimpleMappingTest extends TestCase {
     }
 
     public void testEquals() {
-        MappingImpl mapping = new MappingImpl("/user", MatchMode.PATH_EQUALS);
+        MappingImpl mapping = new MappingImpl("/user", MatchMode.EQUALS);
         // expected: not null
         assertNotNull(mapping.match("/user"));
         assertNotNull(mapping.match("/user"));

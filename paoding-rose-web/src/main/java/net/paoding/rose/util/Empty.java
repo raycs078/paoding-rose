@@ -13,23 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.paoding.rose.web.impl.mapping;
+package net.paoding.rose.util;
 
 /**
- * {@link MappingPattern} 封装字符串的匹配规则，不同的 {@link MatchMode} 匹配规则不一样
- * 
- * @see MatchMode
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
-public interface MappingPattern {
+public class Empty {
 
-    /**
-     * 返回匹配结果,返回空表示不能匹配
-     * 
-     * @param path
-     * @return
-     */
-    java.util.regex.MatchResult match(String path);
+    /** 长度为零字符串 */
+    public final static String[] STRING_ARRAY = new String[0];
 }

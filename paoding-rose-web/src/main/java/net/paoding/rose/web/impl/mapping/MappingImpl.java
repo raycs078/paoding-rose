@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import net.paoding.rose.web.impl.thread.MatchResult;
+import net.paoding.rose.util.Empty;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -31,60 +31,163 @@ import org.apache.commons.logging.LogFactory;
 /**
  * {@link MappingImpl}实现了使用<strong>正则表达式</strong>定义匹配字符串的 {@link Mapping}
  * <p>
- * 如果在所给的地址字符串中被$xxx (或${xxx}、{xxx})包围的都表示要使用正则表达式替代。<br>
+ * 所给的地址字符串中被$xxx (或${xxx}、{xxx})包围的都表示要使用正则表达式替代。<br>
  * 默认使用的正则表达式使用的是"([^/]+)"，即除'/'外的任何字符。<br>
  * 自定义正则表达式通过冒号来定义，例如：{xxx:[0-9]+}，表示使用的正则表达式将是[0-9]+
  * <p>
+ * 为了方便， {@link MappingImpl} 定义了一些正则快捷表述方式:
+ * 
+ * <pre>
+ *     快捷方式    所代表的正则表达式
+ *      id         [0-9a-zA-Z_-]+ 
+ *     number     [0-9]+
+ *     n          [0-9]+
+ *     word       \\w+
+ *     w          \\w+
+ *     .          .*
+ *     +          .+
+ *     ?          .?
+ * </pre>
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
- * @param <T>
  */
-public class MappingImpl extends AbstractMapping {
+public class MappingImpl implements Mapping {
 
     private static final Log logger = LogFactory.getLog(MappingImpl.class);
 
+    /** 为定义正则表达式参数所使用的规则 */
     private static final String DEFAULT_REGEX = "([^/]+)";
 
-    private static final String[] EMPTY = new String[0];
+    /** 规范化的地址定义 */
+    private String path;
 
-    protected MappingPattern mappingPattern;
+    /** 映射规则 */
+    private MappingPattern mappingPattern;
 
-    protected String[] constants = EMPTY;
+    /** 地址定义中包含的常量 */
+    private String[] constants = Empty.STRING_ARRAY;
 
-    protected String[] paramNames = EMPTY;
+    /** 地址定义中的参数名 */
+    private String[] paramNames = Empty.STRING_ARRAY;
 
-    private Object target;
+    /** 该映射代表的资源 */
+    private WebResource resource;
 
     public MappingImpl(String path, MatchMode mode) {
-        super(path);
+        this(path, mode, null);
+    }
+
+    public MappingImpl(String path, MatchMode mode, WebResource resource) {
+        this.path = normalized(path);
         initPattern(mode);
-    }
-
-    public void setTarget(Object target) {
-        this.target = target;
-    }
-
-    public Object getTarget() {
-        return target;
+        this.setResource(resource);
     }
 
     @Override
-    public MatchResult match(String path/*, String requestMethod*/) {
+    public String getPath() {
+        return path;
+    }
+
+    public WebResource getResource() {
+        return resource;
+    }
+
+    public void setResource(WebResource resource) {
+        this.resource = resource;
+    }
+
+    public String[] getConstants() {
+        return Arrays.copyOf(this.constants, constants.length);
+    }
+
+    public String[] getParamNames() {
+        return Arrays.copyOf(this.paramNames, paramNames.length);
+    }
+
+    /**
+     * 返回Mapping地址中含有的常量字符串数，如:<br>
+     * /blog/$userId-$blogId/list的常量字符串是："/blog/"、"-"、"/list"，数目是3<br>
+     * /application/$appName的常量字符串是："/applicaiton/"、""，数目是2
+     * 
+     * @return
+     */
+    public int getConstantCount() {
+        return this.constants.length;
+    }
+
+    /**
+     * 返回Mapping地址中含有的参数字符串数，如：<br>
+     * /blog/$userId-$blogId/list的常量字符串是："userId"、"blogId"，数目是2<br>
+     * /application/$appName的常量字符串是："appName"，数目是1
+     * 
+     * @return
+     */
+    public int getParameterCount() {
+        return this.paramNames.length;
+    }
+
+    /**
+     * 越特殊的地址比越普遍的地址要求排序在前，compare的值要为负
+     */
+    @Override
+    public int compareTo(Mapping o) {
+        if (!(o instanceof MappingImpl)) {
+            return -o.compareTo(this);
+        }
+        MappingImpl pm = (MappingImpl) o;
+        // /user排在/{id}前面
+        // /user_{id}排在/user前面
+        // ab{id}排在a{id}前面
+        for (int i = 0; i < constants.length; i++) {
+            if (pm.constants.length <= i) {
+                return 1;
+            }
+            if (this.constants[i].equals(pm.constants[i])) {
+                continue;
+            }
+            if (this.constants[i].length() == 0) {
+                return 1;
+            } else if (this.constants[i].startsWith(pm.constants[i])) {
+                return -1;
+            } else if (pm.constants[i].startsWith(this.constants[i])) {
+                return 1;
+            } else {
+                return this.constants[i].compareTo(pm.constants[i]);
+            }
+        }
+        return 0;
+    }
+
+    @Override
+    public MatchResult match(String path) {
         java.util.regex.MatchResult regexMatchResult = mappingPattern.match(path);
         if (regexMatchResult == null) {
             return null;
         }
-        String string = regexMatchResult.group(0);
-        while (string.endsWith("/")) {
-            string = string.substring(0, string.length() - 1);
+        String value = regexMatchResult.group(0);
+        while (value.length() > 0 && value.charAt(value.length() - 1) == '/') {
+            value = value.substring(0, value.length() - 1);
         }
-        MatchResult matchResult = new MatchResult(string, this);
+        MatchResultImpl mr = new MatchResultImpl(value, getResource());
         if (paramNames.length != 0) {
             for (int i = 0; i < this.paramNames.length; i++) {
-                matchResult.putParameter(paramNames[i], regexMatchResult.group(i + 1));
+                mr.putParameter(paramNames[i], regexMatchResult.group(i + 1));
             }
         }
-        return matchResult;
+        return mr;
+    }
+
+    protected String normalized(String path) {
+        if (path.length() > 0 && path.charAt(0) != '/') {
+            path = '/' + path;
+        }
+        if (path.equals("/")) {
+            path = "";
+        }
+        while (path.length() > 1 && path.endsWith("/")) {
+            path = path.substring(0, path.length() - 1);
+        }
+        return path;
     }
 
     protected void initPattern(MatchMode mode) {
@@ -209,65 +312,6 @@ public class MappingImpl extends AbstractMapping {
         }
     }
 
-    public String[] getConstants() {
-        return Arrays.copyOf(this.constants, constants.length);
-    }
-
-    public String[] getParamNames() {
-        return Arrays.copyOf(this.paramNames, paramNames.length);
-    }
-
-    /**
-     * 返回Mapping地址中含有的常量字符串数，如:<br>
-     * /blog/$userId-$blogId/list的常量字符串是："/blog/"、"-"、"/list"，数目是3<br>
-     * /application/$appName的常量字符串是："/applicaiton/"、""，数目是2
-     * 
-     * @return
-     */
-    public int getConstantCount() {
-        return this.constants.length;
-    }
-
-    /**
-     * 返回Mapping地址中含有的参数字符串数，如：<br>
-     * /blog/$userId-$blogId/list的常量字符串是："userId"、"blogId"，数目是2<br>
-     * /application/$appName的常量字符串是："appName"，数目是1
-     * 
-     * @return
-     */
-    public int getParameterCount() {
-        return this.paramNames.length;
-    }
-
-    @Override
-    public int compareTo(Mapping o) {
-        if (!(o instanceof MappingImpl)) {
-            return -o.compareTo(this);
-        }
-        MappingImpl pm = (MappingImpl) o;
-        // /user排在/{id}前面
-        // /user_{id}排在/user前面
-        // ab{id}排在a{id}前面
-        for (int i = 0; i < constants.length; i++) {
-            if (pm.constants.length <= i) {
-                return 1;
-            }
-            if (this.constants[i].equals(pm.constants[i])) {
-                continue;
-            }
-            if (this.constants[i].length() == 0) {
-                return 1;
-            } else if (this.constants[i].startsWith(pm.constants[i])) {
-                return -1;
-            } else if (pm.constants[i].startsWith(this.constants[i])) {
-                return 1;
-            } else {
-                return this.constants[i].compareTo(pm.constants[i]);
-            }
-        }
-        return 0;
-    }
-
     @Override
     public boolean equals(Object obj) {
         if (obj == this) {
@@ -297,7 +341,7 @@ public class MappingImpl extends AbstractMapping {
                 sb.append("${").append(this.paramNames[i]).append("}");
             }
         }
-        sb.append("[pattern=").append(mappingPattern).append("]");
+        sb.append("[regex=").append(mappingPattern).append("]");
         return sb.toString();
     }
 

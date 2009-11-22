@@ -18,9 +18,9 @@ package net.paoding.rose.web.impl.thread;
 import java.lang.reflect.Proxy;
 
 import net.paoding.rose.web.Invocation;
+import net.paoding.rose.web.impl.mapping.MatchResult;
 import net.paoding.rose.web.impl.module.ControllerRef;
 import net.paoding.rose.web.impl.module.Module;
-import net.paoding.rose.web.impl.thread.tree.Rose;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -83,10 +83,7 @@ public class ControllerEngine implements Engine {
     @Override
     public Object invoke(Rose rose, MatchResult mr, Object instruction) throws Throwable {
         Invocation inv = rose.getInvocation();
-        inv.getRequestPath().setControllerPath(mr.getMatchedString());
-        for (String matchResultParam : mr.getParameterNames()) {
-            inv.addModel(matchResultParam, mr.getParameter(matchResultParam));
-        }
+        inv.getRequestPath().setControllerPath(mr.getValue());
         return rose.invokeNext(rose, instruction);
     }
 
