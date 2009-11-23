@@ -17,7 +17,6 @@
 package net.paoding.rose.web.paramresolver;
 
 import java.lang.reflect.Array;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
@@ -26,10 +25,11 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -51,6 +51,7 @@ import net.paoding.rose.web.impl.thread.Rose;
 import net.paoding.rose.web.var.Flash;
 import net.paoding.rose.web.var.Model;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -418,6 +419,50 @@ public class ResolverFactoryImpl implements ResolverFactory {
         }
     }
 
+    @SuppressWarnings("unchecked")
+    private static Object resolveArray(Invocation inv, ParamMetaData paramMetaData,
+            Class<?> compnentType) {
+        if (compnentType == MultipartFile.class) {
+            String filterName = paramMetaData.getParamName();
+            if (filterName == null) {
+                filterName = "";
+            }
+            if (inv.getRequest() instanceof MultipartRequest) {
+                List<MultipartFile> files = new LinkedList<MultipartFile>();
+                MultipartRequest multipartRequest = (MultipartRequest) inv.getRequest();
+                Iterator<String> names = multipartRequest.getFileNames();
+                while (names.hasNext()) {
+                    String name = names.next();
+                    if (name.startsWith(filterName)) {
+                        files.add(multipartRequest.getFile(name));
+                    }
+                }
+                return files.toArray(new MultipartFile[0]);
+            } else {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("cann't " + "set MultipartFile param to method "
+                            + ", the request is not a MultipartRequest");
+                }
+            }
+        } else if (StringUtils.isNotEmpty(paramMetaData.getParamName())) {
+            Object toConvert = inv.getRequest().getParameterValues(paramMetaData.getParamName());
+            if (toConvert != null) {
+                if (((String[]) toConvert).length == 1) {
+                    toConvert = ((String[]) toConvert)[0].split(",");
+                }
+                Class<?> arrayType;
+                if (paramMetaData.getParamType().isArray()) {
+                    arrayType = paramMetaData.getParamType();
+                } else {
+                    arrayType = Array.newInstance((Class<?>) compnentType, 0).getClass();
+                }
+                Object array = simpleTypeConverter.convertIfNecessary(toConvert, arrayType);
+                return array;
+            }
+        }
+        return Array.newInstance((Class<?>) compnentType, 0);
+    }
+
     static final class ArrayResolver implements ParamResolver {
 
         @Override
@@ -427,19 +472,9 @@ public class ResolverFactoryImpl implements ResolverFactory {
 
         @Override
         public Object resolve(Invocation inv, ParamMetaData paramMetaData) {
-            if (StringUtils.isNotEmpty(paramMetaData.getParamName())) {
-                Object toConvert = inv.getRequest()
-                        .getParameterValues(paramMetaData.getParamName());
-                if (toConvert != null) {
-                    if (((String[]) toConvert).length == 1) {
-                        toConvert = ((String[]) toConvert)[0].split(",");
-                    }
-                    return simpleTypeConverter.convertIfNecessary(toConvert, paramMetaData
-                            .getParamType());
-                }
-            }
-            return Array.newInstance(paramMetaData.getParamType().getComponentType(), 0);
+            return resolveArray(inv, paramMetaData, paramMetaData.getParamType().getComponentType());
         }
+
     }
 
     static abstract class CollectionResolver<T extends Collection<?>> implements ParamResolver {
@@ -447,8 +482,13 @@ public class ResolverFactoryImpl implements ResolverFactory {
         @Override
         public final boolean supports(ParamMetaData metaData) {
             if (innerSupports(metaData)) {
-                metaData.setUserObject(compileGenericParameterTypesDetail(metaData.getMethod(),
-                        metaData.getIndex()));
+                Class<?>[] generics = compileGenericParameterTypesDetail(metaData.getMethod(),
+                        metaData.getIndex());
+                if (generics.length == 0) {
+                    throw new IllegalArgumentException("please use generic for "
+                            + metaData.getParamType().getName());
+                }
+                metaData.setUserObject(generics[0]);
                 return true;
             }
             return false;
@@ -457,26 +497,19 @@ public class ResolverFactoryImpl implements ResolverFactory {
         public abstract boolean innerSupports(ParamMetaData metaData);
 
         @Override
-        public T resolve(Invocation inv, ParamMetaData paramMetaData) throws Exception {
-            if (StringUtils.isNotEmpty(paramMetaData.getParamName())) {
-                Class<?> componentType = ((Class[]) paramMetaData.getUserObject())[0];
-                Object toConvert = inv.getRequest()
-                        .getParameterValues(paramMetaData.getParamName());
-                if (toConvert != null) {
-                    if (((String[]) toConvert).length == 1) {
-                        toConvert = ((String[]) toConvert)[0].split(","); // 去掉数组，变为一个String，converter将按逗号切割
-                    }
-                    if (componentType != String.class) {
-                        toConvert = simpleTypeConverter.convertIfNecessary(toConvert, Array
-                                .newInstance(componentType, 0).getClass());
-                    }
-                    return convertFromArray(paramMetaData.getParamType(), (Object[]) toConvert);
-                }
+        @SuppressWarnings("unchecked")
+        public Object resolve(Invocation inv, ParamMetaData paramMetaData) throws Exception {
+            Object array = resolveArray(inv, paramMetaData, (Class<?>) paramMetaData
+                    .getUserObject());
+            int len = ArrayUtils.getLength(array);
+            Collection collection = create(paramMetaData, len);
+            for (int i = 0; i < len; i++) {
+                collection.add(Array.get(array, i));
             }
-            return convertFromArray(paramMetaData.getParamType(), new Object[0]);
+            return collection;
         }
 
-        protected abstract T convertFromArray(Class<?> paramType, Object[] toConvert)
+        protected abstract Collection<?> create(ParamMetaData paramMetaData, int len)
                 throws Exception;
     }
 
@@ -492,17 +525,12 @@ public class ResolverFactoryImpl implements ResolverFactory {
 
         @Override
         @SuppressWarnings("unchecked")
-        protected List<?> convertFromArray(Class<?> paramType, Object[] toConvert)
-                throws InstantiationException, IllegalAccessException, IllegalArgumentException,
-                SecurityException, InvocationTargetException, NoSuchMethodException {
-            Collection<Object> param;
-            if (paramType.isInterface()) {
-                param = new ArrayList<Object>(toConvert.length);
+        protected Collection create(ParamMetaData paramMetaData, int len) throws Exception {
+            if (paramMetaData.getParamType().isInterface()) {
+                return new ArrayList<Object>(len);
             } else {
-                param = (Collection<Object>) paramType.getConstructor().newInstance();
+                return (Collection<?>) paramMetaData.getParamType().getConstructor().newInstance();
             }
-            Collections.addAll(param, toConvert);
-            return (List<?>) param;
         }
     }
 
@@ -517,17 +545,12 @@ public class ResolverFactoryImpl implements ResolverFactory {
 
         @Override
         @SuppressWarnings("unchecked")
-        protected Set<?> convertFromArray(Class<?> paramType, Object[] toConvert)
-                throws InstantiationException, IllegalAccessException, IllegalArgumentException,
-                SecurityException, InvocationTargetException, NoSuchMethodException {
-            Collection<Object> param;
-            if (paramType.isInterface()) {
-                param = new HashSet<Object>(toConvert.length);
+        protected Collection create(ParamMetaData paramMetaData, int len) throws Exception {
+            if (paramMetaData.getParamType().isInterface()) {
+                return new HashSet<Object>(len);
             } else {
-                param = (Collection<Object>) paramType.getConstructor().newInstance();
+                return (Collection<?>) paramMetaData.getParamType().getConstructor().newInstance();
             }
-            Collections.addAll(param, toConvert);
-            return (Set<?>) param;
         }
     }
 
