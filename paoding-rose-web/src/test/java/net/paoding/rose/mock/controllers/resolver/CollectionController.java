@@ -18,6 +18,10 @@ public class CollectionController {
             @Param(value = "integer") ArrayList<Integer> integers, //
             @Param("name") Collection<String> names, //
             @Param(value = "bool") LinkedList<Boolean> bools) {
+        ints.size();
+        integers.size();
+        names.size();
+        bools.size();
         return new Class[] { ints.get(0).getClass(), integers.get(0).getClass(),
                 names.iterator().next().getClass(), bools.get(0).getClass() };
     }
