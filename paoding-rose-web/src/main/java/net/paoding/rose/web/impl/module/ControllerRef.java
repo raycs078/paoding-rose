@@ -109,7 +109,7 @@ public class ControllerRef {
                         }
                     }
                 } else if (shotcutMappings.size() == 0) {
-                    methods = ReqMapping.defDefinition.toArray(new ReqMethod[0]);
+                    methods = new ReqMethod[] { ReqMethod.GET, ReqMethod.POST };
                     mappingPaths = new String[] { methodPath };
                 }
                 if (mappingPaths.length > 0 || methods.length > 0 || shotcutMappings.size() > 0) {
