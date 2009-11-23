@@ -33,6 +33,7 @@ import net.paoding.rose.web.impl.view.ViewDispatcher;
 import net.paoding.rose.web.impl.view.ViewDispatcherImpl;
 import net.paoding.rose.web.impl.view.ViewPathCache;
 
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.AnnotatedGenericBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.GenericBeanDefinition;
@@ -163,65 +164,147 @@ public class ViewInstruction extends AbstractInstruction {
             globalViewPathCaches.put(viewRelativePath, viewPathCache);
         }
         //
-        String viewPath = viewPathCache.getViewPath(viewName);
-        if (viewPath == null) {
+        String viewPath = getViewPathFromCache(inv, viewPathCache, viewName);
+        if (viewPath != null) {
             if (logger.isDebugEnabled()) {
-                logger.debug("to find viewPath by viewName '" + viewName + "'");
+                logger.debug("found '" + viewPath + "' for viewName '" + viewName + "'");
             }
-            final String notDirectoryViewName;
-            String directoryPath = viewPathCache.getDirectoryPath();
-            int viewNameIndex = viewName.lastIndexOf('/');
-            if (viewNameIndex > 0) {
-                directoryPath = directoryPath + "/" + viewName.substring(0, viewNameIndex);
-                notDirectoryViewName = viewName.substring(viewNameIndex + 1);
+        }
+        return viewPath;
+    }
+
+    /**
+     * 
+     * @param inv
+     * @param viewPathCache
+     * @param viewName
+     * @return
+     * @throws IOException
+     */
+    private String getViewPathFromCache(InvocationBean inv, ViewPathCache viewPathCache,
+            final String viewName) throws IOException {
+        String viewPath = viewPathCache.getViewPath(viewName);
+        if (viewPath != null) {
+            return viewPath;
+        }
+        if (logger.isDebugEnabled()) {
+            logger.debug("to find viewPath by viewName '" + viewName + "'");
+        }
+        final String notDirectoryViewName;
+        String directoryPath = viewPathCache.getDirectoryPath();
+        int viewNameIndex = viewName.lastIndexOf('/');
+        File directoryFile;
+        if (viewNameIndex > 0) {
+            notDirectoryViewName = viewName.substring(viewNameIndex + 1);
+            String subDirPath = viewName.substring(0, viewNameIndex);
+            File tempHome = new File(inv.getServletContext().getRealPath(directoryPath));
+            if (!tempHome.exists()) {
+                directoryFile = null;
             } else {
-                notDirectoryViewName = viewName;
+                directoryFile = searchDirectory(tempHome, subDirPath);
+                subDirPath = directoryFile.getPath().substring(tempHome.getPath().length())
+                        .replace('\\', '/');
+                directoryPath = directoryPath + subDirPath;
             }
-            String deriectoryRealPath = inv.getServletContext().getRealPath(directoryPath);
-            File directoryFile = new File(deriectoryRealPath);
-            if (!directoryFile.exists()) {
-                inv.getResponse().sendError(404, "not found directoryPath '" + directoryPath + "'");
-                return null;
-            }
+        } else {
+            notDirectoryViewName = viewName;
+            directoryFile = new File(inv.getServletContext().getRealPath(directoryPath));
+        }
+        if (directoryFile == null || !directoryFile.exists()) {
+            inv.getResponse().sendError(404, "not found directoryPath '" + directoryPath + "'");
+            return null;
+        } else {
             if (logger.isDebugEnabled()) {
                 logger.debug("found directory " + directoryFile.getAbsolutePath());
             }
-            String[] viewFiles = directoryFile.list(new FilenameFilter() {
-
-                @Override
-                public boolean accept(File dir, String fileName) {
-                    if (fileName.startsWith(notDirectoryViewName)
-                            && new File(dir, fileName).isFile()) {
-                        if (fileName.length() == notDirectoryViewName.length()
-                                && notDirectoryViewName.lastIndexOf('.') != -1) {
-                            return true;
-                        }
-                        if (fileName.length() > notDirectoryViewName.length()
-                                && fileName.charAt(notDirectoryViewName.length()) == '.') {
-                            return true;
-                        }
-                    }
-                    return false;
-                }
-            });
-            if (viewFiles.length == 0) {
+            String viewFileName = searchViewFile(directoryFile, notDirectoryViewName, false);
+            if (viewFileName == null) {
+                viewFileName = searchViewFile(directoryFile, notDirectoryViewName, true);
+            }
+            if (viewFileName == null) {
                 inv.getResponse().sendError(404,
                         "not found view file '" + notDirectoryViewName + "' in " + directoryPath);
                 return null;
+            } else {
+                viewPath = directoryPath + "/" + viewFileName;
+                viewPathCache.setViewPath(viewName, viewPath);
+                return viewPath;
             }
+        }
+    }
 
-            if (viewFiles.length > 0) {
-                Arrays.sort(viewFiles);
+    /**
+     * 优先获取大小写敏感的路径，如若找不到，则获取忽略大小写后的路径
+     * 
+     * @param tempHome
+     * @param subDirPath
+     * @return
+     */
+    private File searchDirectory(File tempHome, String subDirPath) {
+        // 
+        String[] subDirs = StringUtils.split(subDirPath, "/");
+        for (final String subDir : subDirs) {
+            File file = new File(tempHome, subDir);
+            if (!file.exists()) {
+                String[] candidates = tempHome.list(new FilenameFilter() {
+
+                    @Override
+                    public boolean accept(File dir, String name) {
+                        if (name.equalsIgnoreCase(subDir)) {
+                            return true;
+                        }
+                        return false;
+                    }
+
+                });
+                if (candidates.length == 0) {
+                    tempHome = null;
+                    break;
+                } else {
+                    tempHome = new File(tempHome, candidates[0]);
+                }
+            } else {
+                tempHome = file;
             }
-            //
-            String viewFileName = viewFiles[0];
-            viewPath = directoryPath + "/" + viewFileName;
-            viewPathCache.setViewPath(viewName, viewPath);
         }
-        if (logger.isDebugEnabled()) {
-            logger.debug("found '" + viewPath + "' for viewName '" + viewName + "'");
-        }
-        return viewPath;
+        return tempHome;
+    }
+
+    /**
+     * 
+     * @param fileNameToFind
+     * @param directoryFile
+     * @param ignoreCase
+     * @return
+     */
+    private String searchViewFile(File directoryFile, final String fileNameToFind,
+            final boolean ignoreCase) {
+        String[] viewFiles = directoryFile.list(new FilenameFilter() {
+
+            @Override
+            public boolean accept(File dir, String fileName) {
+                String _notDirectoryViewName = fileNameToFind;
+                String _fileName = fileName;
+                if (ignoreCase) {
+                    _fileName = fileName.toLowerCase();
+                    _notDirectoryViewName = fileNameToFind.toLowerCase();
+                }
+                // 忽略大小写
+                if (_fileName.startsWith(_notDirectoryViewName) && new File(dir, fileName).isFile()) {
+                    if (fileName.length() == fileNameToFind.length()
+                            && fileNameToFind.lastIndexOf('.') != -1) {
+                        return true;
+                    }
+                    if (fileName.length() > fileNameToFind.length()
+                            && fileName.charAt(fileNameToFind.length()) == '.') {
+                        return true;
+                    }
+                }
+                return false;
+            }
+        });
+        Arrays.sort(viewFiles);
+        return viewFiles.length == 0 ? null : viewFiles[0];
     }
 
     //-------------------------------------------
@@ -249,7 +332,9 @@ public class ViewInstruction extends AbstractInstruction {
                 ((BeanDefinitionRegistry) applicationContext.getAutowireCapableBeanFactory())
                         .registerBeanDefinition(viewDispatcherName, beanDefinition);
                 if (logger.isDebugEnabled()) {
-                    logger.debug("registered bean definition:" + ViewDispatcherImpl.class.getName());
+                    logger
+                            .debug("registered bean definition:"
+                                    + ViewDispatcherImpl.class.getName());
                 }
             }
             return (ViewDispatcher) SpringUtils.getBean(applicationContext, viewDispatcherName);
