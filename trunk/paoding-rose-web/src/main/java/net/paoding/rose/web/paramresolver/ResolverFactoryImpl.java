@@ -92,6 +92,27 @@ public class ResolverFactoryImpl implements ResolverFactory {
         primitiveWrapperTypeMap.put(short.class, Short.class);
     }
 
+    private static final Map<Class<?>, Class<?>> arrayTypeMap = new HashMap<Class<?>, Class<?>>();
+    static {
+        arrayTypeMap.put(boolean.class, Boolean.class);
+        arrayTypeMap.put(byte.class, byte[].class);
+        arrayTypeMap.put(char.class, char[].class);
+        arrayTypeMap.put(double.class, double[].class);
+        arrayTypeMap.put(float.class, float[].class);
+        arrayTypeMap.put(int.class, int[].class);
+        arrayTypeMap.put(long.class, long[].class);
+        arrayTypeMap.put(short.class, short[].class);
+
+        arrayTypeMap.put(Boolean.class, Boolean[].class);
+        arrayTypeMap.put(Byte.class, Byte[].class);
+        arrayTypeMap.put(Character.class, Character[].class);
+        arrayTypeMap.put(Double.class, Double[].class);
+        arrayTypeMap.put(Float.class, Float[].class);
+        arrayTypeMap.put(Integer.class, Integer[].class);
+        arrayTypeMap.put(Long.class, Long[].class);
+        arrayTypeMap.put(Short.class, Short[].class);
+    }
+
     private static final ParamResolver[] buildinResolvers = new ParamResolver[] {//
     new InvocationResolver(), //
             new RoseResolver(), //
@@ -454,7 +475,10 @@ public class ResolverFactoryImpl implements ResolverFactory {
                 if (paramMetaData.getParamType().isArray()) {
                     arrayType = paramMetaData.getParamType();
                 } else {
-                    arrayType = Array.newInstance((Class<?>) compnentType, 0).getClass();
+                    arrayType = arrayTypeMap.get(compnentType);
+                    if (arrayType == null) {
+                        arrayType = Array.newInstance((Class<?>) compnentType, 0).getClass();
+                    }
                 }
                 Object array = simpleTypeConverter.convertIfNecessary(toConvert, arrayType);
                 return array;
