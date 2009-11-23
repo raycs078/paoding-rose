@@ -19,5 +19,15 @@
 			<required>true</required>
 			<rtexprvalue>false</rtexprvalue>
 		</attribute>
+		<attribute>
+			<name>prefix</name>
+			<required>false</required>
+			<rtexprvalue>false</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>suffix</name>
+			<required>false</required>
+			<rtexprvalue>false</rtexprvalue>
+		</attribute>
 	</tag>
 </taglib>

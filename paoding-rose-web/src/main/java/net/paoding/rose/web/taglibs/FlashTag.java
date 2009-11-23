@@ -23,6 +23,7 @@ import javax.servlet.jsp.tagext.TagSupport;
 import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.InvocationUtils;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -40,8 +41,20 @@ public class FlashTag extends TagSupport {
 
     private String key;
 
+    private String prefix = "";
+
+    private String suffix = "";
+
     public void setKey(String key) {
         this.key = key;
+    }
+
+    public void setPrefix(String prefix) {
+        this.prefix = prefix;
+    }
+
+    public void setSuffix(String suffix) {
+        this.suffix = suffix;
     }
 
     @Override
@@ -54,7 +67,13 @@ public class FlashTag extends TagSupport {
             }
             if (msg != null) {
                 try {
+                    if (StringUtils.isNotEmpty(prefix)) {
+                        pageContext.getOut().println(prefix);
+                    }
                     pageContext.getOut().println(msg);
+                    if (StringUtils.isNotEmpty(suffix)) {
+                        pageContext.getOut().println(suffix);
+                    }
                 } catch (IOException e) {
                     throw new JspException("", e);
                 }
