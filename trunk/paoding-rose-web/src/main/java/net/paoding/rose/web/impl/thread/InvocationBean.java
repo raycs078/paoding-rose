@@ -29,6 +29,7 @@ import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 
 import net.paoding.rose.web.Invocation;
+import net.paoding.rose.web.InvocationUtils;
 import net.paoding.rose.web.RequestPath;
 import net.paoding.rose.web.impl.mapping.MatchResult;
 import net.paoding.rose.web.impl.module.Module;
@@ -358,6 +359,9 @@ public final class InvocationBean implements Invocation {
         if (this.request == null) {
             this.request = new HttpServletRequestWrapper(request);
         } else {
+            if (this.request.getRequest() == InvocationUtils.getCurrentThreadRequest()) {
+                InvocationUtils.bindRequestToCurrentThread(request);
+            }
             this.request.setRequest(request);
         }
     }
