@@ -29,6 +29,8 @@ import javax.servlet.http.HttpServletResponse;
 import net.paoding.rose.scanner.ModuleResource;
 import net.paoding.rose.scanner.RoseJarContextResources;
 import net.paoding.rose.scanner.RoseModuleInfos;
+import net.paoding.rose.web.Invocation;
+import net.paoding.rose.web.InvocationUtils;
 import net.paoding.rose.web.NamedValidator;
 import net.paoding.rose.web.RequestPath;
 import net.paoding.rose.web.annotation.ReqMethod;
@@ -219,9 +221,13 @@ public class RoseFilter extends GenericFilterBean {
 
         // matched为true代表本次请求被Rose匹配，不需要转发给容器的其他 flter 或 servlet
         boolean matched = false;
+        Invocation preInvocation = null;
         try {
             // invocation 对象 代表一次请求以及响应
+
+            preInvocation = InvocationUtils.getInvocation(httpRequest);
             final InvocationBean inv = new InvocationBean(httpRequest, httpResponse, requestPath);
+            inv.setPreInvocation(preInvocation);
 
             // rose 对象 代表Rose框架对一次请求的执行
             final Rose rose = new Rose(modules, mappingTree, inv);
@@ -234,6 +240,12 @@ public class RoseFilter extends GenericFilterBean {
             // 
         } catch (Throwable exception) {
             throwServletException(requestPath, exception);
+        } finally {
+            if (preInvocation != null) {
+                InvocationUtils.bindRequestToCurrentThread(preInvocation.getRequest());
+            } else {
+                InvocationUtils.unindRequestFromCurrentThread();
+            }
         }
 
         // 非Rose的请求转发给WEB容器的其他组件处理，而且不放到上面的try-catch块中
