@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
@@ -302,10 +303,10 @@ public final class InvocationBean implements Invocation {
     @Override
     public synchronized Invocation setOncePerRequestAttribute(String name, Object value) {
         if (preInvocation != null) {
-            preInvocation.getOncePerRequestAttribute(name);
+            preInvocation.setOncePerRequestAttribute(name, value);
         } else {
             if (oncePerRequestAttributes == null) {
-                oncePerRequestAttributes = new HashMap<String, Object>();
+                oncePerRequestAttributes = new ConcurrentHashMap<String, Object>();
             }
             oncePerRequestAttributes.put(name, value);
         }
