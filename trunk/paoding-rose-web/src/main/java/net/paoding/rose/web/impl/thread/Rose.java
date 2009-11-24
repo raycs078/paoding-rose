@@ -23,7 +23,6 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 
-import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.InvocationUtils;
 import net.paoding.rose.web.annotation.ReqMethod;
 import net.paoding.rose.web.impl.mapping.MappingNode;
@@ -45,15 +44,17 @@ public class Rose implements EngineChain {
 
     private List<Module> modules;
 
-    private Invocation inv;
+    private InvocationBean inv;
 
     private ArrayList<MatchResult> matchResults;
 
     private MappingNode mappingTree;
 
     private int nextIndexOfChain = 0;
+    
+    private LinkedList<AfterCompletion> afterCompletions = new LinkedList<AfterCompletion>();
 
-    public Rose(List<Module> modules, MappingNode mappingTree, Invocation inv) {
+    public Rose(List<Module> modules, MappingNode mappingTree, InvocationBean inv) {
         this.mappingTree = mappingTree;
         this.modules = modules;
         this.inv = inv;
@@ -63,7 +64,7 @@ public class Rose implements EngineChain {
         return mappingTree;
     }
 
-    public Invocation getInvocation() {
+    public InvocationBean getInvocation() {
         return inv;
     }
 
@@ -103,6 +104,11 @@ public class Rose implements EngineChain {
             response.addHeader("Allow", allow.toString());
             response.sendError(405, inv.getRequestPath().getUri());
         } else {
+            //
+
+            inv.setPreInvocation(InvocationUtils.getInvocation(inv.getRequest()));
+            
+            //
             this.matchResults = matchResults;
             Map<String, String> mrParameters = null;
             for (int i = 0; i < this.matchResults.size(); i++) {
@@ -119,7 +125,7 @@ public class Rose implements EngineChain {
             if (mrParameters != null && mrParameters.size() > 0) {
                 inv.setRequest(new ParameteredUriRequest(inv.getRequest(), mrParameters));
             }
-            InvocationUtils.bindRequestToCurrentThread(inv.getRequest());
+//            InvocationUtils.bindRequestToCurrentThread(inv.getRequest());
             // invoke the engine chain
             Throwable error = null;
             try {
@@ -156,7 +162,6 @@ public class Rose implements EngineChain {
         return engine.invoke(rose, matchResult, instruction);
     }
 
-    private LinkedList<AfterCompletion> afterCompletions = new LinkedList<AfterCompletion>();
 
     @Override
     public void addAfterCompletion(AfterCompletion task) {
