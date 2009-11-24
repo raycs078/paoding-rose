@@ -16,7 +16,6 @@
 package net.paoding.rose.web;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletRequestWrapper;
 
 /**
  * 
@@ -29,7 +28,7 @@ public class InvocationUtils {
     private final static ThreadLocal<HttpServletRequest> currentRequests = new ThreadLocal<HttpServletRequest>();
 
     //
-    public static void bindInvocationToRequest(Invocation inv, HttpServletRequestWrapper request) {
+    public static void bindInvocationToRequest(Invocation inv, HttpServletRequest request) {
         request.setAttribute("$$paoding-rose.invocation", inv);
     }
 

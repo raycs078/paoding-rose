@@ -88,9 +88,13 @@ public class WebEngine implements Engine, AfterCompletion {
 
     @Override
     public Object invoke(Rose rose, MatchResult mr, Object instruction) throws Throwable {
+        InvocationBean inv = rose.getInvocation();
+        Invocation preInvocation = InvocationUtils.getInvocation(inv.getRequest());
+        inv.setPreInvocation(preInvocation);
+        InvocationUtils.bindInvocationToRequest(inv, inv.getRequest());
+        InvocationUtils.bindRequestToCurrentThread(inv.getRequest());
 
         rose.addAfterCompletion(this);
-        Invocation inv = rose.getInvocation();
         //
         final RequestPath requestPath = inv.getRequestPath();
         if (requestPath.isIncludeRequest() || requestPath.isForwardRequest()) {
@@ -148,7 +152,7 @@ public class WebEngine implements Engine, AfterCompletion {
         if (inv.getRequestPath().isIncludeRequest()) {
             restoreRequestAttributesAfterInclude(inv);
         }
-        Invocation preInvocation = (Invocation) inv.getAttribute("$$paoding-rose.preInvocation");
+        Invocation preInvocation = inv.getPreInvocation();
         if (preInvocation != null) {
             InvocationUtils.bindRequestToCurrentThread(preInvocation.getRequest());
         } else {
