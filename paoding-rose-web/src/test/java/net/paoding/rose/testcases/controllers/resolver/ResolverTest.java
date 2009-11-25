@@ -46,4 +46,8 @@ public class ResolverTest extends AbstractControllerTest {
     public void testBeanExResolver() throws ServletException, IOException {
         assertNull(invoke("/resolver/main/beanex"));
     }
+
+    public void testSuperControllerResolver() throws ServletException, IOException {
+        assertEquals("ok", invoke("/resolver/sub/resolver"));
+    }
 }
