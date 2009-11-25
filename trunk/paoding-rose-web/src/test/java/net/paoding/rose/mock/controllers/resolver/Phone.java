@@ -1,15 +1,9 @@
 package net.paoding.rose.mock.controllers.resolver;
 
-public class Phone {
+public interface Phone {
 
-    private String id;
+    public String getId();
 
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
+    public void setId(String id);
 
 }

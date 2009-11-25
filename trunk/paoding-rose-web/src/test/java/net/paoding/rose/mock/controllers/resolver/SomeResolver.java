@@ -22,7 +22,7 @@ public class SomeResolver implements ParamResolver {
         if (paramMetaData.getParamAnnotation() == null) {
             throw new NullPointerException("param");
         }
-        Phone phone = new Phone();
+        Phone phone = new PhoneImpl();
         phone.setId(DEFAULT_PHONE_ID);
         return phone;
     }
