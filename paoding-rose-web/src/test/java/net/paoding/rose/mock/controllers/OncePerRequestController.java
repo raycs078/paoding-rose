@@ -26,6 +26,10 @@ public class OncePerRequestController {
             return "preInvocation.error";
         }
         inv.getRequest().setAttribute("msg", "ok");
-        return (String) inv.getOncePerRequestAttribute("once");
+        String ok = (String) inv.getOncePerRequestAttribute("once");
+        if (!"ok".equals(ok)) {
+            throw new IllegalArgumentException("setOncePerRequestAttribute");
+        }
+        return ok;
     }
 }
