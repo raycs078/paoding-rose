@@ -1,4 +1,4 @@
-package net.paoding.rose.testcases;
+package net.paoding.rose.mock.controllers;
 
 import java.lang.reflect.Method;
 
@@ -9,6 +9,8 @@ import net.paoding.rose.web.annotation.Interceptor;
 @Interceptor(oncePerRequest = true)
 public class OncePerRequestInterceptor extends ControllerInterceptorAdapter {
 
+    int count;
+
     @Override
     protected boolean isForAction(Method actionMethod, Class<?> controllerClazz) {
         return OncePerRequestController.class == controllerClazz;
@@ -16,10 +18,10 @@ public class OncePerRequestInterceptor extends ControllerInterceptorAdapter {
 
     @Override
     public Object before(Invocation inv) throws Exception {
-        if (inv.getRequest().getAttribute("onceper") != null) {
+        if (count > 0) {
             throw new IllegalArgumentException("onceperrequest");
         }
-        inv.getRequest().setAttribute("onceper", inv);
+        count++;
         return super.before(inv);
     }
 }
