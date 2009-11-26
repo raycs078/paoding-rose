@@ -3,7 +3,6 @@ package net.paoding.rose.jade.jadeinterface.impl;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
 import java.util.Arrays;
 
 /**
@@ -26,42 +25,35 @@ public class GenericUtils {
 
         if (genericType instanceof ParameterizedType) {
 
-            Type[] argTypes = ((ParameterizedType) genericType).getActualTypeArguments();
+            Type[] actualTypes = ((ParameterizedType) genericType).getActualTypeArguments();
+            Class<?>[] actualClasses = new Class<?>[actualTypes.length];
 
-            Class<?>[] argClasses = new Class<?>[argTypes.length];
-
-            for (int index = 0; index < argTypes.length; index++) {
-
-                Type argType = argTypes[index];
-
-                if (argType instanceof Class<?>) {
-                    argClasses[index] = (Class<?>) argType;
+            for (int i = 0; i < actualTypes.length; i++) {
+                Type actualType = actualTypes[i];
+                if (actualType instanceof Class<?>) {
+                    actualClasses[i] = (Class<?>) actualType;
                 }
             }
 
-            return argClasses;
+            return actualClasses;
         }
 
         return EMPTY_CLASSES;
     }
 
-    // 测试代码。
+    // 测试代码
     public static void main(String... args) {
 
-        Class<?> clazz = ArrayList.class;
+        Class<?> clazz = ClassLoader.class;
 
         for (Method method : clazz.getMethods()) {
-
             Class<?>[] classes = getActualClass(method.getGenericReturnType());
-
             System.out.print(method.getName() + " = ");
             System.out.println(Arrays.toString(classes));
         }
 
         for (Type genericInterfaceType : clazz.getGenericInterfaces()) {
-
             Class<?>[] classes = getActualClass(genericInterfaceType);
-
             System.out.print(genericInterfaceType + " = ");
             System.out.println(Arrays.toString(classes));
         }

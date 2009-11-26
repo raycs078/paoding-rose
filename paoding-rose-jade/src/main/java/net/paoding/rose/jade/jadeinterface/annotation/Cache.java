@@ -7,7 +7,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 使用：{#link Cache} 标注需要缓存的 Dao 接口方法。默认的 expireTime 为 0 表示没有过期限制。
+ * 使用：{#link Cache} 标注需要缓存的 Dao 接口方法。默认的 expiry 为 0 表示没有过期限制。
  * 
  * @author han.liao
  */

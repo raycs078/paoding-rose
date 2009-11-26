@@ -62,16 +62,17 @@ public class DaoFactoryBean<T> implements FactoryBean, InitializingBean {
     private T createDao(final Class<T> daoClass) {
 
         if (!daoClass.isInterface()) {
-            throw new IllegalArgumentException("daoClass should be a interface");
+            throw new IllegalArgumentException(daoClass.getName()
+                    + ": daoClass should be a interface");
         }
 
-        Dao annotation = daoClass.getAnnotation(Dao.class);
-        if (annotation == null) {
-            throw new IllegalArgumentException("not @Dao annotated ");
+        Dao dao = daoClass.getAnnotation(Dao.class);
+        if (dao == null) {
+            throw new IllegalArgumentException(daoClass.getName() // NL
+                    + ": not @Dao annotated ");
         }
 
-        String dataSourceName = annotation.catalog();
-        final DataAccess dataAccess = dataAccessProvider.createDataAccess(dataSourceName);
+        final DataAccess dataAccess = dataAccessProvider.createDataAccess(dao.catalog());
 
         return (T) Proxy.newProxyInstance(ClassUtils.getDefaultClassLoader(),
                 new Class[] { daoClass }, new InvocationHandler() {

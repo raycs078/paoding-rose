@@ -81,12 +81,12 @@ public class Jade implements DaoFactory {
 
             // 检查是否符合规则
             if (!daoClass.isInterface()) {
-                throw new IllegalArgumentException("daoClass should be a interface");
+                throw new IllegalArgumentException(daoClass.getName() + ": daoClass should be a interface");
             }
 
             Dao annotation = daoClass.getAnnotation(Dao.class);
             if (annotation == null) {
-                throw new IllegalArgumentException("not @Dao annotated ");
+                throw new IllegalArgumentException(daoClass.getName() + ": not @Dao annotated ");
             }
 
             // 创建  DaoFactoryBean<T>

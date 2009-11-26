@@ -50,6 +50,7 @@ public class JadeDaoProcessor implements BeanFactoryPostProcessor, ApplicationCo
     @Override
     public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory)
             throws BeansException {
+
         List<Class<?>> classes;
         try {
             classes = findDaoClasses();
@@ -61,20 +62,22 @@ public class JadeDaoProcessor implements BeanFactoryPostProcessor, ApplicationCo
                 .getBean("dataAccessProvider");
         for (Class<?> clazz : classes) {
             if (clazz.isAnnotationPresent(Dao.class) && clazz.isInterface()) {
+                String beanName = ClassUtils.getShortNameAsProperty(clazz);
+
                 GenericBeanDefinition beanDefinition = new GenericBeanDefinition();
                 beanDefinition.setBeanClass(DaoFactoryBean.class);
                 MutablePropertyValues propertyValues = beanDefinition.getPropertyValues();
                 propertyValues.addPropertyValue("dataAccessProvider", dataAccessProvider);
                 propertyValues.addPropertyValue("daoClass", clazz);
-                beanDefinition.setAutowireCandidate(true);
                 beanDefinition.setPropertyValues(propertyValues);
-                String beanName = ClassUtils.getShortNameAsProperty(clazz);
+                beanDefinition.setAutowireCandidate(true);
+
                 if (logger.isInfoEnabled()) {
-                    logger.info("Auto-generate Dao definition: " + beanName + " = "
-                            + clazz.getName());
+                    logger.info("Generate dao: " + beanName + " ==> " + clazz.getName());
                 }
-                ((DefaultListableBeanFactory) beanFactory).registerBeanDefinition(beanName,
-                        beanDefinition);
+
+                DefaultListableBeanFactory defaultBeanFactory = (DefaultListableBeanFactory) beanFactory;
+                defaultBeanFactory.registerBeanDefinition(beanName, beanDefinition);
             }
         }
     }
@@ -84,13 +87,15 @@ public class JadeDaoProcessor implements BeanFactoryPostProcessor, ApplicationCo
     private List<Class<?>> daoClasses;
 
     public synchronized List<Class<?>> findDaoClasses() throws IOException {
+
         if (daoClasses == null) {
             daoClasses = new ArrayList<Class<?>>();
-            DAOScanner roseScanner = DAOScanner.getRoseScanner();
+
+            DAOScanner daoScanner = DAOScanner.getDaoScanner();
             List<ResourceInfo> resources = new ArrayList<ResourceInfo>();
-            resources.addAll(roseScanner.getClassesFolderResources());
-            resources.addAll(roseScanner.getJarResources());
-            List<FileObject> rootObjects = new ArrayList<FileObject>();
+            resources.addAll(daoScanner.getClassesFolderResources());
+            resources.addAll(daoScanner.getJarResources());
+
             FileSystemManager fsManager = VFS.getManager();
             for (ResourceInfo resourceInfo : resources) {
                 if (resourceInfo.hasModifier("dao") || resourceInfo.hasModifier("DAO")) {
@@ -103,28 +108,26 @@ public class JadeDaoProcessor implements BeanFactoryPostProcessor, ApplicationCo
                     } else if (resourceFile.isDirectory()) {
                         rootObject = fsManager.resolveFile(resourceFile.getAbsolutePath());
                     }
-                    if (rootObject == null) {
-                        continue;
-                    }
-                    rootObjects.add(rootObject);
-                    try {
+                    if (rootObject != null) {
                         deepScanImpl(rootObject, rootObject);
-                    } catch (Exception e) {
-                        logger.error(e.getMessage(), e);
                     }
                 }
             }
         }
+
         return new ArrayList<Class<?>>(daoClasses);
     }
 
     protected void deepScanImpl(FileObject rootObject, FileObject fileObject) {
         try {
-            System.out.println("===" + fileObject);
             if (!fileObject.getType().equals(FileType.FOLDER)) {
-                logger.warn("fileObject shoud be a folder", new IllegalArgumentException());
+                if (logger.isWarnEnabled()) {
+                    logger.warn("fileObject shoud be a folder", // NL
+                            new IllegalArgumentException());
+                }
                 return;
             }
+
             if ("dao".equals(fileObject.getName().getBaseName())) {
                 handleWithFolder(rootObject, fileObject, fileObject);
             } else {
@@ -135,14 +138,19 @@ public class JadeDaoProcessor implements BeanFactoryPostProcessor, ApplicationCo
                     }
                 }
             }
-        } catch (Exception e) {
-            logger.error("", e);
+
+        } catch (Throwable e) {
+            logger.error(e.getMessage(), e);
         }
     }
 
     protected void handleWithFolder(FileObject rootObject, FileObject matchedRootFolder,
             FileObject thisFolder) throws IOException {
-        logger.info("found dao folder in " + thisFolder);
+
+        if (logger.isInfoEnabled()) {
+            logger.info("Found dao folder: " + thisFolder);
+        }
+
         FileObject[] children = thisFolder.getChildren();
 
         // 分两个循环，先处理类文件，再处理子目录，使日志更清晰
@@ -174,9 +182,10 @@ public class JadeDaoProcessor implements BeanFactoryPostProcessor, ApplicationCo
         for (int i = daoClasses.size() - 1; i >= 0; i--) {
             Class<?> clazz = daoClasses.get(i);
             if (clazz.getName().equals(className)) {
-                logger
-                        .info("dao: skip replicated class " + className + " in "
-                                + resource.getName());
+                if (logger.isInfoEnabled()) {
+                    logger.info("Skip duplicated class " + className // NL
+                            + " in: " + resource);
+                }
                 return;
             }
         }
@@ -184,10 +193,12 @@ public class JadeDaoProcessor implements BeanFactoryPostProcessor, ApplicationCo
             Class<?> clazz = Class.forName(className);
             if (clazz.isAnnotationPresent(Dao.class)) {
                 daoClasses.add(clazz);
-                logger.info("dao: found class, name=" + className);
+                if (logger.isInfoEnabled()) {
+                    logger.info("Found class: " + className);
+                }
             }
         } catch (ClassNotFoundException e) {
-            logger.error("", e);
+            logger.error("Class not found", e);
         }
     }
 }
