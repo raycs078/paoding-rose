@@ -98,7 +98,7 @@ public class UpdateOperation implements JdbcOperation {
             return executeBatch(dataAccess, batchParam.value(), collection, parameters);
         } else {
             // 单个执行查询
-            return execute(dataAccess, parameters);
+            return execute(dataAccess, returnType, parameters);
         }
     }
 
@@ -138,7 +138,7 @@ public class UpdateOperation implements JdbcOperation {
             // 更新执行参数
             parameters.put(parameterName, arg);
 
-            Object value = execute(dataAccess, parameters);
+            Object value = execute(dataAccess, returnClazz, parameters);
 
             if (batchReturnClazz.isArray()) {
                 Array.set(returnArray, index, value);
@@ -164,9 +164,7 @@ public class UpdateOperation implements JdbcOperation {
         return null;
     }
 
-    private Object execute(DataAccess dataAccess, Map<String, Object> parameters) {
-
-        Class<?> returnClazz = returnType;
+    private Object execute(DataAccess dataAccess, Class<?> returnClazz, Map<String, Object> parameters) {
 
         if (returnClazz == Identity.class) {
 
