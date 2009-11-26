@@ -21,31 +21,26 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
-import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
-import org.springframework.core.io.support.ResourcePatternResolver;
+import org.springframework.util.ClassUtils;
 
 public class DAOScanner {
 
+    private static final Log logger = LogFactory.getLog(DAOScanner.class);
+
     private static SoftReference<DAOScanner> softReference;
-
-    public synchronized static DAOScanner getRoseScanner() {
-        if ((softReference == null) || (softReference.get() == null)) {
-            DAOScanner roseScanner = new DAOScanner();
-            softReference = new SoftReference<DAOScanner>(roseScanner);
-        }
-        return softReference.get();
-    }
-
-    // -------------------------------------------------------------
-
-    protected Log logger = LogFactory.getLog(getClass());
-
-    protected ResourcePatternResolver resourcePatternResolver = new PathMatchingResourcePatternResolver(
-            Thread.currentThread().getContextClassLoader());
 
     private List<ResourceInfo> classesFolderResources;
 
     private List<ResourceInfo> jarResources;
+
+    public synchronized static DAOScanner getDaoScanner() {
+
+        if ((softReference == null) || (softReference.get() == null)) {
+            DAOScanner scanner = new DAOScanner();
+            softReference = new SoftReference<DAOScanner>(scanner);
+        }
+        return softReference.get();
+    }
 
     // -------------------------------------------------------------
 
@@ -55,7 +50,7 @@ public class DAOScanner {
     // -------------------------------------------------------------
 
     /**
-     * 将要被扫描的普通类地址(比如WEB-INF/classes或target/classes之类的地址)
+     * 将要被扫描的普通类地址 (比如WEB-INF/classes或target/classes 之类的地址)
      * 
      * @param resourceLoader
      * @return
@@ -64,7 +59,8 @@ public class DAOScanner {
     public List<ResourceInfo> getClassesFolderResources() throws IOException {
         if (classesFolderResources == null) {
             List<ResourceInfo> classesFolderResources = new LinkedList<ResourceInfo>();
-            Enumeration<URL> found = resourcePatternResolver.getClassLoader().getResources("");
+            ClassLoader classLoader = ClassUtils.getDefaultClassLoader();
+            Enumeration<URL> found = classLoader.getResources("");
             while (found.hasMoreElements()) {
                 URL urlObject = found.nextElement();
                 if ("file".equals(urlObject.getProtocol())) {
@@ -95,8 +91,8 @@ public class DAOScanner {
     public List<ResourceInfo> getJarResources() throws IOException {
         if (jarResources == null) {
             List<ResourceInfo> jarResources = new LinkedList<ResourceInfo>();
-            Enumeration<URL> found = resourcePatternResolver.getClassLoader().getResources(
-                    "META-INF");
+            ClassLoader classLoader = ClassUtils.getDefaultClassLoader();
+            Enumeration<URL> found = classLoader.getResources("META-INF");
             while (found.hasMoreElements()) {
                 URL urlObject = found.nextElement();
                 if ("jar".equals(urlObject.getProtocol())) {
