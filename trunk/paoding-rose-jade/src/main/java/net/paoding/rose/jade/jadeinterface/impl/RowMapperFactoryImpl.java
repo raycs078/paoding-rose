@@ -6,6 +6,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -37,7 +38,11 @@ public class RowMapperFactoryImpl implements RowMapperFactory {
 
         // 根据类型创建  RowMapper
         RowMapper rowMapper;
-        if (ClassUtils.wrapperToPrimitive(rowType) != null) {
+
+        if (/* 目前只考虑  String, Date(Date, Time, Timestamp) 与基本类型 */
+                String.class == rowType // NL
+                || Date.class.isAssignableFrom(rowType)
+                || ClassUtils.wrapperToPrimitive(rowType) != null) {
             SingleColumnRowMapper mapper = new SingleColumnRowMapper();
             mapper.setRequiredType(rowType);
             rowMapper = mapper;
