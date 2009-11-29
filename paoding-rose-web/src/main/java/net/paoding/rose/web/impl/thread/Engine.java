@@ -36,13 +36,11 @@ public interface Engine {
     /**
      * 处理web请求
      * 
-     * @param inv
+     * @param rose
      * @param mr
-     * @param instruction
-     * @param chain
      * @throws Throwable
      */
-    public Object invoke(Rose rose, MatchResult mr, Object instruction) throws Throwable;
+    public Object execute(Rose rose, MatchResult mr) throws Throwable;
 
     /**
      * 销毁该引擎，在系统关闭或其他情况时

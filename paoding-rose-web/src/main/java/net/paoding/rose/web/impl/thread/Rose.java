@@ -21,9 +21,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import net.paoding.rose.web.Dispatcher;
+import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.InvocationUtils;
+import net.paoding.rose.web.RequestPath;
 import net.paoding.rose.web.annotation.ReqMethod;
 import net.paoding.rose.web.impl.mapping.MappingNode;
 import net.paoding.rose.web.impl.mapping.MatchResult;
@@ -51,13 +55,22 @@ public class Rose implements EngineChain {
     private MappingNode mappingTree;
 
     private int nextIndexOfChain = 0;
-    
+
     private LinkedList<AfterCompletion> afterCompletions = new LinkedList<AfterCompletion>();
 
-    public Rose(List<Module> modules, MappingNode mappingTree, InvocationBean inv) {
+    private RequestPath path;
+
+    private HttpServletRequest httpRequest;
+
+    private HttpServletResponse httpResponse;
+
+    public Rose(List<Module> modules, MappingNode mappingTree, HttpServletRequest httpRequest,
+            HttpServletResponse httpResponse, RequestPath requestPath) {
         this.mappingTree = mappingTree;
         this.modules = modules;
-        this.inv = inv;
+        this.httpRequest = httpRequest;
+        this.httpResponse = httpResponse;
+        this.path = requestPath;
     }
 
     public MappingNode getMappingTree() {
@@ -76,8 +89,28 @@ public class Rose implements EngineChain {
         return matchResults;
     }
 
-    public boolean execute() throws Throwable {
-        ArrayList<MatchResult> matchResults = mappingTree.match(inv.getRequestPath());
+    /**
+     * 启动rose逻辑，对请求进行匹配判断，如果匹配未能成功返回false； <br>
+     * 对匹配成功的启动相关的架构处理逻辑直至整个请求的完成
+     * 
+     * @return
+     * @throws Throwable
+     */
+    public boolean start() throws Throwable {
+        return innerStart();
+    }
+
+    @Override
+    public Object doNext() throws Throwable {
+        ReqMethod method = inv.getRequestPath().getMethod();
+        MatchResult matchResult = matchResults.get(nextIndexOfChain++);
+        WebResource resource = matchResult.getResource();
+        Engine engine = resource.getEngine(method);
+        return engine.execute(this, matchResult);
+    }
+
+    private boolean innerStart() throws Throwable {
+        ArrayList<MatchResult> matchResults = mappingTree.match(this.path);
         if (matchResults.size() == 0) {
             return false;
         }
@@ -85,14 +118,13 @@ public class Rose implements EngineChain {
         if (!mr.getResource().isEndResource()) {
             return false;
         }
-        if (!mr.getResource().isMethodAllowed(inv.getRequestPath().getMethod())) {
+        if (!mr.getResource().isMethodAllowed(this.path.getMethod())) {
             /* 405 Method Not Allowed
              * The method specified in the Request-Line is not allowed for the
              * resource identified by the Request-URI. The response MUST include an
              * Allow header containing a list of valid methods for the requested
              * resource.
              */
-            HttpServletResponse response = inv.getResponse();
             StringBuilder allow = new StringBuilder();
             final String gap = ", ";
             for (ReqMethod method : mr.getResource().getAllowedMethods()) {
@@ -101,13 +133,9 @@ public class Rose implements EngineChain {
             if (allow.length() > 0) {
                 allow.setLength(allow.length() - gap.length());
             }
-            response.addHeader("Allow", allow.toString());
-            response.sendError(405, inv.getRequestPath().getUri());
+            httpResponse.addHeader("Allow", allow.toString());
+            httpResponse.sendError(405, this.path.getUri());
         } else {
-            //
-
-            inv.setPreInvocation(InvocationUtils.getInvocation(inv.getRequest()));
-            
             //
             this.matchResults = matchResults;
             Map<String, String> mrParameters = null;
@@ -123,13 +151,32 @@ public class Rose implements EngineChain {
                 }
             }
             if (mrParameters != null && mrParameters.size() > 0) {
-                inv.setRequest(new ParameteredUriRequest(inv.getRequest(), mrParameters));
+                this.httpRequest = new ParameteredUriRequest(httpRequest, mrParameters);
             }
-//            InvocationUtils.bindRequestToCurrentThread(inv.getRequest());
+
+            //
+            HttpServletRequest threadOldHttpRequest = null;
+            Invocation preInvocation = null;
+            if (path.getDispatcher() != Dispatcher.REQUEST) {
+                threadOldHttpRequest = InvocationUtils.getCurrentThreadRequest();
+                if (threadOldHttpRequest != null) {
+                    preInvocation = InvocationUtils.getInvocation(threadOldHttpRequest);
+                    assert preInvocation != null;
+                }
+            }
+            // invocation 对象 代表一次Rose调用
+            InvocationBean inv = new InvocationBean(httpRequest, httpResponse, path);
+            inv.setRose(this);
+            inv.setPreInvocation(preInvocation);
+            //
+            InvocationUtils.bindRequestToCurrentThread(httpRequest);
+            InvocationUtils.bindInvocationToRequest(inv, httpRequest);
+
             // invoke the engine chain
+            this.inv = inv;
             Throwable error = null;
             try {
-                ((EngineChain) this).invokeNext((Rose) this, null);
+                ((EngineChain) this).doNext();
             } catch (Throwable local) {
                 error = local;
                 throw local;
@@ -141,27 +188,18 @@ public class Rose implements EngineChain {
                         logger.error("", e);
                     }
                 }
+                //
+                if (threadOldHttpRequest != null) {
+                    InvocationUtils.bindRequestToCurrentThread(threadOldHttpRequest);
+                    InvocationUtils.bindInvocationToRequest(preInvocation, threadOldHttpRequest);
+                } else {
+                    InvocationUtils.unindRequestFromCurrentThread();
+                }
             }
         }
 
         return true;
     }
-
-    @Override
-    public Object invokeNext(Rose rose, Object instruction) throws Throwable {
-        if (rose != this) {
-            throw new IllegalArgumentException("rose");
-        }
-        if (nextIndexOfChain >= matchResults.size()) {
-            return instruction;
-        }
-        ReqMethod method = inv.getRequestPath().getMethod();
-        MatchResult matchResult = matchResults.get(nextIndexOfChain++);
-        WebResource resource = matchResult.getResource();
-        Engine engine = resource.getEngine(method);
-        return engine.invoke(rose, matchResult, instruction);
-    }
-
 
     @Override
     public void addAfterCompletion(AfterCompletion task) {

@@ -15,7 +15,8 @@ public class CurrentController {
             return "Thread.currentThread().getName().error";
         }
         if (inv.getPreInvocation() != null) {
-            return "getPreInvocation.error.experted.null";
+            new IllegalArgumentException("getPreInvocation.error.expected.null").printStackTrace();
+            return "getPreInvocation.error.expected.null";
         }
         if (inv.getRequest() != InvocationUtils.getCurrentThreadRequest()) {
             return "getCurrentThreadRequest.error";

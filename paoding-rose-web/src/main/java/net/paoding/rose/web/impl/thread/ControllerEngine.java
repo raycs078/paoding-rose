@@ -81,10 +81,10 @@ public class ControllerEngine implements Engine {
     }
 
     @Override
-    public Object invoke(Rose rose, MatchResult mr, Object instruction) throws Throwable {
+    public Object execute(Rose rose, MatchResult mr) throws Throwable {
         Invocation inv = rose.getInvocation();
         inv.getRequestPath().setControllerPath(mr.getValue());
-        return rose.invokeNext(rose, instruction);
+        return rose.doNext();
     }
 
     public void destroy() {

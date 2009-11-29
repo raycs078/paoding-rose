@@ -32,7 +32,7 @@ public class WebResourceTest extends TestCase {
     private Engine getEngine = new Engine() {
 
         @Override
-        public Object invoke(Rose rose, MatchResult mr, Object instruction) throws Throwable {
+        public Object execute(Rose rose, MatchResult mr) throws Throwable {
             return null;
         }
 
@@ -50,7 +50,7 @@ public class WebResourceTest extends TestCase {
     private Engine postEngine = new Engine() {
 
         @Override
-        public Object invoke(Rose rose, MatchResult mr, Object instruction) throws Throwable {
+        public Object execute(Rose rose, MatchResult mr) throws Throwable {
             return null;
         }
 
@@ -68,7 +68,7 @@ public class WebResourceTest extends TestCase {
     private Engine defEngine = new Engine() {
 
         @Override
-        public Object invoke(Rose rose, MatchResult mr, Object instruction) throws Throwable {
+        public Object execute(Rose rose, MatchResult mr) throws Throwable {
             return null;
         }
 
@@ -111,7 +111,7 @@ public class WebResourceTest extends TestCase {
         assertSame(defEngine, resource.getEngine(ReqMethod.PUT));
         assertSame(defEngine, resource.getEngine(ReqMethod.DELETE));
 
-        assertEquals("testNotOverrideByAll [GET, POST, DELETE, PUT, HEAD, OPTIONS, TRACE]", resource
-                .toString());
+        assertEquals("testNotOverrideByAll [GET, POST, DELETE, PUT, HEAD, OPTIONS, TRACE]",
+                resource.toString());
     }
 }

@@ -32,7 +32,7 @@ import net.paoding.rose.scanner.RoseModuleInfos;
 import net.paoding.rose.web.NamedValidator;
 import net.paoding.rose.web.RequestPath;
 import net.paoding.rose.web.annotation.ReqMethod;
-import net.paoding.rose.web.impl.context.ContextLoader;
+import net.paoding.rose.web.impl.context.RoseContextLoader;
 import net.paoding.rose.web.impl.mapping.Mapping;
 import net.paoding.rose.web.impl.mapping.MappingImpl;
 import net.paoding.rose.web.impl.mapping.MappingNode;
@@ -43,7 +43,6 @@ import net.paoding.rose.web.impl.module.ControllerRef;
 import net.paoding.rose.web.impl.module.Module;
 import net.paoding.rose.web.impl.module.ModulesBuilder;
 import net.paoding.rose.web.impl.module.NestedControllerInterceptor;
-import net.paoding.rose.web.impl.thread.InvocationBean;
 import net.paoding.rose.web.impl.thread.Rose;
 import net.paoding.rose.web.impl.thread.WebEngine;
 import net.paoding.rose.web.instruction.InstructionExecutor;
@@ -220,19 +219,12 @@ public class RoseFilter extends GenericFilterBean {
         // matched为true代表本次请求被Rose匹配，不需要转发给容器的其他 flter 或 servlet
         boolean matched = false;
         try {
-            // invocation 对象 代表一次请求以及响应
-
-            final InvocationBean inv = new InvocationBean(httpRequest, httpResponse, requestPath);
-
-            // rose 对象 代表Rose框架对一次请求的执行
-            final Rose rose = new Rose(modules, mappingTree, inv);
-
-            inv.setRose(rose);
+            // rose 对象代表Rose框架对一次请求的执行：一朵玫瑰出墙来
+            final Rose rose = new Rose(modules, mappingTree, httpRequest, httpResponse, requestPath);
 
             // 对请求进行匹配、处理、渲染以及渲染后的操作，如果找不到映配则返回false
-            matched = rose.execute();
+            matched = rose.start();
 
-            // 
         } catch (Throwable exception) {
             throwServletException(requestPath, exception);
         }
@@ -274,7 +266,7 @@ public class RoseFilter extends GenericFilterBean {
         messageBasenames[messageBasenames.length - 2] = "classpath:messages";
         messageBasenames[messageBasenames.length - 1] = "/WEB-INF/messages";
 
-        WebApplicationContext rootContext = ContextLoader.createWebApplicationContext(
+        WebApplicationContext rootContext = RoseContextLoader.createWebApplicationContext(
                 getServletContext(), jarContextResources, contextConfigLocation, messageBasenames,
                 "rose.root");
 

@@ -148,16 +148,16 @@ public class ViewInstruction extends AbstractInstruction {
             return viewName;
         }
         // 其他的按惯例行走
-        String viewRelativePath = inv.getModule().getModulePath();
+        String viewRelativePath = inv.getViewModule().getModulePath();
         ViewPathCache viewPathCache = globalViewPathCaches.get(viewRelativePath);
         if (viewPathCache == null) {
             String directoryPath = RoseConstants.VIEWS_PATH + viewRelativePath;
             File directoryFile = new File(inv.getServletContext().getRealPath(directoryPath));
             if (!directoryFile.exists()) {
-                inv.getResponse().sendError(
-                        404,
-                        "view directory not found, you need to create it in your webapp:"
-                                + directoryPath);
+                String msg = "404: view directory not found, you need to create it in your webapp:"
+                        + directoryPath;
+                logger.error(msg);
+                inv.getResponse().sendError(404, msg);
                 return null;
             }
             viewPathCache = new ViewPathCache(viewRelativePath);

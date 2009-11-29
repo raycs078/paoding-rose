@@ -18,6 +18,7 @@ package net.paoding.rose.web;
 import javax.servlet.http.HttpServletRequest;
 
 /**
+ * 仅限Rose框架本身内部调用!
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
@@ -30,6 +31,10 @@ public class InvocationUtils {
     //
     public static void bindInvocationToRequest(Invocation inv, HttpServletRequest request) {
         request.setAttribute("$$paoding-rose.invocation", inv);
+    }
+
+    public static void unbindInvocationFromRequest(HttpServletRequest request) {
+        request.removeAttribute("$$paoding-rose.invocation");
     }
 
     public static Invocation getInvocation(HttpServletRequest request) {

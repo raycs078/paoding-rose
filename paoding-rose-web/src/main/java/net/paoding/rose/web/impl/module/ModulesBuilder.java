@@ -37,7 +37,7 @@ import net.paoding.rose.web.annotation.Ignored;
 import net.paoding.rose.web.annotation.Interceptor;
 import net.paoding.rose.web.annotation.NotForSubModules;
 import net.paoding.rose.web.annotation.ReqMapping;
-import net.paoding.rose.web.impl.context.ContextLoader;
+import net.paoding.rose.web.impl.context.RoseContextLoader;
 import net.paoding.rose.web.paramresolver.ParamResolver;
 
 import org.apache.commons.lang.ArrayUtils;
@@ -168,6 +168,21 @@ public class ModulesBuilder {
             }
         }
         if (controllerSuffix == null) {
+            if (beanDefinition.hasBeanClass()) {
+                Class<?> beanClass = beanDefinition.getBeanClass();
+                if (beanClass.isAnnotationPresent(ReqMapping.class)) {
+                    throw new IllegalArgumentException("@" + ReqMapping.class.getSimpleName()
+                            + " is only allowed in Resource/Controller, "
+                            + "is it a Resource/Controller? wrong spelling? : " + beanClassName);
+                }
+            }
+            // 对少字母l、r、u，er写成or的等常见错误进行提醒
+            if (beanClassName.endsWith("Controler") || beanClassName.endsWith("Controllor")
+                    || beanClassName.endsWith("Resouce") || beanClassName.endsWith("Resorce")) {
+                // 记录错误，但不throw出，不阻断其他程序的正常运行
+                logger.error("", new IllegalArgumentException(
+                        "invalid class name end， wrong spelling? : " + beanClassName));
+            }
             return false;
         }
         String[] controllerPaths = null;
@@ -224,8 +239,8 @@ public class ModulesBuilder {
     private XmlWebApplicationContext createModuleContext(WebApplicationContext parent,
             final String namespace, final List<URL> contextResources,
             final String[] messageBasenames) throws IOException {
-        return ContextLoader.createWebApplicationContext(parent == null ? null : parent
-                .getServletContext(), parent, ContextLoader.toResources(contextResources), "",
+        return RoseContextLoader.createWebApplicationContext(parent == null ? null : parent
+                .getServletContext(), parent, RoseContextLoader.toResources(contextResources), "",
                 messageBasenames, namespace);
     }
 
@@ -275,8 +290,8 @@ public class ModulesBuilder {
 
     private ControllerErrorHandler getContextErrorHandler(XmlWebApplicationContext context) {
         ControllerErrorHandler errorHandler = null;
-        String[] names = SpringUtils.getBeanNames(context.getBeanFactory(),
-                ControllerErrorHandler.class);
+//        String[] names = SpringUtils.getBeanNames(context, ControllerErrorHandler.class);
+        String[] names = context.getBeanNamesForType(ControllerErrorHandler.class);
         for (int i = 0; errorHandler == null && i < names.length; i++) {
             errorHandler = (ControllerErrorHandler) context.getBean(names[i]);
             Class<?> userClass = ClassUtils.getUserClass(errorHandler);
@@ -347,6 +362,11 @@ public class ModulesBuilder {
                 }
                 continue;
             }
+            if (!userClass.getSimpleName().endsWith(RoseConstants.INTERCEPTOR_SUFFIX)) {
+                logger.error("", new IllegalArgumentException(
+                        "Interceptor must be end with 'Interceptor': " + userClass.getName()));
+                continue;
+            }
             NestedControllerInterceptor.Builder builder = new NestedControllerInterceptor.Builder(
                     interceptor);
             Interceptor annotation = userClass.getAnnotation(Interceptor.class);
@@ -356,7 +376,8 @@ public class ModulesBuilder {
             if (annotation != null && StringUtils.isNotBlank(annotation.name())) {
                 builder.name(annotation.name());
             } else {
-                builder.name(asShortPropertyName(userClass.getSimpleName(), "Interceptor"));
+                builder.name(asShortPropertyName(userClass.getSimpleName(),
+                        RoseConstants.INTERCEPTOR_SUFFIX));
             }
             NestedControllerInterceptor wrapper = builder.build();
             globalInterceptors.add(wrapper);

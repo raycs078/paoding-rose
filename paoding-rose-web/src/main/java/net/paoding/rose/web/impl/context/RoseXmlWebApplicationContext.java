@@ -26,6 +26,7 @@ import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.GenericBeanDefinition;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
+import org.springframework.context.annotation.AnnotationConfigUtils;
 import org.springframework.context.support.ReloadableResourceBundleMessageSource;
 import org.springframework.core.io.Resource;
 import org.springframework.web.context.support.XmlWebApplicationContext;
@@ -35,13 +36,13 @@ import org.springframework.web.context.support.XmlWebApplicationContext;
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
-public class ResourceXmlWebApplicationContext extends XmlWebApplicationContext {
+public class RoseXmlWebApplicationContext extends XmlWebApplicationContext {
 
     private List<Resource> contextResources = Collections.emptyList();
 
     private String[] messageBaseNames = new String[0];
 
-    public ResourceXmlWebApplicationContext() {
+    public RoseXmlWebApplicationContext() {
     }
 
     public void setContextResources(List<Resource> contextResources) {
@@ -71,19 +72,27 @@ public class ResourceXmlWebApplicationContext extends XmlWebApplicationContext {
 
     @Override
     protected void prepareBeanFactory(ConfigurableListableBeanFactory beanFactory) {
-        registerMessageSource();
+        prepareBeanFactoryByRose(beanFactory);
         super.prepareBeanFactory(beanFactory);
     }
 
-    private void registerMessageSource() {
-        if (!ArrayUtils.contains(this.getBeanDefinitionNames(), MESSAGE_SOURCE_BEAN_NAME)) {
-            BeanDefinitionRegistry registry = (BeanDefinitionRegistry) getBeanFactory();
+    /** Rose对BeanFactory的特殊处理，必要时可以覆盖这个方法去掉Rose的特有的处理 */
+    protected void prepareBeanFactoryByRose(ConfigurableListableBeanFactory beanFactory) {
+        BeanDefinitionRegistry registry = (BeanDefinitionRegistry) beanFactory;
+        AnnotationConfigUtils.registerAnnotationConfigProcessors(registry);
+        registerMessageSourceIfNecessary(registry, messageBaseNames);
+    }
+
+    /** 如果配置文件没有自定义的messageSource定义，则由Rose根据最佳实践进行预设 */
+    public static void registerMessageSourceIfNecessary(BeanDefinitionRegistry registry,
+            String[] messageBaseNames) {
+        if (!ArrayUtils.contains(registry.getBeanDefinitionNames(), MESSAGE_SOURCE_BEAN_NAME)) {
             GenericBeanDefinition messageSource = new GenericBeanDefinition();
             messageSource.setBeanClass(ReloadableResourceBundleMessageSource.class);
             MutablePropertyValues propertyValues = new MutablePropertyValues();
             propertyValues.addPropertyValue("useCodeAsDefaultMessage", true);
             propertyValues.addPropertyValue("defaultEncoding", "UTF-8"); // properties文件也将使用UTF-8编辑，而非默认的ISO-9959-1
-            propertyValues.addPropertyValue("cacheSeconds", 60); // 暂时hardcode!
+            propertyValues.addPropertyValue("cacheSeconds", 60); // 暂时hardcode! 60
             propertyValues.addPropertyValue("basenames", messageBaseNames);
 
             messageSource.setPropertyValues(propertyValues);
