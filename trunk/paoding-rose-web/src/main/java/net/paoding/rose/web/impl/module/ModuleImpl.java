@@ -175,13 +175,4 @@ public class ModuleImpl implements Module {
     public void setErrorHandler(ControllerErrorHandler errorHandler) {
         this.errorHandler = errorHandler;
     }
-
-    //    @Override
-    //    public MultipartResolver getMultipartResolver() {
-    //        return multipartResolver;
-    //    }
-    //
-    //    public void setMultipartResolver(MultipartResolver multipartResolver) {
-    //        this.multipartResolver = multipartResolver;
-    //    }
 }

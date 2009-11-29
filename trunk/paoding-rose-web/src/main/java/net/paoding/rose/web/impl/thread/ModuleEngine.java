@@ -89,7 +89,7 @@ public class ModuleEngine implements Engine {
     }
 
     @Override
-    public Object invoke(Rose rose, MatchResult mr, Object instruction) throws Throwable {
+    public Object execute(Rose rose, MatchResult mr) throws Throwable {
         Invocation inv = rose.getInvocation();
         inv.getRequestPath().setModulePath(mr.getValue());
 
@@ -102,7 +102,7 @@ public class ModuleEngine implements Engine {
             if (isMultiPartRequest = checkMultipart(inv)) {
                 inv.setAttribute("$$paoding-rose.isMultiPartRequest", Boolean.TRUE);
             }
-            return innerInvoke(rose, mr, instruction);
+            return innerInvoke(rose, mr);
         } finally {
             if (isMultiPartRequest) {
                 cleanupMultipart(inv);
@@ -110,9 +110,9 @@ public class ModuleEngine implements Engine {
         }
     }
 
-    private Object innerInvoke(Rose rose, MatchResult mr, Object instruction) throws Throwable {
+    private Object innerInvoke(Rose rose, MatchResult mr) throws Throwable {
         try {
-            return rose.invokeNext(rose, instruction);
+            return rose.doNext();
         } catch (Throwable invException) {
             // 抛出异常了(可能是拦截器或控制器抛出的)，此时让该控制器所在模块的ControllerErrorHanlder处理
 
@@ -122,7 +122,21 @@ public class ModuleEngine implements Engine {
                 cause = ((InvocationTargetException) cause).getTargetException();
             }
             // 
-            ControllerErrorHandler errorHandler = module.getErrorHandler();
+            Module errorHandlerModule = module;
+            ControllerErrorHandler errorHandler = errorHandlerModule.getErrorHandler();
+            while (errorHandler == null) {
+                errorHandlerModule = module.getParent();
+                if (errorHandlerModule != null) {
+                    errorHandler = errorHandlerModule.getErrorHandler();
+                } else {
+                    errorHandler = null;
+                    break;
+                }
+            }
+            if (errorHandler != null) {
+                rose.getInvocation().setViewModule(errorHandlerModule);
+            }
+            Object instruction = null;
             if (errorHandler != null) {
                 if (logger.isDebugEnabled()) {
                     logger.debug("exception happended, ControllerErrorHandler in module '" //
@@ -141,8 +155,8 @@ public class ModuleEngine implements Engine {
                     throw (Error) invException;
                 }
             }
+            return instruction;
         }
-        return instruction;
     }
 
     public void destroy() {

@@ -29,7 +29,6 @@ import javax.servlet.http.HttpServletRequest;
 import net.paoding.rose.RoseConstants;
 import net.paoding.rose.RoseFilter;
 import net.paoding.rose.web.Invocation;
-import net.paoding.rose.web.InvocationUtils;
 import net.paoding.rose.web.RequestPath;
 import net.paoding.rose.web.impl.mapping.MatchResult;
 import net.paoding.rose.web.instruction.InstructionExecutor;
@@ -48,7 +47,7 @@ import org.apache.commons.logging.LogFactory;
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  */
-public class WebEngine implements Engine, AfterCompletion {
+public class WebEngine implements Engine {
 
     // ------------------------------------------------------------
 
@@ -87,23 +86,22 @@ public class WebEngine implements Engine, AfterCompletion {
      */
 
     @Override
-    public Object invoke(Rose rose, MatchResult mr, Object instruction) throws Throwable {
+    public Object execute(Rose rose, MatchResult mr) throws Throwable {
         InvocationBean inv = rose.getInvocation();
-        Invocation preInvocation = InvocationUtils.getInvocation(inv.getRequest());
-        inv.setPreInvocation(preInvocation);
-        InvocationUtils.bindInvocationToRequest(inv, inv.getRequest());
-        InvocationUtils.bindRequestToCurrentThread(inv.getRequest());
-
-        rose.addAfterCompletion(this);
         //
         final RequestPath requestPath = inv.getRequestPath();
-        if (requestPath.isIncludeRequest() || requestPath.isForwardRequest()) {
-            inv.setAttribute("$$paoding-rose.preInvocation", InvocationUtils.getInvocation(inv
-                    .getRequest()));
-            // save before include
-            if (requestPath.isIncludeRequest()) {
-                saveAttributesBeforeInclude(inv);
-            }
+
+        // save before include
+        if (requestPath.isIncludeRequest()) {
+            saveAttributesBeforeInclude(inv);
+            // 恢复include请求前的各种请求属性(包括Model对象)
+            rose.addAfterCompletion(new AfterCompletion() {
+
+                @Override
+                public void afterCompletion(Invocation inv, Throwable ex) throws Exception {
+                    restoreRequestAttributesAfterInclude(inv);
+                }
+            });
         }
 
         // 调用之前设置内置属性
@@ -111,7 +109,7 @@ public class WebEngine implements Engine, AfterCompletion {
         inv.addModel("ctxpath", requestPath.getCtxpath());
 
         // instruction是控制器action方法的返回结果或其对应的Instruction对象(也可能是拦截器、错误处理器返回的)
-        instruction = rose.invokeNext(rose, instruction);
+        Object instruction = rose.doNext();
 
         // 写flash消息到Cookie (被include的请求不会有功能)
         if (!requestPath.isIncludeRequest()) {
@@ -145,19 +143,6 @@ public class WebEngine implements Engine, AfterCompletion {
             attributesSnapshot.put(attrName, request.getAttribute(attrName));
         }
         inv.setAttribute("$$paoding-rose.attributesBeforeInclude", attributesSnapshot);
-    }
-
-    public void afterCompletion(Invocation inv, Throwable e) {
-        // 恢复include请求前的各种请求属性(包括Model对象)
-        if (inv.getRequestPath().isIncludeRequest()) {
-            restoreRequestAttributesAfterInclude(inv);
-        }
-        Invocation preInvocation = inv.getPreInvocation();
-        if (preInvocation != null) {
-            InvocationUtils.bindRequestToCurrentThread(preInvocation.getRequest());
-        } else {
-            InvocationUtils.unindRequestFromCurrentThread();
-        }
     }
 
     /**

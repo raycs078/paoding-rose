@@ -42,11 +42,15 @@ public interface RoseConstants {
     public static final String CONTROLLERS_DIRECTORY_NAME = "controllers";
 
     /**
-     * 控制器都以其中一个字符串为结尾。
+     * 资源控制器都以其中一个字符串为结尾。
      * <p>
      * 如果结尾的字符串长度为1，那么要求这个字符串的前一个字符不应为大写字符。
      */
-    public static final String[] CONTROLLER_SUFFIXES = new String[] { "Controller", "C", "Action" };
+    public static final String[] CONTROLLER_SUFFIXES = new String[] { "Resource", "Controller",
+            "C", "Action" };
+
+    /** 拦截器结束符号 */
+    public static final String INTERCEPTOR_SUFFIX = "Interceptor";
 
     /**
      * 用于配置在每个module的包的rose.properties，如果这个属性值为true代表这个目录以及子目录不作为module

@@ -91,12 +91,11 @@ public final class ActionEngine implements Engine {
     public NestedControllerInterceptor[] getRegisteredInterceptors() {
         return interceptors;
     }
-    
-    
+
     public Class<?> getControllerClass() {
         return controllerClass;
     }
-    
+
     public Object getController() {
         return controller;
     }
@@ -177,15 +176,15 @@ public final class ActionEngine implements Engine {
     }
 
     @Override
-    public Object invoke(Rose rose, MatchResult mr, Object instruction) throws Throwable {
+    public Object execute(Rose rose, MatchResult mr) throws Throwable {
         try {
-            return innerInvoke(rose, mr, instruction);
+            return innerExecute(rose, mr);
         } catch (Throwable local) {
             throw createException(rose, local);
         }
     }
 
-    public Object innerInvoke(Rose rose, MatchResult mr, Object instruction) throws Throwable {
+    public Object innerExecute(Rose rose, MatchResult mr) throws Throwable {
         Invocation inv = rose.getInvocation();
         inv.getRequestPath().setActionPath(mr.getValue());
         // applies http features before the resolvers
@@ -220,6 +219,8 @@ public final class ActionEngine implements Engine {
             }
         }
 
+        Object instruction = null;
+
         // invokes before-interceptors
         boolean broken = false;
         boolean[] bitSt = new boolean[interceptors.length];
@@ -241,7 +242,7 @@ public final class ActionEngine implements Engine {
             if (instruction != null && !Boolean.TRUE.equals(instruction)) {
                 if (instruction == inv) {
                     throw new IllegalArgumentException("Don't return an inv as an instruction: "
-                            + inv.getRequestPath().getUri());
+                            + interceptor.getInterceptor().getClass().getName());
                 }
                 // the inv is broken
 
@@ -254,7 +255,6 @@ public final class ActionEngine implements Engine {
             }
         }
 
-        // intercetporIndex负数代表被中断
         if (!broken) {
             // invoke
             instruction = method.invoke(controller, methodParameters);

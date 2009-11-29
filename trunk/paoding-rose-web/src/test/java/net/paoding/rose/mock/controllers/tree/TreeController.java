@@ -13,15 +13,15 @@ public class TreeController {
         MappingNode tree = rose.getMappingTree();
         int count = 0;
         for (MappingNode node : tree) {
-            System.out.print(">" + node);
+            // System.out.print(">" + node);
             if (node.getResource().getIdentiy().startsWith("/rose-info")) {
-                System.out.print("\t" + node);
+                // System.out.print("\t" + node);
                 if (node.getResource().isEndResource()) {
-                    System.out.print("   YES\t" + node);
+                    // System.out.print("   YES\t" + node);
                     count++;
                 }
             }
-            System.out.println();
+            //System.out.println();
         }
         return count;
     }

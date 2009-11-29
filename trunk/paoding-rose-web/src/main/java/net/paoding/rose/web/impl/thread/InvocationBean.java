@@ -83,6 +83,8 @@ public final class InvocationBean implements Invocation {
 
     private Rose rose;
 
+    private Module viewModule;
+
     public InvocationBean(HttpServletRequest request, HttpServletResponse response,
             RequestPath requestPath) {
         setRequest(request);
@@ -125,6 +127,14 @@ public final class InvocationBean implements Invocation {
 
     public Module getModule() {
         return getModuleEngine().getModule();
+    }
+
+    public Module getViewModule() {
+        return viewModule == null ? getModule() : viewModule;
+    }
+
+    public void setViewModule(Module viewModule) {
+        this.viewModule = viewModule;
     }
 
     @Override
