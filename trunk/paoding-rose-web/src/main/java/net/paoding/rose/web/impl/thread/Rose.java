@@ -60,16 +60,16 @@ public class Rose implements EngineChain {
 
     private RequestPath path;
 
-    private HttpServletRequest httpRequest;
+    private HttpServletRequest originalHttpRequest;
 
-    private HttpServletResponse httpResponse;
+    private HttpServletResponse originalHttpResponse;
 
     public Rose(List<Module> modules, MappingNode mappingTree, HttpServletRequest httpRequest,
             HttpServletResponse httpResponse, RequestPath requestPath) {
         this.mappingTree = mappingTree;
         this.modules = modules;
-        this.httpRequest = httpRequest;
-        this.httpResponse = httpResponse;
+        this.originalHttpRequest = httpRequest;
+        this.originalHttpResponse = httpResponse;
         this.path = requestPath;
     }
 
@@ -133,8 +133,8 @@ public class Rose implements EngineChain {
             if (allow.length() > 0) {
                 allow.setLength(allow.length() - gap.length());
             }
-            httpResponse.addHeader("Allow", allow.toString());
-            httpResponse.sendError(405, this.path.getUri());
+            originalHttpResponse.addHeader("Allow", allow.toString());
+            originalHttpResponse.sendError(405, this.path.getUri());
         } else {
             //
             this.matchResults = matchResults;
@@ -150,22 +150,23 @@ public class Rose implements EngineChain {
                     }
                 }
             }
+            HttpServletRequest httpRequest = originalHttpRequest;
             if (mrParameters != null && mrParameters.size() > 0) {
-                this.httpRequest = new ParameteredUriRequest(httpRequest, mrParameters);
+                httpRequest = new ParameteredUriRequest(originalHttpRequest, mrParameters);
             }
 
             //
-            HttpServletRequest threadOldHttpRequest = null;
+            HttpServletRequest originalThreadHttpRequest = null;
             Invocation preInvocation = null;
             if (path.getDispatcher() != Dispatcher.REQUEST) {
-                threadOldHttpRequest = InvocationUtils.getCurrentThreadRequest();
-                if (threadOldHttpRequest != null) {
-                    preInvocation = InvocationUtils.getInvocation(threadOldHttpRequest);
+                originalThreadHttpRequest = InvocationUtils.getCurrentThreadRequest();
+                if (originalThreadHttpRequest != null) {
+                    preInvocation = InvocationUtils.getInvocation(originalThreadHttpRequest);
                     assert preInvocation != null;
                 }
             }
             // invocation 对象 代表一次Rose调用
-            InvocationBean inv = new InvocationBean(httpRequest, httpResponse, path);
+            InvocationBean inv = new InvocationBean(httpRequest, originalHttpResponse, path);
             inv.setRose(this);
             inv.setPreInvocation(preInvocation);
             //
@@ -189,9 +190,10 @@ public class Rose implements EngineChain {
                     }
                 }
                 //
-                if (threadOldHttpRequest != null) {
-                    InvocationUtils.bindRequestToCurrentThread(threadOldHttpRequest);
-                    InvocationUtils.bindInvocationToRequest(preInvocation, threadOldHttpRequest);
+                if (originalThreadHttpRequest != null) {
+                    InvocationUtils.bindRequestToCurrentThread(originalThreadHttpRequest);
+                    InvocationUtils.bindInvocationToRequest(preInvocation,
+                            originalThreadHttpRequest);
                 } else {
                     InvocationUtils.unindRequestFromCurrentThread();
                 }

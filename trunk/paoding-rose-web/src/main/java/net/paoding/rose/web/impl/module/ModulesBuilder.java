@@ -288,23 +288,15 @@ public class ModulesBuilder {
         }
     }
 
+    /** 错误处理器，只从本容器找，不从父容器找 */
     private ControllerErrorHandler getContextErrorHandler(XmlWebApplicationContext context) {
         ControllerErrorHandler errorHandler = null;
-//        String[] names = SpringUtils.getBeanNames(context, ControllerErrorHandler.class);
         String[] names = context.getBeanNamesForType(ControllerErrorHandler.class);
         for (int i = 0; errorHandler == null && i < names.length; i++) {
             errorHandler = (ControllerErrorHandler) context.getBean(names[i]);
             Class<?> userClass = ClassUtils.getUserClass(errorHandler);
             if (userClass.isAnnotationPresent(Ignored.class)) {
                 logger.debug("Ignored controllerErrorHandler: " + errorHandler);
-                errorHandler = null;
-                continue;
-            } else if (userClass.isAnnotationPresent(NotForSubModules.class)
-                    && context.getBeanFactory().getBeanDefinition(names[i]) == null) {
-                if (logger.isDebugEnabled()) {
-                    logger.debug("Ignored controllerErrorHandler (NotForSubModules):"
-                            + errorHandler);
-                }
                 errorHandler = null;
                 continue;
             }
