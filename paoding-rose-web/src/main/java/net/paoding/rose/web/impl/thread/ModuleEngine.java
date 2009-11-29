@@ -17,10 +17,13 @@ package net.paoding.rose.web.impl.thread;
 
 import java.lang.reflect.InvocationTargetException;
 
+import javax.servlet.http.HttpServletRequest;
+
 import net.paoding.rose.RoseConstants;
 import net.paoding.rose.util.SpringUtils;
 import net.paoding.rose.web.ControllerErrorHandler;
 import net.paoding.rose.web.Invocation;
+import net.paoding.rose.web.annotation.NotForSubModules;
 import net.paoding.rose.web.impl.mapping.MatchResult;
 import net.paoding.rose.web.impl.module.Module;
 
@@ -33,6 +36,7 @@ import org.springframework.web.multipart.MultipartException;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.multipart.MultipartResolver;
 import org.springframework.web.multipart.commons.CommonsMultipartResolver;
+import org.springframework.web.util.WebUtils;
 
 /**
  * {@link ModuleEngine} 负责从表示的模块中找出可匹配的 控制器引擎 {@link ControllerEngine}
@@ -124,25 +128,32 @@ public class ModuleEngine implements Engine {
             // 
             Module errorHandlerModule = module;
             ControllerErrorHandler errorHandler = errorHandlerModule.getErrorHandler();
-            while (errorHandler == null) {
-                errorHandlerModule = module.getParent();
+            while (errorHandler == null && errorHandlerModule != null) {
+                errorHandlerModule = errorHandlerModule.getParent();
                 if (errorHandlerModule != null) {
                     errorHandler = errorHandlerModule.getErrorHandler();
+                    if (errorHandler != null) {
+                        if (errorHandler.getClass().isAnnotationPresent(NotForSubModules.class)) {
+                            errorHandler = null;
+                            continue;
+                        }
+                    }
                 } else {
                     errorHandler = null;
                     break;
                 }
             }
-            if (errorHandler != null) {
-                rose.getInvocation().setViewModule(errorHandlerModule);
-            }
             Object instruction = null;
             if (errorHandler != null) {
                 if (logger.isDebugEnabled()) {
-                    logger.debug("exception happended, ControllerErrorHandler in module '" //
-                            + module.getMappingPath() + "' will handler the exception: " //
-                            + cause.getClass().getName() + ":" + cause.getMessage()); //
+                    logger.debug("exception happended； " + errorHandler.getClass().getName()
+                            + " will handle the exception: " //
+                            + cause.getClass().getName() + ":" + cause.getMessage());
                 }
+                rose.getInvocation().setViewModule(errorHandlerModule);
+                // 
+                HttpServletRequest request = rose.getInvocation().getRequest();
+                WebUtils.exposeErrorRequestAttributes(request, cause, null);
                 instruction = errorHandler.onError(rose.getInvocation(), cause);
             }
 
