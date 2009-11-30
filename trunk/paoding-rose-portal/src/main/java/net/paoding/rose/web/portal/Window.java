@@ -15,6 +15,7 @@
  */
 package net.paoding.rose.web.portal;
 
+import java.util.Map;
 import java.util.concurrent.Future;
 
 /**
@@ -111,6 +112,13 @@ public interface Window {
      * @return
      */
     public Object get(String key);
+
+    /**
+     * 获取设置到这个window的所有属性
+     * 
+     * @return
+     */
+    public Map<String, Object> getAttributes();
 
     /**
      * 设置窗口的Title属性，实现上应保证 也设置一份到 {@link #set(String, Object)}

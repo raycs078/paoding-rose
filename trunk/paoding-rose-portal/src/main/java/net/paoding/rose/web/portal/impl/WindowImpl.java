@@ -15,8 +15,10 @@
  */
 package net.paoding.rose.web.portal.impl;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 
 import javax.servlet.http.HttpServletResponse;
@@ -70,7 +72,7 @@ class WindowImpl implements Window {
     @Override
     public void set(String key, Object value) {
         if (attributes == null) {
-            attributes = new HashMap<String, Object>();
+            attributes = new ConcurrentHashMap<String, Object>();
         }
         attributes.put(key, value);
     }
@@ -83,6 +85,11 @@ class WindowImpl implements Window {
     @Override
     public void setTitle(Object title) {
         set("title", title);
+    }
+
+    @Override
+    public Map<String, Object> getAttributes() {
+        return Collections.unmodifiableMap(new HashMap<String, Object>(attributes));
     }
 
     @Override
