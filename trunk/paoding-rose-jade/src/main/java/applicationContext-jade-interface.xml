@@ -17,6 +17,6 @@ http://www.springframework.org/schema/aop http://www.springframework.org/schema/
 		class="net.paoding.rose.jade.jadeinterface.impl.JadeDaoProcessor" />
 
 	<!-- 使用  WebApp 配置的 DataAccessProvider -->
-	<bean id="dataAccessProvider"
-		class="net.paoding.rose.jade.jadeinterface.app.web.WebAppDataAccessProvider" />
+	<bean id="jadeDataAccessProviderHolder"
+		class="net.paoding.rose.jade.jadeinterface.app.DataAccessProviderHolder" />
 </beans>
