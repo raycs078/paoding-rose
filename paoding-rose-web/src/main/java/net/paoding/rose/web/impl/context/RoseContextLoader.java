@@ -25,6 +25,7 @@ import javax.servlet.ServletContext;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.web.context.WebApplicationContext;
@@ -132,4 +133,52 @@ public class RoseContextLoader {
         return wac;
     }
 
+    /**
+     * 
+     * @param parent 上级applicationContext,为null代表没有
+     * @param contextResources 以Resource形式提供的 applicationContext文件资源
+     * @param configLocations 以字符串提供的 applicationContext文件地址资源，如
+     *        "/WEB-INF/applicationContext*.xml,classpath:applicationContext*.xml"
+     * @param namespace
+     * @return
+     * @throws IOException
+     */
+    public static ApplicationContext createApplicationContext(ApplicationContext parent, //
+            List<Resource> contextResources,//
+            String configLocations, //
+            String namespace) throws IOException {
+
+        long startTime = System.currentTimeMillis();
+
+        if (logger.isInfoEnabled()) {
+            logger.info("Loading Spring '" + namespace + "' ApplicationContext");
+        }
+
+        RoseXmlApplicationContext xac = new RoseXmlApplicationContext();
+        xac.setContextResources(contextResources);
+        xac.setDisplayName(namespace);
+        if (configLocations != null) {
+            xac.setConfigLocation(configLocations);
+        }
+
+        if (parent != null) {
+            xac.setParent(parent);
+            xac.setId(parent.getId() + "::" + namespace);
+        } else {
+            xac.setId(namespace);
+        }
+
+        xac.refresh();
+
+        // 日志打印
+        if (logger.isDebugEnabled()) {
+            long elapsedTime = System.currentTimeMillis() - startTime;
+            logger.debug("Using context class [" + xac.getClass().getName() + "] for " //
+                    + namespace + " ApplicationContext");
+            logger.info(namespace + " ApplicationContext: initialization completed in "
+                    + elapsedTime + " ms");
+        }
+
+        return xac;
+    }
 }
