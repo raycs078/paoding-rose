@@ -3,6 +3,7 @@ package net.paoding.rose.jade.jadeinterface.app.java;
 import java.util.concurrent.ConcurrentHashMap;
 
 import net.paoding.rose.jade.jadeinterface.annotation.Dao;
+import net.paoding.rose.jade.jadeinterface.app.DaoFactory;
 import net.paoding.rose.jade.jadeinterface.cache.CacheProvider;
 import net.paoding.rose.jade.jadeinterface.impl.DaoFactoryBean;
 import net.paoding.rose.jade.jadeinterface.provider.DataAccess;
@@ -10,6 +11,21 @@ import net.paoding.rose.jade.jadeinterface.provider.DataAccessProvider;
 import net.paoding.rose.jade.jadeinterface.provider.DataAccessProviderMock;
 import net.paoding.rose.jade.jadeinterface.provider.cache.CacheDataAccess;
 
+/**
+ * 本地轻量级的 Jade {@link DaoFactory} 实现, 用法:
+ * 
+ * <pre>
+ *  Jade jade = new Jade();
+ *  
+ *  jade.setDataAccessProvider(...);
+ *  jade.setCacheProvider(...);
+ *  
+ *  XxxxDao xxxxDao = jade.getDao(XxxxDao.class);
+ *  xxxxDao.findXxxx(...);
+ * </pre>
+ * 
+ * @author han.liao [in355hz@gmail.com]
+ */
 public class Jade implements DaoFactory {
 
     @SuppressWarnings("unchecked")
@@ -81,7 +97,8 @@ public class Jade implements DaoFactory {
 
             // 检查是否符合规则
             if (!daoClass.isInterface()) {
-                throw new IllegalArgumentException(daoClass.getName() + ": daoClass should be a interface");
+                throw new IllegalArgumentException(daoClass.getName()
+                        + ": daoClass should be a interface");
             }
 
             Dao annotation = daoClass.getAnnotation(Dao.class);

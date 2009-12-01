@@ -59,7 +59,7 @@ public class JadeDaoProcessor implements BeanFactoryPostProcessor, ApplicationCo
         }
 
         DataAccessProvider dataAccessProvider = (DataAccessProvider) applicationContext
-                .getBean("dataAccessProvider");
+                .getBean("jadeDataAccessProviderHolder");
         for (Class<?> clazz : classes) {
             if (clazz.isAnnotationPresent(Dao.class) && clazz.isInterface()) {
                 String beanName = ClassUtils.getShortNameAsProperty(clazz);

@@ -1,4 +1,4 @@
-package net.paoding.rose.jade.jadeinterface.app.web;
+package net.paoding.rose.jade.jadeinterface.app;
 
 import java.util.Map;
 
@@ -6,11 +6,11 @@ import net.paoding.rose.jade.jadeinterface.cache.CacheProvider;
 import net.paoding.rose.jade.jadeinterface.provider.DataAccessProvider;
 
 /**
- * 配置 Jade 启动参数的上下文。
+ * 定义 Jade 配置参数。
  * 
- * @author han.liao
+ * @author han.liao [in355hz@gmail.com]
  */
-public abstract class JadeInitContext {
+public abstract class JadeConfig {
 
     /**
      * 配置 {@link DataAccessProvider}
@@ -38,44 +38,33 @@ public abstract class JadeInitContext {
      * @param param - 参数名称
      * 
      * @return 参数中的类名 / 类对象
-     * @throws ClassNotFoundException
      */
-    public Class<?> getClassOrName(String param, Class<?> derivedClass)
+    public final Class<?> getType(String param, Class<?> derivedClass)
             throws ClassNotFoundException {
 
-        // 获取配置参数
-        Object value = get(param);
+        Object value = getConfig(param);
         if (value != null) {
-            Class<?> clazz;
 
-            // 从配置参数获取类
+            // 从配置参数获取类名 / 或者类本身
+            Class<?> configClass;
             if (value instanceof Class<?>) {
-                clazz = (Class<?>) value;
+                configClass = (Class<?>) value;
             } else if (value instanceof String) {
-                clazz = Class.forName((String) value);
+                configClass = Class.forName((String) value);
             } else {
                 throw new ClassCastException("Config \"" + param + "\" must be String or Class.");
             }
 
             // 校验配置的类
-            if (!derivedClass.isAssignableFrom(clazz)) {
-                throw new ClassCastException(clazz + " must implements " + derivedClass.getName());
+            if (!derivedClass.isAssignableFrom(configClass)) {
+                throw new ClassCastException(configClass + " must implements "
+                        + derivedClass.getName());
             }
-
-            return clazz;
+            return configClass;
         }
 
-        // 获取配置失败
         return null;
     }
-
-    /**
-     * 放入配置参数。
-     * 
-     * @param param - 参数名称
-     * @param value - 对象或参数值
-     */
-    public abstract void put(String param, Object value);
 
     /**
      * 取回配置参数。
@@ -84,17 +73,7 @@ public abstract class JadeInitContext {
      * 
      * @return 对象或参数值
      */
-    public abstract Object get(String param);
-
-    /**
-     * 创建空白的配置。
-     * 
-     * @return 空白的配置
-     */
-    public static JadeInitContext newInstance() {
-
-        return new JadeInitContextImpl();
-    }
+    public abstract Object getConfig(String param);
 
     /**
      * 从 {@link java.util.Map} 创建配置。
@@ -103,8 +82,7 @@ public abstract class JadeInitContext {
      * 
      * @return 空白的配置
      */
-    public static JadeInitContext newInstance(Map<String, Object> map) {
-
-        return new JadeInitContextImpl(map);
+    public static JadeConfig newInstance(Map<String, Object> map) {
+        return new JadeConfigImpl(map);
     }
 }
