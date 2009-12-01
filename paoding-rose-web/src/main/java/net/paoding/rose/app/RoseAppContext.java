@@ -1,3 +1,18 @@
+/*
+* Copyright 2007-2009 the original author or authors.
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
 package net.paoding.rose.app;
 
 import java.io.IOException;
@@ -17,7 +32,7 @@ import org.springframework.context.ApplicationContextException;
 import org.springframework.core.io.Resource;
 
 /**
- * 提供扫描 Rose: application-Context-*.xml 配置并初始化 Bean 的功能.
+ * 提供扫描 Rose: applicationContext-*.xml 配置并初始化 Bean 的功能.
  * 
  * @author han.liao [in355hz@gmail.com]
  */
@@ -88,7 +103,7 @@ public class RoseAppContext {
      * 
      * @param name - Bean 的名字
      */
-    boolean containsBean(String name) {
+    public boolean containsBean(String name) {
         return rootContext.containsBean(name);
     }
 
