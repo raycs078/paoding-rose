@@ -18,7 +18,7 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.util.NumberUtils;
 
 /**
- * 实现  SELECT 查询。
+ * 实现 SELECT 查询。
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  * @author han.liao
@@ -67,7 +67,7 @@ public class SelectOperation implements JdbcOperation {
     public Object execute(DataAccess dataAccess, Object[] args) {
 
         // 将参数放入  Map
-        HashMap<String, Object> parameters = new HashMap<String, Object>(args.length);
+        HashMap<String, Object> parameters = new HashMap<String, Object>(annotations.length);
         for (int i = 0; i < annotations.length; i++) {
             SQLParam annotation = annotations[i];
             if (annotation != null) {
