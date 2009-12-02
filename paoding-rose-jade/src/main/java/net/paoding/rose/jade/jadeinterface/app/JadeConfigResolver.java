@@ -22,12 +22,14 @@ public class JadeConfigResolver {
 
         try {
             DataAccessProvider dataAccessProvider = findDataAccessProvider(config);
+            if (dataAccessProvider != null) {
 
-            // 如果配置  CacheProvider, 包装配置的 DataAccessProvider
-            CacheProvider cacheProvider = findCacheProvider(config);
-            if (cacheProvider != null) {
-                dataAccessProvider = new CacheDataAccessProvider( // NL
-                        dataAccessProvider, cacheProvider);
+                // 如果配置  CacheProvider, 包装配置的 DataAccessProvider
+                CacheProvider cacheProvider = findCacheProvider(config);
+                if (cacheProvider != null) {
+                    dataAccessProvider = new CacheDataAccessProvider( // NL
+                            dataAccessProvider, cacheProvider);
+                }
             }
 
             return dataAccessProvider;
