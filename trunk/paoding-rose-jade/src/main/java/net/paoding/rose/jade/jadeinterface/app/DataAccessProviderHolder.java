@@ -43,44 +43,56 @@ public class DataAccessProviderHolder implements FactoryBean, InitializingBean,
     public void afterPropertiesSet() throws Exception {
 
         if (applicationContext instanceof WebApplicationContext) {
-            // 从  web.xml 配置的属性初始化
             logger.info("Try initializing from [web.xml]");
+
+            // 从  web.xml 配置的属性初始化
             JadeConfig config = new JadeWebAppConfig((WebApplicationContext) applicationContext);
             dataAccessProvider = JadeConfigResolver.configResolve(config);
+
             if (dataAccessProvider != null) {
                 logger.info("Jade initialized from [web.xml]");
             }
         }
 
         if (dataAccessProvider == null) {
-            // 从  jade.properties 配置的属性初始化
             logger.info("Try initializing from [jade.properties]");
-            Resource properties = applicationContext.getResource("jade.properties");
-            if (properties.exists()) {
+
+            // 查找 jade.properties 配置
+            Resource config = ResourceUtils.findResource(applicationContext, // NL
+                    "jade.properties");
+
+            // 从  jade.properties 配置的属性初始化
+            if ((config != null) && config.exists()) {
                 dataAccessProvider = JadeConfigResolver.configResolve(// NL
-                        new JadePropConfig(properties));
+                        new JadePropConfig(config));
             } else {
-                logger.info("Resource [" + properties + "] not found");
+                logger.info("Resource [" + config + "] not found");
             }
+
             if (dataAccessProvider != null) {
-                logger.info("Jade initialized from [" + properties.getURL() + "]");
+                logger.info("Jade initialized from [" + config.getURL() + "]");
             }
         }
 
         if (dataAccessProvider == null) {
-            // 从环境变量配置的属性初始化
             logger.info("Try initializing from [environment variable]");
+
+            // 从环境变量配置的属性初始化
             dataAccessProvider = JadeConfigResolver.configResolve(new JadeEnvConfig());
+
             if (dataAccessProvider != null) {
                 logger.info("Jade initialized from [environment variable]");
             }
         }
 
         if (dataAccessProvider == null) {
-            // 从  applicationContext.xml 配置的属性初始化
+
             logger.info("Try initializing from [applicationContext-*.xml]");
+
+            // 从  applicationContext.xml 配置的属性初始化
             dataAccessProvider = JadeConfigResolver.configResolve(// NL
                     new JadeAppConfig(applicationContext));
+
             if (dataAccessProvider != null) {
                 logger.info("Jade initialized from [applicationContext-*.xml]");
             }
