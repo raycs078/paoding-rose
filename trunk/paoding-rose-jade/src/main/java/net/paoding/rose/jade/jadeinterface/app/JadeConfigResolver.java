@@ -34,19 +34,19 @@ public class JadeConfigResolver {
 
         } catch (ClassCastException e) {
             if (logger.isWarnEnabled()) {
-                logger.warn("Jade initialize failed [ClassCastException]", e);
+                logger.warn("Config resolve failed [ClassCastException]", e);
             }
         } catch (ClassNotFoundException e) {
             if (logger.isWarnEnabled()) {
-                logger.warn("Jade initialize failed [ClassNotFoundException]", e);
+                logger.warn("Config resolve failed [ClassNotFoundException]", e);
             }
         } catch (InstantiationException e) {
             if (logger.isWarnEnabled()) {
-                logger.warn("Jade initialize failed [InstantiationException]", e);
+                logger.warn("Config resolve failed [InstantiationException]", e);
             }
         } catch (IllegalAccessException e) {
             if (logger.isWarnEnabled()) {
-                logger.warn("Jade initialize failed [IllegalAccessException]", e);
+                logger.warn("Config resolve failed [IllegalAccessException]", e);
             }
         }
 
