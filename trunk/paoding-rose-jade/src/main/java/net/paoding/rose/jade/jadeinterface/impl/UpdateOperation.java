@@ -61,7 +61,7 @@ public class UpdateOperation implements JdbcOperation {
     public Object execute(DataAccess dataAccess, Object[] args) {
 
         // 将参数放入  Map, 并且检查是否需要批量执行
-        Map<String, Object> parameters = new HashMap<String, Object>(args.length);
+        Map<String, Object> parameters = new HashMap<String, Object>(annotations.length);
 
         // 批量执行的参数与集合
         SQLParam batchParam = null;
