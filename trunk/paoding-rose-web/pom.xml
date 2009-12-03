@@ -16,6 +16,7 @@
 		<snapshotRepository>
 			<id>archiva.snapshots</id>
 			<name>Internal Snapshot Repository</name>
+			
 			<url>http://repos.d.xiaonei.com/nexus/content/repositories/snapshots/</url>
 		</snapshotRepository>
 	</distributionManagement>
@@ -74,8 +75,8 @@
 						<manifestEntries>
 							<Rose>controllers, applicationContext, messages</Rose>
 							<Implementation-Title>Paoding Rose</Implementation-Title>
-							<Implementation-Version>0.9.5-20091121</Implementation-Version>
-							<Rose-Version>0.9.5-200901121</Rose-Version>
+							<Implementation-Version>0.9.5-20091203</Implementation-Version>
+							<Rose-Version>0.9.5-20091203</Rose-Version>
 						</manifestEntries>
 					</archive>
 				</configuration>
@@ -121,6 +122,7 @@
 			<artifactId>servlet-api</artifactId>
 			<version>2.4</version>
 			<scope>provided</scope>
+			
 		</dependency>
 		<dependency>
 			<groupId>javax.servlet</groupId>

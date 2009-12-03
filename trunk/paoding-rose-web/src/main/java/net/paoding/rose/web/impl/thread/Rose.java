@@ -155,15 +155,12 @@ public class Rose implements EngineChain {
                 httpRequest = new ParameteredUriRequest(originalHttpRequest, mrParameters);
             }
 
+            // originalThreadRequest可能为null，特别是在portal框架下
+            HttpServletRequest originalThreadRequest = InvocationUtils.getCurrentThreadRequest();
             //
-            HttpServletRequest originalThreadHttpRequest = null;
             Invocation preInvocation = null;
             if (path.getDispatcher() != Dispatcher.REQUEST) {
-                originalThreadHttpRequest = InvocationUtils.getCurrentThreadRequest();
-                if (originalThreadHttpRequest != null) {
-                    preInvocation = InvocationUtils.getInvocation(originalThreadHttpRequest);
-                    assert preInvocation != null;
-                }
+                preInvocation = InvocationUtils.getInvocation(originalHttpRequest);
             }
             // invocation 对象 代表一次Rose调用
             InvocationBean inv = new InvocationBean(httpRequest, originalHttpResponse, path);
@@ -189,13 +186,14 @@ public class Rose implements EngineChain {
                         logger.error("", e);
                     }
                 }
-                //
-                if (originalThreadHttpRequest != null) {
-                    InvocationUtils.bindRequestToCurrentThread(originalThreadHttpRequest);
-                    InvocationUtils.bindInvocationToRequest(preInvocation,
-                            originalThreadHttpRequest);
+                if (originalThreadRequest != null) {
+                    InvocationUtils.bindRequestToCurrentThread(originalThreadRequest);
                 } else {
                     InvocationUtils.unindRequestFromCurrentThread();
+                }
+                // 更新绑定的invocation，只对于那些forward后request.setAttibute影响了前者的有效。(include的不用处理了，已经做了snapshot了)
+                if (preInvocation != null) {
+                    InvocationUtils.bindInvocationToRequest(preInvocation, httpRequest);
                 }
             }
         }

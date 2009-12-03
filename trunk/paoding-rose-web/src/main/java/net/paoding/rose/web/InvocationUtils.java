@@ -50,7 +50,7 @@ public class InvocationUtils {
 
     public static void bindRequestToCurrentThread(HttpServletRequest request) {
         if (request == null) {
-            currentRequests.remove();
+            unindRequestFromCurrentThread();
         } else {
             currentRequests.set(request);
         }

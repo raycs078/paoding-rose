@@ -15,10 +15,15 @@
  */
 package net.paoding.rose.web;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /**
  * @author 王志亮 [qieqie.wang@gmail.com]
  */
 public class OncePerRequestInterceptorWrapper extends ControllerInterceptorWrapper {
+
+    private static Log logger = LogFactory.getLog(OncePerRequestInterceptorWrapper.class);
 
     private final String filtered;
 
@@ -37,7 +42,14 @@ public class OncePerRequestInterceptorWrapper extends ControllerInterceptorWrapp
     public final Object before(Invocation inv) throws Exception {
         if (inv.getOncePerRequestAttribute(filtered) == null) {
             inv.setOncePerRequestAttribute(filtered, inv);
+            if (logger.isDebugEnabled()) {
+                logger.debug("do oncePerRequest interceptor.before: " + getName());
+            }
             return interceptor.before(inv);
+        } else {
+            if (logger.isDebugEnabled()) {
+                logger.debug("skip oncePerRequest interceptor.before: " + getName());
+            }
         }
         return true;
     }
@@ -45,7 +57,14 @@ public class OncePerRequestInterceptorWrapper extends ControllerInterceptorWrapp
     @Override
     public final Object after(Invocation inv, Object instruction) throws Exception {
         if (inv == inv.getOncePerRequestAttribute(filtered)) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("do oncePerRequest interceptor.after: " + getName());
+            }
             return interceptor.after(inv, instruction);
+        } else {
+            if (logger.isDebugEnabled()) {
+                logger.debug("skip oncePerRequest interceptor.after: " + getName());
+            }
         }
         return instruction;
     }
@@ -53,7 +72,14 @@ public class OncePerRequestInterceptorWrapper extends ControllerInterceptorWrapp
     @Override
     public final void afterCompletion(Invocation inv, Throwable ex) throws Exception {
         if (inv == inv.getOncePerRequestAttribute(filtered)) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("do oncePerRequest interceptor.afterCompletion: " + getName());
+            }
             interceptor.afterCompletion(inv, ex);
+        } else {
+            if (logger.isDebugEnabled()) {
+                logger.debug("skip oncePerRequest interceptor.afterCompletion: " + getName());
+            }
         }
     }
 

@@ -34,6 +34,7 @@ import java.util.jar.Manifest;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
@@ -46,6 +47,12 @@ public class RoseScanner {
 
     private static SoftReference<RoseScanner> softReference;
 
+    
+    public static void main(String[] args) {
+        URL url = ApplicationContext.class.getResource("/org/springframework/context/ApplicationContext.class");
+        System.out.println(url);
+    }
+    
     public synchronized static RoseScanner getInstance() {
         if (softReference == null || softReference.get() == null) {
             RoseScanner roseScanner = new RoseScanner();
