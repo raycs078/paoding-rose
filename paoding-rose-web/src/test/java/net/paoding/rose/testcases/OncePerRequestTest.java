@@ -10,4 +10,8 @@ public class OncePerRequestTest extends AbstractControllerTest {
         assertEquals("ok", invoke("/oncePerRequest"));
     }
 
+    public void test2() throws ServletException, IOException {
+        assertEquals("ok", invoke("/oncePerRequest2"));
+    }
+
 }
