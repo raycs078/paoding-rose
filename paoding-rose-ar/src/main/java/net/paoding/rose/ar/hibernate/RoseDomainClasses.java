@@ -22,7 +22,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.paoding.rose.scanner.ResourceInfo;
+import net.paoding.rose.scanner.ResourceRef;
 import net.paoding.rose.scanner.RoseScanner;
 
 import org.apache.commons.lang.StringUtils;
@@ -52,12 +52,12 @@ public class RoseDomainClasses {
         if (domainClasses == null) {
             domainClasses = new ArrayList<Class<?>>();
             RoseScanner roseScanner = RoseScanner.getInstance();
-            List<ResourceInfo> resources = new ArrayList<ResourceInfo>();
+            List<ResourceRef> resources = new ArrayList<ResourceRef>();
             resources.addAll(roseScanner.getClassesFolderResources());
             resources.addAll(roseScanner.getJarResources());
             List<FileObject> rootObjects = new ArrayList<FileObject>();
             FileSystemManager fsManager = VFS.getManager();
-            for (ResourceInfo resourceInfo : resources) {
+            for (ResourceRef resourceInfo : resources) {
                 if (resourceInfo.hasModifier("domain")) {
                     Resource resource = resourceInfo.getResource();
                     File resourceFile = resource.getFile();
