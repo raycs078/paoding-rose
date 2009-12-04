@@ -4,7 +4,7 @@
 	<groupId>net.paoding</groupId>
 	<artifactId>paoding-rose</artifactId>
 	<packaging>jar</packaging>
-	<version>0.9-SNAPSHOT</version>
+	<version>0.9.5-release</version>
 	<name>paoding-rose</name>
 	<url>http://repos.d.xiaonei.com</url>
 	<distributionManagement>
