@@ -121,7 +121,8 @@ class WindowResponse extends HttpServletResponseWrapper {
 
     @Override
     public void sendRedirect(String location) throws IOException {
-        throw new UnsupportedOperationException("sendRedirect");
+        throw new UnsupportedOperationException("don't call sendRedirect in window request:"
+                + location);
     }
 
     @Override
