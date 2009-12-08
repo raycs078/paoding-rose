@@ -16,10 +16,12 @@ import java.lang.annotation.Target;
 @Documented
 public @interface MapKey {
 
+    String DEFAULT_KEY = "id";
+
     /**
      * 指出用查询结果的哪个字段作为 Key
      * 
      * @return 查询结果的字段名
      */
-    String value();
+    String value() default DEFAULT_KEY;
 }

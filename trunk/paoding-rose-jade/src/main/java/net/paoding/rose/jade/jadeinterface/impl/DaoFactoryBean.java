@@ -87,7 +87,7 @@ public class DaoFactoryBean<T> implements FactoryBean, InitializingBean {
                     public Object invoke(Object proxy, Method method, Object[] args)
                             throws Throwable {
 
-                        if (method.getDeclaringClass() == Object.class) {
+                        if (Object.class == method.getDeclaringClass()) {
                             return method.invoke(this, args);
                         }
 
