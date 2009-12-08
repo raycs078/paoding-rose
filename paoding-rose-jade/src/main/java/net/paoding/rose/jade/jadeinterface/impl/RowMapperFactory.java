@@ -16,5 +16,5 @@ public interface RowMapperFactory {
      * 
      * @return
      */
-    public RowMapper getRowMapper(Class<?> daoClass, Method method, Class<?> rowType);
+    public RowMapper getRowMapper(Class<?> daoClass, Method method);
 }

@@ -110,11 +110,13 @@ public class SelectOperation implements JdbcOperation {
 
         } else if (returnType == Map.class) {
 
-            HashMap<Object, Object> map = new HashMap<Object, Object>();
-            for (Object value : listResult) {
-                KeyValuePair pair = (KeyValuePair) value;
+            // 将返回的  KeyValuePair 转换成  Map 对象
+            Map<Object, Object> map = new HashMap<Object, Object>();
+            for (Object obj : listResult) {
+                KeyValuePair pair = (KeyValuePair) obj;
                 map.put(pair.getKey(), pair.getValue());
             }
+
             return map;
 
         } else if (returnType.isAssignableFrom(HashSet.class)) {

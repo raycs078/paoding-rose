@@ -1,5 +1,7 @@
 package net.paoding.rose.jade.jadeinterface.impl;
 
+import java.lang.reflect.Array;
+import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -32,6 +34,9 @@ public class GenericUtils {
                 Type actualType = actualTypes[i];
                 if (actualType instanceof Class<?>) {
                     actualClasses[i] = (Class<?>) actualType;
+                } else if (actualType instanceof GenericArrayType) {
+                    Type componentType = ((GenericArrayType) actualType).getGenericComponentType();
+                    actualClasses[i] = Array.newInstance((Class<?>) componentType, 0).getClass();
                 }
             }
 
