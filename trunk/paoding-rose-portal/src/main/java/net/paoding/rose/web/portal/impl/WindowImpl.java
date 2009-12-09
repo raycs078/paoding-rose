@@ -89,6 +89,9 @@ class WindowImpl implements Window {
 
     @Override
     public Map<String, Object> getAttributes() {
+        if (attributes == null) {
+            return Collections.emptyMap();
+        }
         return Collections.unmodifiableMap(new HashMap<String, Object>(attributes));
     }
 
