@@ -27,6 +27,7 @@ import javax.servlet.http.HttpServletResponse;
 import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.portal.Portal;
 import net.paoding.rose.web.portal.PortalListener;
+import net.paoding.rose.web.portal.PortalListeners;
 import net.paoding.rose.web.portal.Window;
 import net.paoding.rose.web.var.Model;
 
@@ -45,7 +46,7 @@ class PortalImpl implements Portal, PortalListener {
 
     private ExecutorService executorService;
 
-    private PortalListener portalListener;
+    private PortalListeners portalListeners;
 
     private Invocation invocation;
 
@@ -55,8 +56,8 @@ class PortalImpl implements Portal, PortalListener {
 
     public PortalImpl(Invocation inv, ExecutorService executorService, PortalListener portalListener) {
         this.invocation = inv;
-        this.portalListener = portalListener;
         this.executorService = executorService;
+        addListener(portalListener);
     }
 
     public void setTimeout(long timeoutInMills) {
@@ -70,6 +71,20 @@ class PortalImpl implements Portal, PortalListener {
     @Override
     public Invocation getInvocation() {
         return invocation;
+    }
+
+    @Override
+    public void addListener(PortalListener l) {
+        if (l == null) {
+            return;
+        } else {
+            synchronized (this) {
+                if (portalListeners == null) {
+                    portalListeners = new PortalListeners();
+                }
+                portalListeners.addListener(l);
+            }
+        }
     }
 
     @Override
@@ -147,9 +162,9 @@ class PortalImpl implements Portal, PortalListener {
 
     @Override
     public void onPortalCreated(Portal portal) {
-        if (portalListener != null) {
+        if (portalListeners != null) {
             try {
-                portalListener.onPortalCreated(portal);
+                portalListeners.onPortalCreated(portal);
             } catch (Exception e) {
                 logger.error("", e);
             }
@@ -158,9 +173,9 @@ class PortalImpl implements Portal, PortalListener {
 
     @Override
     public void onPortalReady(Portal portal) {
-        if (portalListener != null) {
+        if (portalListeners != null) {
             try {
-                portalListener.onPortalReady(portal);
+                portalListeners.onPortalReady(portal);
             } catch (Exception e) {
                 logger.error("", e);
             }
@@ -169,9 +184,9 @@ class PortalImpl implements Portal, PortalListener {
 
     @Override
     public void onWindowAdded(Window window) {
-        if (portalListener != null) {
+        if (portalListeners != null) {
             try {
-                portalListener.onWindowAdded(window);
+                portalListeners.onWindowAdded(window);
             } catch (Exception e) {
                 logger.error("", e);
             }
@@ -180,9 +195,9 @@ class PortalImpl implements Portal, PortalListener {
 
     @Override
     public void onWindowStarted(Window window) {
-        if (portalListener != null) {
+        if (portalListeners != null) {
             try {
-                portalListener.onWindowStarted(window);
+                portalListeners.onWindowStarted(window);
             } catch (Exception e) {
                 logger.error("", e);
             }
@@ -191,9 +206,9 @@ class PortalImpl implements Portal, PortalListener {
 
     @Override
     public void onWindowCanceled(Window window) {
-        if (portalListener != null) {
+        if (portalListeners != null) {
             try {
-                portalListener.onWindowCanceled(window);
+                portalListeners.onWindowCanceled(window);
             } catch (Exception e) {
                 logger.error("", e);
             }
@@ -202,9 +217,9 @@ class PortalImpl implements Portal, PortalListener {
 
     @Override
     public void onWindowDone(Window window) {
-        if (portalListener != null) {
+        if (portalListeners != null) {
             try {
-                portalListener.onWindowDone(window);
+                portalListeners.onWindowDone(window);
             } catch (Exception e) {
                 logger.error("", e);
             }
@@ -213,9 +228,9 @@ class PortalImpl implements Portal, PortalListener {
 
     @Override
     public void onWindowError(Window window) {
-        if (portalListener != null) {
+        if (portalListeners != null) {
             try {
-                portalListener.onWindowError(window);
+                portalListeners.onWindowError(window);
             } catch (Exception e) {
                 logger.error("", e);
             }
@@ -224,9 +239,9 @@ class PortalImpl implements Portal, PortalListener {
 
     @Override
     public void onWindowTimeout(Window window) {
-        if (portalListener != null) {
+        if (portalListeners != null) {
             try {
-                portalListener.onWindowTimeout(window);
+                portalListeners.onWindowTimeout(window);
             } catch (Exception e) {
                 logger.error("", e);
             }

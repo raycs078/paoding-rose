@@ -108,4 +108,11 @@ public interface Portal {
      * @param value
      */
     public void addModel(String name, Object value);
+
+    /**
+     * 为这个portal实例注册一个侦听器
+     * 
+     * @param l 如果为null则进行忽略
+     */
+    public void addListener(PortalListener l);
 }
