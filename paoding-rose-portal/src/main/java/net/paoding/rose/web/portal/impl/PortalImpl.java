@@ -18,6 +18,7 @@ package net.paoding.rose.web.portal.impl;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
@@ -102,8 +103,22 @@ class PortalImpl implements Portal, PortalListener {
 
     @Override
     public Window addWindow(String name, String windowPath) {
+        return this.addWindow(name, windowPath, (Map<String, Object>) null);
+    }
+
+    @Override
+    public Window addWindow(String name, String windowPath, Map<String, Object> attributes) {
         // 创建 窗口对象
         WindowImpl window = new WindowImpl((PortalImpl) this, name, windowPath);
+
+        //
+        if (attributes != null) {
+            synchronized (attributes) {
+                for (Map.Entry<String, Object> entry : attributes.entrySet()) {
+                    window.set(entry.getKey(), entry.getValue());
+                }
+            }
+        }
 
         // 定义窗口任务
         WindowTask task = new WindowTask(window);
