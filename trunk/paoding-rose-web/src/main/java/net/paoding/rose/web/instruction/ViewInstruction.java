@@ -202,9 +202,11 @@ public class ViewInstruction extends AbstractInstruction {
                 directoryFile = null;
             } else {
                 directoryFile = searchDirectory(tempHome, subDirPath);
-                subDirPath = directoryFile.getPath().substring(tempHome.getPath().length())
-                        .replace('\\', '/');
-                directoryPath = directoryPath + subDirPath;
+                if (directoryFile != null) {
+                    subDirPath = directoryFile.getPath().substring(tempHome.getPath().length())
+                            .replace('\\', '/');
+                    directoryPath = directoryPath + subDirPath;
+                }
             }
         } else {
             notDirectoryViewName = viewName;

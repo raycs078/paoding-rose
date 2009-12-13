@@ -28,7 +28,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.SimpleTypeConverter;
 import org.springframework.beans.TypeMismatchException;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.validation.ObjectError;
+import org.springframework.validation.FieldError;
 
 /**
  * @author 王志亮 [qieqie.wang@gmail.com]
@@ -106,26 +106,50 @@ public final class MethodParameterResolver {
                     ((InitializingBean) parameters[i]).afterPropertiesSet();
                 }
             } catch (TypeMismatchException e) {
-                if (logger.isDebugEnabled()) {
-                    logger.debug("", e);
-                }
-                parameterBindingResult.rejectValue(parameterNames[i], "convert.failed",
-                        new Object[] { parameterNames[i], e }, e.getMessage());
+                // 出现这个错误肯定是解析一般参数失败导致的，而非bean里面的某个属性值的解析失败
+
+                logger.debug("", e);
+
+                // 对简单类型的参数，设置一个默认值给它以支持对该方法的继续调用
                 if (paramMetaDatas[i].getParamType().isPrimitive()) {
                     Param paramAnnotation = paramMetaDatas[i].getParamAnnotation();
-                    if (paramAnnotation != null && !"~".equals(paramAnnotation.def())) {
+                    if (paramAnnotation == null || Param.JAVA_DEFAULT.equals(paramAnnotation.def())) {
+                        // 对这最常用的类型做一下if-else判断，其他类型就简单使用converter来做吧
+                        if (paramMetaDatas[i].getParamType() == int.class) {
+                            parameters[i] = Integer.valueOf(0);
+                        } else if (paramMetaDatas[i].getParamType() == long.class) {
+                            parameters[i] = Long.valueOf(0);
+                        } else if (paramMetaDatas[i].getParamType() == boolean.class) {
+                            parameters[i] = Boolean.FALSE;
+                        } else if (paramMetaDatas[i].getParamType() == double.class) {
+                            parameters[i] = Double.valueOf(0);
+                        } else if (paramMetaDatas[i].getParamType() == float.class) {
+                            parameters[i] = Float.valueOf(0);
+                        } else {
+                            parameters[i] = simpleTypeConverter.convertIfNecessary("0",
+                                    paramMetaDatas[i].getParamType());
+                        }
+                    } else {
                         parameters[i] = simpleTypeConverter.convertIfNecessary(paramAnnotation
                                 .def(), paramMetaDatas[i].getParamType());
-                    } else {
-                        parameters[i] = simpleTypeConverter.convertIfNecessary("0",
-                                paramMetaDatas[i].getParamType());
                     }
                 }
+                // 
+
+                FieldError fieldError = new FieldError(//
+                        "method", // 该出错字段所在的对象的名字；对于这类异常我们统一规定名字为method
+                        parameterNames[i], // 出错的字段的名字；取其参数名
+                        inv.getRawParameter(parameterNames[i]), // 被拒绝的值
+                        true,//whether this error represents a binding failure (like a type mismatch); else, it is a validation failure
+                        new String[] { e.getErrorCode() },// "typeMismatch"
+                        new String[] { inv.getRawParameter(parameterNames[i]) }, //the array of arguments to be used to resolve this message
+                        null // the default message to be used to resolve this message
+                );
+                parameterBindingResult.addError(fieldError);
             } catch (Exception e) {
-                if (logger.isWarnEnabled()) {
-                    logger.warn("", e);
-                }
-                parameterBindingResult.addError(new ObjectError(parameterNames[i], e.getMessage()));
+                // 什么错误呢？比如很有可能是构造对象不能成功导致的错误，没有默认构造函数、构造函数执行失败等等
+                logger.error("", e);
+                throw e;
             }
         }
         return parameters;
