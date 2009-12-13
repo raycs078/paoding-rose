@@ -435,7 +435,7 @@ public final class InvocationBean implements Invocation {
             }
             return (BindingResult) this.getModel().get(BindingResult.MODEL_KEY_PREFIX + bean);
         } else {
-            if (this.getController() == bean) {
+            if (this.getController() == bean || this == bean) {
                 return (BindingResult) this.getModel().get(
                         BindingResult.MODEL_KEY_PREFIX + ParameterBindingResult.OBJECT_NAME);
             }

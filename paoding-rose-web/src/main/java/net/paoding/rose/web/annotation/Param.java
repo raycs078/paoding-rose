@@ -44,6 +44,8 @@ import net.paoding.rose.web.var.Model;
 @Documented
 public @interface Param {
 
+    String JAVA_DEFAULT = "net.paoding.rose.web.annotation.Param.noDefualt";
+
     /**
      * 声明参数的名字，框架将把这个名字参数的值设置到所在的参数上；
      * <p>
@@ -67,7 +69,7 @@ public @interface Param {
      * 
      * @return
      */
-    String def() default "~";
+    String def() default JAVA_DEFAULT;
 
     /**
      * 设置参数转化需要的参数

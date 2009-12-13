@@ -690,7 +690,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
             String text = inv.getRawParameter(paramMetaData.getParamName());
             if (StringUtils.isEmpty(text)) {
                 if (paramMetaData.getParamAnnotation() != null
-                        && !"~".equals(paramMetaData.getParamAnnotation().def())) {
+                        && !Param.JAVA_DEFAULT.equals(paramMetaData.getParamAnnotation().def())) {
                     text = paramMetaData.getParamAnnotation().def();
                     if (StringUtils.isEmpty(text)) {
                         return new Date(); // 当前时间!
@@ -782,7 +782,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
                 toConvert = inv.getRawParameter(param.value());
             }
             if (toConvert == null) {
-                if (param != null && !"~".equals(param.def())) {
+                if (param != null && !Param.JAVA_DEFAULT.equals(param.def())) {
                     toConvert = paramMetaData.getParamAnnotation().def();
                 }
             }

@@ -16,11 +16,9 @@
 package net.paoding.rose.web.impl.validation;
 
 import net.paoding.rose.web.Invocation;
-import net.paoding.rose.web.impl.thread.InvocationBean;
 
-import org.springframework.util.StringUtils;
+import org.springframework.util.Assert;
 import org.springframework.validation.AbstractBindingResult;
-import org.springframework.validation.FieldError;
 
 /**
  * 控制器action方法普通参数绑定信息类，
@@ -39,40 +37,16 @@ public class ParameterBindingResult extends AbstractBindingResult {
     /**
      * 
      * @param inv
-     * @throws NullPointerException 如果给定的 {@link InvocationBean}参数为null
      */
     public ParameterBindingResult(Invocation inv) {
         super(OBJECT_NAME);
-        if (inv == null) {
-            throw new NullPointerException();
-        }
+        Assert.notNull(inv, "Target Invocation must not be null");
         this.inv = inv;
-
     }
 
     @Override
     public Object getTarget() {
         return this.inv;
-    }
-
-    /**
-     * 
-     * @throws IllegalStateException 在反序列化后调用
-     */
-    public void rejectValue(String field, String errorCode, Object[] errorArgs,
-            String defaultMessage) {
-        if ("".equals(getNestedPath()) && !StringUtils.hasLength(field)) {
-            // We're at the top of the nested object hierarchy,
-            // so the present level is not a field but rather the top object.
-            // The best we can do is register a global error here...
-            reject(errorCode, errorArgs, defaultMessage);
-            return;
-        }
-        String fixedField = fixedField(field);
-        Object newVal = getActualFieldValue(fixedField);
-        FieldError fe = new FieldError(getObjectName(), fixedField, newVal, true,
-                resolveMessageCodes(errorCode, field), errorArgs, defaultMessage);
-        addError(fe);
     }
 
     /**
