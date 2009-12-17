@@ -12,13 +12,23 @@ public class JadeEnvConfig extends JadeConfig {
     @Override
     public Object getConfig(String param) {
 
+        String config = null;
+
         try {
-            return System.getenv(param);
+            // 首先尝试环境变量
+            config = System.getenv(param);
 
-        } catch (SecurityException e) {
+        } catch (SecurityException e) {}
 
-            // 忽略权限异常
-            return null;
+        // 然后尝试系统属性
+        if (config == null) {
+
+            try {
+                config = System.getProperty(param);
+
+            } catch (SecurityException e) {}
         }
+
+        return null;
     }
 }
