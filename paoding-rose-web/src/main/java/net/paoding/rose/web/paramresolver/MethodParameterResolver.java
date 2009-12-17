@@ -35,8 +35,6 @@ import org.springframework.validation.FieldError;
  */
 public final class MethodParameterResolver {
 
-    private static final SimpleTypeConverter simpleTypeConverter = new SimpleTypeConverter();
-
     private static Log logger = LogFactory.getLog(MethodParameterResolver.class);
 
     // ---------------------------------------------------------
@@ -126,12 +124,12 @@ public final class MethodParameterResolver {
                         } else if (paramMetaDatas[i].getParamType() == float.class) {
                             parameters[i] = Float.valueOf(0);
                         } else {
-                            parameters[i] = simpleTypeConverter.convertIfNecessary("0",
+                            parameters[i] = new SimpleTypeConverter().convertIfNecessary("0",
                                     paramMetaDatas[i].getParamType());
                         }
                     } else {
-                        parameters[i] = simpleTypeConverter.convertIfNecessary(paramAnnotation
-                                .def(), paramMetaDatas[i].getParamType());
+                        parameters[i] = new SimpleTypeConverter().convertIfNecessary(
+                                paramAnnotation.def(), paramMetaDatas[i].getParamType());
                     }
                 }
                 // 
