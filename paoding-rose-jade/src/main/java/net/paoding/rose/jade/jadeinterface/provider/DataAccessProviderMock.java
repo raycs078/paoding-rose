@@ -21,7 +21,7 @@ public class DataAccessProviderMock implements DataAccessProvider {
     public DataAccess createDataAccess(String dataSourceName) {
 
         if (logger.isWarnEnabled()) {
-            logger.warn("jade is not correct configured, return mock instance");
+            logger.warn("jade is not configured, return mock instance");
         }
 
         return (DataAccess) Proxy.newProxyInstance(ClassUtils.getDefaultClassLoader(),
@@ -33,9 +33,9 @@ public class DataAccessProviderMock implements DataAccessProvider {
 
                         if (method.getDeclaringClass() == DataAccess.class) {
                             if (logger.isWarnEnabled()) {
-                                logger.warn("jade is not correct configured");
+                                logger.warn("jade is not configured");
                             }
-                            throw new IllegalStateException("jade is not correct configured");
+                            throw new IllegalStateException("jade is not configured");
                         }
 
                         return method.invoke(proxy, args);
