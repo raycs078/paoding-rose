@@ -16,6 +16,7 @@
  */
 package net.paoding.rose.web.paramresolver;
 
+import java.beans.PropertyEditorSupport;
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -77,8 +78,6 @@ public class ResolverFactoryImpl implements ResolverFactory {
 
     public static final String MAP_SEPARATOR = ":";
 
-    private static final SimpleTypeConverter simpleTypeConverter = new SimpleTypeConverter();
-
     private static final Map<Class<?>, Class<?>> primitiveWrapperTypeMap = new HashMap<Class<?>, Class<?>>(
             8);
     static {
@@ -138,6 +137,23 @@ public class ResolverFactoryImpl implements ResolverFactory {
             new EditorResolver(), //
             new BeanResolver(), //
     };
+
+    public ResolverFactoryImpl() {
+    }
+
+    private static SimpleTypeConverter getSimpleTypeConverter() {
+        // simpleTypeConverter is not for concurrency!
+        SimpleTypeConverter simpleTypeConverter = new SimpleTypeConverter();
+        simpleTypeConverter.useConfigValueEditors();
+        simpleTypeConverter.registerCustomEditor(Date.class, new DateEditor(Date.class));
+        simpleTypeConverter.registerCustomEditor(java.sql.Date.class, new DateEditor(
+                java.sql.Date.class));
+        simpleTypeConverter.registerCustomEditor(java.sql.Time.class, new DateEditor(
+                java.sql.Time.class));
+        simpleTypeConverter.registerCustomEditor(java.sql.Timestamp.class, new DateEditor(
+                java.sql.Timestamp.class));
+        return simpleTypeConverter;
+    }
 
     private final List<ParamResolver> customerResolvers = new ArrayList<ParamResolver>();
 
@@ -480,7 +496,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
                         arrayType = Array.newInstance((Class<?>) compnentType, 0).getClass();
                     }
                 }
-                Object array = simpleTypeConverter.convertIfNecessary(toConvert, arrayType);
+                Object array = getSimpleTypeConverter().convertIfNecessary(toConvert, arrayType);
                 return array;
             }
         }
@@ -621,6 +637,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
                         paramMetaData.getParamName() + MAP_SEPARATOR);
                 if (toConvert != null) {
                     if (keyType != String.class || valueType != String.class) {
+                        SimpleTypeConverter simpleTypeConverter = getSimpleTypeConverter();
                         Map<Object, Object> ret = new HashMap<Object, Object>();
                         for (Map.Entry<?, ?> entry : toConvert.entrySet()) {
                             Object key = entry.getKey();
@@ -643,7 +660,26 @@ public class ResolverFactoryImpl implements ResolverFactory {
         }
     }
 
-    static final class DateResolver implements ParamResolver {
+    static class DateEditor extends PropertyEditorSupport {
+
+        private Class<?> targetType;
+
+        public DateEditor(Class<?> targetType) {
+            this.targetType = targetType;
+        }
+
+        @Override
+        public void setAsText(String text) throws IllegalArgumentException {
+            try {
+                setValue(DatePatterns.changeType(DatePatterns.parse(text), targetType));
+            } catch (ParseException e) {
+                throw new IllegalArgumentException(e);
+            }
+        }
+
+    }
+
+    static final class DatePatterns {
 
         private final static String dateTimePattern = "yyyy-MM-dd HH:mm:ss";
 
@@ -661,6 +697,57 @@ public class ResolverFactoryImpl implements ResolverFactory {
 
         private final static String stimePattern = "HH:mm";
 
+        private static Date parse(String text) throws ParseException {
+            if (text.length() == dateTimePattern.length()) {
+                if (text.charAt(4) == '-' && text.charAt(7) == '-') {
+                    return new SimpleDateFormat(dateTimePattern).parse(text);
+                }
+                if (text.charAt(4) == '/' && text.charAt(7) == '/') {
+                    if (text.charAt(13) == ':' && text.charAt(16) == ':') {
+                        return new SimpleDateFormat(dateTimePattern2).parse(text);
+                    }
+                }
+            } else if (text.length() == dateTimePattern3.length()) {
+                return new SimpleDateFormat(dateTimePattern3).parse(text);
+            } else if (text.length() == datePattern3.length()) {
+                return new SimpleDateFormat(datePattern3).parse(text);
+            } else if (text.length() == datePattern.length()) {
+                if (text.charAt(4) == '-' && text.charAt(7) == '-') {
+                    return new SimpleDateFormat(datePattern).parse(text);
+                }
+                if (text.charAt(4) == '/' && text.charAt(7) == '/') {
+                    return new SimpleDateFormat(datePattern2).parse(text);
+                }
+            } else if (text.length() == timePattern.length()) {
+                if (text.charAt(2) == ':' && text.charAt(5) == ':') {
+                    return new SimpleDateFormat(timePattern).parse(text);
+                }
+            } else if (text.length() == stimePattern.length()) {
+                if (text.charAt(2) == ':') {
+                    return new SimpleDateFormat(stimePattern).parse(text);
+                }
+            }
+            return new Date(Long.parseLong(text));
+        }
+
+        private static Date changeType(Date date, Class<?> targetType) {
+            if (date == null) {
+                return date;
+            }
+            if (java.sql.Date.class == targetType) {
+                date = new java.sql.Date(date.getTime());
+            } else if (java.sql.Time.class == targetType) {
+                date = new java.sql.Time(date.getTime());
+            } else if (java.sql.Timestamp.class == targetType) {
+                date = new java.sql.Timestamp(date.getTime());
+            }
+            return date;
+        }
+
+    }
+
+    static final class DateResolver implements ParamResolver {
+
         @Override
         public boolean supports(ParamMetaData paramMetaData) {
             return Date.class == paramMetaData.getParamType()
@@ -671,23 +758,14 @@ public class ResolverFactoryImpl implements ResolverFactory {
 
         @Override
         public Date resolve(Invocation inv, ParamMetaData paramMetaData) throws Exception {
-            Date date = resolveUtilDate(inv, paramMetaData);
-            if (date == null) {
-                return date;
-            }
-            if (java.sql.Date.class == paramMetaData.getParamType()) {
-                date = new java.sql.Date(date.getTime());
-            } else if (java.sql.Time.class == paramMetaData.getParamType()) {
-                date = new java.sql.Time(date.getTime());
-            } else if (java.sql.Timestamp.class == paramMetaData.getParamType()) {
-                date = new java.sql.Timestamp(date.getTime());
-            }
-            return date;
+            String text = inv.getRawParameter(paramMetaData.getParamName());
+
+            Date date = resolveUtilDate(text, paramMetaData);
+            return DatePatterns.changeType(date, paramMetaData.getParamType());
         }
 
-        protected Date resolveUtilDate(Invocation inv, ParamMetaData paramMetaData)
+        protected Date resolveUtilDate(String text, ParamMetaData paramMetaData)
                 throws ParseException {
-            String text = inv.getRawParameter(paramMetaData.getParamName());
             if (StringUtils.isEmpty(text)) {
                 if (paramMetaData.getParamAnnotation() != null
                         && !Param.JAVA_DEFAULT.equals(paramMetaData.getParamAnnotation().def())) {
@@ -727,36 +805,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
                     }
                 }
             }
-            if (text.length() == dateTimePattern.length()) {
-                if (text.charAt(4) == '-' && text.charAt(7) == '-') {
-                    return new SimpleDateFormat(dateTimePattern).parse(text);
-                }
-                if (text.charAt(4) == '/' && text.charAt(7) == '/') {
-                    if (text.charAt(13) == ':' && text.charAt(16) == ':') {
-                        return new SimpleDateFormat(dateTimePattern2).parse(text);
-                    }
-                }
-            } else if (text.length() == dateTimePattern3.length()) {
-                return new SimpleDateFormat(dateTimePattern3).parse(text);
-            } else if (text.length() == datePattern3.length()) {
-                return new SimpleDateFormat(datePattern3).parse(text);
-            } else if (text.length() == datePattern.length()) {
-                if (text.charAt(4) == '-' && text.charAt(7) == '-') {
-                    return new SimpleDateFormat(datePattern).parse(text);
-                }
-                if (text.charAt(4) == '/' && text.charAt(7) == '/') {
-                    return new SimpleDateFormat(datePattern2).parse(text);
-                }
-            } else if (text.length() == timePattern.length()) {
-                if (text.charAt(2) == ':' && text.charAt(5) == ':') {
-                    return new SimpleDateFormat(timePattern).parse(text);
-                }
-            } else if (text.length() == stimePattern.length()) {
-                if (text.charAt(2) == ':') {
-                    return new SimpleDateFormat(stimePattern).parse(text);
-                }
-            }
-            return new Date(Long.parseLong(text));
+            return DatePatterns.parse(text);
         }
     }
 
@@ -764,8 +813,11 @@ public class ResolverFactoryImpl implements ResolverFactory {
 
         @Override
         public boolean supports(ParamMetaData paramMetaData) {
-            return ClassUtils.isPrimitiveOrWrapper(paramMetaData.getParamType())
-                    || simpleTypeConverter.findCustomEditor(paramMetaData.getParamType(), null) != null
+            if (ClassUtils.isPrimitiveOrWrapper(paramMetaData.getParamType())) {
+                return true;
+            }
+            SimpleTypeConverter simpleTypeConverter = getSimpleTypeConverter();
+            return simpleTypeConverter.findCustomEditor(paramMetaData.getParamType(), null) != null
                     || simpleTypeConverter.getDefaultEditor(paramMetaData.getParamType()) != null;
         }
 
@@ -787,11 +839,25 @@ public class ResolverFactoryImpl implements ResolverFactory {
                 }
             }
             if (toConvert != null) {
-                return simpleTypeConverter.convertIfNecessary(toConvert, paramMetaData
-                        .getParamType());
+                return getSimpleTypeConverter().convertIfNecessary(toConvert,
+                        paramMetaData.getParamType());
             }
             if (paramMetaData.getParamType().isPrimitive()) {
-                return simpleTypeConverter.convertIfNecessary("0", paramMetaData.getParamType());
+                // 对这最常用的类型做一下if-else判断，其他类型就简单使用converter来做吧
+                if (paramMetaData.getParamType() == int.class) {
+                    return Integer.valueOf(0);
+                } else if (paramMetaData.getParamType() == long.class) {
+                    return Long.valueOf(0);
+                } else if (paramMetaData.getParamType() == boolean.class) {
+                    return Boolean.FALSE;
+                } else if (paramMetaData.getParamType() == double.class) {
+                    return Double.valueOf(0);
+                } else if (paramMetaData.getParamType() == float.class) {
+                    return Float.valueOf(0);
+                } else {
+                    return getSimpleTypeConverter().convertIfNecessary("0",
+                            paramMetaData.getParamType());
+                }
             }
             return null;
         }
