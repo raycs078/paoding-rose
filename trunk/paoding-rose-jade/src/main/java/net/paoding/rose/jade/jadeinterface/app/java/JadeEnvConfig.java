@@ -18,7 +18,9 @@ public class JadeEnvConfig extends JadeConfig {
             // 首先尝试环境变量
             config = System.getenv(param);
 
-        } catch (SecurityException e) {}
+        } catch (SecurityException e) {
+            e.printStackTrace();
+        }
 
         // 然后尝试系统属性
         if (config == null) {
@@ -26,9 +28,11 @@ public class JadeEnvConfig extends JadeConfig {
             try {
                 config = System.getProperty(param);
 
-            } catch (SecurityException e) {}
+            } catch (SecurityException e) {
+                e.printStackTrace();
+            }
         }
 
-        return null;
+        return config;
     }
 }
