@@ -2,6 +2,8 @@ package net.paoding.rose.jade.jadeinterface.app.java;
 
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.springframework.transaction.PlatformTransactionManager;
+
 import net.paoding.rose.jade.jadeinterface.annotation.Dao;
 import net.paoding.rose.jade.jadeinterface.app.DaoFactory;
 import net.paoding.rose.jade.jadeinterface.cache.CacheProvider;
@@ -55,6 +57,16 @@ public class Jade implements DaoFactory {
                 // 返回原始的  DataAccess
                 return dataAccessProvider.createDataAccess(dataSourceName);
             }
+        }
+
+        @Override
+        public PlatformTransactionManager createTransactionManager(String dataSourceName) {
+
+            if (dataAccessProvider == null) {
+                return mockProvider.createTransactionManager(dataSourceName);
+            }
+
+            return dataAccessProvider.createTransactionManager(dataSourceName);
         }
     };
 
