@@ -16,6 +16,7 @@
 package net.paoding.rose.web.portal.impl;
 
 import net.paoding.rose.web.Invocation;
+import net.paoding.rose.web.impl.thread.InvocationBean;
 import net.paoding.rose.web.paramresolver.ParamMetaData;
 import net.paoding.rose.web.paramresolver.ParamResolver;
 import net.paoding.rose.web.portal.Portal;
@@ -62,6 +63,7 @@ public class PortalResolver implements ParamResolver {
         Portal portal = portalFactory.createPortal(inv);
         // 换request对象
         inv.setRequest(new PortalRequest(inv.getRequest()));
+        ((InvocationBean) inv).setResponse(new PortalResponse(portal));
         //
         long timeout = this.defaultTimeout;
         PortalSetting portalSetting = inv.getMethod().getAnnotation(PortalSetting.class);
