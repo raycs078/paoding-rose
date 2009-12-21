@@ -11,6 +11,8 @@ import net.paoding.rose.jade.jadeinterface.provider.DataAccessProviderImpl;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.transaction.PlatformTransactionManager;
 
 /**
  * 提供 SpringJdbcTemplate 实现的 {@link DataAccessProvider}.
@@ -30,6 +32,11 @@ public class SpringJdbcTemplateDataAccessProvider extends DataAccessProviderImpl
     @Override
     protected DataAccess createDataAccess(DataSource dataSource) {
         return new SpringJdbcTemplateDataAccess(dataSource);
+    }
+
+    @Override
+    protected PlatformTransactionManager createTransactionManager(DataSource dataSource) {
+        return new DataSourceTransactionManager(dataSource);
     }
 
     @Override

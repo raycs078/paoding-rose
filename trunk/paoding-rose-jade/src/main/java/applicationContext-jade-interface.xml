@@ -19,4 +19,8 @@ http://www.springframework.org/schema/aop http://www.springframework.org/schema/
 	<!-- 使用  WebApp 配置的 DataAccessProvider -->
 	<bean id="jadeDataAccessProviderHolder"
 		class="net.paoding.rose.jade.jadeinterface.app.DataAccessProviderHolder" />
+
+	<!-- 事务管理器 -->
+	<bean id="jadeTransactionManager"
+		class="net.paoding.rose.jade.jadeinterface.transaction.TransactionManagerImpl" />
 </beans>
