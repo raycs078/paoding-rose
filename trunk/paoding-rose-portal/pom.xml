@@ -6,7 +6,7 @@
 	<groupId>net.paoding</groupId>
 	<artifactId>paoding-rose-portal</artifactId>
 	<packaging>jar</packaging>
-	<version>0.9.5-release</version>
+	<version>0.9.5-release-fix1</version>
 	<name>paoding-rose-portal</name>
 
 	<!-- 开发人员说明 -->

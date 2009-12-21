@@ -19,6 +19,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
+import java.util.Locale;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponseWrapper;
@@ -37,6 +38,8 @@ class WindowResponse extends HttpServletResponseWrapper {
     private PrintWriter writer;
 
     private ServletOutputStream out;
+
+    private Locale locale;
 
     public WindowResponse(WindowImpl window) {
         super(window.getPortal().getResponse());
@@ -104,6 +107,30 @@ class WindowResponse extends HttpServletResponseWrapper {
     }
 
     @Override
+    public void setHeader(String name, String value) {
+        synchronized (window.getPortal()) {
+            super.setHeader(name, value);
+        }
+    }
+
+    @Override
+    public void addHeader(String name, String value) {
+        synchronized (window.getPortal()) {
+            super.addHeader(name, value);
+        }
+    }
+
+    @Override
+    public void setLocale(Locale locale) {
+        this.locale = locale;
+    }
+
+    @Override
+    public Locale getLocale() {
+        return locale != null ? locale : super.getLocale();
+    }
+
+    @Override
     public void sendError(int sc, String msg) throws IOException {
         window.setStatus(sc, msg);
         getWriter().append(msg);
@@ -140,6 +167,10 @@ class WindowResponse extends HttpServletResponseWrapper {
 
     @Override
     public void setContentType(String type) {
+    }
+
+    @Override
+    public void setContentLength(int len) {
     }
 
 }
