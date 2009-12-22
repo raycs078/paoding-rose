@@ -27,6 +27,7 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import net.paoding.rose.RoseVersion;
 import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.NamedValidator;
 import net.paoding.rose.web.RequestPath;
@@ -46,6 +47,7 @@ import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.core.SpringVersion;
 import org.springframework.validation.Errors;
 
 /**
@@ -292,7 +294,9 @@ public final class ActionEngine implements Engine {
     private Exception createException(Rose rose, Throwable exception) {
         final RequestPath requestPath = rose.getInvocation().getRequestPath();
         StringBuilder sb = new StringBuilder(1024);
-        sb.append("error happended: ").append(requestPath.getMethod());
+        sb.append("[Rose-").append(RoseVersion.getVersion()).append("@Spring-").append(
+                SpringVersion.getVersion());
+        sb.append("]Error happended: ").append(requestPath.getMethod());
         sb.append(" ").append(requestPath.getUri());
         sb.append("->");
         sb.append(this).append(" params=");
