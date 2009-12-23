@@ -37,12 +37,16 @@ public class OpenSessionInViewInterceptor extends HibernateAccessor implements
         ControllerInterceptor {
 
     private int priority;
-    
+
     @Override
     public boolean isForAction(Class<?> controllerClazz, Method actionMethod) {
-        return actionMethod.isAnnotationPresent(OpenSessionInView.class);
+        OpenSessionInView openSessionInView = actionMethod.getAnnotation(OpenSessionInView.class);
+        if (openSessionInView == null) {
+            controllerClazz.getAnnotation(OpenSessionInView.class);
+        }
+        return openSessionInView == null || openSessionInView.enabled();
     }
-    
+
     @Override
     public boolean isForDispatcher(Dispatcher dispatcher) {
         return true;
