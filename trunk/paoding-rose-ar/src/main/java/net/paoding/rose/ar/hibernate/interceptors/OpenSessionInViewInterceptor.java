@@ -42,7 +42,7 @@ public class OpenSessionInViewInterceptor extends HibernateAccessor implements
     public boolean isForAction(Class<?> controllerClazz, Method actionMethod) {
         OpenSessionInView openSessionInView = actionMethod.getAnnotation(OpenSessionInView.class);
         if (openSessionInView == null) {
-            controllerClazz.getAnnotation(OpenSessionInView.class);
+            openSessionInView = controllerClazz.getAnnotation(OpenSessionInView.class);
         }
         return openSessionInView == null || openSessionInView.enabled();
     }
