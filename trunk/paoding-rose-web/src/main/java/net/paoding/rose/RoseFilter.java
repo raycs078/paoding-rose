@@ -52,6 +52,7 @@ import net.paoding.rose.web.paramresolver.ParamResolver;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.context.support.AbstractApplicationContext;
+import org.springframework.core.SpringVersion;
 import org.springframework.core.io.Resource;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
@@ -186,8 +187,12 @@ public class RoseFilter extends GenericFilterBean {
 
             //
         } catch (final Exception e) {
-            logger.error("", e);
-            throw new NestedServletException(e.getMessage(), e);
+            StringBuilder sb = new StringBuilder(1024);
+            sb.append("[Rose-").append(RoseVersion.getVersion());
+            sb.append("@Spring-").append(SpringVersion.getVersion()).append("]:");
+            sb.append(e.getMessage());
+            logger.error(sb.toString(), e);
+            throw new NestedServletException(sb.toString(), e);
         }
     }
 
