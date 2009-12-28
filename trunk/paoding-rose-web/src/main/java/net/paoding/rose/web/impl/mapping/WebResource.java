@@ -131,7 +131,7 @@ public class WebResource {
      * @return
      */
     public boolean isMethodAllowed(ReqMethod method) {
-        return engines[method.ordinal()] != null;
+        return method != null && engines[method.ordinal()] != null;
     }
 
     public boolean isEndResource() {

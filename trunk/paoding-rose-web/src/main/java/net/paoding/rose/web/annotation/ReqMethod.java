@@ -60,7 +60,7 @@ public enum ReqMethod {
         if ("TRACE".equals(method)) {
             return TRACE;
         }
-        throw new IllegalArgumentException(method);
+        return null;
     }
 
 }
