@@ -9,6 +9,8 @@ import net.paoding.rose.jade.jadeinterface.annotation.Dao;
 import net.paoding.rose.jade.jadeinterface.provider.DataAccess;
 import net.paoding.rose.jade.jadeinterface.provider.DataAccessProvider;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.util.ClassUtils;
@@ -19,6 +21,8 @@ import org.springframework.util.ClassUtils;
  * @author 王志亮 [qieqie.wang@gmail.com]
  */
 public class DaoFactoryBean<T> implements FactoryBean, InitializingBean {
+
+    private static final Log logger = LogFactory.getLog(DaoFactoryBean.class);
 
     private static JdbcOperationFactory jdbcOperationFactory = new JdbcOperationFactoryImpl();
 
@@ -86,6 +90,11 @@ public class DaoFactoryBean<T> implements FactoryBean, InitializingBean {
                     @Override
                     public Object invoke(Object proxy, Method method, Object[] args)
                             throws Throwable {
+
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("invoke: " + daoClass.getClass().getName() + " - "
+                                    + method.getName());
+                        }
 
                         if (Object.class == method.getDeclaringClass()) {
                             return method.invoke(this, args);
