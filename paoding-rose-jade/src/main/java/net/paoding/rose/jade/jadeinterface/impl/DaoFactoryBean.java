@@ -92,8 +92,7 @@ public class DaoFactoryBean<T> implements FactoryBean, InitializingBean {
                             throws Throwable {
 
                         if (logger.isDebugEnabled()) {
-                            logger.debug("invoke: " + daoClass.getClass().getName() + " - "
-                                    + method.getName());
+                            logger.debug("invoke: " + daoClass.getName() + "#" + method.getName());
                         }
 
                         if (Object.class == method.getDeclaringClass()) {
