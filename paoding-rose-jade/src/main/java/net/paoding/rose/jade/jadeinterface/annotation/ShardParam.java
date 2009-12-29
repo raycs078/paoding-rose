@@ -21,12 +21,12 @@ public @interface ShardParam {
      * 
      * @return 对应的散表字段
      */
-    String col();
+    String column();
 
     /**
      * 指出这个参数值如何计算。
      * 
      * @return 计算参数值
      */
-    String expr();
+    String value();
 }
