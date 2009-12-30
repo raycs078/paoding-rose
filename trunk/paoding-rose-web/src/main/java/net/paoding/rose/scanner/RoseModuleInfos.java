@@ -76,7 +76,7 @@ public class RoseModuleInfos {
             List<FileObject> rootObjects = new ArrayList<FileObject>();
             FileSystemManager fsManager = VFS.getManager();
             for (ResourceRef resourceInfo : resources) {
-                
+
                 if (resourceInfo.hasModifier("controllers")) {
                     Resource resource = resourceInfo.getResource();
                     File resourceFile = resource.getFile();
@@ -136,6 +136,14 @@ public class RoseModuleInfos {
 
     protected void handleWithFolder(FileObject rootObject, FileObject matchedRootFolder,
             FileObject thisFolder) throws IOException {
+
+        String relativePackagePath = matchedRootFolder.getName().getRelativeName(
+                thisFolder.getName());
+        if (relativePackagePath.startsWith("..")) {
+            throw new Error("wrong relativePackagePath '" + relativePackagePath + "' for "
+                    + thisFolder.getURL());
+        }
+
         String mappingPath = null;
         ModuleResource parentModuleInfo = moduleInfoMap.get(thisFolder.getParent());
         // 如果rose.properties设置了controllers的module.path?
@@ -171,11 +179,13 @@ public class RoseModuleInfos {
                         mappingPath = mappingPath.replace("${" + CONF_PARENT_MODULE_PATH + "}", "");
                     }
                 }
-                if (mappingPath.length() != 0) {
-                    if (mappingPath.charAt(0) != '/') {
-                        if (parentModuleInfo != null) {
-                            mappingPath = parentModuleInfo.getMappingPath() + "/" + mappingPath;
-                        }
+                if (mappingPath.length() != 0 && !mappingPath.startsWith("/")) {
+                    if (parentModuleInfo != null) {
+                        mappingPath = parentModuleInfo.getMappingPath() + "/" + mappingPath;
+                    } else if (StringUtils.isNotEmpty(relativePackagePath)) {
+                        mappingPath = relativePackagePath + "/" + mappingPath;
+                    } else {
+                        mappingPath = "/" + mappingPath;
                     }
                 }
                 // 空串，或，以/开头的串，不能以/结尾，不能重复/
@@ -185,9 +195,6 @@ public class RoseModuleInfos {
                     }
                     while (mappingPath.endsWith("/")) {
                         mappingPath = mappingPath.substring(0, mappingPath.length() - 1);
-                    }
-                    if (!mappingPath.startsWith("/")) {
-                        mappingPath = "/" + mappingPath;
                     }
                 }
             }
@@ -203,12 +210,6 @@ public class RoseModuleInfos {
         ModuleResource moduleInfo = new ModuleResource();
         moduleInfo.setMappingPath(mappingPath);
         moduleInfo.setModuleUrl(thisFolder.getURL());
-        String relativePackagePath = matchedRootFolder.getName().getRelativeName(
-                thisFolder.getName());
-        if (relativePackagePath.startsWith("..")) {
-            throw new Error("wrong relativePackagePath '" + relativePackagePath + "' for "
-                    + thisFolder.getURL());
-        }
         moduleInfo.setRelativePackagePath(relativePackagePath);
         moduleInfo.setParent(parentModuleInfo);
         moduleInfoMap.put(thisFolder, moduleInfo);
