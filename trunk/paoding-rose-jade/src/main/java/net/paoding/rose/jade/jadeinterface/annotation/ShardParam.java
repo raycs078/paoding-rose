@@ -9,7 +9,7 @@ import java.lang.annotation.Target;
 /**
  * 把 {@link ShardParam} 标注在 SQL 查询的散表参数上，说明该参数值用于散库 / 散表。
  * 
- * @author 王志亮 [qieqie.wang@gmail.com]
+ * @author han.liao [in355hz@gmail.com]
  */
 @Target( { ElementType.METHOD })
 @Retention(RetentionPolicy.RUNTIME)
@@ -21,7 +21,7 @@ public @interface ShardParam {
      * 
      * @return 对应的散表字段
      */
-    String column();
+    String name();
 
     /**
      * 指出这个参数值如何计算。
