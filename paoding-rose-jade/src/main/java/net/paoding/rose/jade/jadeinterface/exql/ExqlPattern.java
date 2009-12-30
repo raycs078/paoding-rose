@@ -21,4 +21,19 @@ public interface ExqlPattern {
      * @throws Exception
      */
     String execute(ExqlContext context, Map<String, ?> map) throws Exception;
+
+    /**
+     * 输出全部的语句内容。
+     * 
+     * @param context - 输出上下文
+     * 
+     * @param mapVars - 参数表
+     * @param mapConstants - 常量表
+     * 
+     * @return 语句内容
+     * 
+     * @throws Exception
+     */
+    String execute(ExqlContext context, Map<String, ?> mapVars, Map<String, ?> mapConstants)
+            throws Exception;
 }
