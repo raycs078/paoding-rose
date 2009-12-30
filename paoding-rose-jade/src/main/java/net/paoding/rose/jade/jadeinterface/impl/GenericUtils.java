@@ -1,11 +1,15 @@
 package net.paoding.rose.jade.jadeinterface.impl;
 
 import java.lang.reflect.Array;
+import java.lang.reflect.Field;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 实现工具类，检查参数化类型的参数类型。
@@ -46,18 +50,89 @@ public class GenericUtils {
         return EMPTY_CLASSES;
     }
 
+    /**
+     * 收集类的所有常量。
+     * 
+     * @param clazz - 收集目标
+     * @param findAncestor - 是否查找父类
+     * @param findInterfaces - 是否查找接口
+     * 
+     * @return {@link Map} 包含类的所有常量
+     */
+    public static Map<String, ?> getConstantFrom(Class<?> clazz, // NL
+            boolean findAncestor, boolean findInterfaces) {
+
+        HashMap<String, Object> map = new HashMap<String, Object>();
+
+        fillConstantFrom(clazz, map);
+
+        if (findAncestor) {
+            Class<?> superClass = clazz;
+            while (superClass != null) {
+                fillConstantFrom(superClass, map);
+                superClass = superClass.getSuperclass();
+            }
+        }
+
+        if (findInterfaces) {
+            for (Class<?> interfaceClass : clazz.getInterfaces()) {
+                fillConstantFrom(interfaceClass, map);
+            }
+        }
+
+        return map;
+    }
+
+    // 填充静态常量
+    protected static void fillConstantFrom(Class<?> clazz, HashMap<String, Object> map) {
+
+        Field fields[] = clazz.getDeclaredFields();
+        for (Field field : fields) {
+            if (field.isSynthetic()) {
+                continue; // 忽略系统常量
+            }
+
+            int modifiers = field.getModifiers();
+            if (!Modifier.isStatic(modifiers)) {
+                continue; // 忽略非静态常量
+            }
+
+            try {
+                if (field.isAccessible()) {
+                    field.setAccessible(true);
+                }
+                map.put(field.getName(), field.get(null));
+
+            } catch (SecurityException e) {
+                // Do nothing
+            } catch (IllegalAccessException e) {
+                // Do nothing
+            }
+        }
+    }
+
     // 测试代码
     public static void main(String... args) {
 
-        Class<?> clazz = ClassLoader.class;
+        // 输出所有常量
+        Map<String, ?> constants = getConstantFrom(Character.class, true, true);
+        System.out.println(constants);
 
-        for (Method method : clazz.getMethods()) {
+        // 输出方法的返回类型
+        for (Method method : ClassLoader.class.getMethods()) {
             Class<?>[] classes = getActualClass(method.getGenericReturnType());
             System.out.print(method.getName() + " = ");
             System.out.println(Arrays.toString(classes));
         }
 
-        for (Type genericInterfaceType : clazz.getGenericInterfaces()) {
+        // 输出超类的类型
+        Type genericSuperclassType = java.util.Properties.class.getGenericSuperclass();
+        System.out.print(genericSuperclassType + " = ");
+        System.out.println(Arrays.toString( // NL
+                getActualClass(genericSuperclassType)));
+
+        for (Type genericInterfaceType : java.util.Properties.class.getGenericInterfaces()) {
+            // 输出派生类的类型
             Class<?>[] classes = getActualClass(genericInterfaceType);
             System.out.print(genericInterfaceType + " = ");
             System.out.println(Arrays.toString(classes));
