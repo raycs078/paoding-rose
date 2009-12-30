@@ -176,11 +176,19 @@ public class ExprResolverImpl implements ExprResolver {
         Map<String, Object> map = new HashMap<String, Object>();
 
         map.put("current", new Date());
+        map.put("numbers", new Integer[] { 1, 2, 3, 5, 8, 13, 21, 34 });
+        map.put("index", 5);
 
         ExprResolver exprResolver = new ExprResolverImpl(map, map);
 
-        Object obj = exprResolver.executeExpr(":current.year - ($current.month + $current.day)");
-
-        System.out.println(obj);
+        System.out.println( // NL
+                exprResolver.executeExpr( // NL
+                        "$numbers[:index]"));
+        System.out.println( // NL
+                exprResolver.executeExpr( // NL
+                        ":current.year - ($current.month + $current.day)"));
+        System.out.println( // NL
+                exprResolver.executeExpr( // NL
+                        ":current.year - ($current.month + $current.day) + $numbers[:index]"));
     }
 }
