@@ -29,10 +29,10 @@ public class ExprResolverImpl implements ExprResolver {
             "(\\:|\\$)([a-zA-Z0-9_]+)(\\.[a-zA-Z0-9_]+)*");
 
     // 常量前缀
-    private static final String CONST_PREFIX = "_jadeconst";
+    private static final String CONST_PREFIX = "_mapConsts";
 
     // 参数前缀
-    private static final String VAR_PREFIX = "_jadevar";
+    private static final String VAR_PREFIX = "_mapVars";
 
     // 参数表
     protected final HashMap<String, Object> mapVars = new HashMap<String, Object>();
@@ -56,11 +56,11 @@ public class ExprResolverImpl implements ExprResolver {
     /**
      * 构造表达式处理器。
      * 
-     * @param map - 初始的参数表
+     * @param mapVars - 初始的参数表
      */
-    public ExprResolverImpl(Map<String, ?> map) {
+    public ExprResolverImpl(Map<String, ?> mapVars) {
         this();
-        this.mapVars.putAll(map);
+        this.mapVars.putAll(mapVars);
     }
 
     /**
@@ -80,7 +80,7 @@ public class ExprResolverImpl implements ExprResolver {
      * 
      * @return 处理器的参数表
      */
-    public Map<String, Object> getVars() {
+    public Map<String, ?> getVars() {
         return mapVars;
     }
 
@@ -89,7 +89,7 @@ public class ExprResolverImpl implements ExprResolver {
      * 
      * @param map - 处理器的参数表
      */
-    public void setVars(Map<String, Object> map) {
+    public void setVars(Map<String, ?> map) {
         mapVars.putAll(map);
     }
 
@@ -98,7 +98,7 @@ public class ExprResolverImpl implements ExprResolver {
      * 
      * @return 处理器的常量表
      */
-    public Map<String, Object> getConstants() {
+    public Map<String, ?> getConstants() {
         return mapConsts;
     }
 
@@ -107,7 +107,7 @@ public class ExprResolverImpl implements ExprResolver {
      * 
      * @param map - 处理器的常量表
      */
-    public void setConstants(Map<String, Object> map) {
+    public void setConstants(Map<String, ?> map) {
         mapConsts.putAll(map);
     }
 
