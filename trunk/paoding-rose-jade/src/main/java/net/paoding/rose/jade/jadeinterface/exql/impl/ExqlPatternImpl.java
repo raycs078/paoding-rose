@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import net.paoding.rose.jade.jadeinterface.exql.ExprResolver;
 import net.paoding.rose.jade.jadeinterface.exql.ExqlContext;
 import net.paoding.rose.jade.jadeinterface.exql.ExqlPattern;
 import net.paoding.rose.jade.jadeinterface.exql.ExqlUnit;
@@ -74,8 +75,23 @@ public class ExqlPatternImpl implements ExqlPattern {
     @Override
     public String execute(ExqlContext context, Map<String, ?> map) throws Exception {
 
+        // 执行转换
+        return execute(context, new ExprResolverImpl(map));
+    }
+
+    @Override
+    public String execute(ExqlContext context, Map<String, ?> mapVars, Map<String, ?> mapConstants)
+            throws Exception {
+
+        // 执行转换
+        return execute(context, new ExprResolverImpl(mapVars, mapConstants));
+    }
+
+    // 执行转换
+    protected String execute(ExqlContext context, ExprResolver exprResolver) throws Exception {
+
         // 转换语句内容
-        unit.fill(context, new ExprResolverImpl(map));
+        unit.fill(context, exprResolver);
 
         String flushOut = context.flushOut();
 
