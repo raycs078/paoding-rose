@@ -65,7 +65,7 @@ public class ForEachUnit implements ExqlUnit {
         } else {
 
             // 备份原变量 
-            Object backup = exprResolver.getVar(variant);
+            Object variantValue = exprResolver.getVar(variant);
 
             for (Object value : ExqlUtils.asCollection(obj)) {
 
@@ -77,7 +77,7 @@ public class ForEachUnit implements ExqlUnit {
             }
 
             // 恢复备份变量
-            exprResolver.setVar(variant, backup);
+            exprResolver.setVar(variant, variantValue);
         }
     }
 }
