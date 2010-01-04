@@ -34,11 +34,6 @@ public class OncePerRequestInterceptorWrapper extends ControllerInterceptorWrapp
     }
 
     @Override
-    public void setName(String name) {
-        super.setName(name);
-    }
-
-    @Override
     public final Object before(Invocation inv) throws Exception {
         Invocation temp = inv;
         boolean tobeIntercepted = false;
