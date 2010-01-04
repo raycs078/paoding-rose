@@ -40,8 +40,14 @@ public class OncePerRequestInterceptorWrapper extends ControllerInterceptorWrapp
 
     @Override
     public final Object before(Invocation inv) throws Exception {
-        if (inv.getOncePerRequestAttribute(filtered) == null) {
-            inv.setOncePerRequestAttribute(filtered, inv);
+        Invocation temp = inv;
+        boolean tobeIntercepted = false;
+        while (tobeIntercepted = (temp.getAttribute(filtered) == null)
+                && (temp = temp.getPreInvocation()) != null) {
+            // do nothing
+        }
+        if (tobeIntercepted) {
+            inv.setAttribute(filtered, true);
             if (logger.isDebugEnabled()) {
                 logger.debug("do oncePerRequest interceptor.before: " + getName());
             }
@@ -50,13 +56,13 @@ public class OncePerRequestInterceptorWrapper extends ControllerInterceptorWrapp
             if (logger.isDebugEnabled()) {
                 logger.debug("skip oncePerRequest interceptor.before: " + getName());
             }
+            return true;
         }
-        return true;
     }
 
     @Override
     public final Object after(Invocation inv, Object instruction) throws Exception {
-        if (inv == inv.getOncePerRequestAttribute(filtered)) {
+        if (inv.getAttribute(filtered) != null) {
             if (logger.isDebugEnabled()) {
                 logger.debug("do oncePerRequest interceptor.after: " + getName());
             }
@@ -71,7 +77,7 @@ public class OncePerRequestInterceptorWrapper extends ControllerInterceptorWrapp
 
     @Override
     public final void afterCompletion(Invocation inv, Throwable ex) throws Exception {
-        if (inv == inv.getOncePerRequestAttribute(filtered)) {
+        if (inv.getAttribute(filtered) != null) {
             if (logger.isDebugEnabled()) {
                 logger.debug("do oncePerRequest interceptor.afterCompletion: " + getName());
             }

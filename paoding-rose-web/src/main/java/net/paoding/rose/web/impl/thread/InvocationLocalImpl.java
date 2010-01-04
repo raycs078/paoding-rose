@@ -23,8 +23,8 @@ import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import net.paoding.rose.web.InvocationLocal;
 import net.paoding.rose.web.Invocation;
+import net.paoding.rose.web.InvocationLocal;
 import net.paoding.rose.web.InvocationUtils;
 import net.paoding.rose.web.RequestPath;
 import net.paoding.rose.web.var.Flash;
@@ -197,16 +197,6 @@ public class InvocationLocalImpl implements InvocationLocal {
     }
 
     @Override
-    public Object getOncePerRequestAttribute(String name) {
-        return required().getOncePerRequestAttribute(name);
-    }
-
-    @Override
-    public Invocation setOncePerRequestAttribute(String name, Object value) {
-        return required().setOncePerRequestAttribute(name, value);
-    }
-
-    @Override
     public void setRequest(HttpServletRequest request) {
         required().setRequest(request);
     }
@@ -219,5 +209,10 @@ public class InvocationLocalImpl implements InvocationLocal {
     @Override
     public Invocation getPreInvocation() {
         return required().getPreInvocation();
+    }
+
+    @Override
+    public Invocation getHeadInvocation() {
+        return required().getHeadInvocation();
     }
 }

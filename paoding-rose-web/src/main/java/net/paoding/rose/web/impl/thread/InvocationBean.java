@@ -60,8 +60,6 @@ public final class InvocationBean implements Invocation {
 
     private Map<String, Object> attributes;
 
-    private Map<String, Object> oncePerRequestAttributes;
-
     private HttpServletRequestWrapper request;
 
     private HttpServletResponse response;
@@ -301,32 +299,6 @@ public final class InvocationBean implements Invocation {
     }
 
     @Override
-    public Object getOncePerRequestAttribute(String name) {
-        if (preInvocation != null) {
-            return preInvocation.getOncePerRequestAttribute(name);
-        } else {
-            synchronized (this) {
-                return oncePerRequestAttributes == null ? null : oncePerRequestAttributes.get(name);
-            }
-        }
-    }
-
-    @Override
-    public Invocation setOncePerRequestAttribute(String name, Object value) {
-        if (preInvocation != null) {
-            preInvocation.setOncePerRequestAttribute(name, value);
-        } else {
-            synchronized (this) {
-                if (oncePerRequestAttributes == null) {
-                    oncePerRequestAttributes = new HashMap<String, Object>();
-                }
-                oncePerRequestAttributes.put(name, value);
-            }
-        }
-        return this;
-    }
-
-    @Override
     public void addFlash(String name, String msg) {
         getFlash(true).add(name, msg);
     }
@@ -399,6 +371,15 @@ public final class InvocationBean implements Invocation {
 
     public void setPreInvocation(Invocation preInvocation) {
         this.preInvocation = preInvocation;
+    }
+
+    @Override
+    public Invocation getHeadInvocation() {
+        Invocation inv = this;
+        while (inv.getPreInvocation() != null) {
+            inv = inv.getPreInvocation();
+        }
+        return inv;
     }
 
     public void setMultiPartRequest(boolean multiPartRequest) {

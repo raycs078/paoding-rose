@@ -13,7 +13,7 @@ public class OncePerRequest2Controller {
     @Get
     public Object a(final Invocation inv) throws Exception {
         Object value = "ok";
-        inv.setOncePerRequestAttribute("once", value);
+        inv.getHeadInvocation().setAttribute("once", value);
         inv.getRequest().setAttribute("preInv", inv);
         // 测试异步的(以强壮portal框架)
         final Exception[] exs = new Exception[1];
@@ -51,7 +51,7 @@ public class OncePerRequest2Controller {
             return "preInvocation.error";
         }
         inv.getPreInvocation().getRequest().setAttribute("msg", "ok");
-        String ok = (String) inv.getOncePerRequestAttribute("once");
+        String ok = (String) inv.getHeadInvocation().getAttribute("once");
         if (!"ok".equals(ok)) {
             throw new IllegalArgumentException("setOncePerRequestAttribute");
         }
