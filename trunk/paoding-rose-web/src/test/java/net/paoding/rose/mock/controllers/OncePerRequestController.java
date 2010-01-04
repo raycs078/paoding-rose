@@ -9,7 +9,7 @@ public class OncePerRequestController {
     @Get
     public Object a(Invocation inv) throws Exception {
         Object value = "ok";
-        inv.setOncePerRequestAttribute("once", value);
+        inv.getHeadInvocation().setAttribute("once", value);
         inv.getRequest().setAttribute("preInv", inv);
         inv.getRequest().getRequestDispatcher("/oncePerRequest/b").forward(inv.getRequest(),
                 inv.getResponse());
@@ -26,7 +26,7 @@ public class OncePerRequestController {
             return "preInvocation.error";
         }
         inv.getRequest().setAttribute("msg", "ok");
-        String ok = (String) inv.getOncePerRequestAttribute("once");
+        String ok = (String) inv.getHeadInvocation().getAttribute("once");
         if (!"ok".equals(ok)) {
             throw new IllegalArgumentException("setOncePerRequestAttribute");
         }
