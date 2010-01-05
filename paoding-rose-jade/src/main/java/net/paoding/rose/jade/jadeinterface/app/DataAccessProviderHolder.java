@@ -1,7 +1,7 @@
 package net.paoding.rose.jade.jadeinterface.app;
 
 import net.paoding.rose.jade.jadeinterface.app.java.JadeAppConfig;
-import net.paoding.rose.jade.jadeinterface.app.java.JadeEnvConfig;
+import net.paoding.rose.jade.jadeinterface.app.java.JadeSystemConfig;
 import net.paoding.rose.jade.jadeinterface.app.java.JadePropConfig;
 import net.paoding.rose.jade.jadeinterface.app.web.JadeWebAppConfig;
 import net.paoding.rose.jade.jadeinterface.provider.DataAccessProvider;
@@ -78,7 +78,7 @@ public class DataAccessProviderHolder implements FactoryBean, InitializingBean,
             logger.info("Try initializing from [environment variable]");
 
             // 从环境变量配置的属性初始化
-            dataAccessProvider = JadeConfigResolver.configResolve(new JadeEnvConfig());
+            dataAccessProvider = JadeConfigResolver.configResolve(new JadeSystemConfig());
 
             if (dataAccessProvider != null) {
                 logger.info("Jade initialized from [environment variable]");
