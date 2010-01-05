@@ -7,11 +7,14 @@ import javax.servlet.ServletException;
 import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.annotation.rest.Get;
 
-//测试 OncePerRequest2Interceptor不会被调用2次！随便测试PreInvocation
+//测试 OncePerRequest2Interceptor不会被调用2次,并保证会被调用！随便测试PreInvocation
 public class OncePerRequest2Controller {
 
     @Get
     public Object a(final Invocation inv) throws Exception {
+        if (inv.getAttribute("OncePerRequest2Interceptor") == null) {
+            throw new IllegalArgumentException("OncePerRequest2Interceptor.before should be invoked");
+        }
         Object value = "ok";
         inv.getHeadInvocation().setAttribute("once", value);
         inv.getRequest().setAttribute("preInv", inv);
