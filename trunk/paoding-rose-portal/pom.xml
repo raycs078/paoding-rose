@@ -6,7 +6,7 @@
 	<groupId>net.paoding</groupId>
 	<artifactId>paoding-rose-portal</artifactId>
 	<packaging>jar</packaging>
-	<version>0.9.5-release-fix1</version>
+	<version>0.9.6-release-f1</version>
 	<name>paoding-rose-portal</name>
 
 	<!-- 开发人员说明 -->
@@ -80,8 +80,8 @@
 					<archive>
 						<manifestEntries>
 							<Rose>applicationContext</Rose>
-							<Implementation-Version>0.9.4-release-20091204</Implementation-Version>
-							<Rose-Version>0.9.5-release-20091204</Rose-Version>
+							<Implementation-Version>0.9.6-release-20100104</Implementation-Version>
+							<Rose-Version>0.9.6-release-20100104</Rose-Version>
 						</manifestEntries>
 					</archive>
 				</configuration>
@@ -121,7 +121,7 @@
 		<dependency>
 			<groupId>net.paoding</groupId>
 			<artifactId>paoding-rose</artifactId>
-			<version>0.9.5-release</version>
+			<version>0.9.6-release-f1</version>
 		</dependency>
 	</dependencies>
 </project>
