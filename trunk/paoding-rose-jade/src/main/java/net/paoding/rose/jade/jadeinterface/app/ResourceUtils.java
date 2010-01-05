@@ -30,7 +30,7 @@ public class ResourceUtils {
         if (applicationContext instanceof WebApplicationContext) {
             found = ((WebApplicationContext) applicationContext)
                     .getResource("/WEB-INF/" + fileName);
-        } else if (applicationContext instanceof ResourceLoader) {
+        } else if (applicationContext != null) {
             found = ((ResourceLoader) applicationContext).getResource(fileName);
         }
 
