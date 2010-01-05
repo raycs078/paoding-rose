@@ -28,12 +28,12 @@ public interface ExqlPattern {
      * @param context - 输出上下文
      * 
      * @param mapVars - 参数表
-     * @param mapConstants - 常量表
+     * @param mapConsts - 常量表
      * 
      * @return 语句内容
      * 
      * @throws Exception
      */
-    String execute(ExqlContext context, Map<String, ?> mapVars, Map<String, ?> mapConstants)
-            throws Exception;
+    String execute(ExqlContext context, Map<String, ?> mapVars, // NL
+            Map<String, ?> mapConsts) throws Exception;
 }

@@ -80,11 +80,11 @@ public class ExqlPatternImpl implements ExqlPattern {
     }
 
     @Override
-    public String execute(ExqlContext context, Map<String, ?> mapVars, Map<String, ?> mapConstants)
+    public String execute(ExqlContext context, Map<String, ?> mapVars, Map<String, ?> mapConsts)
             throws Exception {
 
         // 执行转换
-        return execute(context, new ExprResolverImpl(mapVars, mapConstants));
+        return execute(context, new ExprResolverImpl(mapVars, mapConsts));
     }
 
     // 执行转换
