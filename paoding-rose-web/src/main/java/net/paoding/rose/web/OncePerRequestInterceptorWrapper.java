@@ -37,9 +37,15 @@ public class OncePerRequestInterceptorWrapper extends ControllerInterceptorWrapp
     public final Object before(Invocation inv) throws Exception {
         Invocation temp = inv;
         boolean tobeIntercepted = false;
-        while (tobeIntercepted = (temp.getAttribute(filtered) == null)
-                && (temp = temp.getPreInvocation()) != null) {
-            // do nothing
+        while (true) {
+            tobeIntercepted = (temp.getAttribute(filtered) == null);
+            if (!tobeIntercepted) {
+                break;
+            }
+            temp = temp.getPreInvocation();
+            if (temp == null) {
+                break;
+            }
         }
         if (tobeIntercepted) {
             inv.setAttribute(filtered, true);

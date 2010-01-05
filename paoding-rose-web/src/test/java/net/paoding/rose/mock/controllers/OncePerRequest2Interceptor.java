@@ -21,6 +21,7 @@ public class OncePerRequest2Interceptor extends ControllerInterceptorAdapter {
         if (count > 0) {
             throw new IllegalArgumentException("onceperrequest");
         }
+        inv.setAttribute("OncePerRequest2Interceptor", "done");
         count++;
         return super.before(inv);
     }
