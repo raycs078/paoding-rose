@@ -7,7 +7,7 @@ import net.paoding.rose.jade.jadeinterface.app.JadeConfig;
  * 
  * @author han.liao [in355hz@gmail.com]
  */
-public class JadeEnvConfig extends JadeConfig {
+public class JadeSystemConfig extends JadeConfig {
 
     @Override
     public Object getConfig(String param) {
