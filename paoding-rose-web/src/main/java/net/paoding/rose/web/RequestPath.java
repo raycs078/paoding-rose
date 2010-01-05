@@ -71,6 +71,14 @@ public class RequestPath {
                 this.setDispatcher(Dispatcher.FORWARD);
             }
         }
+        if (uri.startsWith("http://") || uri.startsWith("https://")) {
+            int start = uri.indexOf('/', 9);
+            if (start == -1) {
+                uri = "";
+            } else {
+                uri = uri.substring(start);
+            }
+        }
         if (uri.indexOf('%') != -1) {
             try {
                 String encoding = request.getCharacterEncoding();
