@@ -10,8 +10,6 @@ import net.paoding.rose.jade.jadeinterface.exql.ExqlContext;
 import net.paoding.rose.jade.jadeinterface.exql.ExqlPattern;
 import net.paoding.rose.jade.jadeinterface.exql.ExqlUnit;
 
-import org.apache.log4j.BasicConfigurator;
-
 /**
  * 实现语句编译器。
  * 
@@ -430,8 +428,6 @@ public class ExqlCompiler {
 
     // 进行简单测试
     public static void main(String... args) throws Exception {
-
-        BasicConfigurator.configure();
 
         String string = "SELECT :expr1, #($expr2.class),"
                 + " WHERE #if(:expr3) {e = $expr3} #else {e IS NULL}"
