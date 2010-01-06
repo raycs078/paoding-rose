@@ -1,6 +1,6 @@
 package net.paoding.rose.jade.jadeinterface.impl;
 
-import java.lang.reflect.Method;
+import net.paoding.rose.jade.jadeinterface.provider.Modifier;
 
 /**
  * 定义创建: {@link JdbcOperation} 的工厂。
@@ -12,7 +12,7 @@ public interface JdbcOperationFactory {
     /**
      * 创建: {@link JdbcOperation} 对象。
      * 
-     * @return
+     * @return {@link JdbcOperation} 对象
      */
-    public JdbcOperation getJdbcOperation(Class<?> daoClass, Method method);
+    public JdbcOperation getJdbcOperation(Modifier modifier);
 }

@@ -1,6 +1,6 @@
 package net.paoding.rose.jade.jadeinterface.impl;
 
-import java.lang.reflect.Method;
+import net.paoding.rose.jade.jadeinterface.provider.Modifier;
 
 import org.springframework.jdbc.core.RowMapper;
 
@@ -14,7 +14,7 @@ public interface RowMapperFactory {
     /**
      * 创建合适的: {@link RowMapper} 对象。
      * 
-     * @return
+     * @return {@link RowMapper} 对象
      */
-    public RowMapper getRowMapper(Class<?> daoClass, Method method);
+    public RowMapper getRowMapper(Modifier modifier);
 }

@@ -51,10 +51,6 @@ public class DAOScanner {
 
     /**
      * 将要被扫描的普通类地址 (比如WEB-INF/classes或target/classes 之类的地址)
-     * 
-     * @param resourceLoader
-     * @return
-     * @throws IOException
      */
     public List<ResourceInfo> getClassesFolderResources() throws IOException {
         if (classesFolderResources == null) {
@@ -148,6 +144,6 @@ public class DAOScanner {
                 result.add(split);
             }
         }
-        return result.toArray(new String[0]);
+        return result.toArray(new String[result.size()]);
     }
 }
