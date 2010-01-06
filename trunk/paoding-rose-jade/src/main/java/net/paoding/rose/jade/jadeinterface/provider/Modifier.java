@@ -3,8 +3,8 @@ package net.paoding.rose.jade.jadeinterface.provider;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.TreeMap;
 
 import net.paoding.rose.jade.jadeinterface.impl.GenericUtils;
 
@@ -21,7 +21,8 @@ public class Modifier {
 
     private final Class<?>[] genericReturnType;
 
-    private final Map<Class<? extends Annotation>, Annotation[]> parameterAnnotations = new TreeMap<Class<? extends Annotation>, Annotation[]>();
+    private final Map<Class<? extends Annotation>, Annotation[]> parameterAnnotations = new HashMap<Class<? extends Annotation>, Annotation[]>(
+            8, 1.0f);
 
     public Modifier(Definition definition, Method method) {
         this.definition = definition;
