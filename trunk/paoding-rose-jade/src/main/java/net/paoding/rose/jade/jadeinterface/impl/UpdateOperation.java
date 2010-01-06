@@ -1,8 +1,6 @@
 package net.paoding.rose.jade.jadeinterface.impl;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
-import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -23,10 +21,6 @@ import org.springframework.util.NumberUtils;
  */
 public class UpdateOperation implements JdbcOperation {
 
-    private final Class<?> daoClass;
-
-    private final Method method;
-
     private final String jdQL;
 
     private final SQLParam[] annotations;
@@ -35,26 +29,12 @@ public class UpdateOperation implements JdbcOperation {
 
     private final Modifier modifier;
 
-    public UpdateOperation(String jdQL, Class<?> daoClass, Method method) {
+    public UpdateOperation(String jdQL, Modifier modifier) {
 
         this.jdQL = jdQL;
-        this.daoClass = daoClass;
-        this.method = method;
-
-        // 获得参数注释列表
-        Annotation[][] parameterAnnotations = method.getParameterAnnotations();
-        this.annotations = new SQLParam[parameterAnnotations.length];
-        for (int i = 0; i < parameterAnnotations.length; i++) {
-            for (Annotation annotation : parameterAnnotations[i]) {
-                if (annotation instanceof SQLParam) {
-                    this.annotations[i] = (SQLParam) annotation;
-                    continue;
-                }
-            }
-        }
-
-        this.returnType = method.getReturnType();
-        this.modifier = new Modifier(method);
+        this.modifier = modifier;
+        this.returnType = modifier.getReturnType();
+        this.annotations = modifier.getParameterAnnotations(SQLParam.class);
     }
 
     @Override
@@ -76,7 +56,7 @@ public class UpdateOperation implements JdbcOperation {
             if (args[i] instanceof Collection<?>) {
 
                 if (batchParam != null) {
-                    throw new IllegalArgumentException(daoClass.getName() + "#" + method.getName()
+                    throw new IllegalArgumentException(modifier
                             + ": Too many collection arguments in batch method");
                 }
 
@@ -164,7 +144,8 @@ public class UpdateOperation implements JdbcOperation {
         return null;
     }
 
-    private Object execute(DataAccess dataAccess, Class<?> returnClazz, Map<String, Object> parameters) {
+    private Object execute(DataAccess dataAccess, Class<?> returnClazz,
+            Map<String, Object> parameters) {
 
         if (returnClazz == Identity.class) {
 

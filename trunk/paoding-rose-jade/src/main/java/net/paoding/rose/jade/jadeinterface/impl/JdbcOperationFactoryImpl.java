@@ -1,14 +1,10 @@
 package net.paoding.rose.jade.jadeinterface.impl;
 
-import java.lang.reflect.Method;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.regex.Pattern;
 
 import net.paoding.rose.jade.jadeinterface.annotation.SQL;
 import net.paoding.rose.jade.jadeinterface.annotation.SQLType;
+import net.paoding.rose.jade.jadeinterface.provider.Modifier;
 
 import org.springframework.jdbc.core.RowMapper;
 
@@ -25,14 +21,13 @@ public class JdbcOperationFactoryImpl implements JdbcOperationFactory {
     private RowMapperFactory rowMapperFactory = new RowMapperFactoryImpl();
 
     @Override
-    public JdbcOperation getJdbcOperation(Class<?> daoClass, Method method) {
+    public JdbcOperation getJdbcOperation(Modifier modifier) {
 
         // 检查方法的  Annotation
-        SQL sqlAnnotation = method.getAnnotation(SQL.class);
+        SQL sqlAnnotation = modifier.getAnnotation(SQL.class);
         if (sqlAnnotation == null) {
             throw new UnsupportedOperationException( // NL
-                    "DAO method without @SQL annotated: " + // NL
-                            daoClass.getName() + '#' + method.getName());
+                    "DAO method without @SQL annotated: " + modifier);
         }
 
         String jdQL = sqlAnnotation.value();
@@ -48,14 +43,15 @@ public class JdbcOperationFactoryImpl implements JdbcOperationFactory {
 
         if (SQLType.SELECT == sqlType) {
             // 获得  RowMapper
-            RowMapper rowMapper = rowMapperFactory.getRowMapper(daoClass, method);
+            RowMapper rowMapper = rowMapperFactory.getRowMapper(modifier);
             // SELECT 查询
-            return new SelectOperation(jdQL, daoClass, method, rowMapper);
+            return new SelectOperation(jdQL, modifier, rowMapper);
 
         } else if (SQLType.UPDATE == sqlType) {
             // INSERT / UPDATE / DELETE 查询
-            return new UpdateOperation(jdQL, daoClass, method);
+            return new UpdateOperation(jdQL, modifier);
         }
+
         // 抛出检查异常
         throw new AssertionError("Unknown SQL type: " + sqlType);
     }

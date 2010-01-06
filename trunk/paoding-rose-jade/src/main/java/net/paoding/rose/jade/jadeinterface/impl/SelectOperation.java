@@ -1,8 +1,6 @@
 package net.paoding.rose.jade.jadeinterface.impl;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
-import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -25,10 +23,6 @@ import org.springframework.util.NumberUtils;
  */
 public class SelectOperation implements JdbcOperation {
 
-    private final Class<?> daoClass;
-
-    private final Method method;
-
     private final String jdQL;
 
     private final SQLParam[] annotations;
@@ -39,28 +33,13 @@ public class SelectOperation implements JdbcOperation {
 
     private final Modifier modifier;
 
-    public SelectOperation(String jdQL, Class<?> daoClass, Method method, // NL
-            RowMapper rowMapper) {
+    public SelectOperation(String jdQL, Modifier modifier, RowMapper rowMapper) {
 
         this.jdQL = jdQL;
-        this.daoClass = daoClass;
-        this.method = method;
-
-        // 获得参数注释列表
-        Annotation[][] parameterAnnotations = method.getParameterAnnotations();
-        this.annotations = new SQLParam[parameterAnnotations.length];
-        for (int i = 0; i < parameterAnnotations.length; i++) {
-            for (Annotation annotation : parameterAnnotations[i]) {
-                if (annotation instanceof SQLParam) {
-                    this.annotations[i] = (SQLParam) annotation;
-                    continue;
-                }
-            }
-        }
-
+        this.modifier = modifier;
+        this.returnType = modifier.getReturnType();
+        this.annotations = modifier.getParameterAnnotations(SQLParam.class);
         this.rowMapper = rowMapper;
-        this.returnType = method.getReturnType();
-        this.modifier = new Modifier(method);
     }
 
     @Override
@@ -147,8 +126,7 @@ public class SelectOperation implements JdbcOperation {
 
             } else {
                 // IncorrectResultSizeDataAccessException
-                throw new IncorrectResultSizeDataAccessException(daoClass.getName() + "#"
-                        + method.getName(), 1, sizeResult);
+                throw new IncorrectResultSizeDataAccessException(modifier.toString(), 1, sizeResult);
             }
         }
     }

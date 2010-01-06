@@ -1,7 +1,6 @@
 package net.paoding.rose.jade.jadeinterface.impl;
 
 import java.lang.reflect.Array;
-import java.lang.reflect.Method;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -14,6 +13,7 @@ import java.util.Map;
 import java.util.Set;
 
 import net.paoding.rose.jade.jadeinterface.annotation.MapKey;
+import net.paoding.rose.jade.jadeinterface.provider.Modifier;
 
 import org.apache.commons.lang.ClassUtils;
 import org.springframework.dao.TypeMismatchDataAccessException;
@@ -33,9 +33,9 @@ import org.springframework.util.NumberUtils;
 public class RowMapperFactoryImpl implements RowMapperFactory {
 
     // 获得返回的集合元素类型
-    private static Class<?> getRowType(Method method) {
+    private static Class<?> getRowType(Modifier modifier) {
 
-        Class<?> returnClassType = method.getReturnType();
+        Class<?> returnClassType = modifier.getReturnType();
         Class<?> rowType = returnClassType;
 
         if (Collection.class.isAssignableFrom(returnClassType)) {
@@ -47,20 +47,18 @@ public class RowMapperFactoryImpl implements RowMapperFactory {
                         + returnClassType.getName() + "; only support List, Set, Collection");
             }
             // 获取集合元素类型
-            Class<?>[] genericTypes = GenericUtils.getActualClass(method.getGenericReturnType());
+            Class<?>[] genericTypes = modifier.getGenericReturnType();
             if (genericTypes.length < 1) {
-                throw new IllegalArgumentException(method.getDeclaringClass().getName() + '#'
-                        + method.getName() + ": Collection<T> must be generic");
+                throw new IllegalArgumentException(modifier + ": Collection<T> must be generic");
             }
             rowType = genericTypes[0];
 
         } else if (Map.class == returnClassType) {
 
             // 获取  Map<K, V> 值元素类型
-            Class<?>[] genericTypes = GenericUtils.getActualClass(method.getGenericReturnType());
+            Class<?>[] genericTypes = modifier.getGenericReturnType();
             if (genericTypes.length != 2) {
-                throw new IllegalArgumentException(method.getDeclaringClass().getName() + '#'
-                        + method.getName() + ": Map<K, V> must be generic");
+                throw new IllegalArgumentException(modifier + ": Map<K, V> must be generic");
             }
             rowType = genericTypes[1]; // 取  V 类型
 
@@ -74,10 +72,10 @@ public class RowMapperFactoryImpl implements RowMapperFactory {
     }
 
     @Override
-    public RowMapper getRowMapper(Class<?> daoClass, Method method) {
+    public RowMapper getRowMapper(Modifier modifier) {
 
-        Class<?> returnClassType = method.getReturnType();
-        Class<?> rowType = getRowType(method);
+        Class<?> returnClassType = modifier.getReturnType();
+        Class<?> rowType = getRowType(modifier);
 
         // BUGFIX: SingleColumnRowMapper 处理  Primitive Type 抛异常
         if (rowType.isPrimitive()) {
@@ -93,7 +91,7 @@ public class RowMapperFactoryImpl implements RowMapperFactory {
             // 目前只考虑  java.lang.String, java.util.Date(java.sql.Date, 
             // java.sql.Time, java.sql.Timestamp) 及基本类型
             if (returnClassType == Map.class) {
-                rowMapper = new KeyValuePairColumnRowMapper(method, rowType);
+                rowMapper = new KeyValuePairColumnRowMapper(modifier, rowType);
             } else {
                 rowMapper = new SingleColumnRowMapper(rowType);
             }
@@ -105,15 +103,15 @@ public class RowMapperFactoryImpl implements RowMapperFactory {
             } else if (rowType.isArray()) {
                 rowMapper = new ArrayRowMapper(rowType);
             } else if ((rowType == List.class) || (rowType == Collection.class)) {
-                rowMapper = new ListRowMapper(method);
+                rowMapper = new ListRowMapper(modifier);
             } else if (rowType == Set.class) {
-                rowMapper = new ListRowMapper(method);
+                rowMapper = new ListRowMapper(modifier);
             } else {
                 rowMapper = new BeanPropertyRowMapper(rowType);
             }
 
             if (returnClassType == Map.class) {
-                rowMapper = new KeyValuePairRowMapper(method, rowMapper);
+                rowMapper = new KeyValuePairRowMapper(modifier, rowMapper);
             }
         }
 
@@ -150,11 +148,11 @@ public class RowMapperFactoryImpl implements RowMapperFactory {
 
         private Class<?> keyType, valueType;
 
-        public KeyValuePairColumnRowMapper(Method method, Class<?> requiredType) {
+        public KeyValuePairColumnRowMapper(Modifier modifier, Class<?> requiredType) {
 
             // 获取 Key 类型与列
-            MapKey mapKey = method.getAnnotation(MapKey.class);
-            Class<?>[] genericTypes = GenericUtils.getActualClass(method.getGenericReturnType());
+            MapKey mapKey = modifier.getAnnotation(MapKey.class);
+            Class<?>[] genericTypes = modifier.getGenericReturnType();
             if (genericTypes.length < 1) {
                 throw new IllegalArgumentException("Map generic");
             }
@@ -220,10 +218,10 @@ public class RowMapperFactoryImpl implements RowMapperFactory {
 
         private Class<?> keyType;
 
-        public KeyValuePairRowMapper(Method method, RowMapper mapper) {
+        public KeyValuePairRowMapper(Modifier modifier, RowMapper mapper) {
 
-            MapKey mapKey = method.getAnnotation(MapKey.class);
-            Class<?>[] genericTypes = GenericUtils.getActualClass(method.getGenericReturnType());
+            MapKey mapKey = modifier.getAnnotation(MapKey.class);
+            Class<?>[] genericTypes = modifier.getGenericReturnType();
             if (genericTypes.length < 1) {
                 throw new IllegalArgumentException("Map generic");
             }
@@ -262,8 +260,8 @@ public class RowMapperFactoryImpl implements RowMapperFactory {
     // 用  List<T> 返回每一列
     protected static class ListRowMapper extends CollectionRowMapper {
 
-        public ListRowMapper(Method method) {
-            super(method);
+        public ListRowMapper(Modifier modifier) {
+            super(modifier);
         }
 
         @Override
@@ -276,8 +274,8 @@ public class RowMapperFactoryImpl implements RowMapperFactory {
     // 用  Set<T> 返回每一列
     protected static class SetRowMapper extends CollectionRowMapper {
 
-        public SetRowMapper(Method method) {
-            super(method);
+        public SetRowMapper(Modifier modifier) {
+            super(modifier);
         }
 
         @Override
@@ -292,8 +290,8 @@ public class RowMapperFactoryImpl implements RowMapperFactory {
 
         private Class<?> elementType;
 
-        public CollectionRowMapper(Method method) {
-            Class<?>[] genericTypes = GenericUtils.getActualClass(method.getGenericReturnType());
+        public CollectionRowMapper(Modifier modifier) {
+            Class<?>[] genericTypes = modifier.getGenericReturnType();
             if (genericTypes.length < 1) {
                 throw new IllegalArgumentException("Collection generic");
             }

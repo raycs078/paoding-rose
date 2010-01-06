@@ -14,6 +14,7 @@ import net.paoding.rose.jade.jadeinterface.provider.DataAccess;
 import net.paoding.rose.jade.jadeinterface.provider.Modifier;
 import net.paoding.rose.jade.jadeinterface.provider.springjdbctemplte.SpringJdbcTemplateDataAccess;
 
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.jdbc.core.RowMapper;
 
@@ -29,66 +30,47 @@ public class ExqlDataAccess extends SpringJdbcTemplateDataAccess {
     }
 
     @Override
-    public List<?> select(String sql, Modifier modifier, Map<String, ?> parameters,
+    public List<?> select(String jdQL, Modifier modifier, Map<String, ?> parameters,
             RowMapper rowMapper) {
 
-        if (sql == null) {
-            throw new IllegalArgumentException("SQL must not be null");
-        }
-
-        // 转换语句中的表达式
-        ExqlPattern pattern = ExqlPatternImpl.compile(sql);
-        ExqlContext context = new ExqlContextImpl();
-
-        try {
-            sql = pattern.execute(context, parameters);
-        } catch (Exception e) {
-            throw new BadSqlGrammarException("ExqlPattern.execute", sql,
-                    new SQLSyntaxErrorException("Error executing pattern", e));
-        }
-
-        return select(sql, context.getParams(), rowMapper);
+        ExqlContext context = processConversion(jdQL, modifier, parameters);
+        return select(context.flushOut(), context.getParams(), rowMapper);
     }
 
     @Override
-    public int update(String sql, Modifier modifier, Map<String, ?> parameters) {
+    public int update(String jdQL, Modifier modifier, Map<String, ?> parameters) {
 
-        if (sql == null) {
-            throw new IllegalArgumentException("SQL must not be null");
-        }
-
-        // 转换语句中的表达式
-        ExqlPattern pattern = ExqlPatternImpl.compile(sql);
-        ExqlContext context = new ExqlContextImpl();
-
-        try {
-            sql = pattern.execute(context, parameters);
-        } catch (Exception e) {
-            throw new BadSqlGrammarException("ExqlPattern.execute", sql,
-                    new SQLSyntaxErrorException("Error executing pattern", e));
-        }
-
-        return update(sql, context.getParams());
+        ExqlContext context = processConversion(jdQL, modifier, parameters);
+        return update(context.flushOut(), context.getParams());
     }
 
     @Override
-    public Number insertReturnId(String sql, Modifier modifier, Map<String, ?> parameters) {
+    public Number insertReturnId(String jdQL, Modifier modifier, Map<String, ?> parameters) {
 
-        if (sql == null) {
+        ExqlContext context = processConversion(jdQL, modifier, parameters);
+        return insertReturnId(context.flushOut(), context.getParams());
+    }
+
+    // 转换   JDQL 语句为正常的  SQL 语句
+    protected ExqlContext processConversion(String jdQL, Modifier modifier,
+            Map<String, ?> parameters) throws DataAccessException {
+
+        if (jdQL == null) {
             throw new IllegalArgumentException("SQL must not be null");
         }
 
         // 转换语句中的表达式
-        ExqlPattern pattern = ExqlPatternImpl.compile(sql);
+        ExqlPattern pattern = ExqlPatternImpl.compile(jdQL);
         ExqlContext context = new ExqlContextImpl();
 
         try {
-            sql = pattern.execute(context, parameters);
+            pattern.execute(context, parameters, modifier.getDefinition().getConstants());
+
         } catch (Exception e) {
-            throw new BadSqlGrammarException("ExqlPattern.execute", sql,
+            throw new BadSqlGrammarException("ExqlPattern.execute", jdQL,
                     new SQLSyntaxErrorException("Error executing pattern", e));
         }
 
-        return insertReturnId(sql, context.getParams());
+        return context;
     }
 }

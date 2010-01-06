@@ -8,6 +8,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import net.paoding.rose.jade.jadeinterface.annotation.Dao;
 import net.paoding.rose.jade.jadeinterface.provider.DataAccess;
 import net.paoding.rose.jade.jadeinterface.provider.DataAccessProvider;
+import net.paoding.rose.jade.jadeinterface.provider.Definition;
+import net.paoding.rose.jade.jadeinterface.provider.Modifier;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -16,9 +18,10 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.util.ClassUtils;
 
 /**
- * 
+ * 提供 DAO 对象的 Spring-framework {@link FactoryBean} 工厂。
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
+ * @author han.liao [in355hz@gmail.com]
  */
 public class DaoFactoryBean<T> implements FactoryBean, InitializingBean {
 
@@ -76,8 +79,8 @@ public class DaoFactoryBean<T> implements FactoryBean, InitializingBean {
                     + ": not @Dao annotated ");
         }
 
+        final Definition definition = new Definition(daoClass);
         final DataAccess dataAccess = dataAccessProvider.createDataAccess(dao.catalog());
-
         return (T) Proxy.newProxyInstance(ClassUtils.getDefaultClassLoader(),
                 new Class[] { daoClass }, new InvocationHandler() {
 
@@ -101,7 +104,8 @@ public class DaoFactoryBean<T> implements FactoryBean, InitializingBean {
 
                         JdbcOperation operation = jdbcOperations.get(method);
                         if (operation == null) {
-                            operation = jdbcOperationFactory.getJdbcOperation(daoClass, method);
+                            Modifier modifier = new Modifier(definition, method);
+                            operation = jdbcOperationFactory.getJdbcOperation(modifier);
                             jdbcOperations.putIfAbsent(method, operation);
                         }
 
