@@ -10,6 +10,8 @@ import net.paoding.rose.jade.jadeinterface.exql.ExqlContext;
 import net.paoding.rose.jade.jadeinterface.exql.ExqlPattern;
 import net.paoding.rose.jade.jadeinterface.exql.ExqlUnit;
 
+import org.apache.log4j.BasicConfigurator;
+
 /**
  * 实现语句编译器。
  * 
@@ -36,7 +38,7 @@ public class ExqlCompiler {
 
     // 正则表达式
     private static final Pattern PATTERN_KEYWORD = Pattern.compile( // NL
-            "\\:\\:|(\\:[a-zA-Z0-9_\\.]+)|\\{([^\\{\\}]+)\\}\\?|#(#|if|for)?");
+            "\\:\\:|([\\:\\$]{1}[a-zA-Z0-9_\\.]+)|\\{([^\\{\\}]+)\\}\\?|#(#|if|for)?");
 
     private static final Pattern PATTERN_IN = Pattern.compile(// NL
             "([a-zA-Z0-9_]*)\\s+in\\s+(.+)");
@@ -429,10 +431,12 @@ public class ExqlCompiler {
     // 进行简单测试
     public static void main(String... args) throws Exception {
 
-        String string = "SELECT :expr1, #(:expr2.class),"
-                + " WHERE #if(:expr3) {e = :expr3} #else {e IS NULL}"
-                + "#for(variant in :expr4.bytes) { AND c = :variant}" // NL
-                + " {AND d = :expr5}? {AND f = :expr6}?" // NL
+        BasicConfigurator.configure();
+
+        String string = "SELECT :expr1, #($expr2.class),"
+                + " WHERE #if(:expr3) {e = $expr3} #else {e IS NULL}"
+                + "#for(variant in $expr4.bytes) { AND c = :variant}" // NL
+                + " {AND d = :expr5}? {AND f = $expr6}?" // NL
                 + " BY ##(:expr7) ASC";
 
         // 在输入中查找  PREFIX 字符
@@ -477,7 +481,7 @@ public class ExqlCompiler {
         // map.put("expr6", "expr6");
         map.put("expr7", "expr7");
 
-        System.out.println(pattern.execute(context, map));
+        System.out.println(pattern.execute(context, map, map));
         System.out.println(Arrays.toString(context.getParams()));
     }
 }
