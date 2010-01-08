@@ -26,7 +26,6 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
 
-import net.paoding.rose.RoseConstants;
 import net.paoding.rose.RoseFilter;
 import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.RequestPath;
@@ -77,7 +76,7 @@ public class WebEngine implements Engine {
 
     /**
      * {@link WebEngine} 接口.调用此方法判断并处理请求.如果本引擎能够找到该请求相应的控制器方法处理，则启动整个调用过程，
-     * 并最终渲染页面到客户端; 如果找不到匹配的控制器方法，则返回 {@link RoseConstants#CONTINUE}报告给调用者
+     * 并最终渲染页面到客户端;
      * 
      * @param request
      * @param response
@@ -120,7 +119,8 @@ public class WebEngine implements Engine {
         }
 
         // 渲染页面
-        return instructionExecutor.render(inv, instruction);
+        instructionExecutor.render(inv, instruction);
+        return instruction;
     }
 
     @Override

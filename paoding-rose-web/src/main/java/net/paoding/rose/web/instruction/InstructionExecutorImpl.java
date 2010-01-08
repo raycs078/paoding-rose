@@ -102,9 +102,6 @@ public class InstructionExecutorImpl implements InstructionExecutor {
             if (str.charAt(0) == '/') {
                 return View.name(str);
             }
-            if (str.startsWith("f:") || str.startsWith("forward:")) {
-                return new StringInstruction(true, str.substring(str.indexOf(':') + 1));
-            }
             if (str.startsWith("r:") || str.startsWith("redirect:")) {
                 StringInstruction si = new StringInstruction(false, str
                         .substring(str.indexOf(':') + 1));
@@ -113,6 +110,9 @@ public class InstructionExecutorImpl implements InstructionExecutor {
                     return Redirect.location(si.innerInstruction);
                 }
                 return si;
+            }
+            if (str.startsWith("f:") || str.startsWith("forward:")) {
+                return new StringInstruction(true, str.substring(str.indexOf(':') + 1));
             }
             if (str.startsWith("e:") || str.startsWith("error:")) {
                 int begin = str.indexOf(':') + 1;
@@ -141,6 +141,9 @@ public class InstructionExecutorImpl implements InstructionExecutor {
                         }
                     }
                 }
+            }
+            if (str.equals(":continue")) {
+                return null;
             }
             return new StringInstruction(null, str);
         } else if (ins.getClass() == StringInstruction.class) {
