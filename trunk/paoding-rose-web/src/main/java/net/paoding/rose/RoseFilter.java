@@ -16,6 +16,7 @@
 package net.paoding.rose;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -156,6 +157,10 @@ public class RoseFilter extends GenericFilterBean {
 
     private MappingNode mappingTree;
 
+    private IgnoredPath[] ignoredPaths = new IgnoredPath[] {
+            new IgnoredPathStarts(RoseConstants.VIEWS_PATH_WITH_END_SEP),
+            new IgnoredPathEquals("/favicon.ico") };
+
     /**
      * 改变默认行为，告知Rose要读取的applicationContext地址
      */
@@ -168,6 +173,39 @@ public class RoseFilter extends GenericFilterBean {
 
     public void setInstructionExecutor(InstructionExecutor instructionExecutor) {
         this.instructionExecutor = instructionExecutor;
+    }
+
+    /**
+     * @see #quicklyPass(RequestPath)
+     * @param ignoredPaths
+     */
+    public void setIgnoredPaths(String[] ignoredPaths) {
+        List<IgnoredPath> list = new ArrayList<IgnoredPath>(ignoredPaths.length + 2);
+        for (String ignoredPath : ignoredPaths) {
+            ignoredPath = ignoredPath.trim();
+            if (StringUtils.isEmpty(ignoredPath)) {
+                continue;
+            }
+            if (ignoredPath.equals("*")) {
+                list.add(new IgnoredPathEquals(""));
+                list.add(new IgnoredPathStarts("/"));
+                break;
+            }
+            if (ignoredPath.length() > 0 && !ignoredPath.startsWith("/")) {
+                ignoredPath = "/" + ignoredPath;
+            }
+            if (ignoredPath.endsWith("*")) {
+                list.add(new IgnoredPathStarts(ignoredPath.substring(0, ignoredPath.length() - 1)));
+            } else {
+                list.add(new IgnoredPathEquals(ignoredPath));
+            }
+        }
+        IgnoredPath[] _ignoredPaths = Arrays.copyOf(this.ignoredPaths, this.ignoredPaths.length
+                + list.size());
+        for (int i = this.ignoredPaths.length; i < _ignoredPaths.length; i++) {
+            _ignoredPaths[i] = list.get(i - this.ignoredPaths.length);
+        }
+        this.ignoredPaths = _ignoredPaths;
     }
 
     /**
@@ -217,7 +255,7 @@ public class RoseFilter extends GenericFilterBean {
 
         //  简单、快速判断本次请求，如果不应由Rose执行，返回true
         if (quicklyPass(requestPath)) {
-            forwardToWebContainer(filterChain, httpRequest, httpResponse, requestPath);
+            forwardToWebContainer(filterChain, httpRequest, httpResponse, requestPath.getUri());
             return;
         }
 
@@ -236,7 +274,7 @@ public class RoseFilter extends GenericFilterBean {
 
         // 非Rose的请求转发给WEB容器的其他组件处理，而且不放到上面的try-catch块中
         if (!matched) {
-            forwardToWebContainer(filterChain, httpRequest, httpResponse, requestPath);
+            forwardToWebContainer(filterChain, httpRequest, httpResponse, requestPath.getUri());
         }
     }
 
@@ -307,8 +345,12 @@ public class RoseFilter extends GenericFilterBean {
      * @return
      */
     private boolean quicklyPass(final RequestPath requestPath) {
-        return requestPath.getRosePath().startsWith(RoseConstants.VIEWS_PATH_WITH_END_SEP)
-                || "/favicon.ico".equals(requestPath.getUri());
+        for (IgnoredPath p : ignoredPaths) {
+            if (p.hit(requestPath)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -340,10 +382,10 @@ public class RoseFilter extends GenericFilterBean {
             FilterChain filterChain, //
             HttpServletRequest httpRequest,//
             HttpServletResponse httpResponse,//
-            RequestPath requestPath)//
+            String uri)//
             throws IOException, ServletException {
         if (logger.isDebugEnabled()) {
-            logger.debug("not rose uri: " + requestPath.getUri());
+            logger.debug("not rose uri: " + uri);
         }
         // 调用其它Filter
         filterChain.doFilter(httpRequest, httpResponse);
@@ -427,6 +469,39 @@ public class RoseFilter extends GenericFilterBean {
             sb.append("\n\n");
         }
         sb.append("--------end--------");
+    }
+
+    interface IgnoredPath {
+
+        public boolean hit(RequestPath requestPath);
+    }
+
+    class IgnoredPathEquals implements IgnoredPath {
+
+        private String path;
+
+        public IgnoredPathEquals(String path) {
+            this.path = path;
+        }
+
+        @Override
+        public boolean hit(RequestPath requestPath) {
+            return requestPath.getRosePath().equals(path);
+        }
+    }
+
+    class IgnoredPathStarts implements IgnoredPath {
+
+        private String path;
+
+        public IgnoredPathStarts(String path) {
+            this.path = path;
+        }
+
+        @Override
+        public boolean hit(RequestPath requestPath) {
+            return requestPath.getRosePath().startsWith(path);
+        }
     }
 
 }

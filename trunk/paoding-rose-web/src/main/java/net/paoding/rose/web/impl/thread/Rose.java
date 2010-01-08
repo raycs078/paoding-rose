@@ -174,7 +174,10 @@ public class Rose implements EngineChain {
             this.inv = inv;
             Throwable error = null;
             try {
-                ((EngineChain) this).doNext();
+                Object instuction = ((EngineChain) this).doNext();
+                if (":continue".equals(instuction)) {
+                    return false;
+                }
             } catch (Throwable local) {
                 error = local;
                 throw local;
