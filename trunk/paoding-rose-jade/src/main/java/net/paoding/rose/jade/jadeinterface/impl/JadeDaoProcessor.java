@@ -51,29 +51,29 @@ public class JadeDaoProcessor implements BeanFactoryPostProcessor, ApplicationCo
     public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory)
             throws BeansException {
 
-        List<Class<?>> classes;
+        List<Class<?>> daoClasses;
         try {
-            classes = findDaoClasses();
+            daoClasses = findDaoClasses();
         } catch (IOException e) {
             throw new BeanCreationException("", e);
         }
 
         DataAccessProvider dataAccessProvider = (DataAccessProvider) applicationContext
                 .getBean("jadeDataAccessProviderHolder");
-        for (Class<?> clazz : classes) {
-            if (clazz.isAnnotationPresent(Dao.class) && clazz.isInterface()) {
-                String beanName = ClassUtils.getShortNameAsProperty(clazz);
+        for (Class<?> daoClass : daoClasses) {
+            if (daoClass.isAnnotationPresent(Dao.class) && daoClass.isInterface()) {
+                String beanName = daoClass.getName(); // ClassUtils.getShortNameAsProperty(clazz);
 
                 GenericBeanDefinition beanDefinition = new GenericBeanDefinition();
                 beanDefinition.setBeanClass(DaoFactoryBean.class);
                 MutablePropertyValues propertyValues = beanDefinition.getPropertyValues();
                 propertyValues.addPropertyValue("dataAccessProvider", dataAccessProvider);
-                propertyValues.addPropertyValue("daoClass", clazz);
+                propertyValues.addPropertyValue("daoClass", daoClass);
                 beanDefinition.setPropertyValues(propertyValues);
                 beanDefinition.setAutowireCandidate(true);
 
                 if (logger.isInfoEnabled()) {
-                    logger.info("Generate dao: " + beanName + " ==> " + clazz.getName());
+                    logger.info("Generate dao: " + beanName + " ==> " + daoClass.getName());
                 }
 
                 DefaultListableBeanFactory defaultBeanFactory = (DefaultListableBeanFactory) beanFactory;
