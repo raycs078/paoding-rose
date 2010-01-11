@@ -172,6 +172,14 @@ public interface Invocation {
     public void addModel(String name, Object value);
 
     /**
+     * 获取添加到model中的对象
+     * 
+     * @param name
+     * @return
+     */
+    public Object getModel(String name);
+
+    /**
      * 返回Model接口，通过这个设置对象给view渲染
      * 
      * @return

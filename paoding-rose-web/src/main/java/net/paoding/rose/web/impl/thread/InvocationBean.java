@@ -267,6 +267,11 @@ public final class InvocationBean implements Invocation {
     }
 
     @Override
+    public Object getModel(String name) {
+        return getModel().get(name);
+    }
+
+    @Override
     public synchronized Object getAttribute(String name) {
         if (attributes == null) {
             return null;
