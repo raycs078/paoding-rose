@@ -191,11 +191,14 @@ public class RoseFilter extends GenericFilterBean {
                 list.add(new IgnoredPathStarts("/"));
                 break;
             }
-            if (ignoredPath.length() > 0 && !ignoredPath.startsWith("/")) {
+            if (ignoredPath.length() > 0 && !ignoredPath.startsWith("/")
+                    && !ignoredPath.startsWith("*")) {
                 ignoredPath = "/" + ignoredPath;
             }
             if (ignoredPath.endsWith("*")) {
                 list.add(new IgnoredPathStarts(ignoredPath.substring(0, ignoredPath.length() - 1)));
+            } else if (ignoredPath.startsWith("*")) {
+                list.add(new IgnoredPathEnds(ignoredPath.substring(1)));
             } else {
                 list.add(new IgnoredPathEquals(ignoredPath));
             }
@@ -501,6 +504,20 @@ public class RoseFilter extends GenericFilterBean {
         @Override
         public boolean hit(RequestPath requestPath) {
             return requestPath.getRosePath().startsWith(path);
+        }
+    }
+
+    class IgnoredPathEnds implements IgnoredPath {
+
+        private String path;
+
+        public IgnoredPathEnds(String path) {
+            this.path = path;
+        }
+
+        @Override
+        public boolean hit(RequestPath requestPath) {
+            return requestPath.getRosePath().endsWith(path);
         }
     }
 
