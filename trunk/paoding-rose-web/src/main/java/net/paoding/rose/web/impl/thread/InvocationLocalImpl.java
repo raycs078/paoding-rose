@@ -151,6 +151,11 @@ public class InvocationLocalImpl implements InvocationLocal {
     }
 
     @Override
+    public Object getModel(String name) {
+        return required().getModel(name);
+    }
+
+    @Override
     public Object getParameter(String name) {
         return required().getParameter(name);
     }
