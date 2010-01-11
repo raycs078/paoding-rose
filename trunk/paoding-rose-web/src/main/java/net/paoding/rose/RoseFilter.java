@@ -40,6 +40,11 @@ import net.paoding.rose.web.impl.mapping.MappingNode;
 import net.paoding.rose.web.impl.mapping.MatchMode;
 import net.paoding.rose.web.impl.mapping.TreeBuilder;
 import net.paoding.rose.web.impl.mapping.WebResource;
+import net.paoding.rose.web.impl.mapping.ignored.IgnoredPath;
+import net.paoding.rose.web.impl.mapping.ignored.IgnoredPathEnds;
+import net.paoding.rose.web.impl.mapping.ignored.IgnoredPathEquals;
+import net.paoding.rose.web.impl.mapping.ignored.IgnoredPathRegexMatch;
+import net.paoding.rose.web.impl.mapping.ignored.IgnoredPathStarts;
 import net.paoding.rose.web.impl.module.ControllerRef;
 import net.paoding.rose.web.impl.module.Module;
 import net.paoding.rose.web.impl.module.ModulesBuilder;
@@ -191,16 +196,21 @@ public class RoseFilter extends GenericFilterBean {
                 list.add(new IgnoredPathStarts("/"));
                 break;
             }
-            if (ignoredPath.length() > 0 && !ignoredPath.startsWith("/")
-                    && !ignoredPath.startsWith("*")) {
-                ignoredPath = "/" + ignoredPath;
-            }
-            if (ignoredPath.endsWith("*")) {
-                list.add(new IgnoredPathStarts(ignoredPath.substring(0, ignoredPath.length() - 1)));
-            } else if (ignoredPath.startsWith("*")) {
-                list.add(new IgnoredPathEnds(ignoredPath.substring(1)));
+            if (ignoredPath.startsWith("regex:")) {
+                list.add(new IgnoredPathRegexMatch(ignoredPath.substring("regex:".length())));
             } else {
-                list.add(new IgnoredPathEquals(ignoredPath));
+                if (ignoredPath.length() > 0 && !ignoredPath.startsWith("/")
+                        && !ignoredPath.startsWith("*")) {
+                    ignoredPath = "/" + ignoredPath;
+                }
+                if (ignoredPath.endsWith("*")) {
+                    list.add(new IgnoredPathStarts(ignoredPath.substring(0,
+                            ignoredPath.length() - 1)));
+                } else if (ignoredPath.startsWith("*")) {
+                    list.add(new IgnoredPathEnds(ignoredPath.substring(1)));
+                } else {
+                    list.add(new IgnoredPathEquals(ignoredPath));
+                }
             }
         }
         IgnoredPath[] _ignoredPaths = Arrays.copyOf(this.ignoredPaths, this.ignoredPaths.length
@@ -472,53 +482,6 @@ public class RoseFilter extends GenericFilterBean {
             sb.append("\n\n");
         }
         sb.append("--------end--------");
-    }
-
-    interface IgnoredPath {
-
-        public boolean hit(RequestPath requestPath);
-    }
-
-    class IgnoredPathEquals implements IgnoredPath {
-
-        private String path;
-
-        public IgnoredPathEquals(String path) {
-            this.path = path;
-        }
-
-        @Override
-        public boolean hit(RequestPath requestPath) {
-            return requestPath.getRosePath().equals(path);
-        }
-    }
-
-    class IgnoredPathStarts implements IgnoredPath {
-
-        private String path;
-
-        public IgnoredPathStarts(String path) {
-            this.path = path;
-        }
-
-        @Override
-        public boolean hit(RequestPath requestPath) {
-            return requestPath.getRosePath().startsWith(path);
-        }
-    }
-
-    class IgnoredPathEnds implements IgnoredPath {
-
-        private String path;
-
-        public IgnoredPathEnds(String path) {
-            this.path = path;
-        }
-
-        @Override
-        public boolean hit(RequestPath requestPath) {
-            return requestPath.getRosePath().endsWith(path);
-        }
     }
 
 }
