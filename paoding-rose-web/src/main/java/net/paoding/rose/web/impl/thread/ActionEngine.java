@@ -29,7 +29,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import net.paoding.rose.RoseVersion;
 import net.paoding.rose.web.Invocation;
-import net.paoding.rose.web.NamedValidator;
+import net.paoding.rose.web.ParamValidator;
 import net.paoding.rose.web.RequestPath;
 import net.paoding.rose.web.annotation.HttpFeatures;
 import net.paoding.rose.web.annotation.Intercepted;
@@ -67,7 +67,7 @@ public final class ActionEngine implements Engine {
 
     private final NestedControllerInterceptor[] interceptors;
 
-    private final NamedValidator[] validators;
+    private final ParamValidator[] validators;
 
     private final MethodParameterResolver methodParameterResolver;
 
@@ -121,15 +121,15 @@ public final class ActionEngine implements Engine {
     }
 
     @SuppressWarnings("unchecked")
-    private NamedValidator[] compileValidators() {
+    private ParamValidator[] compileValidators() {
         Class[] parameterTypes = method.getParameterTypes();
-        List<NamedValidator> validators = module.getValidators();
-        NamedValidator[] registeredValidators = new NamedValidator[parameterTypes.length];
+        List<ParamValidator> validators = module.getValidators();
+        ParamValidator[] registeredValidators = new ParamValidator[parameterTypes.length];
         for (int i = 0; i < parameterTypes.length; i++) {
             if (methodParameterResolver.getParamAnnotationAt(i) == null
                     || methodParameterResolver.getParamAnnotationAt(i).validated()) {
-                for (NamedValidator validator : validators) {
-                    if (validator.supports(parameterTypes[i])) {
+                for (ParamValidator validator : validators) {
+                    if (validator.supports(methodParameterResolver.getParamMetaDatas()[i])) {
                         registeredValidators[i] = validator;
                         break;
                     }

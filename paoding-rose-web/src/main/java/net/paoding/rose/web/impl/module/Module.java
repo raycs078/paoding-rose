@@ -19,7 +19,7 @@ import java.net.URL;
 import java.util.List;
 
 import net.paoding.rose.web.ControllerErrorHandler;
-import net.paoding.rose.web.NamedValidator;
+import net.paoding.rose.web.ParamValidator;
 import net.paoding.rose.web.impl.mapping.Mapping;
 import net.paoding.rose.web.paramresolver.ParamResolver;
 
@@ -97,7 +97,7 @@ public interface Module {
      * 
      * @return
      */
-    public List<NamedValidator> getValidators();
+    public List<ParamValidator> getValidators();
 
     /**
      * 本模块使用的有效拦截器对象

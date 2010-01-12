@@ -72,8 +72,8 @@ public interface ParamMetaData {
 
     public int getIndex();
 
-    public void setUserObject(Object userObject);
+    public void setUserObject(Object key, Object userObject);
 
-    public Object getUserObject();
+    public Object getUserObject(Object key);
 
 }

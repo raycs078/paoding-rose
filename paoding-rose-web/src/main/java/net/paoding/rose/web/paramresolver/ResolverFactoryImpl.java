@@ -58,6 +58,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.SimpleTypeConverter;
+import org.springframework.beans.TypeConverter;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.MessageSource;
 import org.springframework.util.ClassUtils;
@@ -75,6 +76,8 @@ import org.springframework.web.util.WebUtils;
 public class ResolverFactoryImpl implements ResolverFactory {
 
     private static Log logger = LogFactory.getLog(MethodParameterResolver.class);
+
+    private static final TypeConverter typeConverter = new ThreadSafedSimpleTypeConverter();
 
     public static final String MAP_SEPARATOR = ":";
 
@@ -139,20 +142,6 @@ public class ResolverFactoryImpl implements ResolverFactory {
     };
 
     public ResolverFactoryImpl() {
-    }
-
-    private static SimpleTypeConverter getSimpleTypeConverter() {
-        // simpleTypeConverter is not for concurrency!
-        SimpleTypeConverter simpleTypeConverter = new SimpleTypeConverter();
-        simpleTypeConverter.useConfigValueEditors();
-        simpleTypeConverter.registerCustomEditor(Date.class, new DateEditor(Date.class));
-        simpleTypeConverter.registerCustomEditor(java.sql.Date.class, new DateEditor(
-                java.sql.Date.class));
-        simpleTypeConverter.registerCustomEditor(java.sql.Time.class, new DateEditor(
-                java.sql.Time.class));
-        simpleTypeConverter.registerCustomEditor(java.sql.Timestamp.class, new DateEditor(
-                java.sql.Timestamp.class));
-        return simpleTypeConverter;
     }
 
     private final List<ParamResolver> customerResolvers = new ArrayList<ParamResolver>();
@@ -496,7 +485,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
                         arrayType = Array.newInstance((Class<?>) compnentType, 0).getClass();
                     }
                 }
-                Object array = getSimpleTypeConverter().convertIfNecessary(toConvert, arrayType);
+                Object array = typeConverter.convertIfNecessary(toConvert, arrayType);
                 return array;
             }
         }
@@ -524,11 +513,13 @@ public class ResolverFactoryImpl implements ResolverFactory {
             if (innerSupports(metaData)) {
                 Class<?>[] generics = compileGenericParameterTypesDetail(metaData.getMethod(),
                         metaData.getIndex());
-                if (generics.length == 0) {
+                if (generics == null || generics.length == 0) {
                     throw new IllegalArgumentException("please use generic for "
-                            + metaData.getParamType().getName());
+                            + metaData.getParamType().getName() + " ["
+                            + metaData.getControllerClass().getName() + "."
+                            + metaData.getMethod().getName() + "]");
                 }
-                metaData.setUserObject(generics[0]);
+                metaData.setUserObject(this, generics[0]);
                 return true;
             }
             return false;
@@ -540,7 +531,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
         @SuppressWarnings("unchecked")
         public Object resolve(Invocation inv, ParamMetaData paramMetaData) throws Exception {
             Object array = resolveArray(inv, paramMetaData, (Class<?>) paramMetaData
-                    .getUserObject());
+                    .getUserObject(this));
             int len = ArrayUtils.getLength(array);
             Collection collection = create(paramMetaData, len);
             for (int i = 0; i < len; i++) {
@@ -577,19 +568,19 @@ public class ResolverFactoryImpl implements ResolverFactory {
     static final class SetResolver extends CollectionResolver<Set<?>> {
 
         @Override
-        public boolean innerSupports(ParamMetaData paramMetaData) {
-            return Set.class == paramMetaData.getParamType()
-                    || (!Modifier.isAbstract(paramMetaData.getParamType().getModifiers()) && Set.class
-                            .isAssignableFrom(paramMetaData.getParamType()));
+        public boolean innerSupports(ParamMetaData metaData) {
+            return Set.class == metaData.getParamType()
+                    || (!Modifier.isAbstract(metaData.getParamType().getModifiers()) && Set.class
+                            .isAssignableFrom(metaData.getParamType()));
         }
 
         @Override
         @SuppressWarnings("unchecked")
-        protected Collection create(ParamMetaData paramMetaData, int len) throws Exception {
-            if (paramMetaData.getParamType().isInterface()) {
+        protected Collection create(ParamMetaData metaData, int len) throws Exception {
+            if (metaData.getParamType().isInterface()) {
                 return new HashSet<Object>(len);
             } else {
-                return (Collection<?>) paramMetaData.getParamType().getConstructor().newInstance();
+                return (Collection<?>) metaData.getParamType().getConstructor().newInstance();
             }
         }
     }
@@ -617,36 +608,43 @@ public class ResolverFactoryImpl implements ResolverFactory {
     static final class MapResolver implements ParamResolver {
 
         @Override
-        public boolean supports(ParamMetaData paramMetaData) {
-            boolean supports = Map.class == paramMetaData.getParamType()
-                    || HashMap.class == paramMetaData.getParamType();
+        public boolean supports(ParamMetaData metaData) {
+            boolean supports = Map.class == metaData.getParamType()
+                    || HashMap.class == metaData.getParamType();
             if (supports) {
-                paramMetaData.setUserObject(compileGenericParameterTypesDetail(paramMetaData
-                        .getMethod(), paramMetaData.getIndex()));
+                Class<?>[] generics = compileGenericParameterTypesDetail(metaData.getMethod(),
+                        metaData.getIndex());
+                if (generics == null || generics.length == 0) {
+                    throw new IllegalArgumentException("please use generic for "
+                            + metaData.getParamType().getName() + " ["
+                            + metaData.getControllerClass().getName() + "."
+                            + metaData.getMethod().getName() + "]");
+                }
+                metaData.setUserObject(this, generics);
             }
             return supports;
         }
 
         @Override
-        public Map<?, ?> resolve(Invocation inv, ParamMetaData paramMetaData) {
-            if (StringUtils.isNotEmpty(paramMetaData.getParamName())) {
-                Class<?>[] genericTypes = (Class[]) paramMetaData.getUserObject();
+        public Map<?, ?> resolve(Invocation inv, ParamMetaData metaData) {
+            if (StringUtils.isNotEmpty(metaData.getParamName())) {
+                Class<?>[] genericTypes = (Class[]) metaData.getUserObject(this);
                 Class<?> keyType = genericTypes[0];
                 Class<?> valueType = genericTypes[1];
-                Map<?, ?> toConvert = WebUtils.getParametersStartingWith(inv.getRequest(),
-                        paramMetaData.getParamName() + MAP_SEPARATOR);
+                Map<?, ?> toConvert = WebUtils.getParametersStartingWith(inv.getRequest(), metaData
+                        .getParamName()
+                        + MAP_SEPARATOR);
                 if (toConvert != null) {
                     if (keyType != String.class || valueType != String.class) {
-                        SimpleTypeConverter simpleTypeConverter = getSimpleTypeConverter();
                         Map<Object, Object> ret = new HashMap<Object, Object>();
                         for (Map.Entry<?, ?> entry : toConvert.entrySet()) {
                             Object key = entry.getKey();
                             Object value = entry.getValue();
                             if (keyType != String.class) {
-                                key = simpleTypeConverter.convertIfNecessary(key, keyType);
+                                key = typeConverter.convertIfNecessary(key, keyType);
                             }
                             if (valueType != String.class) {
-                                value = simpleTypeConverter.convertIfNecessary(value, valueType);
+                                value = typeConverter.convertIfNecessary(value, valueType);
                             }
                             ret.put(key, value);
                         }
@@ -749,27 +747,26 @@ public class ResolverFactoryImpl implements ResolverFactory {
     static final class DateResolver implements ParamResolver {
 
         @Override
-        public boolean supports(ParamMetaData paramMetaData) {
-            return Date.class == paramMetaData.getParamType()
-                    || java.sql.Date.class == paramMetaData.getParamType()
-                    || java.sql.Time.class == paramMetaData.getParamType()
-                    || java.sql.Timestamp.class == paramMetaData.getParamType();
+        public boolean supports(ParamMetaData metaData) {
+            return Date.class == metaData.getParamType()
+                    || java.sql.Date.class == metaData.getParamType()
+                    || java.sql.Time.class == metaData.getParamType()
+                    || java.sql.Timestamp.class == metaData.getParamType();
         }
 
         @Override
-        public Date resolve(Invocation inv, ParamMetaData paramMetaData) throws Exception {
-            String text = inv.getRawParameter(paramMetaData.getParamName());
+        public Date resolve(Invocation inv, ParamMetaData metaData) throws Exception {
+            String text = inv.getRawParameter(metaData.getParamName());
 
-            Date date = resolveUtilDate(text, paramMetaData);
-            return DatePatterns.changeType(date, paramMetaData.getParamType());
+            Date date = resolveUtilDate(text, metaData);
+            return DatePatterns.changeType(date, metaData.getParamType());
         }
 
-        protected Date resolveUtilDate(String text, ParamMetaData paramMetaData)
-                throws ParseException {
+        protected Date resolveUtilDate(String text, ParamMetaData metaData) throws ParseException {
             if (StringUtils.isEmpty(text)) {
-                if (paramMetaData.getParamAnnotation() != null
-                        && !Param.JAVA_DEFAULT.equals(paramMetaData.getParamAnnotation().def())) {
-                    text = paramMetaData.getParamAnnotation().def();
+                if (metaData.getParamAnnotation() != null
+                        && !Param.JAVA_DEFAULT.equals(metaData.getParamAnnotation().def())) {
+                    text = metaData.getParamAnnotation().def();
                     if (StringUtils.isEmpty(text)) {
                         return new Date(); // 当前时间!
                     }
@@ -777,10 +774,10 @@ public class ResolverFactoryImpl implements ResolverFactory {
                     return null; // 保留null，而非当前时间
                 }
             }
-            if (paramMetaData.getParamAnnotation() != null
-                    && paramMetaData.getParamAnnotation().conf() != null
-                    && paramMetaData.getParamAnnotation().conf().length > 0) {
-                ParamConf[] conf = paramMetaData.getParamAnnotation().conf();
+            if (metaData.getParamAnnotation() != null
+                    && metaData.getParamAnnotation().conf() != null
+                    && metaData.getParamAnnotation().conf().length > 0) {
+                ParamConf[] conf = metaData.getParamAnnotation().conf();
                 for (ParamConf paramConf : conf) {
                     if ("pattern".equals(paramConf.name())) {
                         // 如果都找不到pattern则使用parseLong，但是总可能存在意外，
@@ -812,21 +809,22 @@ public class ResolverFactoryImpl implements ResolverFactory {
     static final class EditorResolver implements ParamResolver {
 
         @Override
-        public boolean supports(ParamMetaData paramMetaData) {
-            if (ClassUtils.isPrimitiveOrWrapper(paramMetaData.getParamType())) {
+        public boolean supports(ParamMetaData metaData) {
+            if (ClassUtils.isPrimitiveOrWrapper(metaData.getParamType())) {
                 return true;
             }
-            SimpleTypeConverter simpleTypeConverter = getSimpleTypeConverter();
-            return simpleTypeConverter.findCustomEditor(paramMetaData.getParamType(), null) != null
-                    || simpleTypeConverter.getDefaultEditor(paramMetaData.getParamType()) != null;
+            SimpleTypeConverter simpleTypeConverter = ((ThreadSafedSimpleTypeConverter) typeConverter)
+                    .getSimpleTypeConverter();
+            return simpleTypeConverter.findCustomEditor(metaData.getParamType(), null) != null
+                    || simpleTypeConverter.getDefaultEditor(metaData.getParamType()) != null;
         }
 
         @Override
-        public Object resolve(Invocation inv, ParamMetaData paramMetaData) {
+        public Object resolve(Invocation inv, ParamMetaData metaData) {
             String toConvert = null;
             // 
-            FlashParam flashParam = paramMetaData.getFlashParamAnnotation();
-            Param param = paramMetaData.getParamAnnotation();
+            FlashParam flashParam = metaData.getFlashParamAnnotation();
+            Param param = metaData.getParamAnnotation();
             if (flashParam != null) {
                 toConvert = inv.getFlash().get(flashParam.value());
             }
@@ -835,28 +833,26 @@ public class ResolverFactoryImpl implements ResolverFactory {
             }
             if (toConvert == null) {
                 if (param != null && !Param.JAVA_DEFAULT.equals(param.def())) {
-                    toConvert = paramMetaData.getParamAnnotation().def();
+                    toConvert = metaData.getParamAnnotation().def();
                 }
             }
             if (toConvert != null) {
-                return getSimpleTypeConverter().convertIfNecessary(toConvert,
-                        paramMetaData.getParamType());
+                return typeConverter.convertIfNecessary(toConvert, metaData.getParamType());
             }
-            if (paramMetaData.getParamType().isPrimitive()) {
+            if (metaData.getParamType().isPrimitive()) {
                 // 对这最常用的类型做一下if-else判断，其他类型就简单使用converter来做吧
-                if (paramMetaData.getParamType() == int.class) {
+                if (metaData.getParamType() == int.class) {
                     return Integer.valueOf(0);
-                } else if (paramMetaData.getParamType() == long.class) {
+                } else if (metaData.getParamType() == long.class) {
                     return Long.valueOf(0);
-                } else if (paramMetaData.getParamType() == boolean.class) {
+                } else if (metaData.getParamType() == boolean.class) {
                     return Boolean.FALSE;
-                } else if (paramMetaData.getParamType() == double.class) {
+                } else if (metaData.getParamType() == double.class) {
                     return Double.valueOf(0);
-                } else if (paramMetaData.getParamType() == float.class) {
+                } else if (metaData.getParamType() == float.class) {
                     return Float.valueOf(0);
                 } else {
-                    return getSimpleTypeConverter().convertIfNecessary("0",
-                            paramMetaData.getParamType());
+                    return typeConverter.convertIfNecessary("0", metaData.getParamType());
                 }
             }
             return null;

@@ -30,7 +30,7 @@ import javax.servlet.http.HttpServletResponse;
 import net.paoding.rose.scanner.ModuleResource;
 import net.paoding.rose.scanner.RoseJarContextResources;
 import net.paoding.rose.scanner.RoseModuleInfos;
-import net.paoding.rose.web.NamedValidator;
+import net.paoding.rose.web.ParamValidator;
 import net.paoding.rose.web.RequestPath;
 import net.paoding.rose.web.annotation.ReqMethod;
 import net.paoding.rose.web.impl.context.RoseContextLoader;
@@ -461,7 +461,7 @@ public class RoseFilter extends GenericFilterBean {
                 sb.setLength(sb.length() - 2);
             }
             sb.append("];\n\tvalidators=[");
-            for (NamedValidator validator : module.getValidators()) {
+            for (ParamValidator validator : module.getValidators()) {
                 sb.append(validator.getClass().getSimpleName()).append(", ");
             }
             if (module.getValidators().size() > 0) {

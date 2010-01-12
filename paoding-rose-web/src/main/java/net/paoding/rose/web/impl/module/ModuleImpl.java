@@ -21,7 +21,7 @@ import java.util.Collections;
 import java.util.List;
 
 import net.paoding.rose.web.ControllerErrorHandler;
-import net.paoding.rose.web.NamedValidator;
+import net.paoding.rose.web.ParamValidator;
 import net.paoding.rose.web.paramresolver.ParamResolver;
 
 import org.springframework.web.context.WebApplicationContext;
@@ -61,7 +61,7 @@ public class ModuleImpl implements Module {
             32);
 
     // 用于add方法加进来
-    private List<NamedValidator> validators = new ArrayList<NamedValidator>(32);
+    private List<ParamValidator> validators = new ArrayList<ParamValidator>(32);
 
     // 本模块使用的错误处理器(如果本模块没有定义，则使用上级模块的errorHanlder或根applicationContext的errorHandler)
     private ControllerErrorHandler errorHandler;
@@ -157,13 +157,13 @@ public class ModuleImpl implements Module {
         return interceptors;
     }
 
-    public ModuleImpl addValidator(NamedValidator validator) {
+    public ModuleImpl addValidator(ParamValidator validator) {
         this.validators.add(validator);
         return this;
     }
 
     @Override
-    public List<NamedValidator> getValidators() {
+    public List<ParamValidator> getValidators() {
         return validators;
     }
 

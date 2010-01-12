@@ -32,7 +32,7 @@ import net.paoding.rose.scanner.ModuleResource;
 import net.paoding.rose.util.SpringUtils;
 import net.paoding.rose.web.ControllerErrorHandler;
 import net.paoding.rose.web.ControllerInterceptor;
-import net.paoding.rose.web.NamedValidator;
+import net.paoding.rose.web.ParamValidator;
 import net.paoding.rose.web.annotation.Ignored;
 import net.paoding.rose.web.annotation.Interceptor;
 import net.paoding.rose.web.annotation.NotForSubModules;
@@ -51,7 +51,6 @@ import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ClassUtils;
-import org.springframework.validation.Validator;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.XmlWebApplicationContext;
 
@@ -94,7 +93,7 @@ public class ModulesBuilder {
             // 从Spring应用环境中找出全局resolver, interceptors, errorHanlder
             List<ParamResolver> customerResolvers = findContextResolvers(context);
             List<NestedControllerInterceptor> interceptors = findContextInterceptors(context);
-            List<NamedValidator> validators = findContextValidators(context);
+            List<ParamValidator> validators = findContextValidators(context);
             ControllerErrorHandler errorHandler = getContextErrorHandler(context);
 
             // resolvers
@@ -115,7 +114,7 @@ public class ModulesBuilder {
                         + Arrays.toString(interceptors.toArray()));
             }
             // 将validator设置到module中
-            for (NamedValidator validator : validators) {
+            for (ParamValidator validator : validators) {
                 module.addValidator(validator);
             }
             if (logger.isDebugEnabled()) {
@@ -381,13 +380,13 @@ public class ModulesBuilder {
         return globalInterceptors;
     }
 
-    private List<NamedValidator> findContextValidators(XmlWebApplicationContext context) {
+    private List<ParamValidator> findContextValidators(XmlWebApplicationContext context) {
         String[] validatorNames = SpringUtils.getBeanNames(context.getBeanFactory(),
-                Validator.class);
-        ArrayList<NamedValidator> globalValidators = new ArrayList<NamedValidator>(
+                ParamValidator.class);
+        ArrayList<ParamValidator> globalValidators = new ArrayList<ParamValidator>(
                 validatorNames.length);
         for (String beanName : validatorNames) {
-            Validator validator = (Validator) context.getBean(beanName);
+            ParamValidator validator = (ParamValidator) context.getBean(beanName);
             Class<?> userClass = ClassUtils.getUserClass(validator);
             if (userClass.isAnnotationPresent(Ignored.class)) {
                 if (logger.isDebugEnabled()) {
@@ -402,17 +401,9 @@ public class ModulesBuilder {
                 }
                 continue;
             }
-            NamedValidator wrapper;
-            if (NamedValidator.class.isAssignableFrom(userClass)) {
-                wrapper = (NamedValidator) validator;
-            } else {
-                wrapper = new NamedValidatorWrapper(asShortPropertyName(userClass.getSimpleName(),
-                        "Validator"), validator);
-            }
-            globalValidators.add(wrapper);
+            globalValidators.add(validator);
             if (logger.isDebugEnabled()) {
-                logger.debug("context validator: " // \r\n
-                        + wrapper.getName() + "=" + userClass.getName());
+                logger.debug("add context validator: " + userClass.getName());
             }
         }
         return globalValidators;
