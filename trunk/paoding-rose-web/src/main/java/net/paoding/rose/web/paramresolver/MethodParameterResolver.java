@@ -25,7 +25,7 @@ import net.paoding.rose.web.impl.validation.ParameterBindingResult;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.SimpleTypeConverter;
+import org.springframework.beans.TypeConverter;
 import org.springframework.beans.TypeMismatchException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.validation.FieldError;
@@ -36,6 +36,8 @@ import org.springframework.validation.FieldError;
 public final class MethodParameterResolver {
 
     private static Log logger = LogFactory.getLog(MethodParameterResolver.class);
+
+    private static final TypeConverter typeConverter = new ThreadSafedSimpleTypeConverter();
 
     // ---------------------------------------------------------
 
@@ -69,6 +71,10 @@ public final class MethodParameterResolver {
             paramMetaDatas[i] = paramMetaData;
             resolvers[i] = resolverFactory.supports(paramMetaData);
         }
+    }
+
+    public ParamMetaData[] getParamMetaDatas() {
+        return paramMetaDatas;
     }
 
     public String[] getParameterNames() {
@@ -124,12 +130,13 @@ public final class MethodParameterResolver {
                         } else if (paramMetaDatas[i].getParamType() == float.class) {
                             parameters[i] = Float.valueOf(0);
                         } else {
-                            parameters[i] = new SimpleTypeConverter().convertIfNecessary("0",
-                                    paramMetaDatas[i].getParamType());
+
+                            parameters[i] = typeConverter.convertIfNecessary("0", paramMetaDatas[i]
+                                    .getParamType());
                         }
                     } else {
-                        parameters[i] = new SimpleTypeConverter().convertIfNecessary(
-                                paramAnnotation.def(), paramMetaDatas[i].getParamType());
+                        parameters[i] = typeConverter.convertIfNecessary(paramAnnotation.def(),
+                                paramMetaDatas[i].getParamType());
                     }
                 }
                 // 

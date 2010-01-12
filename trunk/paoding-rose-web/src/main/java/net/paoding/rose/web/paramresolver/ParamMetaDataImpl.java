@@ -16,6 +16,8 @@
 package net.paoding.rose.web.paramresolver;
 
 import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
 
 import net.paoding.rose.web.annotation.FlashParam;
 import net.paoding.rose.web.annotation.Param;
@@ -39,7 +41,7 @@ class ParamMetaDataImpl implements ParamMetaData {
 
     private FlashParam flashParamAnnotation;
 
-    private Object userObject;
+    private Map<Object, Object> userObjectMap;
 
     private int index;
 
@@ -58,13 +60,20 @@ class ParamMetaDataImpl implements ParamMetaData {
     }
 
     @Override
-    public void setUserObject(Object userObject) {
-        this.userObject = userObject;
+    public synchronized void setUserObject(Object key, Object userObject) {
+        if (this.userObjectMap == null) {
+            this.userObjectMap = new HashMap<Object, Object>();
+        }
+        if (userObject == null) {
+            this.userObjectMap.remove(key);
+        } else {
+            this.userObjectMap.put(key, userObject);
+        }
     }
 
     @Override
-    public Object getUserObject() {
-        return userObject;
+    public synchronized Object getUserObject(Object key) {
+        return userObjectMap == null ? null : userObjectMap.get(key);
     }
 
     public Class<?> getControllerClass() {
