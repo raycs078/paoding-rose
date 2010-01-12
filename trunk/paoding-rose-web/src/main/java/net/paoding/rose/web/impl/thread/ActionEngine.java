@@ -207,6 +207,8 @@ public final class ActionEngine implements Engine {
                 inv.addModel(parameterNames[i], methodParameters[i]);
             }
         }
+
+        Object instruction = null;
         // validators
         for (int i = 0; i < this.validators.length; i++) {
             if (validators[i] != null && !(methodParameters[i] instanceof Errors)) {
@@ -216,12 +218,27 @@ public final class ActionEngine implements Engine {
                             + " of method " + method.getDeclaringClass().getName() + "."
                             + method.getName());
                 } else {
-                    validators[i].validate(methodParameters[i], errors);
+                    instruction = validators[i].validate(inv, methodParameters[i], errors);
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("do validate [" + validators[i].getClass().getName()
+                                + "] and return '" + instruction + "'");
+                    }
+                    // 如果返回的instruction不是null、boolean或空串==>杯具：流程到此为止！
+                    if (instruction != null) {
+                        if (instruction instanceof Boolean) {
+                            continue;
+                        }
+                        if (instruction instanceof String && ((String) instruction).length() == 0) {
+                            continue;
+                        }
+                        return instruction;
+                    }
                 }
             }
         }
 
-        Object instruction = null;
+        // 恢复instruction为null
+        instruction = null;
 
         // invokes before-interceptors
         boolean broken = false;

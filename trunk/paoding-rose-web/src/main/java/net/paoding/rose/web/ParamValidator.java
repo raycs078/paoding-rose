@@ -18,7 +18,6 @@ package net.paoding.rose.web;
 import net.paoding.rose.web.paramresolver.ParamMetaData;
 
 import org.springframework.validation.Errors;
-import org.springframework.validation.ValidationUtils;
 
 /**
  * 
@@ -36,18 +35,8 @@ public interface ParamValidator {
     public boolean supports(ParamMetaData metaData);
 
     /**
-     * Validate the supplied <code>target</code> object, which must be of a
-     * {@link Class} for which the {@link #supports(Class)} method
-     * typically has (or would) return <code>true</code>.
-     * <p>
-     * The supplied {@link Errors errors} instance can be used to report
-     * any resulting validation errors.
-     * 
-     * @param target the object that is to be validated (can be
-     *        <code>null</code>)
-     * @param errors contextual state about the validation process (never
-     *        <code>null</code>)
-     * @see ValidationUtils
+     * 如果返回的instruction不是null、boolean或空串==>杯具：流程到此为止！
+     * 返回null或true,false,空串没有本质区别
      */
-    void validate(Object target, Errors errors);
+    Object validate(Invocation inv, Object target, Errors errors);
 }
