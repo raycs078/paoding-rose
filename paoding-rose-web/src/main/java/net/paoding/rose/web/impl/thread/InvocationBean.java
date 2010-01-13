@@ -409,29 +409,23 @@ public final class InvocationBean implements Invocation {
 
     @Override
     public BindingResult getParameterBindingResult() {
-        return getBindingResult(getController());
+        return (BindingResult) this.getModel().get(
+                BindingResult.MODEL_KEY_PREFIX + ParameterBindingResult.OBJECT_NAME);
     }
 
     @Override
-    public BindingResult getBindingResult(Object bean) {
-        Assert.notNull(bean);
-        if (bean instanceof String) {
-            if (!((String) bean).endsWith("BindingResult")) {
-                bean = bean + "BindingResult";
+    public BindingResult getBindingResult(String name) {
+        Assert.notNull(name);
+        if (name instanceof String) {
+            if (!((String) name).endsWith("BindingResult")) {
+                name = name + "BindingResult";
             }
-            return (BindingResult) this.getModel().get(BindingResult.MODEL_KEY_PREFIX + bean);
-        } else {
-            if (this.getController() == bean || this == bean) {
-                return (BindingResult) this.getModel().get(
-                        BindingResult.MODEL_KEY_PREFIX + ParameterBindingResult.OBJECT_NAME);
+            BindingResult br = (BindingResult) this.getModel().get(
+                    BindingResult.MODEL_KEY_PREFIX + name);
+            if (br == null) {
+                br = getParameterBindingResult();
             }
-            Object[] params = methodParameters;
-            String[] names = getActionEngine().getParameterNames();
-            for (int i = 0; i < params.length; i++) {
-                if (bean.equals(params[i])) {
-                    return getBindingResult(names[i]);
-                }
-            }
+            return br;
         }
         return null;
     }

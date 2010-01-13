@@ -213,27 +213,22 @@ public final class ActionEngine implements Engine {
         for (int i = 0; i < this.validators.length; i++) {
             if (validators[i] != null && !(methodParameters[i] instanceof Errors)) {
                 Errors errors = inv.getBindingResult(parameterNames[i]);
-                if (errors == null) {
-                    logger.error("not found Errors object from param " + parameterNames[i]
-                            + " of method " + method.getDeclaringClass().getName() + "."
-                            + method.getName());
-                } else {
-                    instruction = validators[i].validate(inv, methodParameters[i], errors);
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("do validate [" + validators[i].getClass().getName()
-                                + "] and return '" + instruction + "'");
-                    }
-                    // 如果返回的instruction不是null、boolean或空串==>杯具：流程到此为止！
-                    if (instruction != null) {
-                        if (instruction instanceof Boolean) {
-                            continue;
-                        }
-                        if (instruction instanceof String && ((String) instruction).length() == 0) {
-                            continue;
-                        }
-                        return instruction;
-                    }
+                instruction = validators[i].validate(inv, methodParameters[i], errors);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("do validate [" + validators[i].getClass().getName()
+                            + "] and return '" + instruction + "'");
                 }
+                // 如果返回的instruction不是null、boolean或空串==>杯具：流程到此为止！
+                if (instruction != null) {
+                    if (instruction instanceof Boolean) {
+                        continue;
+                    }
+                    if (instruction instanceof String && ((String) instruction).length() == 0) {
+                        continue;
+                    }
+                    return instruction;
+                }
+                //                }
             }
         }
 
