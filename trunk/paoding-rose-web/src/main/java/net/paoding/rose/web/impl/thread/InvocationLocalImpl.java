@@ -91,7 +91,7 @@ public class InvocationLocalImpl implements InvocationLocal {
     }
 
     @Override
-    public BindingResult getBindingResult(Object bean) {
+    public BindingResult getBindingResult(String bean) {
         return required().getBindingResult(bean);
     }
 

@@ -197,7 +197,7 @@ public class Rc {
      * @return
      * @throws NullPointerException 如果当前线程中没有绑定请求对象时
      */
-    public static BindingResult getBindingResult(Object bean) {
+    public static BindingResult getBindingResult(String bean) {
         return invocation().getBindingResult(bean);
     }
 
