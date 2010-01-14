@@ -64,7 +64,11 @@ public class GenericUtils {
 
         HashMap<String, Object> map = new HashMap<String, Object>();
 
-        fillConstantFrom(clazz, map);
+        if (findInterfaces) {
+            for (Class<?> interfaceClass : clazz.getInterfaces()) {
+                fillConstantFrom(interfaceClass, map);
+            }
+        }
 
         if (findAncestor) {
             Class<?> superClass = clazz;
@@ -74,11 +78,7 @@ public class GenericUtils {
             }
         }
 
-        if (findInterfaces) {
-            for (Class<?> interfaceClass : clazz.getInterfaces()) {
-                fillConstantFrom(interfaceClass, map);
-            }
-        }
+        fillConstantFrom(clazz, map);
 
         return map;
     }
