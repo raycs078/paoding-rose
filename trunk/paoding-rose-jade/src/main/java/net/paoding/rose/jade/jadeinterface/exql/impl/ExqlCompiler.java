@@ -92,7 +92,7 @@ public class ExqlCompiler {
             // 修改当前位置
             position = matcher.end();
 
-            // 检查  :expr 形式的子句
+            // 检查  :expr | $expr 形式的子句
             String expr = matcher.group(1);
             if (expr != null) {
 
@@ -101,8 +101,16 @@ public class ExqlCompiler {
                     units.add(new TextUnit(pattern.substring(fromIndex, matcher.start())));
                 }
 
-                // 创建  :expr 形式的子句
-                units.add(new ExprUnit(expr));
+                // 创建  :expr | $expr 形式的子句
+                if (expr.charAt(0) == '$') {
+
+                    // 创建  $expr 形式的子句, 作为拼接处理
+                    units.add(new JoinExprUnit(expr));
+                } else {
+
+                    // 创建  :expr 形式的子句
+                    units.add(new ExprUnit(expr));
+                }
 
                 fromIndex = position;
 
