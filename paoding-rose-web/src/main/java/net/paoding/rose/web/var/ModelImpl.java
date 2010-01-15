@@ -16,8 +16,8 @@
 package net.paoding.rose.web.var;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import net.paoding.rose.util.PlaceHolderUtils;
@@ -50,7 +50,15 @@ public class ModelImpl implements Model {
 
     public Map<String, Object> getAttributes() {
         synchronized (mutex) {
-            return Collections.unmodifiableMap(map);
+            Map<String, Object> cloneAndFiltered = new HashMap<String, Object>(map);
+            Iterator<Map.Entry<String, Object>> iterator = cloneAndFiltered.entrySet().iterator();
+            while (iterator.hasNext()) {
+                Map.Entry<String, Object> entry = iterator.next();
+                if (entry.getKey() != null && entry.getKey().startsWith("$$paoding-rose")) {
+                    iterator.remove();
+                }
+            }
+            return cloneAndFiltered;
         }
     }
 
