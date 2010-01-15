@@ -86,7 +86,7 @@ public interface Model {
     public Model remove(String name);
 
     /**
-     * 返回该Model中的所有属性对象
+     * 返回该Model中的所有属性对象(除rose内置的、和框架有关的属性)
      * 
      * @return
      */
