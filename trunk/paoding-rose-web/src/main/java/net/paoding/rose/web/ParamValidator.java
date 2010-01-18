@@ -38,5 +38,5 @@ public interface ParamValidator {
      * 如果返回的instruction不是null、boolean或空串==>杯具：流程到此为止！
      * 返回null或true,false,空串没有本质区别
      */
-    Object validate(Invocation inv, Object target, Errors errors);
+    Object validate(ParamMetaData metaData, Invocation inv, Object target, Errors errors);
 }

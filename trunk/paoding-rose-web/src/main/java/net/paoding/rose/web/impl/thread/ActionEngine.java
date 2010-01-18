@@ -39,6 +39,7 @@ import net.paoding.rose.web.impl.module.Module;
 import net.paoding.rose.web.impl.module.NestedControllerInterceptor;
 import net.paoding.rose.web.impl.validation.ParameterBindingResult;
 import net.paoding.rose.web.paramresolver.MethodParameterResolver;
+import net.paoding.rose.web.paramresolver.ParamMetaData;
 import net.paoding.rose.web.paramresolver.ParamResolver;
 import net.paoding.rose.web.paramresolver.ParameterNameDiscovererImpl;
 import net.paoding.rose.web.paramresolver.ResolverFactoryImpl;
@@ -209,11 +210,14 @@ public final class ActionEngine implements Engine {
         }
 
         Object instruction = null;
+
+        ParamMetaData[] metaDatas = methodParameterResolver.getParamMetaDatas();
         // validators
         for (int i = 0; i < this.validators.length; i++) {
             if (validators[i] != null && !(methodParameters[i] instanceof Errors)) {
                 Errors errors = inv.getBindingResult(parameterNames[i]);
-                instruction = validators[i].validate(inv, methodParameters[i], errors);
+                instruction = validators[i].validate(//
+                        metaDatas[i], inv, methodParameters[i], errors);
                 if (logger.isDebugEnabled()) {
                     logger.debug("do validate [" + validators[i].getClass().getName()
                             + "] and return '" + instruction + "'");
