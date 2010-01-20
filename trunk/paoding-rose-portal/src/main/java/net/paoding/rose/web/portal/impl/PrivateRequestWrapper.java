@@ -38,8 +38,11 @@ public class PrivateRequestWrapper implements HttpServletRequest {
 
     private HttpServletRequest request;
 
+    private Object mutex;
+
     public PrivateRequestWrapper(HttpServletRequest request) {
         this.request = request;
+        this.mutex = request;
     }
 
     protected HttpServletRequest getRequest() {
@@ -59,17 +62,23 @@ public class PrivateRequestWrapper implements HttpServletRequest {
     @Override
     @SuppressWarnings("unchecked")
     public Enumeration getAttributeNames() {
-        return getRequest().getAttributeNames();
+        synchronized (mutex) {
+            return getRequest().getAttributeNames();
+        }
     }
 
     @Override
     public void removeAttribute(String name) {
-        getRequest().removeAttribute(name);
+        synchronized (mutex) {
+            getRequest().removeAttribute(name);
+        }
     }
 
     @Override
     public void setAttribute(String name, Object value) {
-        getRequest().setAttribute(name, value);
+        synchronized (mutex) {
+            getRequest().setAttribute(name, value);
+        }
     }
 
     @Override
@@ -104,34 +113,46 @@ public class PrivateRequestWrapper implements HttpServletRequest {
 
     @Override
     public Cookie[] getCookies() {
-        return getRequest().getCookies();
+        synchronized (mutex) {
+            return getRequest().getCookies();
+        }
     }
 
     @Override
     public long getDateHeader(String name) {
-        return getRequest().getDateHeader(name);
+        synchronized (mutex) {
+            return getRequest().getDateHeader(name);
+        }
     }
 
     @Override
     public String getHeader(String name) {
-        return getRequest().getHeader(name);
+        synchronized (mutex) {
+            return getRequest().getHeader(name);
+        }
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public Enumeration getHeaders(String name) {
-        return getRequest().getHeaders(name);
+        synchronized (mutex) {
+            return getRequest().getHeaders(name);
+        }
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public Enumeration getHeaderNames() {
-        return getRequest().getHeaderNames();
+        synchronized (mutex) {
+            return getRequest().getHeaderNames();
+        }
     }
 
     @Override
     public int getIntHeader(String name) {
-        return getRequest().getIntHeader(name);
+        synchronized (mutex) {
+            return getRequest().getIntHeader(name);
+        }
     }
 
     @Override
@@ -207,7 +228,9 @@ public class PrivateRequestWrapper implements HttpServletRequest {
 
     @Override
     public void setCharacterEncoding(String enc) throws java.io.UnsupportedEncodingException {
-        getRequest().setCharacterEncoding(enc);
+        synchronized (mutex) {
+            getRequest().setCharacterEncoding(enc);
+        }
     }
 
     @Override
@@ -222,12 +245,16 @@ public class PrivateRequestWrapper implements HttpServletRequest {
 
     @Override
     public ServletInputStream getInputStream() throws IOException {
-        return getRequest().getInputStream();
+        synchronized (mutex) {
+            return getRequest().getInputStream();
+        }
     }
 
     @Override
     public String getParameter(String name) {
-        return getRequest().getParameter(name);
+        synchronized (mutex) {
+            return getRequest().getParameter(name);
+        }
     }
 
     @Override
@@ -269,7 +296,9 @@ public class PrivateRequestWrapper implements HttpServletRequest {
 
     @Override
     public BufferedReader getReader() throws IOException {
-        return getRequest().getReader();
+        synchronized (mutex) {
+            return getRequest().getReader();
+        }
     }
 
     @Override
