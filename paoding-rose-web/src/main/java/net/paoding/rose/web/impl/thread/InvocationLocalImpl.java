@@ -156,18 +156,13 @@ public class InvocationLocalImpl implements InvocationLocal {
     }
 
     @Override
-    public Object getParameter(String name) {
+    public String getParameter(String name) {
         return required().getParameter(name);
     }
 
     @Override
     public BindingResult getParameterBindingResult() {
         return required().getParameterBindingResult();
-    }
-
-    @Override
-    public String getRawParameter(String name) {
-        return required().getRawParameter(name);
     }
 
     @Override
