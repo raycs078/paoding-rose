@@ -47,12 +47,12 @@ public class RoseScanner {
 
     private static SoftReference<RoseScanner> softReference;
 
-    
     public static void main(String[] args) {
-        URL url = ApplicationContext.class.getResource("/org/springframework/context/ApplicationContext.class");
+        URL url = ApplicationContext.class
+                .getResource("/org/springframework/context/ApplicationContext.class");
         System.out.println(url);
     }
-    
+
     public synchronized static RoseScanner getInstance() {
         if (softReference == null || softReference.get() == null) {
             RoseScanner roseScanner = new RoseScanner();
@@ -90,9 +90,9 @@ public class RoseScanner {
     public List<ResourceRef> getClassesFolderResources() throws IOException {
         if (classesFolderResources == null) {
             List<ResourceRef> classesFolderResources = new ArrayList<ResourceRef>();
-            Enumeration<URL> found = resourcePatternResolver.getClassLoader().getResources("");
-            while (found.hasMoreElements()) {
-                URL urlObject = found.nextElement();
+            Enumeration<URL> founds = resourcePatternResolver.getClassLoader().getResources("");
+            while (founds.hasMoreElements()) {
+                URL urlObject = founds.nextElement();
                 if ("file".equals(urlObject.getProtocol())) {
                     File file;
                     try {
@@ -107,13 +107,21 @@ public class RoseScanner {
                         continue;
                     }
                     Resource resource = new FileSystemResource(file);
-                    classesFolderResources.add(new ResourceRef(resource, new String[] { "**" }));
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("add classes folder: " + urlObject);
+                    ResourceRef resourceRef = new ResourceRef(resource, new String[] { "**" });
+                    if (classesFolderResources.contains(resourceRef)) {
+                        // 删除重复的地址
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("remove replicated classes folder: " + resourceRef);
+                        }
+                    } else {
+                        classesFolderResources.add(resourceRef);
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("add classes folder: " + resourceRef);
+                        }
                     }
                 }
             }
-            //
+            // 删除含有一个地址包含另外一个地址的
             List<ResourceRef> toRemove = new LinkedList<ResourceRef>();
             for (int i = 0; i < classesFolderResources.size(); i++) {
                 ResourceRef resourceInfo = classesFolderResources.get(i);
@@ -124,7 +132,7 @@ public class RoseScanner {
                     if (path.startsWith(toCheckPath)) {
                         toRemove.add(toCheck);
                         if (logger.isDebugEnabled()) {
-                            logger.debug("remove classes folder: " + toCheck);
+                            logger.debug("remove nested classes folder: " + toCheck);
                         }
                     }
                 }
@@ -151,10 +159,10 @@ public class RoseScanner {
     public List<ResourceRef> getJarResources() throws IOException {
         if (jarResources == null) {
             List<ResourceRef> jarResources = new LinkedList<ResourceRef>();
-            Enumeration<URL> found = resourcePatternResolver.getClassLoader().getResources(
-                    "META-INF");
-            while (found.hasMoreElements()) {
-                URL urlObject = found.nextElement();
+            Resource[] metaInfResources = resourcePatternResolver
+                    .getResources("classpath*:/META-INF");
+            for (Resource metaInfResource : metaInfResources) {
+                URL urlObject = metaInfResource.getURL();
                 if ("jar".equals(urlObject.getProtocol())) {
                     try {
                         String path = URLDecoder.decode(urlObject.getPath(), "UTF-8"); // fix 20%
@@ -164,15 +172,21 @@ public class RoseScanner {
                             path = path.substring(0, path.lastIndexOf("!/"));
                         }
                         Resource resource = new FileSystemResource(path);
-                        String[] modifier = getManifestRoseValue(resource.getFile());
-                        if (modifier.length > 0) {
-                            jarResources.add(new ResourceRef(resource, modifier));
+                        if (jarResources.contains(resource)) {
                             if (logger.isDebugEnabled()) {
-                                logger.debug("add jar resource: " + path);
+                                logger.debug("skip replicated jar resource: " + path);// 在多个 linux环境 下发现有重复,fix it!
                             }
                         } else {
-                            if (logger.isDebugEnabled()) {
-                                logger.debug("not rose jar resource: " + path);
+                            String[] modifier = getManifestRoseValue(resource.getFile());
+                            if (modifier.length > 0) {
+                                jarResources.add(new ResourceRef(resource, modifier));
+                                if (logger.isDebugEnabled()) {
+                                    logger.debug("add jar resource: " + path);
+                                }
+                            } else {
+                                if (logger.isDebugEnabled()) {
+                                    logger.debug("not rose jar resource: " + path);
+                                }
                             }
                         }
                     } catch (Exception e) {

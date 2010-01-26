@@ -20,6 +20,8 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.core.io.support.ResourcePatternResolver;
@@ -40,6 +42,8 @@ public class RoseJarContextResources {
                 + Arrays.toString(resources.toArray(new Resource[0])));
     }
 
+    protected static Log logger = LogFactory.getLog(RoseJarContextResources.class);
+
     public static List<Resource> findContextResources() throws IOException {
         List<ResourceRef> jarResources = RoseScanner.getInstance().getJarResources();
         ResourcePatternResolver resourcePatternResolver = new PathMatchingResourcePatternResolver(
@@ -48,11 +52,14 @@ public class RoseJarContextResources {
         for (ResourceRef resourceInfo : jarResources) {
             if (resourceInfo.hasModifier("applicationContext")) {
                 Resource resource = resourceInfo.getResource();
-                String jarPath = resource.getFile().getAbsolutePath();
+                String jarPath = resource.getFile().getAbsolutePath().replace('\\', '/');
                 String ctxPath = "jar:file:" + jarPath + "!/applicationContext*.xml";
                 Resource[] founds = resourcePatternResolver.getResources(ctxPath);
                 for (Resource found : founds) {
                     ctxResources.add(found);
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("add applicationContext resource: " + found);
+                    }
                 }
             }
         }
@@ -65,7 +72,7 @@ public class RoseJarContextResources {
         for (ResourceRef resourceInfo : jarResources) {
             if (resourceInfo.hasModifier("messages")) {
                 Resource resource = resourceInfo.getResource();
-                String jarPath = resource.getFile().getAbsolutePath();
+                String jarPath = resource.getFile().getAbsolutePath().replace('\\', '/');
                 ctxResources.add("jar:file:" + jarPath + "!/messages*");
             }
         }

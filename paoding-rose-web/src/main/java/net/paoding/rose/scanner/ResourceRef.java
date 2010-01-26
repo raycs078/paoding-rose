@@ -62,6 +62,22 @@ public class ResourceRef {
     }
 
     @Override
+    public int hashCode() {
+        return 13 * resource.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (resource == null) return false;
+        if (obj instanceof Resource) {
+            return resource.equals(obj);
+        } else if (obj instanceof ResourceRef) {
+            return resource.equals(((ResourceRef) obj).resource);
+        }
+        return false;
+    }
+
+    @Override
     public String toString() {
         try {
             return resource.getURL().getFile() + Arrays.toString(modifiers);
