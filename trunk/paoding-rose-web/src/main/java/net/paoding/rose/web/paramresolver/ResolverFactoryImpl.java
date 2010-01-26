@@ -313,7 +313,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
 
         @Override
         public String resolve(Invocation inv, ParamMetaData paramMetaData) {
-            return inv.getRawParameter(paramMetaData.getParamName());
+            return inv.getParameter(paramMetaData.getParamName());
         }
     }
 
@@ -756,7 +756,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
 
         @Override
         public Date resolve(Invocation inv, ParamMetaData metaData) throws Exception {
-            String text = inv.getRawParameter(metaData.getParamName());
+            String text = inv.getParameter(metaData.getParamName());
 
             Date date = resolveUtilDate(text, metaData);
             return DatePatterns.changeType(date, metaData.getParamType());
@@ -829,7 +829,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
                 toConvert = inv.getFlash().get(flashParam.value());
             }
             if (toConvert == null && param != null) {
-                toConvert = inv.getRawParameter(param.value());
+                toConvert = inv.getParameter(param.value());
             }
             if (toConvert == null) {
                 if (param != null && !Param.JAVA_DEFAULT.equals(param.def())) {

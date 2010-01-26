@@ -182,19 +182,7 @@ public final class InvocationBean implements Invocation {
     }
 
     @Override
-    public Object getParameter(String name) {
-        Object value = null;
-        if (isMethodParametersInitiated()) {
-            value = getMethodParameter(name);
-        }
-        if (value == null && !ArrayUtils.contains(getActionEngine().getParameterNames(), name)) {
-            value = getRawParameter(name);
-        }
-        return value;
-    }
-
-    @Override
-    public String getRawParameter(String name) {
+    public String getParameter(String name) {
         return request.getParameter(name);
     }
 

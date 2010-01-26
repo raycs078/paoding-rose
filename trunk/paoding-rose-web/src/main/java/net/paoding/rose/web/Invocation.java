@@ -24,6 +24,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import net.paoding.rose.web.annotation.Param;
+import net.paoding.rose.web.paramresolver.ParamResolver;
 import net.paoding.rose.web.var.Flash;
 import net.paoding.rose.web.var.Model;
 
@@ -31,17 +32,38 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.context.WebApplicationContext;
 
 /**
- * {@link Invocation}代表对一个Controller action
- * 方法的一次调用，通过它能够了解这个调用的方法名、参数以及哪个Controller等
+ * {@link Invocation} 封装框架对控制器方法的一次调用相关的信息：请求和响应对象、目标控制器方法、方法参数值等。
  * <p>
- * 每一个{@link Invocation} 实例的生命周期仅在一次request之内， {@link Invocation}作为拦截器
- * {@link ControllerInterceptor} 方法的一个参数，对一次独立的控制器action调用请求只使用一个实例，
- * 即对同一次action方法的调用过程中所有拦截器中的方法的 {@link Invocation}
- * 参数总是同一个实例。所以，如有需要在拦截器之间传递参数的话，您可以使用
- * {@link #setAttribute(String, Object)}和 {@link #getAttribute(String)}方法。
+ * 可以在控制器方法参数类似如下声明这个调用对象，获取之:<br>
+ * <code>
+ * public String get(Invocation inv) {
+ *     return &quot;@hello, get!&quot;;
+ * }
+ * </code>
  * <p>
  * 
- * {@link Invocation}实例。
+ * 当不存在请求转发，一个用户请求只存在一个调用实例；当用户请求可能被转发时，转发前和转发后的控制器方法调用是不同的调用，
+ * 则一个用户请求将不只包含了一个调用实例。可以通过 {@link Invocation#getPreInvocation()}
+ * 获取该调用inv的前一个调用preinv。
+ * <p>
+ * 
+ * 在参数解析器{@link ParamResolver}、验证器{@link ParamValidator}、拦截器
+ * {@link ControllerInterceptor} 的接口方法实现中可以得到当前调用inv实例，使可以获取此此调用的信息进行控制。
+ * <p>
+ * 
+ * 如果需要在参数验证器、拦截器、控制器之间传递仅在本次调用可见、和视图渲染无关的一些参数时，请使用
+ * {@link #setAttribute(String, Object)}和 {@link #getAttribute(String)}
+ * 方法。如果某个数据要渲染发送给客户端，请使用 {@link #addModel(String, Object)}。
+ * <p>
+ * 
+ * {@link #addModel(String, Object)}和{@link #setAttribute(String, Object)}
+ * 的区别:
+ * 
+ * <ul>
+ * <li>他们各自采用独立容器存储数据，互相不混淆。</li>
+ * <li>addModel的数据可以被后续的调用的getModel方法“看见”，而setAttribute的数据不能被后面调用的
+ * getAttribute方法“看见”</li>
+ * </ul>
  * <p>
  * 
  * 
@@ -52,31 +74,47 @@ import org.springframework.web.context.WebApplicationContext;
 public interface Invocation {
 
     /**
-     * 将要调用的控制器对象(可能已经是一个Proxy、CGlib等等后的对象，不是原控制器的直接实例对象)
+     * 本次调用的目标控制器对象。
+     * <p>
+     * (可能已经是一个Proxy、CGlib等等后的对象，不是原控制器的直接实例对象)
      * 
      * @return
      */
     public Object getController();
 
     /**
-     * 将要调用的控制器的类名，这个类名就是编写控制器类时的那个类
+     * 本次调用的控制器的类名，这个类名就是编写控制器类时的那个类。
      * <p>
-     * 他不总是和本次调用的控制器对象的getClass()相同，
+     * 他不总是和本次调用的控制器对象的getClass()相同。
      * 
      * @return
      */
     public Class<?> getControllerClass();
 
     /**
-     * 将要调用的方法
+     * 本次调用的目标控制器方法
      * 
      * @return
      */
     public Method getMethod();
 
     /**
-     * 将要调用的方法的参数的名字(这个名字不是String id的id这样的名字，而是@Param("userId") String
-     * id的userId)
+     * 本地调用的目标控制器方法中，各参数的名字。
+     * <p>
+     * 这个名字不是程序开发中使用的变量名，而是通过 @Param
+     * 声明的名字，比如@Param("userId")用来声明某个参数的名字是userId。
+     * <p>
+     * 建议，你把参数名和变量定义为一样！
+     * 
+     * <p>
+     * 本法方法返回的字符串数组长度和目标控制器方法的参数个数相同，元素的值在下列情况为空：
+     * <ul>
+     * <li>没有标注@Param的基本类型以及封装类型</li>
+     * <li>没有标注@Param的这些类型：时间类型、Map、Collection类型等</li>
+     * </ul>
+     * 对用户对应的实体Bean，一般没有标注@Param，他的参数名即是该实体类名的首字母小写化字符串。<br>
+     * (额外注意：通过@Param标注一个实体类，
+     * 不仅仅改变了默认的参数名，同时也将改变数据绑定规则，即时通过@Param标注的名字和默认的一样)。
      * 
      * @see Param
      * @return
@@ -84,7 +122,9 @@ public interface Invocation {
     public String[] getMethodParameterNames();
 
     /**
-     * 将要调用的方法的参数值
+     * 本次调用的控制器方法所使用的参数值。
+     * <p>
+     * 请谨慎对待这个方法的返回值，如果在拦截器等组件中改变这个数组的元素值，表示要使用所设置数据代替原来的数据去调用控制器方法。
      * 
      * @return
      */
@@ -93,35 +133,13 @@ public interface Invocation {
     /**
      * 获取在URI、flash信息、请求查询串(即问号后的xx=yyy)中所带的参数值
      * <p>
-     * URI中的参数需要通过在action方法中通过类似@ReqMapping(path="user_${name}")进行声明，
+     * URI中的参数需要通过在控制器方法中通过类似@ReqMapping(path="user_${name}")进行声明，
      * 才可以获取name的参数<br>
-     * 对于id=3&name=5这样的参数如果绑定到一个bean中(比如@Param("user") User
-     * user)，那么getParameter("user")将返回给bean对象
-     * <p>
-     * 如果这个参数在action方法中声明了参数，则返回该参数，即不再是String类型的。<br>
-     * 如果这个参数没有在action方法中声明，则返回的是普通String类型<br>
-     * 如果没有存在给定的参数，返回null
-     * <p>
      * 
      * @param name
      * @return
      */
-    public Object getParameter(String name);
-
-    /**
-     * 获取在URI、flash信息、请求查询串(即问号后的xx=yyy)中所带的参数值
-     * <p>
-     * URI中的参数需要通过在action方法中通过类似@ReqMapping(path="user_${name}")进行声明，
-     * 才可以获取name的参数<br>
-     * <p>
-     * 这个参数总是返回String类型<br>
-     * 如果没有存在给定的参数，返回null
-     * <p>
-     * 
-     * @param name
-     * @return
-     */
-    public String getRawParameter(String name);
+    public String getParameter(String name);
 
     /**
      * 返回给定名字的方法参数。
@@ -132,6 +150,7 @@ public interface Invocation {
     public Object getMethodParameter(String name);
 
     /**
+     * 改变调用的方法参数值
      * 
      * @param index
      * @param value
@@ -139,6 +158,7 @@ public interface Invocation {
     public void changeMethodParameter(int index, Object value);
 
     /**
+     * 改变调用的方法参数值
      * 
      * @param name
      * @param value
@@ -297,6 +317,11 @@ public interface Invocation {
      */
     public void setRequest(HttpServletRequest request);
 
+    /**
+     * 
+     * @param create
+     * @return
+     */
     public Flash getFlash(boolean create);
 
     /**

@@ -58,7 +58,7 @@ public class ParameterBindingResult extends AbstractBindingResult {
         if (inv == null) {
             throw new IllegalStateException();
         }
-        return inv.getRawParameter(field);
+        return inv.getParameter(field);
     }
 
 }
