@@ -4,7 +4,7 @@
 	<groupId>net.paoding</groupId>
 	<artifactId>paoding-rose</artifactId>
 	<packaging>jar</packaging>
-	<version>0.9.6-release-f1</version>
+	<version>0.9-SNAPSHOT</version>
 	<name>paoding-rose</name>
 	<url>http://repos.d.xiaonei.com</url>
 	<distributionManagement>
@@ -75,8 +75,8 @@
 						<manifestEntries>
 							<Rose>controllers, applicationContext, messages</Rose>
 							<Implementation-Title>Paoding Rose</Implementation-Title>
-							<Implementation-Version>0.9.6-release-f1-2010/01/05</Implementation-Version>
-							<Rose-Version>0.9.6-release-f1-2010/01/05</Rose-Version>
+							<Implementation-Version>0.9.6-release-4</Implementation-Version>
+							<Rose-Version>0.9.6-release-4</Rose-Version>
 						</manifestEntries>
 					</archive>
 				</configuration>
