@@ -22,6 +22,18 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
+ * 表明所注解的方法可用于处理HTTP PUT请求。
+ * <p>
+ * Put参数：<br>
+ * 没有没有设置值，表示所注解的方法用于处理对控制器资源的PUT请求；<br>
+ * 如果设置值(可多个)，表示所注解的方法用于处理所设定地址资源的PUT请求。
+ * <p>
+ * example： UserController下有一个方法xyz<br>
+ * 1、在没有配置任何注解的情况下，xyz方法代表的资源是/user/xyz，支持GET和POST两种访问<br>
+ * 2、如果对xyz标注了@Put()注解，xyz代表的资源是/user，并且仅支持PUT访问<br>
+ * 3、如果对xyz标注了@Put("abc")，xyz代表的是资源/user/abc，并且仅支持PUT访问<br>
+ * 
+ * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  */
 @Target( { ElementType.METHOD })
