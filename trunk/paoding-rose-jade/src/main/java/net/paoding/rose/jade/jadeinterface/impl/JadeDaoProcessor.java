@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import net.paoding.rose.jade.jadeinterface.annotation.Dao;
 import net.paoding.rose.jade.jadeinterface.impl.scanner.DAOScanner;
@@ -29,7 +30,6 @@ import org.springframework.beans.factory.support.GenericBeanDefinition;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.io.Resource;
-import org.springframework.util.ClassUtils;
 
 /**
  * 
@@ -39,6 +39,8 @@ import org.springframework.util.ClassUtils;
 public class JadeDaoProcessor implements BeanFactoryPostProcessor, ApplicationContextAware {
 
     protected static final Log logger = LogFactory.getLog(JadeDaoProcessor.class);
+
+    private static final Pattern DAO_CLASSNAME = Pattern.compile("DAO$", Pattern.CASE_INSENSITIVE);
 
     private ApplicationContext applicationContext;
 
@@ -188,6 +190,14 @@ public class JadeDaoProcessor implements BeanFactoryPostProcessor, ApplicationCo
                 }
                 return;
             }
+        }
+        if (!DAO_CLASSNAME.matcher(className).find()) {
+            // 忽略名称不匹配的类, 防止这些 .class 被加载。
+            if (logger.isDebugEnabled()) {
+                logger.debug("Skip class " + className // NL
+                        + " in: " + resource);
+            }
+            return;
         }
         try {
             Class<?> clazz = Class.forName(className);
