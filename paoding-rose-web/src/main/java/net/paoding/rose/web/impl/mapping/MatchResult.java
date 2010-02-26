@@ -40,6 +40,12 @@ public interface MatchResult {
     public WebResource getResource();
 
     /**
+     * 
+     * @param resource
+     */
+    public void setResource(WebResource resource);
+
+    /**
      * 从结果字符串中得到的资源参数个数
      * 
      * @return

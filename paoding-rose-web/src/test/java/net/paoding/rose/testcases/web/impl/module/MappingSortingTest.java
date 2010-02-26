@@ -94,6 +94,16 @@ public class MappingSortingTest extends TestCase {
         assertEquals(-1, mapping2.compareTo(mapping1));
     }
 
+    public void testPatternSimple5() {
+        MappingImpl mapping1 = new MappingImpl("/user_", MatchMode.STARTS_WITH);
+        MappingImpl mapping2 = new MappingImpl("/user_{id:*}", MatchMode.STARTS_WITH);
+
+        assertEquals(0, mapping1.compareTo(mapping1));
+        assertEquals(0, mapping2.compareTo(mapping2));
+        assertEquals(1, mapping2.compareTo(mapping1));
+        assertEquals(-1, mapping1.compareTo(mapping2));
+    }
+
     public void testPattern1() {
         MappingImpl mapping1 = new MappingImpl("/user_{id}", MatchMode.STARTS_WITH);
         MappingImpl mapping2 = new MappingImpl("/user_{id}/", MatchMode.STARTS_WITH);

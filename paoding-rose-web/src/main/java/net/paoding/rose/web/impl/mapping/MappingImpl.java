@@ -70,17 +70,17 @@ public class MappingImpl implements Mapping {
     /** 地址定义中的参数名 */
     private String[] paramNames = Empty.STRING_ARRAY;
 
-    /** 该映射代表的资源 */
-    private WebResource resource;
+    /** 该映射代表的结点 */
+    private MappingNode mappingNode;
 
     public MappingImpl(String path, MatchMode mode) {
         this(path, mode, null);
     }
 
-    public MappingImpl(String path, MatchMode mode, WebResource resource) {
+    public MappingImpl(String path, MatchMode mode, MappingNode mappingNode) {
         this.path = normalized(path);
         initPattern(mode);
-        this.setResource(resource);
+        this.mappingNode = mappingNode;
     }
 
     @Override
@@ -88,12 +88,13 @@ public class MappingImpl implements Mapping {
         return path;
     }
 
-    public WebResource getResource() {
-        return resource;
+    @Override
+    public MappingNode getMappingNode() {
+        return this.mappingNode;
     }
 
-    public void setResource(WebResource resource) {
-        this.resource = resource;
+    public void setMappingNode(MappingNode mappingNode) {
+        this.mappingNode = mappingNode;
     }
 
     public String[] getConstants() {
@@ -135,8 +136,12 @@ public class MappingImpl implements Mapping {
             return -o.compareTo(this);
         }
         MappingImpl pm = (MappingImpl) o;
+        if (this.path.equals(pm.path)) {
+            return 0;
+        }
         // /user排在/{id}前面
         // /user_{id}排在/user前面
+        // /user_排在/user_{id}前面
         // ab{id}排在a{id}前面
         for (int i = 0; i < constants.length; i++) {
             if (pm.constants.length <= i) {
@@ -155,7 +160,7 @@ public class MappingImpl implements Mapping {
                 return this.constants[i].compareTo(pm.constants[i]);
             }
         }
-        return 0;
+        return Integer.signum(this.paramNames.length - pm.paramNames.length);
     }
 
     @Override
@@ -168,7 +173,13 @@ public class MappingImpl implements Mapping {
         while (value.length() > 0 && value.charAt(value.length() - 1) == '/') {
             value = value.substring(0, value.length() - 1);
         }
-        MatchResultImpl mr = new MatchResultImpl(value, getResource());
+        MatchResultImpl mr;
+        if (mappingNode != null) {
+            WebResource[] resources = mappingNode.getResources();
+            mr = new MatchResultImpl(value, resources.length == 1 ? resources[0] : null);
+        } else {
+            mr = new MatchResultImpl(value, null);
+        }
         if (paramNames.length != 0) {
             for (int i = 0; i < this.paramNames.length; i++) {
                 mr.putParameter(paramNames[i], regexMatchResult.group(i + 1));

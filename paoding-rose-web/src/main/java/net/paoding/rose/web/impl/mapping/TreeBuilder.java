@@ -22,6 +22,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import net.paoding.rose.web.annotation.ReqMethod;
 import net.paoding.rose.web.impl.module.ControllerRef;
 import net.paoding.rose.web.impl.module.MethodRef;
@@ -40,6 +43,8 @@ import net.paoding.rose.web.impl.thread.ModuleEngine;
 // FIXME: 不要使用ModuleBuilder,而直接使用new ModuleImpl()实现?
 public class TreeBuilder {
 
+    protected static final Log logger = LogFactory.getLog(TreeBuilder.class);
+
     /*
      * 构造一个树，树的结点是地址-资源映射，每个结点都能回答是否匹配一个字符串，每个匹配的节点都知道如何执行对该资源的操作.
      * 构造树的过程：
@@ -57,115 +62,96 @@ public class TreeBuilder {
     }
 
     private void module(final MappingNode rootNode, Module module) {
-        WebResource moduleResource;
-        MappingImpl mapping = new MappingImpl(module.getMappingPath(), MatchMode.STARTS_WITH);
-        MappingNode moduleNode = rootNode.getChild(mapping);
+        Mapping moduleMapping = new MappingImpl(module.getMappingPath(), MatchMode.STARTS_WITH);
+        WebResource moduleResource = new WebResourceImpl(moduleMapping.getPath());
+        MappingNode moduleNode = rootNode.getChild(moduleMapping);
         if (moduleNode == null) {
-            moduleResource = new WebResource(rootNode.getResource(), mapping.getPath());
-            mapping.setResource(moduleResource);
-            moduleNode = new MappingNode(mapping, rootNode);
+            moduleNode = new MappingNode(moduleMapping, rootNode, rootNode.getResources()[0]);
         } else {
-            moduleResource = moduleNode.getResource();
+            moduleMapping = moduleNode.getMapping();
+            if (logger.isDebugEnabled()) {
+                logger.debug("found multi module with same path: " + moduleMapping.getPath()
+                        + " vs " + moduleNode.getMapping().getPath());
+            }
         }
+        moduleNode.addResource(moduleResource);
         moduleResource.addEngine(ReqMethod.ALL, new ModuleEngine(module));
 
         // controllers
         List<ControllerRef> controllers = module.getControllers();
         for (ControllerRef controller : controllers) {
-            controller(module, moduleNode, controller);
+            controller(module, moduleNode, moduleResource, controller);
         }
 
         // defaults
-
-        WebResource defResource;
         MappingImpl defMapping = new MappingImpl("", MatchMode.STARTS_WITH, null);
         MappingNode defNode = moduleNode.getChild(defMapping);
-        List<ReqMethod> allowed = null;
         if (defNode == null) {
-            allowed = Collections.emptyList();
-            defResource = new WebResource(moduleResource, "");
-        } else {
-            defResource = defNode.getResource();
-            allowed = defResource.getAllowedMethods();
-        }
-        defMapping.setResource(defResource);
-        MappingNode defTargetNode = null;
-        ReqMethod reqMethod = ReqMethod.GET; // controller的，只对GET做default
-        if (!allowed.contains(reqMethod)) {
+            ReqMethod reqMethod = ReqMethod.GET; // controller的，只对GET做default
             String[] candidates = getControllerCandidates(reqMethod);
+            MappingNode defTargetNode = null;
             for (String candidate : candidates) {
-                WebResource tempResource = null;
                 MappingImpl tempMapping = new MappingImpl(candidate, MatchMode.STARTS_WITH);
-                MappingNode tempNode = moduleNode.getChild(tempMapping);
-                if (tempNode != null) {
-                    defTargetNode = tempNode;
-                    tempResource = tempNode.getResource();
-                    tempMapping.setResource(tempResource);
-                    defResource.addEngine(reqMethod, tempResource.getEngine(reqMethod));
+                defTargetNode = moduleNode.getChild(tempMapping);
+                if (defTargetNode != null) {
+                    defNode = new MappingNode(defMapping, moduleNode, moduleResource);
+                    defNode.setResources(defTargetNode.getResources());
+                    List<ReqMethod> filters = new ArrayList<ReqMethod>(1);
+                    filters.add(reqMethod);
+                    defTargetNode.copyChildrenTo(defNode, filters);
                     break;
                 }
             }
         }
-        if (defNode == null && defResource.getAllowedMethods().size() > 0) {
-            defNode = new MappingNode(defMapping, moduleNode);
-            List<ReqMethod> filters = new ArrayList<ReqMethod>(1);
-            filters.add(reqMethod);
-            defTargetNode.copyTo(defNode, filters);
-        }
     }
 
-    private void controller(Module module, MappingNode moduleNode, ControllerRef controller) {
+    private void controller(Module module, MappingNode moduleNode, WebResource moduleResource,
+            ControllerRef controller) {
         for (String mappingPath : controller.getMappingPaths()) {
-            MappingImpl controllerMapping = new MappingImpl(mappingPath, MatchMode.STARTS_WITH);
+            Mapping controllerMapping = new MappingImpl(mappingPath, MatchMode.STARTS_WITH);
             MappingNode controllerNode = moduleNode.getChild(controllerMapping);
-            WebResource controllerResource;
+            WebResource controllerResource = new WebResourceImpl(controllerMapping.getPath());
             if (controllerNode == null) {
-                controllerResource = new WebResource(moduleNode.getResource(), controllerMapping
-                        .getPath());
-                controllerMapping.setResource(controllerResource);
-                controllerNode = new MappingNode(controllerMapping, moduleNode);
+                controllerNode = new MappingNode(controllerMapping, moduleNode, moduleResource);
             } else {
-                controllerResource = controllerNode.getResource();
+                controllerMapping = controllerNode.getMapping();
+                if (logger.isDebugEnabled()) {
+                    logger.debug("found multi controllers with same path: " + mappingPath + " vs "
+                            + controllerNode.getMapping().getPath());
+                }
             }
+            controllerNode.addResource(controllerResource);
             Engine controllerEngine = new ControllerEngine(module, mappingPath, controller);
             controllerResource.addEngine(ReqMethod.ALL, controllerEngine);
 
             // actions
             MethodRef[] actions = controller.getActions();
             for (MethodRef action : actions) {
-                action(module, controller, action, controllerNode);
+                action(module, controller, action, controllerNode, controllerResource);
             }
 
             // defaults
-            WebResource defResource;
+            WebResource defResource = new WebResourceImpl("");
             MappingImpl defMapping = new MappingImpl("", MatchMode.EQUALS);
-            MappingNode defNode = controllerNode.getChild(defMapping);
-            List<ReqMethod> allowed = null;
-            if (defNode == null) {
-                allowed = Collections.emptyList();
-                defResource = new WebResource(controllerResource, "");
-            } else {
-                defResource = defNode.getResource();
-                allowed = defResource.getAllowedMethods();
-            }
-            defMapping.setResource(defResource);
-            for (ReqMethod reqMethod : ReqMethod.ALL.parse()) {
-                if (!allowed.contains(reqMethod)) {
+            MappingNode defTargetNode = controllerNode.getChild(defMapping);
+            MappingNode defNode = defTargetNode;
+            if (defTargetNode == null) {
+                for (ReqMethod reqMethod : ReqMethod.ALL.parse()) {
                     String[] candidates = getActionCandidates(reqMethod);
                     for (String candidate : candidates) {
                         MappingImpl tempMapping = new MappingImpl(candidate, MatchMode.EQUALS, null);
                         MappingNode tempNode = controllerNode.getChild(tempMapping);
                         if (tempNode != null) {
-                            WebResource tempResource = tempNode.getResource();
-                            tempMapping.setResource(tempResource);
-                            defResource.addEngine(reqMethod, tempResource.getEngine(reqMethod));
+                            defResource.addEngine(reqMethod, tempNode.getResources()[0]
+                                    .getEngine(reqMethod));
                             break;
                         }
                     }
                 }
             }
             if (defNode == null && defResource.getAllowedMethods().size() > 0) {
-                new MappingNode(defMapping, controllerNode);
+                defNode = new MappingNode(defMapping, controllerNode, controllerResource);
+                defNode.addResource(defResource);
             }
         }
     }
@@ -191,8 +177,8 @@ public class TreeBuilder {
     }
 
     private void action(Module module, ControllerRef controller, MethodRef action,
-            MappingNode controllerNode) {
-        MappingImpl mapping;
+            MappingNode controllerNode, WebResource controllerResource) {
+        Mapping mapping;
         Map<String, Set<ReqMethod>> mappings = action.getMappings();
         if (mappings.size() == 0) {
             mappings = new HashMap<String, Set<ReqMethod>>();
@@ -202,13 +188,13 @@ public class TreeBuilder {
         for (String mappingPath : mappings.keySet()) {
             mapping = new MappingImpl(mappingPath, MatchMode.EQUALS);
             MappingNode actionNode = controllerNode.getChild(mapping);
-            WebResource resource = null;
+            WebResource resource = new WebResourceImpl(mapping.getPath());
             if (actionNode == null) {
-                resource = new WebResource(controllerNode.getResource(), mapping.getPath());
-                mapping.setResource(resource);
-                actionNode = new MappingNode(mapping, controllerNode);
+                actionNode = new MappingNode(mapping, controllerNode, controllerResource);
+                actionNode.addResource(resource);
             } else {
-                resource = actionNode.getResource();
+                mapping = actionNode.getMapping();
+                resource = actionNode.getResources()[0];
             }
             Set<ReqMethod> methods = mappings.get(mappingPath);
             if (methods.size() > 0) {

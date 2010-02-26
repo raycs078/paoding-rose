@@ -10,7 +10,7 @@ public class TreeTest extends AbstractControllerTest {
 
     public void testGet() throws ServletException, IOException {
         request.setMethod("GET");
-        assertEquals(5, invoke("/tree/count"));
+        assertEquals(7, invoke("/tree/count"));
     }
 
 }
