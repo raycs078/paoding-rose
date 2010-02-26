@@ -41,7 +41,7 @@ class MatchResultImpl implements MatchResult {
      * 创建新的匹配结果对象
      * 
      * @param value 匹配结果字符串
-     * @param resource 匹配的目标资源
+     * @param resource 匹配的目标资源; 若为null代表不确定
      */
     public MatchResultImpl(String value, WebResource resource) {
         this.value = value;

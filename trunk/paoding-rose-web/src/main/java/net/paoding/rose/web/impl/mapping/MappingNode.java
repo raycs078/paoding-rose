@@ -16,7 +16,7 @@
 package net.paoding.rose.web.impl.mapping;
 
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -42,6 +42,9 @@ public class MappingNode implements Comparable<MappingNode>, Iterable<MappingNod
     /** 父结点 */
     private MappingNode parent;
 
+    /** 父亲资源 */
+    private WebResource parentResource;
+
     /** 最左子结点 */
     private MappingNode leftMostChild;
 
@@ -51,12 +54,22 @@ public class MappingNode implements Comparable<MappingNode>, Iterable<MappingNod
     /** 后序遍历的后继结点 */
     private MappingNode successor;
 
+    private static final WebResource[] EMPTY = new WebResource[0];
+
+    private WebResource[] resources = EMPTY;
+
+    private transient String pathCache;
+
     /**
      * 
      * @param mapping
      */
     public MappingNode(Mapping mapping) {
-        this(mapping, null);
+        this(mapping, null, null);
+    }
+
+    private MappingNode() {
+
     }
 
     /**
@@ -64,20 +77,36 @@ public class MappingNode implements Comparable<MappingNode>, Iterable<MappingNod
      * @param mapping
      * @param parent
      */
-    public MappingNode(Mapping mapping, MappingNode parent) {
+    public MappingNode(Mapping mapping, MappingNode parent, WebResource parentResource) {
         if (mapping == null) {
             throw new NullPointerException("mapping");
         }
         this.setMapping(mapping);
         this.setParent(parent);
+        if (parent != null) {
+            assert parentResource != null;
+            this.parentResource = parentResource;
+        }
     }
 
     public void setMapping(Mapping mapping) {
         this.mapping = mapping;
+        this.mapping.setMappingNode(this);
     }
 
     public Mapping getMapping() {
         return mapping;
+    }
+
+    public String getPath() {
+        if (pathCache == null) {
+            if (parent == null) {
+                pathCache = this.mapping.getPath();
+            } else {
+                pathCache = parent.getPath() + this.mapping.getPath();
+            }
+        }
+        return pathCache;
     }
 
     public MappingNode getLeftMostChild() {
@@ -88,12 +117,12 @@ public class MappingNode implements Comparable<MappingNode>, Iterable<MappingNod
         return parent;
     }
 
-    public MappingNode getSibling() {
-        return sibling;
+    public WebResource getParentResource() {
+        return parentResource;
     }
 
-    public WebResource getResource() {
-        return getMapping().getResource();
+    public MappingNode getSibling() {
+        return sibling;
     }
 
     /**
@@ -132,22 +161,36 @@ public class MappingNode implements Comparable<MappingNode>, Iterable<MappingNod
         };
     }
 
+    public WebResource[] getResources() {
+        return resources;
+    }
+
+    public void setResources(WebResource[] resources) {
+        this.resources = resources;
+    }
+
+    public void addResource(WebResource resource) {
+        assert resource != null;
+        if (resources.length == 0) {
+            resources = new WebResource[] { resource };
+        } else {
+            resources = Arrays.copyOf(resources, resources.length + 1);
+            resources[resources.length - 1] = resource;
+        }
+    }
+
     /**
      * 
      * @param parent
      * @param filter
      */
-    void copyTo(MappingNode parent, List<ReqMethod> filter) {
+    void copyChildrenTo(MappingNode parent, List<ReqMethod> filter) {
         MappingNode child = this.leftMostChild;
         while (child != null) {
-            final WebResource resouce = new WebResource(parent.getResource(), child.getResource()
-                    .getName());
-            for (ReqMethod reqMethod : child.getResource().getAllowedMethods()) {
-                if (filter.contains(ReqMethod.ALL) || filter.contains(reqMethod)) {
-                    resouce.addEngine(reqMethod, child.getResource().getEngine(reqMethod));
-                }
-            }
             final Mapping toCopy = child.getMapping();
+            final MappingNode newNode = new MappingNode();
+            newNode.parentResource = child.parentResource;
+            newNode.resources = Arrays.copyOf(child.resources, child.resources.length);
             Mapping copiedMapping = new Mapping() {
 
                 @Override
@@ -156,45 +199,18 @@ public class MappingNode implements Comparable<MappingNode>, Iterable<MappingNod
                 }
 
                 @Override
-                public WebResource getResource() {
-                    return resouce;
+                public MappingNode getMappingNode() {
+                    return newNode;
+                }
+
+                @Override
+                public void setMappingNode(MappingNode mappingNode) {
+                    assert mappingNode == newNode;
                 }
 
                 @Override
                 public MatchResult match(String path) {
-                    final MatchResult mr = toCopy.match(path);
-                    MatchResult returned = mr;
-                    if (returned != null) {
-                        returned = new MatchResult() {
-
-                            @Override
-                            public String getParameter(String name) {
-                                return mr.getParameter(name);
-                            }
-
-                            @Override
-                            public int getParameterCount() {
-                                return mr.getParameterCount();
-                            }
-
-                            @Override
-                            public Collection<String> getParameterNames() {
-                                return mr.getParameterNames();
-                            }
-
-                            @Override
-                            public WebResource getResource() {
-                                return resouce;
-                            }
-
-                            @Override
-                            public String getValue() {
-                                return mr.getValue();
-                            }
-
-                        };
-                    }
-                    return returned;
+                    return toCopy.match(path);
                 }
 
                 @Override
@@ -203,8 +219,9 @@ public class MappingNode implements Comparable<MappingNode>, Iterable<MappingNod
                 }
 
             };
-            MappingNode newNode = new MappingNode(copiedMapping, parent);
-            child.copyTo(newNode, filter);
+            newNode.setMapping(copiedMapping);
+            newNode.setParent(parent);
+            child.copyChildrenTo(newNode, filter);
             child = child.sibling;
         }
     }
@@ -218,6 +235,9 @@ public class MappingNode implements Comparable<MappingNode>, Iterable<MappingNod
     }
 
     public void setParent(MappingNode parentNode) {
+        if (this.parent != null) {
+            throw new IllegalStateException("the node's parent cann't be changed after setting.");
+        }
         this.parent = parentNode;
         if (this.parent != null) {
             //
@@ -307,6 +327,13 @@ public class MappingNode implements Comparable<MappingNode>, Iterable<MappingNod
         while (true) {
             MatchResult mr = cur.getMapping().match(path);
             if (mr != null) {
+                // 设置上一级的resource [因上级node如果包含了多个resource当时留空]
+                if (matchResults.size() > 0) {
+                    MatchResult prev = matchResults.get(matchResults.size() - 1);
+                    if (prev.getResource() == null) {
+                        prev.setResource(cur.getParentResource());
+                    }
+                }
                 if (cur.leftMostChild == null) {
                     mrIngoresRequestMethod = mr;
                 }
@@ -315,7 +342,9 @@ public class MappingNode implements Comparable<MappingNode>, Iterable<MappingNod
                             + "'; resource=" + mr.getResource());
                 }
             }
-            if (mr == null || !mr.getResource().isMethodAllowed(requestPath.getMethod())) {
+            if (mr == null
+                    || (mr.getResource() != null && !mr.getResource().isMethodAllowed(
+                            requestPath.getMethod()))) {
                 if (cur.sibling != null) {
                     cur = cur.sibling;
                 } else {
@@ -355,7 +384,10 @@ public class MappingNode implements Comparable<MappingNode>, Iterable<MappingNod
                 if (cur.leftMostChild != null) {
                     cur = cur.leftMostChild;
                 } else {
-                    logger.debug("matched '" + rosePath + "': target=" + mr.getResource());
+                    if (logger.isDebugEnabled()) {
+                        // FIXME: mr.getResource可能为null，需要做什么特别标注没？
+                        logger.debug("matched '" + rosePath + "': target=" + mr.getResource());
+                    }
                     return matchResults;
                 }
             }
@@ -383,7 +415,7 @@ public class MappingNode implements Comparable<MappingNode>, Iterable<MappingNod
 
     @Override
     public String toString() {
-        return getResource().toString();
+        return getPath();
     }
 
 }

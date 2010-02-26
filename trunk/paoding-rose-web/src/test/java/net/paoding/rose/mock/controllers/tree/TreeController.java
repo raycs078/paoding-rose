@@ -14,9 +14,9 @@ public class TreeController {
         int count = 0;
         for (MappingNode node : tree) {
             // System.out.print(">" + node);
-            if (node.getResource().getIdentiy().startsWith("/rose-info")) {
+            if (node.getPath().startsWith("/rose-info")) {
                 // System.out.print("\t" + node);
-                if (node.getResource().isEndResource()) {
+                if (node.getLeftMostChild() == null) {
                     // System.out.print("   YES\t" + node);
                     count++;
                 }

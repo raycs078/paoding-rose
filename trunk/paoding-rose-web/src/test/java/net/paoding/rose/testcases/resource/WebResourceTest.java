@@ -19,6 +19,7 @@ import junit.framework.TestCase;
 import net.paoding.rose.web.annotation.ReqMethod;
 import net.paoding.rose.web.impl.mapping.MatchResult;
 import net.paoding.rose.web.impl.mapping.WebResource;
+import net.paoding.rose.web.impl.mapping.WebResourceImpl;
 import net.paoding.rose.web.impl.thread.Engine;
 import net.paoding.rose.web.impl.thread.Rose;
 
@@ -84,7 +85,7 @@ public class WebResourceTest extends TestCase {
     };
 
     public void testGetPost() {
-        WebResource resource = new WebResource(null, "testGetPost");
+        WebResource resource = new WebResourceImpl("testGetPost");
         resource.addEngine(ReqMethod.GET, getEngine);
         resource.addEngine(ReqMethod.POST, postEngine);
 
@@ -100,7 +101,7 @@ public class WebResourceTest extends TestCase {
     }
 
     public void testNotOverrideByAll() {
-        WebResource resource = new WebResource(null, "testNotOverrideByAll");
+        WebResource resource = new WebResourceImpl("testNotOverrideByAll");
         resource.addEngine(ReqMethod.GET, getEngine);
         resource.addEngine(ReqMethod.ALL, defEngine);
         resource.addEngine(ReqMethod.POST, postEngine);

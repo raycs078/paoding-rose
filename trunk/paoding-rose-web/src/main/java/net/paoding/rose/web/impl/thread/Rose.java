@@ -111,13 +111,15 @@ public class Rose implements EngineChain {
 
     private boolean innerStart() throws Throwable {
         ArrayList<MatchResult> matchResults = mappingTree.match(this.path);
-        if (matchResults.size() == 0) {
+        // 完成一次成功匹配需要走完树的4个结点
+        if (matchResults.size() != 4) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("[" + this.path + "] matchResults.size=" + matchResults.size());
+            }
             return false;
         }
         MatchResult mr = matchResults.get(matchResults.size() - 1);
-        if (!mr.getResource().isEndResource()) {
-            return false;
-        }
+        assert mr.getResource() != null;
         if (!mr.getResource().isMethodAllowed(this.path.getMethod())) {
             /* 405 Method Not Allowed
              * The method specified in the Request-Line is not allowed for the

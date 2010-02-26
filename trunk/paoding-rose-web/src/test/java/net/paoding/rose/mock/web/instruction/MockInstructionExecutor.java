@@ -42,7 +42,6 @@ public class MockInstructionExecutor implements InstructionExecutor {
 
     @Override
     public Object render(Invocation inv, Object instruction) throws Exception {
-        System.out.println(getClass().getSimpleName() + "-------instruction=" + instruction);
         // 设置到request中，使测试用例可以从request对象取回instruction对象
         if (storesInstructionInRequest) {
             inv.getRequest().setAttribute(INSTRUCTION, instruction);

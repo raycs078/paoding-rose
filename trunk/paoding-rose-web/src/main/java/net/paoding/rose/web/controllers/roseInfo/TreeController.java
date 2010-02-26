@@ -32,8 +32,8 @@ import net.paoding.rose.web.impl.thread.Rose;
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
-@ReqMapping(path = { "mapping.xml", "mapping" })
-public class MappingController {
+@ReqMapping(path = { "tree.xml", "tree" })
+public class TreeController {
 
     @Get
     @HttpFeatures(contentType = "text/xml; charset=UTF-8")
@@ -47,11 +47,13 @@ public class MappingController {
         return sb.toString();
     }
 
-    private void println(MappingNode tree, StringBuilder sb) {
-        for (MappingNode node : tree) {
-            if (node.getLeftMostChild() == null) {
-                for (WebResource resource : node.getResources()) {
-                    sb.append("<resource path=\"").append(node.getPath()).append("\">");
+    private void println(MappingNode parent, StringBuilder sb) {
+        MappingNode child = parent.getLeftMostChild();
+        while (child != null) {
+            sb.append("<node path=\"").append(child.getPath()).append(
+                    "\" resourceCount=\"" + child.getResources().length + "\">");
+            if (child.getLeftMostChild() == null) {
+                for (WebResource resource : child.getResources()) {
                     for (ReqMethod method : resource.getAllowedMethods()) {
                         Engine engine = resource.getEngine(method);
                         ActionEngine action = (ActionEngine) engine;
@@ -64,9 +66,11 @@ public class MappingController {
                                 + "\" ");
                         sb.append(" />");
                     }
-                    sb.append("</resource>");
                 }
             }
+            println(child, sb);
+            child = child.getSibling();
+            sb.append("</node>");
         }
     }
 }
