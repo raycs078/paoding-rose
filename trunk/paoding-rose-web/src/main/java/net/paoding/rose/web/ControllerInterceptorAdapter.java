@@ -126,20 +126,62 @@ public class ControllerInterceptorAdapter implements NamedControllerInterceptor,
      * @return
      */
     protected final boolean checkRequiredAnnotations(Class<?> controllerClazz, Method actionMethod) {
-        List<Class<? extends Annotation>> annotations = getRequiredAnnotationClasses();
-        if (annotations == null || annotations.size() == 0) {
+
+        List<Class<? extends Annotation>> requiredAnnotations = getRequiredAnnotationClasses();
+        if (requiredAnnotations == null || requiredAnnotations.size() == 0) {
             return true;
         }
-        for (Class<? extends Annotation> annotation : annotations) {
-            if (annotation == null) {
+
+        for (Class<? extends Annotation> requiredAnnotation : requiredAnnotations) {
+            if (requiredAnnotation == null) {
                 continue;
             }
-            if (actionMethod.isAnnotationPresent(annotation)
-                    || controllerClazz.isAnnotationPresent(annotation)) {
-                return true;
+            AnnotationScope scope = getAnnotationScope(requiredAnnotation);
+            if (AnnotationScope.METHOD.equals(scope) || AnnotationScope.DEFAULT.equals(scope)
+                    || AnnotationScope.ALL.equals(scope)) {
+                if (actionMethod.isAnnotationPresent(requiredAnnotation)) {
+                    return true;
+                }
+            }
+            if (AnnotationScope.CLASS.equals(scope) || AnnotationScope.DEFAULT.equals(scope)
+                    || AnnotationScope.ALL.equals(scope)) {
+                if (controllerClazz.isAnnotationPresent(requiredAnnotation)) {
+                    return true;
+                }
+            }
+            if (AnnotationScope.ANNOTATION.equals(scope) || AnnotationScope.ALL.equals(scope)) {
+                for (Annotation annotation : actionMethod.getAnnotations()) {
+                    if (annotation.annotationType().isAnnotationPresent(requiredAnnotation)) {
+                        return true;
+                    }
+                }
+                for (Annotation annotation : controllerClazz.getAnnotations()) {
+                    if (annotation.annotationType().isAnnotationPresent(requiredAnnotation)) {
+                        return true;
+                    }
+                }
             }
         }
+
         return false;
+    }
+
+    /**
+     * 标注的作用范围: METHOD(方法), CLASS(类), ANNOTATION(被标注的标注), DEFAULT(方法和类),
+     * ALL(所有作用域)。
+     */
+    public static enum AnnotationScope {
+        METHOD, CLASS, ANNOTATION, DEFAULT, ALL
+    }
+
+    /**
+     * 返回标注的作用域。
+     * 
+     * @param annotationType
+     * @return
+     */
+    protected AnnotationScope getAnnotationScope(Class<? extends Annotation> annotationType) {
+        return AnnotationScope.DEFAULT;
     }
 
     /**
