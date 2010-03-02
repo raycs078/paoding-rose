@@ -18,6 +18,7 @@ package net.paoding.rose.web;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.Collections;
 import java.util.List;
 
@@ -126,30 +127,26 @@ public class ControllerInterceptorAdapter implements NamedControllerInterceptor,
      * @return
      */
     protected final boolean checkRequiredAnnotations(Class<?> controllerClazz, Method actionMethod) {
-
         List<Class<? extends Annotation>> requiredAnnotations = getRequiredAnnotationClasses();
         if (requiredAnnotations == null || requiredAnnotations.size() == 0) {
             return true;
         }
-
         for (Class<? extends Annotation> requiredAnnotation : requiredAnnotations) {
             if (requiredAnnotation == null) {
                 continue;
             }
-            AnnotationScope scope = getAnnotationScope(requiredAnnotation);
-            if (AnnotationScope.METHOD.equals(scope) || AnnotationScope.DEFAULT.equals(scope)
-                    || AnnotationScope.ALL.equals(scope)) {
+            BitSet scopeSet = getAnnotationScope(requiredAnnotation);
+            if (scopeSet.get(AnnotationScope.METHOD.ordinal())) {
                 if (actionMethod.isAnnotationPresent(requiredAnnotation)) {
                     return true;
                 }
             }
-            if (AnnotationScope.CLASS.equals(scope) || AnnotationScope.DEFAULT.equals(scope)
-                    || AnnotationScope.ALL.equals(scope)) {
+            if (scopeSet.get(AnnotationScope.CLASS.ordinal())) {
                 if (controllerClazz.isAnnotationPresent(requiredAnnotation)) {
                     return true;
                 }
             }
-            if (AnnotationScope.ANNOTATION.equals(scope) || AnnotationScope.ALL.equals(scope)) {
+            if (scopeSet.get(AnnotationScope.ANNOTATION.ordinal())) {
                 for (Annotation annotation : actionMethod.getAnnotations()) {
                     if (annotation.annotationType().isAnnotationPresent(requiredAnnotation)) {
                         return true;
@@ -162,26 +159,39 @@ public class ControllerInterceptorAdapter implements NamedControllerInterceptor,
                 }
             }
         }
-
         return false;
     }
 
     /**
-     * 标注的作用范围: METHOD(方法), CLASS(类), ANNOTATION(被标注的标注), DEFAULT(方法和类),
-     * ALL(所有作用域)。
+     * 标注的作用范围: METHOD(方法), CLASS(类), ANNOTATION(被标注的标注)。
      */
     public static enum AnnotationScope {
-        METHOD, CLASS, ANNOTATION, DEFAULT, ALL
+        METHOD, CLASS, ANNOTATION;
+
+        public static BitSet getMethodAndClassScope() {
+            BitSet bitSet = new BitSet();
+            bitSet.set(METHOD.ordinal());
+            bitSet.set(CLASS.ordinal());
+            return bitSet;
+        }
+
+        public static BitSet getMethodAndClassAndAnnotationScope() {
+            BitSet bitSet = new BitSet();
+            bitSet.set(METHOD.ordinal());
+            bitSet.set(CLASS.ordinal());
+            bitSet.set(ANNOTATION.ordinal());
+            return bitSet;
+        }
     }
 
     /**
-     * 返回标注的作用域。
+     * 用 BitSet 的形式返回标注的作用域。
      * 
      * @param annotationType
      * @return
      */
-    protected AnnotationScope getAnnotationScope(Class<? extends Annotation> annotationType) {
-        return AnnotationScope.DEFAULT;
+    protected BitSet getAnnotationScope(Class<? extends Annotation> annotationType) {
+        return AnnotationScope.getMethodAndClassScope();
     }
 
     /**
@@ -192,17 +202,36 @@ public class ControllerInterceptorAdapter implements NamedControllerInterceptor,
      * @return
      */
     protected final boolean checkDenyAnnotations(Class<?> controllerClazz, Method actionMethod) {
-        List<Class<? extends Annotation>> annotations = getDenyAnnotationClasses();
-        if (annotations == null || annotations.size() == 0) {
+        List<Class<? extends Annotation>> denyAnnotations = getDenyAnnotationClasses();
+        if (denyAnnotations == null || denyAnnotations.size() == 0) {
             return false;
         }
-        for (Class<? extends Annotation> annotation : annotations) {
-            if (annotation == null) {
+        for (Class<? extends Annotation> denyAnnotation : denyAnnotations) {
+            if (denyAnnotation == null) {
                 continue;
             }
-            if (actionMethod.isAnnotationPresent(annotation)
-                    || controllerClazz.isAnnotationPresent(annotation)) {
-                return true;
+            BitSet scopeSet = getAnnotationScope(denyAnnotation);
+            if (scopeSet.get(AnnotationScope.METHOD.ordinal())) {
+                if (actionMethod.isAnnotationPresent(denyAnnotation)) {
+                    return true;
+                }
+            }
+            if (scopeSet.get(AnnotationScope.CLASS.ordinal())) {
+                if (controllerClazz.isAnnotationPresent(denyAnnotation)) {
+                    return true;
+                }
+            }
+            if (scopeSet.get(AnnotationScope.ANNOTATION.ordinal())) {
+                for (Annotation annotation : actionMethod.getAnnotations()) {
+                    if (annotation.annotationType().isAnnotationPresent(denyAnnotation)) {
+                        return true;
+                    }
+                }
+                for (Annotation annotation : controllerClazz.getAnnotations()) {
+                    if (annotation.annotationType().isAnnotationPresent(denyAnnotation)) {
+                        return true;
+                    }
+                }
             }
         }
         return false;
