@@ -101,7 +101,7 @@ http://127.0.0.1/user/valuOfMap?map:1=paoding&map:2=rose <br>
 }}}
 http://127.0.0.1/user/map?map:1=paoding&map:2=rose <br>
 {{{
-    public StringBuilder map(@Param("map") Map<Integer, String> map) {
+    public String map(@Param("map") Map<Integer, String> map) {
         StringBuilder sb = new StringBuilder();
         for (Map.Entry<Integer, String> entry : map.entrySet()) {
             sb.append(entry.getKey()).append("=").append(entry.getValue()).append("<br>");
