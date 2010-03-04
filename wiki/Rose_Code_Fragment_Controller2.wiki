@@ -106,7 +106,7 @@ http://127.0.0.1/user/map?map:1=paoding&map:2=rose <br>
         for (Map.Entry<Integer, String> entry : map.entrySet()) {
             sb.append(entry.getKey()).append("=").append(entry.getValue()).append("<br>");
         }
-        return sb;
+        return "@" + sb;
     }
 }}}
 = 6、表单提交 =
