@@ -18,6 +18,7 @@ package net.paoding.rose.web.instruction;
 import java.io.IOException;
 
 import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletResponse;
 
 import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.RequestPath;
@@ -32,12 +33,30 @@ public class RedirectInstruction extends AbstractInstruction {
     @Override
     public void doRender(Invocation inv) throws IOException {
         String location = resolvePlaceHolder(location(), inv);
-        inv.getResponse().sendRedirect(location);
+        if (sc == null || sc == 302) {
+            inv.getResponse().sendRedirect(location);
+        } else {
+            assert sc == HttpServletResponse.SC_MOVED_PERMANENTLY;
+            inv.getResponse().setStatus(sc);
+            inv.getResponse().setHeader("Location", location);
+        }
     }
 
     // ----------------------------------------
 
     private String location;
+
+    private Integer sc;
+
+    /**
+     * 设置301永久跳转
+     * 
+     * @return
+     */
+    public RedirectInstruction permanently() {
+        this.sc = HttpServletResponse.SC_MOVED_PERMANENTLY;
+        return this;
+    }
 
     public RedirectInstruction module(final String module) {
         this.preInstruction = new Instruction() {

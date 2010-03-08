@@ -111,6 +111,16 @@ public class InstructionExecutorImpl implements InstructionExecutor {
                 }
                 return si;
             }
+            if (str.startsWith("pr:") || str.startsWith("perm-redirect:")) {
+                StringInstruction si = new StringInstruction(false, str
+                        .substring(str.indexOf(':') + 1));
+                si.permanentlyWhenRedirect = true;
+                if (si.innerInstruction.startsWith("http://")
+                        || si.innerInstruction.startsWith("https://")) {
+                    return si.permanentlyIfNecessary(Redirect.location(si.innerInstruction));
+                }
+                return si;
+            }
             if (str.startsWith("f:") || str.startsWith("forward:")) {
                 return new StringInstruction(true, str.substring(str.indexOf(':') + 1));
             }
@@ -168,28 +178,28 @@ public class InstructionExecutorImpl implements InstructionExecutor {
                 String body = str.subSequence(i + 1, str.length()).toString();
                 if ("a".equals(prefix) || "action".equals(prefix)) {
                     if (fr.isReirect()) {
-                        return Redirect.action(body);
+                        return fr.permanentlyIfNecessary(Redirect.action(body));
                     } else {
                         return Forward.action(body);
                     }
                 }
                 if ("c".equals(prefix) || "controller".equals(prefix)) {
                     if (fr.isReirect()) {
-                        return Redirect.controller(body);
+                        return fr.permanentlyIfNecessary(Redirect.controller(body));
                     } else {
                         return Forward.controller(body);
                     }
                 }
                 if ("m".equals(prefix) || "module".equals(prefix)) {
                     if (fr.isReirect()) {
-                        return Redirect.module(body);
+                        return fr.permanentlyIfNecessary(Redirect.module(body));
                     } else {
                         return Forward.module(body);
                     }
                 }
                 logger.warn("skip the prefix '" + prefix + ":' of " + str);
                 if (fr.isReirect()) {
-                    return Redirect.location(str);
+                    return fr.permanentlyIfNecessary(Redirect.location(str));
                 } else if (fr.isForward()) {
                     return Forward.path(str);
                 } else {
@@ -197,7 +207,7 @@ public class InstructionExecutorImpl implements InstructionExecutor {
                 }
             }
             if (fr.isReirect()) {
-                return Redirect.location(str);
+                return fr.permanentlyIfNecessary(Redirect.location(str));
             } else if (fr.isForward()) {
                 return Forward.path(str);
             }
@@ -217,10 +227,19 @@ public class InstructionExecutorImpl implements InstructionExecutor {
 
         String innerInstruction;
 
+        boolean permanentlyWhenRedirect = false;
+
         public StringInstruction(Boolean forward, String innerInstruction) {
             super();
             this.forward = forward;
             this.innerInstruction = innerInstruction;
+        }
+
+        public RedirectInstruction permanentlyIfNecessary(RedirectInstruction redirectInstruction) {
+            if (permanentlyWhenRedirect) {
+                redirectInstruction.permanently();
+            }
+            return redirectInstruction;
         }
 
         public boolean isReirect() {
