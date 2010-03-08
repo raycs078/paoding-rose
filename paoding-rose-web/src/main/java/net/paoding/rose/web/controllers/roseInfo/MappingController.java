@@ -49,7 +49,7 @@ public class MappingController {
 
     private void println(MappingNode tree, StringBuilder sb) {
         for (MappingNode node : tree) {
-            if (node.getLeftMostChild() == null) {
+            if (node.getDeep() == 3) {
                 for (WebResource resource : node.getResources()) {
                     sb.append("<resource path=\"").append(node.getPath()).append("\">");
                     for (ReqMethod method : resource.getAllowedMethods()) {

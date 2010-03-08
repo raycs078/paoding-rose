@@ -27,7 +27,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * 构造一个树，树的结点是"地址-资源"映射，每个结点都能回答是否匹配一个字符串，每个匹配的结点都知道如何执行对该资源的操作
+ * {@link MappingNode}代表匹配树的一个结点，树的结点能够包含一个或多个被称为资源的 {@link WebResource} 对象
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
@@ -36,7 +36,7 @@ public class MappingNode implements Comparable<MappingNode>, Iterable<MappingNod
 
     protected static final Log logger = LogFactory.getLog(MappingNode.class);
 
-    /** 所使用的“地址-资源”映射 */
+    /** 所使用的映射 */
     private Mapping mapping;
 
     /** 父结点 */
@@ -48,7 +48,7 @@ public class MappingNode implements Comparable<MappingNode>, Iterable<MappingNod
     /** 最左子结点 */
     private MappingNode leftMostChild;
 
-    /** 同级兄弟结点 */
+    /** 右兄弟结点 */
     private MappingNode sibling;
 
     /** 后序遍历的后继结点 */
@@ -59,6 +59,8 @@ public class MappingNode implements Comparable<MappingNode>, Iterable<MappingNod
     private WebResource[] resources = EMPTY;
 
     private transient String pathCache;
+
+    private int deep;
 
     /**
      * 
@@ -87,6 +89,10 @@ public class MappingNode implements Comparable<MappingNode>, Iterable<MappingNod
             assert parentResource != null;
             this.parentResource = parentResource;
         }
+    }
+
+    public int getDeep() {
+        return deep;
     }
 
     public void setMapping(Mapping mapping) {
@@ -239,6 +245,9 @@ public class MappingNode implements Comparable<MappingNode>, Iterable<MappingNod
             throw new IllegalStateException("the node's parent cann't be changed after setting.");
         }
         this.parent = parentNode;
+        if (this.parent != null) {
+            this.deep = this.parent.deep + 1;
+        }
         if (this.parent != null) {
             //
             if (parentNode.leftMostChild == null) {
