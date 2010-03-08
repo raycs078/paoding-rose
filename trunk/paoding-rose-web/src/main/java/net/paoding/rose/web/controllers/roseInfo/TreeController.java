@@ -52,7 +52,7 @@ public class TreeController {
         while (child != null) {
             sb.append("<node path=\"").append(child.getPath()).append(
                     "\" resourceCount=\"" + child.getResources().length + "\">");
-            if (child.getLeftMostChild() == null) {
+            if (child.getDeep() == 3) {
                 for (WebResource resource : child.getResources()) {
                     for (ReqMethod method : resource.getAllowedMethods()) {
                         Engine engine = resource.getEngine(method);
