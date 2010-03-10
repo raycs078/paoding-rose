@@ -52,22 +52,25 @@ public class RoseModuleInfos {
 
     public static void main(String[] args) throws IOException {
         Log4jConfigurer.initLogging("src/test/java/log4j.properties");
-        List<ModuleResource> moduleInfos = new RoseModuleInfos().findModuleInfos();
+        List<ModuleResource> moduleInfos = new RoseModuleInfos().findModuleResources();
         System.out.println("context resource="
                 + Arrays.toString(moduleInfos.toArray(new ModuleResource[0])));
     }
 
     protected Log logger = LogFactory.getLog(RoseModuleInfos.class);
 
-    private List<ModuleResource> moduleInfoList;
+    private List<ModuleResource> moduleResourceList;
 
-    private Map<FileObject, ModuleResource> moduleInfoMap;
+    private Map<FileObject, ModuleResource> moduleResourceMap;
 
-    public synchronized List<ModuleResource> findModuleInfos() throws IOException {
-        if (moduleInfoList == null) {
+    public synchronized List<ModuleResource> findModuleResources() throws IOException {
+        if (moduleResourceList == null) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("do find module resources!");
+            }
             //
-            moduleInfoList = new LinkedList<ModuleResource>();
-            moduleInfoMap = new HashMap<FileObject, ModuleResource>();
+            moduleResourceList = new LinkedList<ModuleResource>();
+            moduleResourceMap = new HashMap<FileObject, ModuleResource>();
             //
             RoseScanner roseScanner = RoseScanner.getInstance();
             List<ResourceRef> resources = new ArrayList<ResourceRef>();
@@ -75,10 +78,10 @@ public class RoseModuleInfos {
             resources.addAll(roseScanner.getJarResources());
             List<FileObject> rootObjects = new ArrayList<FileObject>();
             FileSystemManager fsManager = VFS.getManager();
-            for (ResourceRef resourceInfo : resources) {
+            for (ResourceRef resourceRef : resources) {
 
-                if (resourceInfo.hasModifier("controllers")) {
-                    Resource resource = resourceInfo.getResource();
+                if (resourceRef.hasModifier("controllers")) {
+                    Resource resource = resourceRef.getResource();
                     File resourceFile = resource.getFile();
                     FileObject rootObject = null;
                     if (resourceFile.isFile()) {
@@ -88,6 +91,9 @@ public class RoseModuleInfos {
                         rootObject = fsManager.resolveFile(resourceFile.getAbsolutePath());
                     }
                     if (rootObject == null) {
+                        if (logger.isInfoEnabled()) {
+                            logger.info("It's not a directory or file: " + resourceFile);
+                        }
                         continue;
                     }
                     rootObjects.add(rootObject);
@@ -95,6 +101,11 @@ public class RoseModuleInfos {
                         deepScanImpl(rootObject, rootObject);
                     } catch (Exception e) {
                         logger.error(e.getMessage(), e);
+                    }
+                } else {
+                    if (logger.isInfoEnabled()) {
+                        logger.info("It's not a module/controllers file: "
+                                + resourceRef.getResource().getFile());
                     }
                 }
             }
@@ -104,8 +115,14 @@ public class RoseModuleInfos {
             for (FileObject fileObject : rootObjects) {
                 fsManager.closeFileSystem(fileObject.getFileSystem());
             }
+            logger.info("found " + moduleResourceList.size() + " module resources");
+        } else {
+
+            if (logger.isDebugEnabled()) {
+                logger.debug("found cached module resources; size=" + moduleResourceList.size());
+            }
         }
-        return new ArrayList<ModuleResource>(moduleInfoList);
+        return new ArrayList<ModuleResource>(moduleResourceList);
     }
 
     protected void deepScanImpl(FileObject rootObject, FileObject fileObject) {
@@ -125,7 +142,7 @@ public class RoseModuleInfos {
                 }
             }
         } catch (Exception e) {
-            logger.error("", e);
+            logger.error("error happend when deep scan " + fileObject, e);
         }
     }
 
@@ -145,7 +162,7 @@ public class RoseModuleInfos {
         }
 
         String mappingPath = null;
-        ModuleResource parentModuleInfo = moduleInfoMap.get(thisFolder.getParent());
+        ModuleResource parentModuleInfo = moduleResourceMap.get(thisFolder.getParent());
         // 如果rose.properties设置了controllers的module.path?
         FileObject rosePropertiesFile = thisFolder.getChild("rose.properties");// (null if there is no such child.)
         if (rosePropertiesFile != null) {
@@ -157,9 +174,7 @@ public class RoseModuleInfos {
             // 如果controllers=ignored，则...
             String ignored = p.getProperty(CONF_MODULE_IGNORED, "false").trim();
             if ("true".equalsIgnoreCase(ignored) || "1".equalsIgnoreCase(ignored)) {
-                if (logger.isDebugEnabled()) {
-                    logger.info("ignored controllers " + thisFolder.getName());
-                }
+                logger.info("ignored controllers folder: " + thisFolder.getName());
                 return;
             }
             mappingPath = p.getProperty(CONF_MODULE_PATH);
@@ -207,13 +222,13 @@ public class RoseModuleInfos {
                 mappingPath = "";
             }
         }
-        ModuleResource moduleInfo = new ModuleResource();
-        moduleInfo.setMappingPath(mappingPath);
-        moduleInfo.setModuleUrl(thisFolder.getURL());
-        moduleInfo.setRelativePackagePath(relativePackagePath);
-        moduleInfo.setParent(parentModuleInfo);
-        moduleInfoMap.put(thisFolder, moduleInfo);
-        moduleInfoList.add(moduleInfo);
+        ModuleResource moduleResource = new ModuleResource();
+        moduleResource.setMappingPath(mappingPath);
+        moduleResource.setModuleUrl(thisFolder.getURL());
+        moduleResource.setRelativePackagePath(relativePackagePath);
+        moduleResource.setParent(parentModuleInfo);
+        moduleResourceMap.put(thisFolder, moduleResource);
+        moduleResourceList.add(moduleResource);
         if (logger.isDebugEnabled()) {
             logger.debug("found module '" + mappingPath + "' in " + thisFolder.getURL());
         }
@@ -246,7 +261,7 @@ public class RoseModuleInfos {
 
     private void addModuleContext(FileObject rootObject, FileObject thisFolder, FileObject resource)
             throws FileSystemException {
-        ModuleResource moduleInfo = moduleInfoMap.get(thisFolder);
+        ModuleResource moduleInfo = moduleResourceMap.get(thisFolder);
         moduleInfo.addContextResource(resource.getURL());
         if (logger.isDebugEnabled()) {
             logger.debug("module '" + moduleInfo.getMappingPath() + "': found context file, url="
@@ -256,7 +271,7 @@ public class RoseModuleInfos {
 
     private void addModuleMessage(FileObject rootObject, FileObject thisFolder, FileObject resource)
             throws FileSystemException {
-        ModuleResource moduleInfo = moduleInfoMap.get(thisFolder);
+        ModuleResource moduleInfo = moduleResourceMap.get(thisFolder);
         moduleInfo.addMessageResource(resource.getParent().getURL() + "/messages");
         if (logger.isDebugEnabled()) {
             logger.debug("module '" + moduleInfo.getMappingPath() + "': found messages file, url="
@@ -269,7 +284,7 @@ public class RoseModuleInfos {
         String className = rootObject.getName().getRelativeName(resource.getName());
         className = StringUtils.removeEnd(className, ".class");
         className = className.replace('/', '.');
-        ModuleResource moduleInfo = moduleInfoMap.get(thisFolder);
+        ModuleResource moduleInfo = moduleResourceMap.get(thisFolder);
         try {
             // TODO: classloader...
             moduleInfo.addModuleClass(Class.forName(className));
@@ -282,14 +297,15 @@ public class RoseModuleInfos {
         }
     }
 
+    // FIXME: 如果一个module只有rose.properties文件也会从moduleInfoList中remove，以后是否需要修改？
     protected void afterScanning() {
-        for (ModuleResource moduleInfo : moduleInfoMap.values()) {
-            if (moduleInfo.getContextResources().size() == 0
-                    && moduleInfo.getModuleClasses().size() == 0) {
-                moduleInfoList.remove(moduleInfo);
-                if (logger.isDebugEnabled()) {
-                    logger.debug("remove empty module '" + moduleInfo.getMappingPath() + "' "
-                            + moduleInfo.getModuleUrl());
+        for (ModuleResource moduleResource : moduleResourceMap.values()) {
+            if (moduleResource.getContextResources().size() == 0
+                    && moduleResource.getModuleClasses().size() == 0) {
+                moduleResourceList.remove(moduleResource);
+                if (logger.isInfoEnabled()) {
+                    logger.info("remove empty module '" + moduleResource.getMappingPath() + "' "
+                            + moduleResource.getModuleUrl());
                 }
             }
         }

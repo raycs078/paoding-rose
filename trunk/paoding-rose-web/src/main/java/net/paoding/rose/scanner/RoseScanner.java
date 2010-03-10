@@ -24,6 +24,7 @@ import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.List;
@@ -65,6 +66,8 @@ public class RoseScanner {
 
     protected Log logger = LogFactory.getLog(getClass());
 
+    protected Date createTime = new Date();
+
     protected ResourcePatternResolver resourcePatternResolver = new PathMatchingResourcePatternResolver(
             Thread.currentThread().getContextClassLoader());
 
@@ -75,6 +78,10 @@ public class RoseScanner {
     // -------------------------------------------------------------
 
     private RoseScanner() {
+    }
+
+    public Date getCreateTime() {
+        return createTime;
     }
 
     // -------------------------------------------------------------

@@ -25,12 +25,17 @@ import java.util.List;
 import net.paoding.rose.web.ControllerErrorHandler;
 import net.paoding.rose.web.Invocation;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /**
  * 
  * @author zhiliang.wang
  * 
  */
 public class ErrorHandlerDispatcher implements ControllerErrorHandler {
+
+    private Log logger = LogFactory.getLog(getClass());
 
     private static final int INVOCATION_INDEX = 0;
 
@@ -63,7 +68,14 @@ public class ErrorHandlerDispatcher implements ControllerErrorHandler {
                         @Override
                         public Object onError(Invocation inv, Throwable ex) throws Throwable {
                             Object[] args = new Object[] { inv, ex };
-                            return method.invoke(ErrorHandlerDispatcher.this.errorHandler, args);
+                            try {
+                                return method
+                                        .invoke(ErrorHandlerDispatcher.this.errorHandler, args);
+                            } catch (Throwable e) {
+                                logger.error("error happened when handling error " + ex.getClass()
+                                        + " at " + ErrorHandlerDispatcher.this.toString());
+                                throw e;
+                            }
                         }
                     });
                 }
