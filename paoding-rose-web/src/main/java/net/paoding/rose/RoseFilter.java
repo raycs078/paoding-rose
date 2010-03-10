@@ -338,7 +338,7 @@ public class RoseFilter extends GenericFilterBean {
 
     private List<Module> prepareModules(WebApplicationContext rootContext) throws Exception {
         // 自动扫描识别web层对象，纳入Rose管理
-        List<ModuleResource> moduleInfoList = new RoseModuleInfos().findModuleInfos();
+        List<ModuleResource> moduleInfoList = new RoseModuleInfos().findModuleResources();
         return new ModulesBuilder().build(rootContext, moduleInfoList);
     }
 

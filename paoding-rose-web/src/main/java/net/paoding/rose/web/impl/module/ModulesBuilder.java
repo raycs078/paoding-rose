@@ -63,11 +63,11 @@ public class ModulesBuilder {
 
     private Log logger = LogFactory.getLog(getClass());
 
-    public List<Module> build(WebApplicationContext rootContext, List<ModuleResource> moduleInfos)
-            throws Exception {
-        List<Module> modules = new ArrayList<Module>(moduleInfos.size());
+    public List<Module> build(WebApplicationContext rootContext,
+            List<ModuleResource> moduleResources) throws Exception {
+        List<Module> modules = new ArrayList<Module>(moduleResources.size());
         Map<ModuleResource, Module> moduleMap = new HashMap<ModuleResource, Module>();
-        for (ModuleResource resource : moduleInfos) {
+        for (ModuleResource resource : moduleResources) {
             Module parentModule = resource.getParent() == null ? null : moduleMap.get(resource
                     .getParent());
             WebApplicationContext parentContext = (parentModule == null) ? rootContext
@@ -77,9 +77,11 @@ public class ModulesBuilder {
             final XmlWebApplicationContext context = createModuleContext(// NL
                     parentContext, contextNamespace, resource.getContextResources(), resource
                             .getMessageBasenames());
-            final String contextAttrKey = WebApplicationContext.class.getName() + "."
-                    + contextNamespace;
+            String contextAttrKey = WebApplicationContext.class.getName() + "." + contextNamespace;
             if (context.getServletContext() != null) {
+                if (context.getServletContext().getAttribute(contextAttrKey) != null) {
+                    contextAttrKey = contextAttrKey + "@" + resource.getModuleUrl().getFile();
+                }
                 context.getServletContext().setAttribute(contextAttrKey, context);
             }
             // 创建module对象
