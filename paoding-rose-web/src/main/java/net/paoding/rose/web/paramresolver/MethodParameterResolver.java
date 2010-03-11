@@ -19,6 +19,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 
 import net.paoding.rose.web.Invocation;
+import net.paoding.rose.web.annotation.DefValue;
 import net.paoding.rose.web.annotation.FlashParam;
 import net.paoding.rose.web.annotation.Param;
 import net.paoding.rose.web.impl.validation.ParameterBindingResult;
@@ -66,6 +67,8 @@ public final class MethodParameterResolver {
                     paramMetaData.setParamAnnotation(Param.class.cast(annotation));
                 } else if (annotation instanceof FlashParam) {
                     paramMetaData.setFlashParamAnnotation(FlashParam.class.cast(annotation));
+                } else if (annotation instanceof DefValue) {
+                    paramMetaData.setDefaultValue(DefValue.class.cast(annotation));
                 }
             }
             paramMetaDatas[i] = paramMetaData;
@@ -116,8 +119,9 @@ public final class MethodParameterResolver {
 
                 // 对简单类型的参数，设置一个默认值给它以支持对该方法的继续调用
                 if (paramMetaDatas[i].getParamType().isPrimitive()) {
-                    Param paramAnnotation = paramMetaDatas[i].getParamAnnotation();
-                    if (paramAnnotation == null || Param.JAVA_DEFAULT.equals(paramAnnotation.def())) {
+                    DefValue defaultValudeAnnotation = paramMetaDatas[i].getDefaultValue();
+                    if (defaultValudeAnnotation == null
+                            || DefValue.NATIVE_DEFAULT.equals(defaultValudeAnnotation.value())) {
                         // 对这最常用的类型做一下if-else判断，其他类型就简单使用converter来做吧
                         if (paramMetaDatas[i].getParamType() == int.class) {
                             parameters[i] = Integer.valueOf(0);
@@ -135,8 +139,8 @@ public final class MethodParameterResolver {
                                     .getParamType());
                         }
                     } else {
-                        parameters[i] = typeConverter.convertIfNecessary(paramAnnotation.def(),
-                                paramMetaDatas[i].getParamType());
+                        parameters[i] = typeConverter.convertIfNecessary(defaultValudeAnnotation
+                                .value(), paramMetaDatas[i].getParamType());
                     }
                 }
                 // 

@@ -19,6 +19,7 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
+import net.paoding.rose.web.annotation.DefValue;
 import net.paoding.rose.web.annotation.FlashParam;
 import net.paoding.rose.web.annotation.Param;
 
@@ -39,6 +40,8 @@ class ParamMetaDataImpl implements ParamMetaData {
 
     private Param paramAnnotation;
 
+    private DefValue defaultValue;
+
     private FlashParam flashParamAnnotation;
 
     private Map<Object, Object> userObjectMap;
@@ -52,6 +55,15 @@ class ParamMetaDataImpl implements ParamMetaData {
         this.paramName = paramName;
         this.paramType = paramType;
         this.index = index;
+    }
+
+    @Override
+    public DefValue getDefaultValue() {
+        return defaultValue;
+    }
+
+    public void setDefaultValue(DefValue defaultValue) {
+        this.defaultValue = defaultValue;
     }
 
     @Override

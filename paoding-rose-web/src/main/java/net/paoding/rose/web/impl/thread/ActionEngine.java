@@ -127,13 +127,10 @@ public final class ActionEngine implements Engine {
         List<ParamValidator> validators = module.getValidators();
         ParamValidator[] registeredValidators = new ParamValidator[parameterTypes.length];
         for (int i = 0; i < parameterTypes.length; i++) {
-            if (methodParameterResolver.getParamAnnotationAt(i) == null
-                    || methodParameterResolver.getParamAnnotationAt(i).validated()) {
-                for (ParamValidator validator : validators) {
-                    if (validator.supports(methodParameterResolver.getParamMetaDatas()[i])) {
-                        registeredValidators[i] = validator;
-                        break;
-                    }
+            for (ParamValidator validator : validators) {
+                if (validator.supports(methodParameterResolver.getParamMetaDatas()[i])) {
+                    registeredValidators[i] = validator;
+                    break;
                 }
             }
         }
