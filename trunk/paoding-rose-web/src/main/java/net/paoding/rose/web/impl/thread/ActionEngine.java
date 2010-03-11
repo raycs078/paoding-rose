@@ -32,7 +32,10 @@ import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.ParamValidator;
 import net.paoding.rose.web.RequestPath;
 import net.paoding.rose.web.annotation.HttpFeatures;
+import net.paoding.rose.web.annotation.IfParamExists;
 import net.paoding.rose.web.annotation.Intercepted;
+import net.paoding.rose.web.annotation.ReqMapping;
+import net.paoding.rose.web.annotation.ReqMethod;
 import net.paoding.rose.web.annotation.Return;
 import net.paoding.rose.web.impl.mapping.MatchResult;
 import net.paoding.rose.web.impl.module.Module;
@@ -173,6 +176,41 @@ public final class ActionEngine implements Engine {
         //
         return registeredInterceptors
                 .toArray(new NestedControllerInterceptor[registeredInterceptors.size()]);
+    }
+
+    @Override
+    public int compareTo(Engine o) {
+        assert o.getClass() == this.getClass();
+        // 还有All放最后!
+        ReqMapping rm1 = method.getAnnotation(ReqMapping.class);
+        ReqMapping rm2 = ((ActionEngine) o).method.getAnnotation(ReqMapping.class);
+        boolean ca1 = rm1 == null ? false : ArrayUtils.contains(rm1.methods(), ReqMethod.ALL);
+        boolean ca2 = rm2 == null ? false : ArrayUtils.contains(rm2.methods(), ReqMethod.ALL);
+        if (ca1 != ca2) {
+            return ca1 ? 1 : -1;
+        }
+        // 还有@IfParamExists放前面，都含有的按方法名来区分
+        boolean e1 = method.isAnnotationPresent(IfParamExists.class);
+        boolean e2 = ((ActionEngine) o).method.isAnnotationPresent(IfParamExists.class);
+        return e1 != e2 ? (e1 ? -1 : 1) : method.getName().compareTo(
+                ((ActionEngine) o).method.getName());
+    }
+
+    @Override
+    public boolean isAccepted(HttpServletRequest request) {
+        assert request != null;
+        IfParamExists ifParamExists = method.getAnnotation(IfParamExists.class);
+        if (ifParamExists != null) {
+            String[] values = ifParamExists.value();
+            assert values.length == 1;// TODO: 目前只支持1个参数配置的
+            // create&form
+            String[] terms = StringUtils.split(values[0], "&");
+            assert terms.length == 1;
+            assert terms[0].indexOf('=') == -1;
+            String paramValue = request.getParameter(terms[0]);
+            return StringUtils.isNotBlank(paramValue);
+        }
+        return true;
     }
 
     @Override

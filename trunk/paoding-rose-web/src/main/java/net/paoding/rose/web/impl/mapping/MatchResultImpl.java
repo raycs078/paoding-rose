@@ -21,6 +21,8 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
+import net.paoding.rose.web.impl.thread.Engine;
+
 /**
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
@@ -33,6 +35,8 @@ class MatchResultImpl implements MatchResult {
 
     /** 所匹配的资源 */
     private WebResource resource;
+
+    private Engine engine;
 
     /** 从结果字符串中得到的资源参数值(如果该资源使用了使用了参数化的映射地址) */
     private Map<String, String> parameters;
@@ -54,6 +58,15 @@ class MatchResultImpl implements MatchResult {
 
     public WebResource getResource() {
         return resource;
+    }
+
+    public Engine getEngine() {
+        return engine;
+    }
+
+    @Override
+    public void setEngine(Engine engine) {
+        this.engine = engine;
     }
 
     public void setResource(WebResource resource) {
