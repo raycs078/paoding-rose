@@ -16,6 +16,7 @@
 package net.paoding.rose.web.impl.mapping;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -40,8 +41,6 @@ public class WebResourceImpl implements WebResource {
 
     private String name = "unNamed";
 
-    private boolean isEndResource = true;
-
     private transient String toStringCache;
 
     private transient List<ReqMethod> allowedMethodsCache;
@@ -51,24 +50,24 @@ public class WebResourceImpl implements WebResource {
      * <p>
      * 没种操作逻辑存放于该数组的唯一位置，即 {@link ReqMethod#ordinal()} 值所指向的位置
      */
-    private Engine[] engines = new Engine[ARRAY_SIZE];
+    private Engine[][] engines = new Engine[ARRAY_SIZE][];
 
-//    private WebResource parent;
+    //    private WebResource parent;
 
-//    public WebResourceImpl(WebResource parent) {
-//        setParent(parent);
-//    }
+    //    public WebResourceImpl(WebResource parent) {
+    //        setParent(parent);
+    //    }
 
     public WebResourceImpl(String name) {
         setName(name);
     }
 
-//    public void setParent(WebResource parent) {
-//        this.parent = parent;
-//        if (this.parent != null) {
-//            parent.setEndResource(false);
-//        }
-//    }
+    //    public void setParent(WebResource parent) {
+    //        this.parent = parent;
+    //        if (this.parent != null) {
+    //            parent.setEndResource(false);
+    //        }
+    //    }
 
     public String getName() {
         return name;
@@ -89,10 +88,18 @@ public class WebResourceImpl implements WebResource {
     public void addEngine(ReqMethod method, Engine engine) {
         ReqMethod[] methods = method.parse();
         for (ReqMethod md : methods) {
-            if (method == ReqMethod.ALL && engines[md.ordinal()] != null) {
-                continue;
+//            if (method == ReqMethod.ALL && engines[md.ordinal()] != null) {
+//                continue;
+//            }
+            Engine[] methodEngines = engines[md.ordinal()];
+            if (methodEngines == null) {
+                methodEngines = new Engine[] { engine };
+            } else {
+                methodEngines = Arrays.copyOf(methodEngines, methodEngines.length + 1);
+                methodEngines[methodEngines.length - 1] = engine;
+                Arrays.sort(methodEngines);
             }
-            engines[md.ordinal()] = engine;
+            engines[md.ordinal()] = methodEngines;
             clearCache();
         }
     }
@@ -107,7 +114,17 @@ public class WebResourceImpl implements WebResource {
         if (method == ReqMethod.ALL) {
             throw new IllegalArgumentException("method");
         }
-        return engines[method.ordinal()];
+        Engine[] methodEngines = engines[method.ordinal()];
+        return methodEngines == null ? null : methodEngines[0];
+    }
+
+    @Override
+    public Engine[] getEngines(ReqMethod method) {
+        if (method == ReqMethod.ALL) {
+            throw new IllegalArgumentException("method");
+        }
+        Engine[] methodEngines = engines[method.ordinal()];
+        return methodEngines;
     }
 
     /**
@@ -118,14 +135,6 @@ public class WebResourceImpl implements WebResource {
      */
     public boolean isMethodAllowed(ReqMethod method) {
         return method != null && engines[method.ordinal()] != null;
-    }
-
-    public boolean isEndResource() {
-        return isEndResource;
-    }
-
-    public void setEndResource(boolean isEndResource) {
-        this.isEndResource = isEndResource;
     }
 
     protected void clearCache() {
@@ -151,15 +160,17 @@ public class WebResourceImpl implements WebResource {
      */
     public void destroy() {
         RuntimeException error = null;
-        for (Engine engine : engines) {
-            if (engine == null) {
+        for (Engine[] methodEngines : engines) {
+            if (methodEngines == null) {
                 continue;
             }
-            try {
-                engine.destroy();
-            } catch (RuntimeException e) {
-                logger.error("", e);
-                error = e;
+            for (Engine engine : methodEngines) {
+                try {
+                    engine.destroy();
+                } catch (RuntimeException e) {
+                    logger.error("", e);
+                    error = e;
+                }
             }
         }
         if (error != null) {

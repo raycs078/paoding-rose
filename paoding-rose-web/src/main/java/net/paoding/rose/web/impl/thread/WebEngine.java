@@ -74,6 +74,17 @@ public class WebEngine implements Engine {
 
     // ------------------------------------------------------------
 
+    @Override
+    public int compareTo(Engine o) {
+        assert o.getClass() == this.getClass();
+        return 0;
+    }
+
+    @Override
+    public boolean isAccepted(HttpServletRequest rose) {
+        return true;
+    }
+
     /**
      * {@link WebEngine} 接口.调用此方法判断并处理请求.如果本引擎能够找到该请求相应的控制器方法处理，则启动整个调用过程，
      * 并最终渲染页面到客户端;

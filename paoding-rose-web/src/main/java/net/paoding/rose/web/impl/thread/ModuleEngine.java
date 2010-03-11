@@ -93,6 +93,17 @@ public class ModuleEngine implements Engine {
     }
 
     @Override
+    public int compareTo(Engine o) {
+        assert o.getClass() == this.getClass();
+        return 0;
+    }
+
+    @Override
+    public boolean isAccepted(HttpServletRequest rose) {
+        return true;
+    }
+
+    @Override
     public Object execute(Rose rose, MatchResult mr) throws Throwable {
         Invocation inv = rose.getInvocation();
         inv.getRequestPath().setModulePath(mr.getValue());
