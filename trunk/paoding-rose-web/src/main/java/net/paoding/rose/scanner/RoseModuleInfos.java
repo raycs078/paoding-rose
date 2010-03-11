@@ -50,11 +50,21 @@ import org.springframework.util.Log4jConfigurer;
  */
 public class RoseModuleInfos {
 
-    public static void main(String[] args) throws IOException {
+    public static void main0(String[] args) throws IOException {
         Log4jConfigurer.initLogging("src/test/java/log4j.properties");
         List<ModuleResource> moduleInfos = new RoseModuleInfos().findModuleResources();
         System.out.println("context resource="
                 + Arrays.toString(moduleInfos.toArray(new ModuleResource[0])));
+    }
+
+    public static void main(String[] args) throws FileSystemException {
+        FileSystemManager fsManager = VFS.getManager();
+        File file = new File(
+                "/workspaces/opi-corp-ws/paoding-rose/target/paoding-rose-0.9-SNAPSHOT.jar");
+        String path = "jar:file:" + file.getAbsolutePath() + "/!";
+        FileObject rootObject = fsManager.resolveFile(path);
+        System.out.println(rootObject.getType().equals(FileType.FOLDER));
+        System.out.println(rootObject);
     }
 
     protected Log logger = LogFactory.getLog(RoseModuleInfos.class);
@@ -128,8 +138,17 @@ public class RoseModuleInfos {
     protected void deepScanImpl(FileObject rootObject, FileObject fileObject) {
         try {
             if (!fileObject.getType().equals(FileType.FOLDER)) {
-                logger.warn("fileObject shoud be a folder", new IllegalArgumentException());
-                return;
+                if (rootObject != fileObject) {
+                    String msg = "fileObject not a folder, it's unable to scan it : " + fileObject;
+                    logger.error(msg, new IllegalArgumentException(msg));
+                    // log error and return
+                    return;
+                } else {
+                    String msg = "rootObject not a folder, it's unable to scan it, what's wrong (rose will try its best to scan it!!!): "
+                            + fileObject;
+                    logger.warn(msg, new IllegalArgumentException(msg));
+                    // just log warnning, not return!
+                }
             }
             if (CONTROLLERS_DIRECTORY_NAME.equals(fileObject.getName().getBaseName())) {
                 handleWithFolder(rootObject, fileObject);
