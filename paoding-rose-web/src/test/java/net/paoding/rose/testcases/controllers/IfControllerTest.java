@@ -13,13 +13,18 @@ public class IfControllerTest extends AbstractControllerTest {
     }
 
     public void testIfb() throws ServletException, IOException {
-        request.addParameter("b", "any");
+        request.addParameter("b", "anyvalueforb");
         assertEquals("b", invoke("/if"));
     }
 
     public void testIfc() throws ServletException, IOException {
-        request.addParameter("c", "any");
+        request.addParameter("c", "anyvalueforc");
         assertEquals("c", invoke("/if"));
+    }
+
+    public void testIfc2() throws ServletException, IOException {
+        request.addParameter("c", "2");
+        assertEquals("c2", invoke("/if"));
     }
 
     public void testSubDir() throws ServletException, IOException {

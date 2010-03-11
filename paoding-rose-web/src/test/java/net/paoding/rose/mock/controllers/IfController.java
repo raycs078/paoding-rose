@@ -28,4 +28,11 @@ public class IfController {
     public String d() {
         return "d";
     }
+
+    @Get
+    @IfParamExists("c=2")
+    public String c2() {
+        return "c2";
+    }
+
 }
