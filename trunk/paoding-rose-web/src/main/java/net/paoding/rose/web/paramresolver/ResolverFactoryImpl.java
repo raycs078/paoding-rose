@@ -17,6 +17,7 @@
 package net.paoding.rose.web.paramresolver;
 
 import java.beans.PropertyEditorSupport;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -43,9 +44,10 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import net.paoding.rose.web.Invocation;
+import net.paoding.rose.web.annotation.DefValue;
 import net.paoding.rose.web.annotation.FlashParam;
 import net.paoding.rose.web.annotation.Param;
-import net.paoding.rose.web.annotation.ParamConf;
+import net.paoding.rose.web.annotation.Pattern;
 import net.paoding.rose.web.impl.module.Module;
 import net.paoding.rose.web.impl.thread.InvocationBean;
 import net.paoding.rose.web.impl.thread.Rose;
@@ -764,26 +766,26 @@ public class ResolverFactoryImpl implements ResolverFactory {
 
         protected Date resolveUtilDate(String text, ParamMetaData metaData) throws ParseException {
             if (StringUtils.isEmpty(text)) {
-                if (metaData.getParamAnnotation() != null
-                        && !Param.JAVA_DEFAULT.equals(metaData.getParamAnnotation().def())) {
-                    text = metaData.getParamAnnotation().def();
-                    if (StringUtils.isEmpty(text)) {
+                DefValue defaultValudeAnnotation = metaData.getDefaultValue();
+                if (defaultValudeAnnotation != null
+                        && !DefValue.NATIVE_DEFAULT.equals(defaultValudeAnnotation.value())) {
+                    if (StringUtils.isEmpty(defaultValudeAnnotation.value())) {
                         return new Date(); // 当前时间!
+                    } else {
+                        text = defaultValudeAnnotation.value(); // 改变要被解析的文本!
                     }
                 } else {
                     return null; // 保留null，而非当前时间
                 }
             }
-            if (metaData.getParamAnnotation() != null
-                    && metaData.getParamAnnotation().conf() != null
-                    && metaData.getParamAnnotation().conf().length > 0) {
-                ParamConf[] conf = metaData.getParamAnnotation().conf();
-                for (ParamConf paramConf : conf) {
-                    if ("pattern".equals(paramConf.name())) {
-                        // 如果都找不到pattern则使用parseLong，但是总可能存在意外，
-                        // 比如dateTimePattern2也全部都是数字，那是使用它，还是parseLong?
-                        // 通过把patter定义为long，就明确一定是用parseLong,也建议实际情况应如此定义
-                        if ("long".equals(paramConf.value())) {
+            Annotation[] paramAnnotations = metaData.getMethod().getParameterAnnotations()[metaData
+                    .getIndex()];
+            for (Annotation annotation : paramAnnotations) {
+                if (annotation instanceof Pattern) {
+                    String[] patterns = Pattern.class.cast(annotation).value();
+                    for (String pattern : patterns) {
+                        // 以long为时间
+                        if ("long".equals(pattern)) {
                             boolean digit = true;
                             for (int i = 0; i < text.length(); i++) {
                                 if (!Character.isDigit(text.charAt(i))) {
@@ -796,10 +798,11 @@ public class ResolverFactoryImpl implements ResolverFactory {
                             }
                         }
                         // 可以配置多个pattern!! 通过长度匹配
-                        if (text.length() == paramConf.value().length()) {
-                            return new SimpleDateFormat(paramConf.value()).parse(text);
+                        if (text.length() == pattern.length()) {
+                            return new SimpleDateFormat(pattern).parse(text);
                         }
                     }
+                    break;
                 }
             }
             return DatePatterns.parse(text);
@@ -832,8 +835,10 @@ public class ResolverFactoryImpl implements ResolverFactory {
                 toConvert = inv.getParameter(param.value());
             }
             if (toConvert == null) {
-                if (param != null && !Param.JAVA_DEFAULT.equals(param.def())) {
-                    toConvert = metaData.getParamAnnotation().def();
+                DefValue defaultValudeAnnotation = metaData.getDefaultValue();
+                if (defaultValudeAnnotation != null
+                        && !DefValue.NATIVE_DEFAULT.equals(defaultValudeAnnotation.value())) {
+                    toConvert = defaultValudeAnnotation.value();
                 }
             }
             if (toConvert != null) {

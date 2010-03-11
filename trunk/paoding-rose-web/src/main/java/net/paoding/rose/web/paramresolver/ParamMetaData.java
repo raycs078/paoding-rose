@@ -17,6 +17,7 @@ package net.paoding.rose.web.paramresolver;
 
 import java.lang.reflect.Method;
 
+import net.paoding.rose.web.annotation.DefValue;
 import net.paoding.rose.web.annotation.FlashParam;
 import net.paoding.rose.web.annotation.Param;
 
@@ -62,6 +63,8 @@ public interface ParamMetaData {
      * @return
      */
     public Param getParamAnnotation();
+
+    public DefValue getDefaultValue();
 
     /**
      * 返回对该参数的 {@link FlashParam} 注解；可能为null
