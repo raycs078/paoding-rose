@@ -190,10 +190,11 @@ public final class ActionEngine implements Engine {
             return ca1 ? 1 : -1;
         }
         // 还有@IfParamExists放前面，都含有的按方法名来区分
-        boolean e1 = method.isAnnotationPresent(IfParamExists.class);
-        boolean e2 = ((ActionEngine) o).method.isAnnotationPresent(IfParamExists.class);
-        return e1 != e2 ? (e1 ? -1 : 1) : method.getName().compareTo(
-                ((ActionEngine) o).method.getName());
+        IfParamExists if1 = method.getAnnotation(IfParamExists.class);
+        IfParamExists if2 = ((ActionEngine) o).method.getAnnotation(IfParamExists.class);
+        boolean e1 = (if1 != null);
+        boolean e2 = (if2 != null);
+        return e1 != e2 ? (e1 ? -1 : 1) : if2.value()[0].length() - if1.value()[0].length();
     }
 
     @Override
@@ -206,9 +207,21 @@ public final class ActionEngine implements Engine {
             // create&form
             String[] terms = StringUtils.split(values[0], "&");
             assert terms.length == 1;
-            assert terms[0].indexOf('=') == -1;
-            String paramValue = request.getParameter(terms[0]);
-            return StringUtils.isNotBlank(paramValue);
+            int index = terms[0].indexOf('=');
+            if (index == -1) {
+                String paramValue = request.getParameter(terms[0]);
+                return StringUtils.isNotBlank(paramValue);
+            } else {
+                String paramName = terms[0].substring(0, index).trim();
+                String expected = terms[0].substring(index + 1).trim();
+                String paramValue = request.getParameter(paramName);
+                if (StringUtils.isBlank(expected)) {
+                    // xxx=等价于xxx的
+                    return paramValue != null;
+                } else {
+                    return expected.equals(paramValue);
+                }
+            }
         }
         return true;
     }
