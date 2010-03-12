@@ -97,9 +97,15 @@ public class RoseModuleInfos {
                     }
                     rootObjects.add(rootObject);
                     try {
+                        int oldSize = moduleResourceList.size();
                         deepScanImpl(rootObject, rootObject);
+                        int newSize = moduleResourceList.size();
+                        if (logger.isInfoEnabled()) {
+                            logger.info("got" + (newSize - oldSize) + " modules from " //
+                                    + rootObject);
+                        }
                     } catch (Exception e) {
-                        logger.error(e.getMessage(), e);
+                        logger.error("error happend when scanning " + rootObject, e);
                     }
                 } else {
                     if (logger.isInfoEnabled()) {
