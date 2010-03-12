@@ -22,6 +22,10 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
+ * 用 {@link Pattern} 标注在控制器的方法参数上，表示其解析模式。
+ * <p>
+ * 如用于时间参数解析，可以使用 @Pattern("MM/dd/yyyy")来解析"03/12/2010"的字符串!
+ * 
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 

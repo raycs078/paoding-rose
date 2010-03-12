@@ -1,5 +1,4 @@
 /*
- * $Id$
  * Copyright 2007-2009 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,22 +17,31 @@ package net.paoding.rose.web.annotation;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
-import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import net.paoding.rose.web.paramresolver.ParamResolver;
+import javax.servlet.http.HttpSession;
+
+import net.paoding.rose.web.paramresolver.ResolverFactoryImpl.HttpSessionResolver;
 
 /**
+ * 将Create标注在控制器方法参数上，表示该参数必须或不必须创建，比如对 {@link HttpSession}参数，可通过配置
+ * {@link Create} 为false，表示如果原先没有 HttpSession 时，保留为null，不用创建。
+ * 
+ * @see HttpSessionResolver
  * @author 王志亮 [qieqie.wang@gmail.com]
+ * 
  */
-@Inherited
-@Target( { ElementType.TYPE, ElementType.METHOD })
+@Target( { ElementType.PARAMETER })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@interface ParamResolvers {
+public @interface Create {
 
-    Class<? extends ParamResolver>[] value();
+    /**
+     * 
+     * @return
+     */
+    boolean value() default true;
 
 }
