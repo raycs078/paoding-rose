@@ -22,6 +22,7 @@ import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.annotation.DefValue;
 import net.paoding.rose.web.annotation.Param;
 import net.paoding.rose.web.annotation.Pattern;
+import net.paoding.rose.web.annotation.Create;
 import net.paoding.rose.web.var.Flash;
 import net.paoding.rose.web.var.Model;
 
@@ -49,7 +50,7 @@ public class MethodParameter2Controller {
     public void session(HttpSession session) {
     }
 
-    public void session2(@Param(value = "", required = false) HttpSession session) {
+    public void session2(@Create(false) HttpSession session) {
     }
 
     public void model(Model request) {

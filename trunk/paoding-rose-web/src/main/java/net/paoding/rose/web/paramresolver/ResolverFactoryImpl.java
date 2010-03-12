@@ -48,6 +48,7 @@ import net.paoding.rose.web.annotation.DefValue;
 import net.paoding.rose.web.annotation.FlashParam;
 import net.paoding.rose.web.annotation.Param;
 import net.paoding.rose.web.annotation.Pattern;
+import net.paoding.rose.web.annotation.Create;
 import net.paoding.rose.web.impl.module.Module;
 import net.paoding.rose.web.impl.thread.InvocationBean;
 import net.paoding.rose.web.impl.thread.Rose;
@@ -169,7 +170,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
 
     // ---------------------------------------------------------
 
-    static final class InvocationResolver implements ParamResolver {
+    public static final class InvocationResolver implements ParamResolver {
 
         @Override
         public boolean supports(ParamMetaData paramMetaData) {
@@ -182,7 +183,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
         }
     }
 
-    static final class ApplicationContextResolver implements ParamResolver {
+    public static final class ApplicationContextResolver implements ParamResolver {
 
         @Override
         public boolean supports(ParamMetaData paramMetaData) {
@@ -196,7 +197,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
         }
     }
 
-    static final class MessageSourceResolver implements ParamResolver {
+    public static final class MessageSourceResolver implements ParamResolver {
 
         @Override
         public boolean supports(ParamMetaData paramMetaData) {
@@ -209,7 +210,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
         }
     }
 
-    static final class RequestResolver implements ParamResolver {
+    public static final class RequestResolver implements ParamResolver {
 
         @Override
         public boolean supports(ParamMetaData paramMetaData) {
@@ -223,7 +224,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
         }
     }
 
-    static final class ResponseResolver implements ParamResolver {
+    public static final class ResponseResolver implements ParamResolver {
 
         @Override
         public boolean supports(ParamMetaData paramMetaData) {
@@ -237,7 +238,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
         }
     }
 
-    static final class ServletContextResolver implements ParamResolver {
+    public static final class ServletContextResolver implements ParamResolver {
 
         @Override
         public boolean supports(ParamMetaData paramMetaData) {
@@ -250,7 +251,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
         }
     }
 
-    static final class HttpSessionResolver implements ParamResolver {
+    public static final class HttpSessionResolver implements ParamResolver {
 
         @Override
         public boolean supports(ParamMetaData paramMetaData) {
@@ -260,14 +261,15 @@ public class ResolverFactoryImpl implements ResolverFactory {
         @Override
         public HttpSession resolve(Invocation inv, ParamMetaData paramMetaData) {
             boolean create = true;
-            if (paramMetaData.getParamAnnotation() != null) {
-                create = paramMetaData.getParamAnnotation().required();
+            Create createAnnotation = paramMetaData.getAnnotation(Create.class);
+            if (createAnnotation != null) {
+                create = createAnnotation.value();
             }
             return inv.getRequest().getSession(create);
         }
     }
 
-    static final class ModelResolver implements ParamResolver {
+    public static final class ModelResolver implements ParamResolver {
 
         @Override
         public boolean supports(ParamMetaData paramMetaData) {
@@ -280,7 +282,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
         }
     }
 
-    static final class FlashResolver implements ParamResolver {
+    public static final class FlashResolver implements ParamResolver {
 
         @Override
         public boolean supports(ParamMetaData paramMetaData) {
@@ -293,7 +295,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
         }
     }
 
-    static final class ModuleResolver implements ParamResolver {
+    public static final class ModuleResolver implements ParamResolver {
 
         @Override
         public boolean supports(ParamMetaData paramMetaData) {
@@ -306,7 +308,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
         }
     }
 
-    static final class StringResolver implements ParamResolver {
+    public static final class StringResolver implements ParamResolver {
 
         @Override
         public boolean supports(ParamMetaData paramMetaData) {
@@ -319,7 +321,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
         }
     }
 
-    static final class MultipartRequestResolver implements ParamResolver {
+    public static final class MultipartRequestResolver implements ParamResolver {
 
         @Override
         public boolean supports(ParamMetaData paramMetaData) {
@@ -341,7 +343,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
         }
     }
 
-    static final class MultipartHttpServletRequestResolver implements ParamResolver {
+    public static final class MultipartHttpServletRequestResolver implements ParamResolver {
 
         @Override
         public boolean supports(ParamMetaData paramMetaData) {
@@ -362,7 +364,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
         }
     }
 
-    static final class MultipartFileResolver implements ParamResolver {
+    public static final class MultipartFileResolver implements ParamResolver {
 
         @Override
         public boolean supports(ParamMetaData paramMetaData) {
@@ -391,7 +393,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
         }
     }
 
-    static final class RoseResolver implements ParamResolver {
+    public static final class RoseResolver implements ParamResolver {
 
         @Override
         public boolean supports(ParamMetaData metaData) {
@@ -404,7 +406,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
         }
     }
 
-    static final class BeanResolver implements ParamResolver {
+    public static final class BeanResolver implements ParamResolver {
 
         @Override
         public boolean supports(ParamMetaData paramMetaData) {
@@ -416,7 +418,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
         public Object resolve(Invocation inv, ParamMetaData paramMetaData) {
             Object bean = BeanUtils.instantiateClass(paramMetaData.getParamType());
             ServletRequestDataBinder binder;
-            if (paramMetaData.getParamAnnotation() == null) {
+            if (!paramMetaData.isAnnotationPresent(Param.class)) {
                 binder = new ServletRequestDataBinder(bean);
             } else {
                 binder = new ServletRequestDataBinder(bean, paramMetaData.getParamName());
@@ -429,7 +431,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
         }
     }
 
-    static final class BindingResultResolver implements ParamResolver {
+    public static final class BindingResultResolver implements ParamResolver {
 
         @Override
         public boolean supports(ParamMetaData paramMetaData) {
@@ -766,7 +768,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
 
         protected Date resolveUtilDate(String text, ParamMetaData metaData) throws ParseException {
             if (StringUtils.isEmpty(text)) {
-                DefValue defaultValudeAnnotation = metaData.getDefaultValue();
+                DefValue defaultValudeAnnotation = metaData.getAnnotation(DefValue.class);
                 if (defaultValudeAnnotation != null
                         && !DefValue.NATIVE_DEFAULT.equals(defaultValudeAnnotation.value())) {
                     if (StringUtils.isEmpty(defaultValudeAnnotation.value())) {
@@ -826,19 +828,21 @@ public class ResolverFactoryImpl implements ResolverFactory {
         public Object resolve(Invocation inv, ParamMetaData metaData) {
             String toConvert = null;
             // 
-            FlashParam flashParam = metaData.getFlashParamAnnotation();
-            Param param = metaData.getParamAnnotation();
+            FlashParam flashParam = metaData.getAnnotation(FlashParam.class);
             if (flashParam != null) {
                 toConvert = inv.getFlash().get(flashParam.value());
             }
-            if (toConvert == null && param != null) {
-                toConvert = inv.getParameter(param.value());
+            if (toConvert == null) {
+                Param param = metaData.getAnnotation(Param.class);
+                if (param != null) {
+                    toConvert = inv.getParameter(param.value());
+                }
             }
             if (toConvert == null) {
-                DefValue defaultValudeAnnotation = metaData.getDefaultValue();
-                if (defaultValudeAnnotation != null
-                        && !DefValue.NATIVE_DEFAULT.equals(defaultValudeAnnotation.value())) {
-                    toConvert = defaultValudeAnnotation.value();
+                DefValue defValudeAnnotation = metaData.getAnnotation(DefValue.class);
+                if (defValudeAnnotation != null
+                        && !DefValue.NATIVE_DEFAULT.equals(defValudeAnnotation.value())) {
+                    toConvert = defValudeAnnotation.value();
                 }
             }
             if (toConvert != null) {

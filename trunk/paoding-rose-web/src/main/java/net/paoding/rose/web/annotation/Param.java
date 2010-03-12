@@ -53,19 +53,4 @@ public @interface Param {
      */
     String value();
 
-    /**
-     * 
-     * (目前基本忽略这个参数，除了声明在HttpSession参数中)
-     * 
-     * @return
-     */
-    boolean required() default false;
-
-//    /**
-//     * 设置参数转化需要的参数
-//     * 
-//     * @return
-//     */
-//    ParamConf[] conf() default {};
-
 }

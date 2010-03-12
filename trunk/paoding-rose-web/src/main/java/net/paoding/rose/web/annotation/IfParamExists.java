@@ -22,6 +22,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
+ * 将 {@link IfParamExists} 标注在控制器方法的参数上，用于表示只有符合此条件时，才将请求映射到该方法。
+ * 
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
@@ -31,5 +33,13 @@ import java.lang.annotation.Target;
 @Documented
 public @interface IfParamExists {
 
+    /**
+     * 示例：<br>
+     * 
+     * IfParamExists("type")表示只当请求含有非零长度的type参数时才映射到此类 <br>
+     * IfParamExists("type=1" ) 表示只当请求含有tyep参数且值为1才映射到此方法 ；<br>
+     * 
+     * @return
+     */
     String[] value();
 }
