@@ -20,11 +20,8 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.servlet.http.HttpServletRequest;
-
 import net.paoding.rose.web.RequestPath;
 import net.paoding.rose.web.annotation.ReqMethod;
-import net.paoding.rose.web.impl.thread.Engine;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -329,7 +326,7 @@ public class MappingNode implements Comparable<MappingNode>, Iterable<MappingNod
         return null;
     }
 
-    public ArrayList<MatchResult> match(HttpServletRequest request, RequestPath requestPath) {
+    public ArrayList<MatchResult> match(RequestPath requestPath) {
         String rosePath = requestPath.getRosePath();
         String path = rosePath;
         ArrayList<MatchResult> matchResults = new ArrayList<MatchResult>(4);
@@ -338,21 +335,12 @@ public class MappingNode implements Comparable<MappingNode>, Iterable<MappingNod
         MatchResult mrIngoresRequestMethod = null;
         while (true) {
             MatchResult mr = cur.getMapping().match(path);
-            // @IfParamExists
-            if (mr != null && mr.getResource() != null) {
-                bindEngine(request, requestPath, mr);
-                if (mr.getEngine() == null) {
-                    mr = null;
-                }
-            }
             if (mr != null) {
                 // 设置上一级的resource [因上级node如果包含了多个resource当时留空]
                 if (matchResults.size() > 0) {
                     MatchResult prev = matchResults.get(matchResults.size() - 1);
                     if (prev.getResource() == null) {
                         prev.setResource(cur.getParentResource());
-                        bindEngine(request, requestPath, prev);
-                        assert prev.getEngine() != null;
                     }
                 }
                 if (cur.leftMostChild == null) {
@@ -411,23 +399,6 @@ public class MappingNode implements Comparable<MappingNode>, Iterable<MappingNod
                     }
                     return matchResults;
                 }
-            }
-        }
-    }
-
-    private void bindEngine(HttpServletRequest request, RequestPath requestPath, MatchResult mr) {
-        Engine[] engines = mr.getResource().getEngines(requestPath.getMethod());
-        for (Engine engine : engines) {
-            if (engine.isAccepted(request)) {
-                if (logger.isDebugEnabled()) {
-                    logger.debug("[" + requestPath.getRosePath() + "] it's accepted by engine: "
-                            + engine);
-                }
-                mr.setEngine(engine);
-                break;
-            } else if (logger.isDebugEnabled()) {
-                logger.debug("[" + requestPath.getRosePath() + "] it's not accepted by engine: "
-                        + engine);
             }
         }
     }

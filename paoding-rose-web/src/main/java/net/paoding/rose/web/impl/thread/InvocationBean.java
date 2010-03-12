@@ -142,19 +142,19 @@ public final class InvocationBean implements Invocation {
     private ModuleEngine getModuleEngine() {
         List<MatchResult> mrs = rose.getMatchResults();
         MatchResult mr = mrs.get(1);
-        return (ModuleEngine) mr.getEngine();
+        return (ModuleEngine) mr.getResource().getEngine(requestPath.getMethod());
     }
 
     private ControllerEngine getControllerEngine() {
         List<MatchResult> mrs = rose.getMatchResults();
         MatchResult mr = mrs.get(2);
-        return (ControllerEngine) mr.getEngine();
+        return (ControllerEngine) mr.getResource().getEngine(requestPath.getMethod());
     }
 
     private ActionEngine getActionEngine() {
         List<MatchResult> mrs = rose.getMatchResults();
         MatchResult mr = mrs.get(3);
-        return (ActionEngine) mr.getEngine();
+        return (ActionEngine) mr.getResource().getEngine(requestPath.getMethod());
     }
 
     @Override

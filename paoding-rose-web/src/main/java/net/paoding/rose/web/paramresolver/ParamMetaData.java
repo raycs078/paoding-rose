@@ -15,8 +15,10 @@
  */
 package net.paoding.rose.web.paramresolver;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+
+import net.paoding.rose.web.annotation.FlashParam;
+import net.paoding.rose.web.annotation.Param;
 
 /**
  * {@link ParamMetaData} 封装对一个控制器方法的某个参数的描述
@@ -41,13 +43,6 @@ public interface ParamMetaData {
     public Method getMethod();
 
     /**
-     * 该参数在方法所有参数中的位置,从0开始
-     * 
-     * @return
-     */
-    public int getIndex();
-
-    /**
      * 该参数的声明类型
      * 
      * @return
@@ -61,9 +56,21 @@ public interface ParamMetaData {
      */
     public String getParamName();
 
-    public <T extends Annotation> T getAnnotation(Class<T> annotationClass);
+    /**
+     * 返回对该参数的 {@link Param} 注解；可能为null
+     * 
+     * @return
+     */
+    public Param getParamAnnotation();
 
-    public <T extends Annotation> boolean isAnnotationPresent(Class<T> annotationClass);
+    /**
+     * 返回对该参数的 {@link FlashParam} 注解；可能为null
+     * 
+     * @return
+     */
+    public FlashParam getFlashParamAnnotation();
+
+    public int getIndex();
 
     public void setUserObject(Object key, Object userObject);
 

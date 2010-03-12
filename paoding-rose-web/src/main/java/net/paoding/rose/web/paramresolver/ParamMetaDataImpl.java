@@ -15,10 +15,12 @@
  */
 package net.paoding.rose.web.paramresolver;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
+
+import net.paoding.rose.web.annotation.FlashParam;
+import net.paoding.rose.web.annotation.Param;
 
 /**
  * 
@@ -35,9 +37,11 @@ class ParamMetaDataImpl implements ParamMetaData {
 
     private String paramName;
 
-    private Map<Object, Object> userObjectMap;
+    private Param paramAnnotation;
 
-    private Annotation[] annotations;
+    private FlashParam flashParamAnnotation;
+
+    private Map<Object, Object> userObjectMap;
 
     private int index;
 
@@ -48,27 +52,11 @@ class ParamMetaDataImpl implements ParamMetaData {
         this.paramName = paramName;
         this.paramType = paramType;
         this.index = index;
-        this.annotations = method.getParameterAnnotations()[index];
     }
 
     @Override
     public int getIndex() {
         return index;
-    }
-
-    @Override
-    public <T extends Annotation> T getAnnotation(Class<T> annotationClass) {
-        for (Annotation annotation : annotations) {
-            if (annotationClass.isInstance(annotation)) {
-                return annotationClass.cast(annotation);
-            }
-        }
-        return null;
-    }
-
-    @Override
-    public <T extends Annotation> boolean isAnnotationPresent(Class<T> annotationClass) {
-        return getAnnotation(annotationClass) != null;
     }
 
     @Override
@@ -118,6 +106,22 @@ class ParamMetaDataImpl implements ParamMetaData {
 
     public void setParamName(String paramName) {
         this.paramName = paramName;
+    }
+
+    public Param getParamAnnotation() {
+        return paramAnnotation;
+    }
+
+    public void setParamAnnotation(Param paramAnnotation) {
+        this.paramAnnotation = paramAnnotation;
+    }
+
+    public FlashParam getFlashParamAnnotation() {
+        return flashParamAnnotation;
+    }
+
+    public void setFlashParamAnnotation(FlashParam flashParamAnnotation) {
+        this.flashParamAnnotation = flashParamAnnotation;
     }
 
 }

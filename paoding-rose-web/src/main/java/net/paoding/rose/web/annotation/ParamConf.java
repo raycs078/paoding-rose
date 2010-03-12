@@ -13,29 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.paoding.rose.web.portal.impl;
+package net.paoding.rose.web.annotation;
 
-import net.paoding.rose.web.Invocation;
-import net.paoding.rose.web.paramresolver.ParamMetaData;
-import net.paoding.rose.web.paramresolver.ParamResolver;
-import net.paoding.rose.web.portal.PortalUtils;
-import net.paoding.rose.web.portal.Window;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * 解析声明在窗口控制器中的Window参数
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
-public class WindowResolver implements ParamResolver {
+@Target( { ElementType.PARAMETER })
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+public @interface ParamConf {
 
-    @Override
-    public boolean supports(ParamMetaData paramMetaData) {
-        return Window.class == paramMetaData.getParamType();
-    }
+    String name();
 
-    @Override
-    public Object resolve(Invocation inv, ParamMetaData paramMetaData) throws Exception {
-        return PortalUtils.getWindow(inv);
-    }
+    String value();
 }

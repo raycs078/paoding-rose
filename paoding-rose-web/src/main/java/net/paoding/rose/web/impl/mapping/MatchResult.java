@@ -17,8 +17,6 @@ package net.paoding.rose.web.impl.mapping;
 
 import java.util.Collection;
 
-import net.paoding.rose.web.impl.thread.Engine;
-
 /**
  * 控制器的action path参数映射结果,从这个结果中可以知道一个地址映射给哪个资源、资源的参数值是什么
  * 
@@ -46,10 +44,6 @@ public interface MatchResult {
      * @param resource
      */
     public void setResource(WebResource resource);
-
-    public Engine getEngine();
-
-    public void setEngine(Engine engine);
 
     /**
      * 从结果字符串中得到的资源参数个数

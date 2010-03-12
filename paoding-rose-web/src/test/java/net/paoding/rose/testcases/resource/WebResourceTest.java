@@ -15,8 +15,6 @@
  */
 package net.paoding.rose.testcases.resource;
 
-import javax.servlet.http.HttpServletRequest;
-
 import junit.framework.TestCase;
 import net.paoding.rose.web.annotation.ReqMethod;
 import net.paoding.rose.web.impl.mapping.MatchResult;
@@ -33,15 +31,6 @@ import net.paoding.rose.web.impl.thread.Rose;
 public class WebResourceTest extends TestCase {
 
     private Engine getEngine = new Engine() {
-
-        public int compareTo(Engine o) {
-            return 0;
-        }
-
-        @Override
-        public boolean isAccepted(HttpServletRequest rose) {
-            return true;
-        }
 
         @Override
         public Object execute(Rose rose, MatchResult mr) throws Throwable {
@@ -61,15 +50,6 @@ public class WebResourceTest extends TestCase {
 
     private Engine postEngine = new Engine() {
 
-        public int compareTo(Engine o) {
-            return 0;
-        }
-
-        @Override
-        public boolean isAccepted(HttpServletRequest rose) {
-            return true;
-        }
-
         @Override
         public Object execute(Rose rose, MatchResult mr) throws Throwable {
             return null;
@@ -87,15 +67,6 @@ public class WebResourceTest extends TestCase {
     };
 
     private Engine defEngine = new Engine() {
-
-        public int compareTo(Engine o) {
-            return 1;
-        }
-
-        @Override
-        public boolean isAccepted(HttpServletRequest rose) {
-            return true;
-        }
 
         @Override
         public Object execute(Rose rose, MatchResult mr) throws Throwable {
@@ -118,13 +89,13 @@ public class WebResourceTest extends TestCase {
         resource.addEngine(ReqMethod.GET, getEngine);
         resource.addEngine(ReqMethod.POST, postEngine);
 
-        assertSame(getEngine, resource.getEngines(ReqMethod.GET)[0]);
-        assertSame(postEngine, resource.getEngines(ReqMethod.POST)[0]);
+        assertSame(getEngine, resource.getEngine(ReqMethod.GET));
+        assertSame(postEngine, resource.getEngine(ReqMethod.POST));
 
         String msg = "not allowed method should return none engine";
-        assertNull(msg, resource.getEngines(ReqMethod.PUT));
-        assertNull(msg, resource.getEngines(ReqMethod.DELETE));
-        assertNull(msg, resource.getEngines(ReqMethod.OPTIONS));
+        assertNull(msg, resource.getEngine(ReqMethod.PUT));
+        assertNull(msg, resource.getEngine(ReqMethod.DELETE));
+        assertNull(msg, resource.getEngine(ReqMethod.OPTIONS));
 
         assertEquals("testGetPost [GET, POST]", resource.toString());
     }
@@ -135,13 +106,11 @@ public class WebResourceTest extends TestCase {
         resource.addEngine(ReqMethod.ALL, defEngine);
         resource.addEngine(ReqMethod.POST, postEngine);
 
-        assertSame(getEngine, resource.getEngines(ReqMethod.GET)[0]);
-        assertSame(defEngine, resource.getEngines(ReqMethod.GET)[1]);
-        assertSame(postEngine, resource.getEngines(ReqMethod.POST)[0]);
-        assertSame(defEngine, resource.getEngines(ReqMethod.POST)[1]);
+        assertSame(getEngine, resource.getEngine(ReqMethod.GET));
+        assertSame(postEngine, resource.getEngine(ReqMethod.POST));
 
-        assertSame(defEngine, resource.getEngines(ReqMethod.PUT)[0]);
-        assertSame(defEngine, resource.getEngines(ReqMethod.DELETE)[0]);
+        assertSame(defEngine, resource.getEngine(ReqMethod.PUT));
+        assertSame(defEngine, resource.getEngine(ReqMethod.DELETE));
 
         assertEquals("testNotOverrideByAll [GET, POST, DELETE, PUT, HEAD, OPTIONS, TRACE]",
                 resource.toString());

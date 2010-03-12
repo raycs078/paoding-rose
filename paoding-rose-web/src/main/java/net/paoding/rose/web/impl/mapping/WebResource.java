@@ -39,15 +39,13 @@ public interface WebResource {
      */
     public void addEngine(ReqMethod method, Engine engine);
 
-    //    /**
-    //     * 返回处理这个资源的处理逻辑，如果该资源不支持该操作方法返回null。
-    //     * 
-    //     * @param method 除 {@link ReqMethod#ALL} 外的其他 {@link ReqMethod} 实例
-    //     * @return
-    //     */
-    //    public Engine getEngine(ReqMethod method);
-
-    public Engine[] getEngines(ReqMethod method);
+    /**
+     * 返回处理这个资源的处理逻辑，如果该资源不支持该操作方法返回null。
+     * 
+     * @param method 除 {@link ReqMethod#ALL} 外的其他 {@link ReqMethod} 实例
+     * @return
+     */
+    public Engine getEngine(ReqMethod method);
 
     /**
      * 本资源是否支持此操作?

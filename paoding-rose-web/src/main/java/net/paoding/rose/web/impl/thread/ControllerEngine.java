@@ -17,8 +17,6 @@ package net.paoding.rose.web.impl.thread;
 
 import java.lang.reflect.Proxy;
 
-import javax.servlet.http.HttpServletRequest;
-
 import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.impl.mapping.MatchResult;
 import net.paoding.rose.web.impl.module.ControllerRef;
@@ -80,17 +78,6 @@ public class ControllerEngine implements Engine {
 
     public boolean isProxiedController() {
         return proxiedController;
-    }
-
-    @Override
-    public int compareTo(Engine o) {
-        assert o.getClass() == this.getClass();
-        return 0;
-    }
-
-    @Override
-    public boolean isAccepted(HttpServletRequest rose) {
-        return true;
     }
 
     @Override

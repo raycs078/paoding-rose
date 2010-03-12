@@ -44,6 +44,8 @@ import net.paoding.rose.web.var.Model;
 @Documented
 public @interface Param {
 
+    String JAVA_DEFAULT = "net.paoding.rose.web.annotation.Param.noDefualt";
+
     /**
      * 声明参数的名字，框架将把这个名字参数的值设置到所在的参数上；
      * <p>
@@ -52,5 +54,35 @@ public @interface Param {
      * @return
      */
     String value();
+
+    /**
+     * 
+     * (目前基本忽略这个参数，除了声明在HttpSession参数中)
+     * 
+     * @return
+     */
+    boolean required() default false;
+
+    /**
+     * 设置该参数的默认值，如果请求中没有该参数的话，或者发生转化错误时
+     * <p>
+     * 
+     * @return
+     */
+    String def() default JAVA_DEFAULT;
+
+    /**
+     * 设置参数转化需要的参数
+     * 
+     * @return
+     */
+    ParamConf[] conf() default {};
+
+    /**
+     * 是否应该跳过验证这个功能?
+     * 
+     * @return
+     */
+    boolean validated() default true;
 
 }

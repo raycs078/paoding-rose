@@ -15,10 +15,11 @@
  */
 package net.paoding.rose.web.paramresolver;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 
 import net.paoding.rose.web.Invocation;
-import net.paoding.rose.web.annotation.DefValue;
+import net.paoding.rose.web.annotation.FlashParam;
 import net.paoding.rose.web.annotation.Param;
 import net.paoding.rose.web.impl.validation.ParameterBindingResult;
 
@@ -56,9 +57,17 @@ public final class MethodParameterResolver {
         resolvers = new ParamResolver[parameterTypes.length];
         paramMetaDatas = new ParamMetaData[parameterTypes.length];
         // 
+        Annotation[][] parameterAnnotations = method.getParameterAnnotations();
         for (int i = 0; i < parameterTypes.length; i++) {
             ParamMetaDataImpl paramMetaData = new ParamMetaDataImpl(controllerClazz, method,
                     parameterTypes[i], parameterNames[i], i);
+            for (Annotation annotation : parameterAnnotations[i]) {
+                if (annotation instanceof Param) {
+                    paramMetaData.setParamAnnotation(Param.class.cast(annotation));
+                } else if (annotation instanceof FlashParam) {
+                    paramMetaData.setFlashParamAnnotation(FlashParam.class.cast(annotation));
+                }
+            }
             paramMetaDatas[i] = paramMetaData;
             resolvers[i] = resolverFactory.supports(paramMetaData);
         }
@@ -77,7 +86,7 @@ public final class MethodParameterResolver {
     }
 
     public Param getParamAnnotationAt(int index) {
-        return this.paramMetaDatas[index].getAnnotation(Param.class);
+        return this.paramMetaDatas[index].getParamAnnotation();
     }
 
     // ---------------------------------------------------------
@@ -107,9 +116,8 @@ public final class MethodParameterResolver {
 
                 // 对简单类型的参数，设置一个默认值给它以支持对该方法的继续调用
                 if (paramMetaDatas[i].getParamType().isPrimitive()) {
-                    DefValue defValudeAnnotation = paramMetaDatas[i].getAnnotation(DefValue.class);
-                    if (defValudeAnnotation == null
-                            || DefValue.NATIVE_DEFAULT.equals(defValudeAnnotation.value())) {
+                    Param paramAnnotation = paramMetaDatas[i].getParamAnnotation();
+                    if (paramAnnotation == null || Param.JAVA_DEFAULT.equals(paramAnnotation.def())) {
                         // 对这最常用的类型做一下if-else判断，其他类型就简单使用converter来做吧
                         if (paramMetaDatas[i].getParamType() == int.class) {
                             parameters[i] = Integer.valueOf(0);
@@ -127,8 +135,8 @@ public final class MethodParameterResolver {
                                     .getParamType());
                         }
                     } else {
-                        parameters[i] = typeConverter.convertIfNecessary(defValudeAnnotation
-                                .value(), paramMetaDatas[i].getParamType());
+                        parameters[i] = typeConverter.convertIfNecessary(paramAnnotation.def(),
+                                paramMetaDatas[i].getParamType());
                     }
                 }
                 // 

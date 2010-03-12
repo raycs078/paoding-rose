@@ -18,8 +18,6 @@
  */
 package net.paoding.rose.web.impl.thread;
 
-import javax.servlet.http.HttpServletRequest;
-
 import net.paoding.rose.web.impl.mapping.Mapping;
 import net.paoding.rose.web.impl.mapping.MatchResult;
 
@@ -33,15 +31,7 @@ import net.paoding.rose.web.impl.mapping.MatchResult;
  * @see Mapping
  * @author 王志亮 [qieqie.wang@gmail.com]
  */
-public interface Engine extends Comparable<Engine> {
-
-    /**
-     * 同一资源地址、请求方法下的排序
-     */
-    @Override
-    public int compareTo(Engine o);
-
-    public boolean isAccepted(HttpServletRequest request);
+public interface Engine {
 
     /**
      * 处理web请求

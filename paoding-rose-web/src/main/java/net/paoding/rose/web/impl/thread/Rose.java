@@ -31,6 +31,7 @@ import net.paoding.rose.web.RequestPath;
 import net.paoding.rose.web.annotation.ReqMethod;
 import net.paoding.rose.web.impl.mapping.MappingNode;
 import net.paoding.rose.web.impl.mapping.MatchResult;
+import net.paoding.rose.web.impl.mapping.WebResource;
 import net.paoding.rose.web.impl.module.Module;
 
 import org.apache.commons.logging.Log;
@@ -101,13 +102,15 @@ public class Rose implements EngineChain {
 
     @Override
     public Object doNext() throws Throwable {
+        ReqMethod method = inv.getRequestPath().getMethod();
         MatchResult matchResult = matchResults.get(nextIndexOfChain++);
-        Engine engine = matchResult.getEngine();
+        WebResource resource = matchResult.getResource();
+        Engine engine = resource.getEngine(method);
         return engine.execute(this, matchResult);
     }
 
     private boolean innerStart() throws Throwable {
-        ArrayList<MatchResult> matchResults = mappingTree.match(originalHttpRequest, this.path);
+        ArrayList<MatchResult> matchResults = mappingTree.match(this.path);
         // 完成一次成功匹配需要走完树的4个结点
         if (matchResults.size() != 4) {
             if (logger.isDebugEnabled()) {

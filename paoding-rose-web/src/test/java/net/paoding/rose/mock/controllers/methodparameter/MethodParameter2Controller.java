@@ -19,10 +19,8 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import net.paoding.rose.web.Invocation;
-import net.paoding.rose.web.annotation.DefValue;
 import net.paoding.rose.web.annotation.Param;
-import net.paoding.rose.web.annotation.Pattern;
-import net.paoding.rose.web.annotation.Create;
+import net.paoding.rose.web.annotation.ParamConf;
 import net.paoding.rose.web.var.Flash;
 import net.paoding.rose.web.var.Model;
 
@@ -50,7 +48,7 @@ public class MethodParameter2Controller {
     public void session(HttpSession session) {
     }
 
-    public void session2(@Create(false) HttpSession session) {
+    public void session2(@Param(value = "", required = false) HttpSession session) {
     }
 
     public void model(Model request) {
@@ -101,18 +99,21 @@ public class MethodParameter2Controller {
             @Param("ts") Timestamp ts) {
     }
 
-    public void datedef(@Param("d") @DefValue("") Date d,//
-            @Param("sd") @DefValue("123456") java.sql.Date sd,//
-            @Param(value = "t") Time t,//
+    public void datedef(@Param(value = "d", def = "") Date d,
+            @Param(value = "sd", def = "123456") java.sql.Date sd, @Param(value = "t") Time t,
             @Param("ts") Timestamp ts) {
     }
 
-    public void datePattern1(@Param("d") @Pattern( { "yyyy.MMddHHmmss", "yyMMddHHmmss" }) Date d,
-            @Param("t") @Pattern( { "HHmmss", "ss.HHmm" }) Time t) {
+    public void datePattern1(@Param(value = "d", conf = {
+            @ParamConf(name = "pattern", value = "yyyy.MMddHHmmss"),
+            @ParamConf(name = "pattern", value = "yyMMddHHmmss") }) Date d,
+            @Param(value = "t", conf = { @ParamConf(name = "pattern", value = "HHmmss"),
+                    @ParamConf(name = "pattern", value = "ss.HHmm") }) Time t) {
     }
 
-    public void datePattern2(@Param("d") @Pattern("long") Date d,
-            @Param("t") @Pattern("long") Time t) {
+    public void datePattern2(
+            @Param(value = "d", conf = { @ParamConf(name = "pattern", value = "long") }) Date d,
+            @Param(value = "t", conf = { @ParamConf(name = "pattern", value = "long") }) Time t) {
     }
 
     public void userBean(User user) {
@@ -199,3 +200,4 @@ public class MethodParameter2Controller {
     }
 
 }
+

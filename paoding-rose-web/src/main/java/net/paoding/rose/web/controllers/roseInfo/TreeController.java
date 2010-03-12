@@ -55,17 +55,16 @@ public class TreeController {
             if (child.getDeep() == 3) {
                 for (WebResource resource : child.getResources()) {
                     for (ReqMethod method : resource.getAllowedMethods()) {
-                        for (Engine engine : resource.getEngines(method)) {
-                            ActionEngine action = (ActionEngine) engine;
-                            Method m = action.getMethod();
-                            Class<?> cc = action.getControllerClass();
-                            String rm = method.toString();
-                            sb.append("<allowed ");
-                            sb.append(rm + "=\"" + cc.getSimpleName() + " ." + m.getName() + "\" ");
-                            sb.append("package=\"" + m.getDeclaringClass().getPackage().getName()
-                                    + "\" ");
-                            sb.append(" />");
-                        }
+                        Engine engine = resource.getEngine(method);
+                        ActionEngine action = (ActionEngine) engine;
+                        Method m = action.getMethod();
+                        Class<?> cc = action.getControllerClass();
+                        String rm = method.toString();
+                        sb.append("<allowed ");
+                        sb.append(rm + "=\"" + cc.getSimpleName() + " ." + m.getName() + "\" ");
+                        sb.append("package=\"" + m.getDeclaringClass().getPackage().getName()
+                                + "\" ");
+                        sb.append(" />");
                     }
                 }
             }
