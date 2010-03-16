@@ -7,19 +7,17 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import net.paoding.rose.jade.jadeinterface.annotation.Dao;
-import net.paoding.rose.jade.jadeinterface.impl.scanner.DAOScanner;
-import net.paoding.rose.jade.jadeinterface.impl.scanner.ResourceInfo;
 import net.paoding.rose.jade.jadeinterface.provider.DataAccessProvider;
+import net.paoding.rose.scanning.ResourceRef;
+import net.paoding.rose.scanning.RoseScanner;
+import net.paoding.rose.scanning.vfs.FileName;
+import net.paoding.rose.scanning.vfs.FileObject;
+import net.paoding.rose.scanning.vfs.FileSystemManager;
+import net.paoding.rose.scanning.vfs.FileType;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.commons.vfs.FileName;
-import org.apache.commons.vfs.FileObject;
-import org.apache.commons.vfs.FileSystemException;
-import org.apache.commons.vfs.FileSystemManager;
-import org.apache.commons.vfs.FileType;
-import org.apache.commons.vfs.VFS;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.MutablePropertyValues;
 import org.springframework.beans.factory.BeanCreationException;
@@ -88,18 +86,19 @@ public class JadeDaoProcessor implements BeanFactoryPostProcessor, ApplicationCo
 
     private List<Class<?>> daoClasses;
 
+    FileSystemManager fsManager = new FileSystemManager();
+
     public synchronized List<Class<?>> findDaoClasses() throws IOException {
 
         if (daoClasses == null) {
             daoClasses = new ArrayList<Class<?>>();
 
-            DAOScanner daoScanner = DAOScanner.getDaoScanner();
-            List<ResourceInfo> resources = new ArrayList<ResourceInfo>();
+            RoseScanner daoScanner = RoseScanner.getInstance();
+            List<ResourceRef> resources = new ArrayList<ResourceRef>();
             resources.addAll(daoScanner.getClassesFolderResources());
             resources.addAll(daoScanner.getJarResources());
 
-            FileSystemManager fsManager = VFS.getManager();
-            for (ResourceInfo resourceInfo : resources) {
+            for (ResourceRef resourceInfo : resources) {
                 if (resourceInfo.hasModifier("dao") || resourceInfo.hasModifier("DAO")) {
                     Resource resource = resourceInfo.getResource();
                     File resourceFile = resource.getFile();
@@ -168,8 +167,7 @@ public class JadeDaoProcessor implements BeanFactoryPostProcessor, ApplicationCo
         }
     }
 
-    protected void handleDAOResource(FileObject rootObject, FileObject resource)
-            throws FileSystemException {
+    protected void handleDAOResource(FileObject rootObject, FileObject resource) throws IOException {
         FileName fileName = resource.getName();
         String bn = fileName.getBaseName();
         if (bn.endsWith(".class") && (bn.indexOf('$') == -1)) {
@@ -177,7 +175,7 @@ public class JadeDaoProcessor implements BeanFactoryPostProcessor, ApplicationCo
         }
     }
 
-    private void addDAOClass(FileObject rootObject, FileObject resource) throws FileSystemException {
+    private void addDAOClass(FileObject rootObject, FileObject resource) throws IOException {
         String className = rootObject.getName().getRelativeName(resource.getName());
         className = StringUtils.removeEnd(className, ".class");
         className = className.replace('/', '.');
