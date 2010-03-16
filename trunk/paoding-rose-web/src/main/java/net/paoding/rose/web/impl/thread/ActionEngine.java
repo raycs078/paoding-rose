@@ -194,7 +194,13 @@ public final class ActionEngine implements Engine {
         IfParamExists if2 = ((ActionEngine) o).method.getAnnotation(IfParamExists.class);
         boolean e1 = (if1 != null);
         boolean e2 = (if2 != null);
-        return e1 != e2 ? (e1 ? -1 : 1) : if2.value()[0].length() - if1.value()[0].length();
+        if (e1 != e2) {
+            return (e1 ? -1 : 1);
+        } else if (e1) {
+            return if2.value()[0].length() - if1.value()[0].length();
+        } else {
+            return method.getName().length() - ((ActionEngine) o).method.getName().length();
+        }
     }
 
     @Override

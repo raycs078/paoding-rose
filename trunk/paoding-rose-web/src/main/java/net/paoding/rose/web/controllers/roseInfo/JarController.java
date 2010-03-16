@@ -18,8 +18,8 @@ package net.paoding.rose.web.controllers.roseInfo;
 import java.util.Arrays;
 import java.util.List;
 
-import net.paoding.rose.scanner.ResourceRef;
-import net.paoding.rose.scanner.RoseScanner;
+import net.paoding.rose.scanning.ResourceRef;
+import net.paoding.rose.scanning.RoseScanner;
 import net.paoding.rose.web.annotation.rest.Get;
 
 /**
