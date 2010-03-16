@@ -15,9 +15,6 @@
  */
 package net.paoding.rose.scanner;
 
-import static net.paoding.rose.RoseConstants.CONF_MODULE_IGNORED;
-import static net.paoding.rose.RoseConstants.CONF_MODULE_PATH;
-import static net.paoding.rose.RoseConstants.CONF_PARENT_MODULE_PATH;
 import static net.paoding.rose.RoseConstants.CONTROLLERS_DIRECTORY_NAME;
 
 import java.io.File;
@@ -31,14 +28,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import net.paoding.rose.RoseConstants;
+import net.paoding.rose.scanning.ResourceRef;
+import net.paoding.rose.scanning.RoseScanner;
+import net.paoding.rose.scanning.vfs.FileName;
+import net.paoding.rose.scanning.vfs.FileObject;
+import net.paoding.rose.scanning.vfs.FileSystemManager;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.commons.vfs.FileName;
-import org.apache.commons.vfs.FileObject;
-import org.apache.commons.vfs.FileSystemException;
-import org.apache.commons.vfs.FileSystemManager;
-import org.apache.commons.vfs.VFS;
 import org.springframework.core.io.Resource;
 import org.springframework.util.Log4jConfigurer;
 
@@ -62,6 +61,8 @@ public class RoseModuleInfos {
 
     private Map<FileObject, ModuleResource> moduleResourceMap;
 
+    private FileSystemManager fsManager = new FileSystemManager();
+
     public synchronized List<ModuleResource> findModuleResources() throws IOException {
         if (moduleResourceList == null) {
             if (logger.isDebugEnabled()) {
@@ -76,10 +77,12 @@ public class RoseModuleInfos {
             resources.addAll(roseScanner.getClassesFolderResources());
             resources.addAll(roseScanner.getJarResources());
             List<FileObject> rootObjects = new ArrayList<FileObject>();
-            FileSystemManager fsManager = VFS.getManager();
-            for (ResourceRef resourceRef : resources) {
 
+            for (ResourceRef resourceRef : resources) {
                 if (resourceRef.hasModifier("controllers")) {
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("try to find controllers: " + resourceRef.getResource());
+                    }
                     Resource resource = resourceRef.getResource();
                     File resourceFile = resource.getFile();
                     FileObject rootObject = null;
@@ -101,7 +104,7 @@ public class RoseModuleInfos {
                         deepScanImpl(rootObject, rootObject);
                         int newSize = moduleResourceList.size();
                         if (logger.isInfoEnabled()) {
-                            logger.info("got" + (newSize - oldSize) + " modules from " //
+                            logger.info("got " + (newSize - oldSize) + " modules from " //
                                     + rootObject);
                         }
                     } catch (Exception e) {
@@ -116,11 +119,7 @@ public class RoseModuleInfos {
             }
 
             afterScanning();
-
-            for (FileObject fileObject : rootObjects) {
-                fsManager.closeFileSystem(fileObject.getFileSystem());
-            }
-            logger.info("found " + moduleResourceList.size() + " module resources");
+            logger.info("found " + moduleResourceList.size() + " module resources ");
         } else {
 
             if (logger.isDebugEnabled()) {
@@ -130,20 +129,20 @@ public class RoseModuleInfos {
         return new ArrayList<ModuleResource>(moduleResourceList);
     }
 
-    protected void deepScanImpl(FileObject rootObject, FileObject fileObject) {
-        try {
-            if (CONTROLLERS_DIRECTORY_NAME.equals(fileObject.getName().getBaseName())) {
-                handleWithFolder(rootObject, fileObject);
-            } else {
-                FileObject[] children = fileObject.getChildren();
-                for (FileObject child : children) {
-                    if (child.getType().hasChildren()) {
-                        deepScanImpl(rootObject, child);
-                    }
+    protected void deepScanImpl(FileObject rootObject, FileObject fileObject) throws IOException {
+        if (logger.isDebugEnabled()) {
+            logger.debug(fileObject + " .getBaseName()=" //
+                    + fileObject.getName().getBaseName());
+        }
+        if (CONTROLLERS_DIRECTORY_NAME.equals(fileObject.getName().getBaseName())) {
+            handleWithFolder(rootObject, fileObject);
+        } else {
+            FileObject[] children = fileObject.getChildren();
+            for (FileObject child : children) {
+                if (child.getType().hasChildren()) {
+                    deepScanImpl(rootObject, child);
                 }
             }
-        } catch (Exception e) {
-            logger.error("error happend when deep scan " + fileObject, e);
         }
     }
 
@@ -173,15 +172,15 @@ public class RoseModuleInfos {
             in.close();
 
             // 如果controllers=ignored，则...
-            String ignored = p.getProperty(CONF_MODULE_IGNORED, "false").trim();
+            String ignored = p.getProperty(RoseConstants.CONF_MODULE_IGNORED, "false").trim();
             if ("true".equalsIgnoreCase(ignored) || "1".equalsIgnoreCase(ignored)) {
                 logger.info("ignored controllers folder: " + thisFolder.getName());
                 return;
             }
-            mappingPath = p.getProperty(CONF_MODULE_PATH);
+            mappingPath = p.getProperty(RoseConstants.CONF_MODULE_PATH);
             if (mappingPath != null) {
                 mappingPath = mappingPath.trim();
-                if (mappingPath.indexOf("${" + CONF_PARENT_MODULE_PATH + "}") != -1) {
+                if (mappingPath.indexOf("${" + RoseConstants.CONF_PARENT_MODULE_PATH + "}") != -1) {
                     if (thisFolder.getParent() != null) {
                         String replacePath;
                         if (parentModuleInfo == null) {
@@ -189,10 +188,11 @@ public class RoseModuleInfos {
                         } else {
                             replacePath = parentModuleInfo.getMappingPath();
                         }
-                        mappingPath = mappingPath.replace("${" + CONF_PARENT_MODULE_PATH + "}",
-                                replacePath);
+                        mappingPath = mappingPath.replace("${"
+                                + RoseConstants.CONF_PARENT_MODULE_PATH + "}", replacePath);
                     } else {
-                        mappingPath = mappingPath.replace("${" + CONF_PARENT_MODULE_PATH + "}", "");
+                        mappingPath = mappingPath.replace("${"
+                                + RoseConstants.CONF_PARENT_MODULE_PATH + "}", "");
                     }
                 }
                 if (mappingPath.length() != 0 && !mappingPath.startsWith("/")) {
@@ -248,7 +248,7 @@ public class RoseModuleInfos {
     }
 
     protected void handlerModuleResource(FileObject rootObject, FileObject thisFolder,
-            FileObject resource) throws FileSystemException {
+            FileObject resource) throws IOException {
         FileName fileName = resource.getName();
         String bn = fileName.getBaseName();
         if (bn.endsWith(".class") && bn.indexOf('$') == -1) {
@@ -261,7 +261,7 @@ public class RoseModuleInfos {
     }
 
     private void addModuleContext(FileObject rootObject, FileObject thisFolder, FileObject resource)
-            throws FileSystemException {
+            throws IOException {
         ModuleResource moduleInfo = moduleResourceMap.get(thisFolder);
         moduleInfo.addContextResource(resource.getURL());
         if (logger.isDebugEnabled()) {
@@ -271,7 +271,7 @@ public class RoseModuleInfos {
     }
 
     private void addModuleMessage(FileObject rootObject, FileObject thisFolder, FileObject resource)
-            throws FileSystemException {
+            throws IOException {
         ModuleResource moduleInfo = moduleResourceMap.get(thisFolder);
         moduleInfo.addMessageResource(resource.getParent().getURL() + "/messages");
         if (logger.isDebugEnabled()) {
@@ -281,9 +281,10 @@ public class RoseModuleInfos {
     }
 
     private void addModuleClass(FileObject rootObject, FileObject thisFolder, FileObject resource)
-            throws FileSystemException {
+            throws IOException {
         String className = rootObject.getName().getRelativeName(resource.getName());
         className = StringUtils.removeEnd(className, ".class");
+        className = StringUtils.removeStart(className, "/");
         className = className.replace('/', '.');
         ModuleResource moduleInfo = moduleResourceMap.get(thisFolder);
         try {

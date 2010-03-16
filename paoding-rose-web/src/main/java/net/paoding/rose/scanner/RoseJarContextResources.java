@@ -20,6 +20,9 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
+import net.paoding.rose.scanning.ResourceRef;
+import net.paoding.rose.scanning.RoseScanner;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.core.io.Resource;
