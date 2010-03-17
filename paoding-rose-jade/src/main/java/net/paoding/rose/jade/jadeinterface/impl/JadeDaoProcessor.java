@@ -179,6 +179,10 @@ public class JadeDaoProcessor implements BeanFactoryPostProcessor, ApplicationCo
         String className = rootObject.getName().getRelativeName(resource.getName());
         className = StringUtils.removeEnd(className, ".class");
         className = className.replace('/', '.');
+        if (className.charAt(0) == '.') {
+            // BUGFIX: 在某些情况下, 会返回以 '/' 起始的相对路径
+            className = className.substring(1);
+        }
         for (int i = daoClasses.size() - 1; i >= 0; i--) {
             Class<?> clazz = daoClasses.get(i);
             if (clazz.getName().equals(className)) {
@@ -206,7 +210,7 @@ public class JadeDaoProcessor implements BeanFactoryPostProcessor, ApplicationCo
                 }
             }
         } catch (ClassNotFoundException e) {
-            logger.error("Class not found", e);
+            logger.error("Class not found: " + className, e);
         }
     }
 }
