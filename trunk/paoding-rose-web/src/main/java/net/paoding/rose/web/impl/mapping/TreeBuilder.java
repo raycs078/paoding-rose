@@ -142,9 +142,12 @@ public class TreeBuilder {
                         MappingImpl tempMapping = new MappingImpl(candidate, MatchMode.EQUALS, null);
                         MappingNode tempNode = controllerNode.getChild(tempMapping);
                         if (tempNode != null) {
-                            Engine[] defActionEngines = tempNode.getResources()[0].getEngines(reqMethod);
-                            for (Engine engine : defActionEngines) {
-                                defResource.addEngine(reqMethod, engine);
+                            Engine[] defActionEngines = tempNode.getResources()[0]
+                                    .getEngines(reqMethod);
+                            if (defActionEngines != null) {
+                                for (Engine engine : defActionEngines) {
+                                    defResource.addEngine(reqMethod, engine);
+                                }
                             }
                             break;
                         }
