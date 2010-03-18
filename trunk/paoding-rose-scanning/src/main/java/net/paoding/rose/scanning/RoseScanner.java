@@ -135,6 +135,10 @@ public class RoseScanner {
                             logger.debug("add classes folder: " + resourceRef);
                         }
                     }
+                } else {
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("skip classes folder (not a file protocol url): " + urlObject);
+                    }
                 }
             }
             // 删除含有一个地址包含另外一个地址的
