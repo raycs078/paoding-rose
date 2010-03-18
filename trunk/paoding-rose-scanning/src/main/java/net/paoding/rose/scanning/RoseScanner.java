@@ -100,6 +100,15 @@ public class RoseScanner {
             Enumeration<URL> founds = resourcePatternResolver.getClassLoader().getResources("");
             while (founds.hasMoreElements()) {
                 URL urlObject = founds.nextElement();
+                String path = urlObject.getPath();
+                path = StringUtils.removeEnd(path, "/");
+                if (!path.endsWith("/classes") && !path.endsWith("/bin")) {
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("skip classes folder (not ends with classes or bin): "
+                                + urlObject);
+                    }
+                    continue;
+                }
                 if ("file".equals(urlObject.getProtocol())) {
                     File file;
                     try {
@@ -132,12 +141,12 @@ public class RoseScanner {
             List<ResourceRef> toRemove = new LinkedList<ResourceRef>();
             for (int i = 0; i < classesFolderResources.size(); i++) {
                 ResourceRef resourceInfo = classesFolderResources.get(i);
-//                String path = resourceInfo.getResource().getFile().getAbsolutePath();
+                //                String path = resourceInfo.getResource().getFile().getAbsolutePath();
                 String path = resourceInfo.getResource().getURI().getPath();
                 for (int j = i + 1; j < classesFolderResources.size(); j++) {
                     ResourceRef toCheck = classesFolderResources.get(j);
                     String toCheckPath = toCheck.getResource().getURI().getPath();
-//                    String toCheckPath = toCheck.getResource().getFile().getAbsolutePath();
+                    //                    String toCheckPath = toCheck.getResource().getFile().getAbsolutePath();
                     if (path.startsWith(toCheckPath)) {
                         toRemove.add(toCheck);
                         if (logger.isDebugEnabled()) {
