@@ -96,6 +96,9 @@ public class RoseScanner {
      */
     public List<ResourceRef> getClassesFolderResources() throws IOException {
         if (classesFolderResources == null) {
+            if (logger.isInfoEnabled()) {
+                logger.info("start to get classes folder resources");
+            }
             List<ResourceRef> classesFolderResources = new ArrayList<ResourceRef>();
             Enumeration<URL> founds = resourcePatternResolver.getClassLoader().getResources("");
             while (founds.hasMoreElements()) {
