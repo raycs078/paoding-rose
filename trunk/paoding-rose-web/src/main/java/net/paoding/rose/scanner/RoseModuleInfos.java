@@ -251,6 +251,10 @@ public class RoseModuleInfos {
             FileObject resource) throws IOException {
         FileName fileName = resource.getName();
         String bn = fileName.getBaseName();
+        if (logger.isDebugEnabled()) {
+            logger.debug("handlerModuleResource baseName=" + bn + "; file="
+                    + fileName.getFileObject());
+        }
         if (bn.endsWith(".class") && bn.indexOf('$') == -1) {
             addModuleClass(rootObject, thisFolder, resource);
         } else if (bn.startsWith("applicationContext") && bn.endsWith(".xml")) {
@@ -273,7 +277,12 @@ public class RoseModuleInfos {
     private void addModuleMessage(FileObject rootObject, FileObject thisFolder, FileObject resource)
             throws IOException {
         ModuleResource moduleInfo = moduleResourceMap.get(thisFolder);
-        moduleInfo.addMessageResource(resource.getParent().getURL() + "/messages");
+        String directory = resource.getParent().getURL().toString();
+        if (directory.endsWith("/")) {
+            moduleInfo.addMessageResource(directory + "messages");
+        } else {
+            moduleInfo.addMessageResource(directory + "/messages");
+        }
         if (logger.isDebugEnabled()) {
             logger.debug("module '" + moduleInfo.getMappingPath() + "': found messages file, url="
                     + resource.getURL());

@@ -8,6 +8,10 @@
 	<name>paoding-rose</name>
 	<url>http://repos.d.xiaonei.com</url>
 
+	<properties>
+		<Implementation-Version>0.9.7-20100318</Implementation-Version>
+	</properties>
+	
 	<dependencies>
 		<dependency>
 			<groupId>junit</groupId>
@@ -173,8 +177,8 @@
 						<manifestEntries>
 							<Rose>controllers, applicationContext, messages</Rose>
 							<Implementation-Title>Paoding Rose</Implementation-Title>
-							<Implementation-Version>0.9.7-20100316</Implementation-Version>
-							<Rose-Version>0.9.7-20100316</Rose-Version>
+							<Implementation-Version>${Implementation-Version}</Implementation-Version>
+							<Rose-Version>${Implementation-Version}</Rose-Version>
 						</manifestEntries>
 					</archive>
 				</configuration>
