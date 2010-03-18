@@ -202,7 +202,7 @@ public class JarFileObject implements FileObject {
 
     @Override
     public URL getURL() throws IOException {
-        String url = "jar:" + new File(jarFilePath).toURI() + "!/" + path;
+        String url = "jar:file:" + jarFilePath + "!/" + path;
         return new URL(url);
     }
 

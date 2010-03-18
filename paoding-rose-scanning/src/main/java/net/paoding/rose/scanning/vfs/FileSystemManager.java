@@ -28,6 +28,9 @@ public class FileSystemManager {
         if (path.startsWith("jar:file:")) {
             FileObject jar = new JarFileObject(path.substring("jar:file:".length()));
             return jar;
+        } else if (path.startsWith("jar:")) {
+            FileObject jar = new JarFileObject(path.substring("jar:".length()));
+            return jar;
         } else {
             FileObject file = new SimpleFileObject(path);
             return file;
