@@ -20,6 +20,8 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.MutablePropertyValues;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
@@ -37,6 +39,8 @@ import org.springframework.web.context.support.XmlWebApplicationContext;
  * 
  */
 public class RoseXmlWebApplicationContext extends XmlWebApplicationContext {
+
+    private static final Log logger = LogFactory.getLog(RoseXmlWebApplicationContext.class);
 
     private List<Resource> contextResources = Collections.emptyList();
 
@@ -80,13 +84,16 @@ public class RoseXmlWebApplicationContext extends XmlWebApplicationContext {
     protected void prepareBeanFactoryByRose(ConfigurableListableBeanFactory beanFactory) {
         BeanDefinitionRegistry registry = (BeanDefinitionRegistry) beanFactory;
         AnnotationConfigUtils.registerAnnotationConfigProcessors(registry);
-        registerMessageSourceIfNecessary(registry, messageBaseNames);
+        if (messageBaseNames != null && messageBaseNames.length > 0) {
+            registerMessageSourceIfNecessary(registry, messageBaseNames);
+        }
     }
 
     /** 如果配置文件没有自定义的messageSource定义，则由Rose根据最佳实践进行预设 */
     public static void registerMessageSourceIfNecessary(BeanDefinitionRegistry registry,
             String[] messageBaseNames) {
         if (!ArrayUtils.contains(registry.getBeanDefinitionNames(), MESSAGE_SOURCE_BEAN_NAME)) {
+            logger.debug("registerMessageSource  " + ArrayUtils.toString(messageBaseNames));
             GenericBeanDefinition messageSource = new GenericBeanDefinition();
             messageSource.setBeanClass(ReloadableResourceBundleMessageSource.class);
             MutablePropertyValues propertyValues = new MutablePropertyValues();

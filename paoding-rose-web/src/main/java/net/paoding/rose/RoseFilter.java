@@ -228,8 +228,8 @@ public class RoseFilter extends GenericFilterBean {
     @Override
     protected final void initFilterBean() throws ServletException {
         try {
-            logger.info("Rose Initiating...");
-            getServletContext().log("Rose Initiating...");
+            logger.info("Rose Initializing...");
+            getServletContext().log("Rose Initializing...");
 
             // 识别 Rose 程序模块
             this.modules = prepareModules(prepareRootApplicationContext());
