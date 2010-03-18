@@ -55,6 +55,10 @@ public class TreeController {
             if (child.getDeep() == 3) {
                 for (WebResource resource : child.getResources()) {
                     for (ReqMethod method : resource.getAllowedMethods()) {
+                        Engine[] engines = resource.getEngines(method);
+                        if (engines == null) {
+                            continue;
+                        }
                         for (Engine engine : resource.getEngines(method)) {
                             ActionEngine action = (ActionEngine) engine;
                             Method m = action.getMethod();
