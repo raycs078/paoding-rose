@@ -35,29 +35,28 @@ public enum ReqMethod {
     }
 
     public static ReqMethod parse(String method) {
-        method = method.toUpperCase();
-        if ("GET".equals(method)) {
+        if ("GET".equalsIgnoreCase(method)) {
             return GET;
         }
-        if ("POST".equals(method)) {
+        if ("POST".equalsIgnoreCase(method)) {
             return POST;
         }
         if ("*".equals(method) || "ALL".equals(method)) {
             return ALL;
         }
-        if ("DELETE".equals(method)) {
+        if ("DELETE".equalsIgnoreCase(method)) {
             return DELETE;
         }
-        if ("PUT".equals(method)) {
+        if ("PUT".equalsIgnoreCase(method)) {
             return PUT;
         }
-        if ("HEAD".equals(method)) {
+        if ("HEAD".equalsIgnoreCase(method)) {
             return HEAD;
         }
-        if ("OPTIONS".equals(method)) {
+        if ("OPTIONS".equalsIgnoreCase(method)) {
             return OPTIONS;
         }
-        if ("TRACE".equals(method)) {
+        if ("TRACE".equalsIgnoreCase(method)) {
             return TRACE;
         }
         return null;

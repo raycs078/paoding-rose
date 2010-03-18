@@ -22,12 +22,16 @@ import javax.servlet.http.HttpServletRequest;
 
 import net.paoding.rose.web.annotation.ReqMethod;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.web.util.WebUtils;
 
 /**
  * @author 王志亮 [qieqie.wang@gmail.com]
  */
 public class RequestPath {
+
+    private static Log logger = LogFactory.getLog(RequestPath.class);
 
     private ReqMethod method;
 
@@ -49,7 +53,7 @@ public class RequestPath {
 
     public RequestPath(HttpServletRequest request) {
         // method
-        setMethod(ReqMethod.parse(request.getMethod()));
+        setMethod(parseMethod(request));
 
         // ctxpath
         setCtxpath(request.getContextPath());
@@ -99,6 +103,34 @@ public class RequestPath {
             setRosePath(getUri().substring(
                     (invocationCtxpath == null ? getCtxpath() : invocationCtxpath).length()));
         }
+    }
+
+    private ReqMethod parseMethod(HttpServletRequest request) {
+        ReqMethod reqMethod = ReqMethod.parse(request.getMethod());
+        if (reqMethod != null && reqMethod.equals(ReqMethod.POST)) {
+            // 为什么不用getParameter：
+            // 1、使_method只能在queryString中，不能在body中
+            // 2、getParameter会导致encoding，使用UTF-8? 尽量不做这个假设
+            String queryString = request.getQueryString();
+            if (queryString != null) {
+                int start = queryString.indexOf("_method=");
+                if (start >= 0) {
+                    if (start == 0 || queryString.indexOf(start - 1) == '&') {
+                        int end = queryString.indexOf('&', start);
+                        String method = queryString.substring(start + "_method=".length(),//
+                                end > 0 ? end : queryString.length());
+                        ReqMethod _reqMethod = ReqMethod.parse(method);
+                        if (_reqMethod != null) {
+                            if (logger.isDebugEnabled()) {
+                                logger.debug("override http method from POST to " + _reqMethod);
+                            }
+                            reqMethod = _reqMethod;
+                        }
+                    }
+                }
+            }
+        }
+        return reqMethod;
     }
 
     public boolean isIncludeRequest() {
