@@ -97,7 +97,18 @@ public class WebEngine implements Engine {
 
     @Override
     public Object execute(Rose rose, MatchResult mr) throws Throwable {
+
         InvocationBean inv = rose.getInvocation();
+        ServletRequest request = inv.getRequest();
+        //
+        if (request.getCharacterEncoding() == null) {
+            request.setCharacterEncoding("UTF-8");
+            if (logger.isDebugEnabled()) {
+                logger.debug("set request.characterEncoding by default:"
+                        + request.getCharacterEncoding());
+            }
+        }
+
         //
         final RequestPath requestPath = inv.getRequestPath();
 

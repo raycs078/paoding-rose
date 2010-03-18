@@ -384,40 +384,34 @@ public final class ActionEngine implements Engine {
             httpFeatures = this.controllerClass.getAnnotation(HttpFeatures.class);
         }
         if (httpFeatures != null) {
-            if (StringUtils.isNotBlank(httpFeatures.contentType())) {
-                response.setContentType(httpFeatures.contentType());
-                if (logger.isDebugEnabled()) {
-                    logger.debug("set response.contentType by metadata:"
-                            + response.getContentType());
-                }
-            }
             if (StringUtils.isNotBlank(httpFeatures.charset())) {
-                request.setCharacterEncoding(httpFeatures.charset());
                 response.setCharacterEncoding(httpFeatures.charset());
                 if (logger.isDebugEnabled()) {
-                    logger.debug("set request/response.characterEncoding " + "by metadata:"
+                    logger.debug("set response.characterEncoding by HttpFeatures:"
                             + httpFeatures.charset());
                 }
             }
-        }
-        if (response.getContentType() == null) {
-            response.setContentType("text/html;charset=UTF-8");
-            if (logger.isDebugEnabled()) {
-                logger.debug("set response.contentType by default:" + response.getContentType());
-            }
-        }
-        if (request.getCharacterEncoding() == null) {
-            request.setCharacterEncoding("UTF-8");
-            if (logger.isDebugEnabled()) {
-                logger.debug("set request.characterEncoding by default:"
-                        + request.getCharacterEncoding());
+            if (StringUtils.isNotBlank(httpFeatures.contentType())) {
+                response.setContentType(httpFeatures.contentType());
+                if (logger.isDebugEnabled()) {
+                    logger.debug("set response.contentType by HttpFeatures:"
+                            + response.getContentType());
+                }
             }
         }
         if (response.getCharacterEncoding() == null) {
-            response.setCharacterEncoding("UTF-8");
+            String encoding = request.getCharacterEncoding();
+            assert encoding != null;
+            response.setCharacterEncoding(encoding);
             if (logger.isDebugEnabled()) {
                 logger.debug("set response.characterEncoding by default:"
                         + response.getCharacterEncoding());
+            }
+        }
+        if (response.getContentType() == null) {
+            response.setContentType("text/html;charset=" + response.getCharacterEncoding());
+            if (logger.isDebugEnabled()) {
+                logger.debug("set response.contentType by default:" + response.getContentType());
             }
         }
     }
