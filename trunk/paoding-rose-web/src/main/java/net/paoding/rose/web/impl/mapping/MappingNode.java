@@ -415,8 +415,11 @@ public class MappingNode implements Comparable<MappingNode>, Iterable<MappingNod
         }
     }
 
-    private void bindEngine(HttpServletRequest request, RequestPath requestPath, MatchResult mr) {
+    private boolean bindEngine(HttpServletRequest request, RequestPath requestPath, MatchResult mr) {
         Engine[] engines = mr.getResource().getEngines(requestPath.getMethod());
+        if (engines == null) {
+            return false;
+        }
         for (Engine engine : engines) {
             if (engine.isAccepted(request)) {
                 if (logger.isDebugEnabled()) {
@@ -424,12 +427,13 @@ public class MappingNode implements Comparable<MappingNode>, Iterable<MappingNod
                             + engine);
                 }
                 mr.setEngine(engine);
-                break;
+                return true;
             } else if (logger.isDebugEnabled()) {
                 logger.debug("[" + requestPath.getRosePath() + "] it's not accepted by engine: "
                         + engine);
             }
         }
+        return false;
     }
 
     @Override
