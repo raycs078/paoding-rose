@@ -50,24 +50,11 @@ public class WebResourceImpl implements WebResource {
      * <p>
      * 没种操作逻辑存放于该数组的唯一位置，即 {@link ReqMethod#ordinal()} 值所指向的位置
      */
-    private Engine[][] engines = new Engine[ARRAY_SIZE][];
-
-    //    private WebResource parent;
-
-    //    public WebResourceImpl(WebResource parent) {
-    //        setParent(parent);
-    //    }
+    private Engine[][] allEngines = new Engine[ARRAY_SIZE][];
 
     public WebResourceImpl(String name) {
         setName(name);
     }
-
-    //    public void setParent(WebResource parent) {
-    //        this.parent = parent;
-    //        if (this.parent != null) {
-    //            parent.setEndResource(false);
-    //        }
-    //    }
 
     public String getName() {
         return name;
@@ -88,10 +75,7 @@ public class WebResourceImpl implements WebResource {
     public void addEngine(ReqMethod method, Engine engine) {
         ReqMethod[] methods = method.parse();
         for (ReqMethod md : methods) {
-//            if (method == ReqMethod.ALL && engines[md.ordinal()] != null) {
-//                continue;
-//            }
-            Engine[] methodEngines = engines[md.ordinal()];
+            Engine[] methodEngines = allEngines[md.ordinal()];
             if (methodEngines == null) {
                 methodEngines = new Engine[] { engine };
             } else {
@@ -99,7 +83,7 @@ public class WebResourceImpl implements WebResource {
                 methodEngines[methodEngines.length - 1] = engine;
                 Arrays.sort(methodEngines);
             }
-            engines[md.ordinal()] = methodEngines;
+            allEngines[md.ordinal()] = methodEngines;
             clearCache();
         }
     }
@@ -107,23 +91,19 @@ public class WebResourceImpl implements WebResource {
     /**
      * 返回处理这个资源的处理逻辑，如果该资源不支持该操作方法返回null。
      * 
-     * @param method 除 {@link ReqMethod#ALL} 外的其他 {@link ReqMethod} 实例
+     * @param method 除 {@link ReqMethod#ALL} 外的其他 {@link ReqMethod}
+     *        实例，如果method为null，将返回null
      * @return
      */
-    public Engine getEngine(ReqMethod method) {
-        if (method == ReqMethod.ALL) {
-            throw new IllegalArgumentException("method");
-        }
-        Engine[] methodEngines = engines[method.ordinal()];
-        return methodEngines == null ? null : methodEngines[0];
-    }
-
     @Override
     public Engine[] getEngines(ReqMethod method) {
         if (method == ReqMethod.ALL) {
             throw new IllegalArgumentException("method");
         }
-        Engine[] methodEngines = engines[method.ordinal()];
+        if (method == null) {
+            return null;
+        }
+        Engine[] methodEngines = allEngines[method.ordinal()];
         return methodEngines;
     }
 
@@ -134,7 +114,7 @@ public class WebResourceImpl implements WebResource {
      * @return
      */
     public boolean isMethodAllowed(ReqMethod method) {
-        return method != null && engines[method.ordinal()] != null;
+        return method != null && allEngines[method.ordinal()] != null;
     }
 
     protected void clearCache() {
@@ -146,7 +126,8 @@ public class WebResourceImpl implements WebResource {
         if (allowedMethodsCache == null) {
             List<ReqMethod> allowedMethods = new ArrayList<ReqMethod>();
             for (ReqMethod method : ReqMethod.ALL.parse()) {
-                if (getEngine(method) != null) {
+                Engine[] engines = this.allEngines[method.ordinal()];
+                if (engines != null && engines.length > 0) {
                     allowedMethods.add(method);
                 }
             }
@@ -160,7 +141,7 @@ public class WebResourceImpl implements WebResource {
      */
     public void destroy() {
         RuntimeException error = null;
-        for (Engine[] methodEngines : engines) {
+        for (Engine[] methodEngines : allEngines) {
             if (methodEngines == null) {
                 continue;
             }
