@@ -15,6 +15,7 @@
  */
 package net.paoding.rose.web.instruction;
 
+import java.io.IOException;
 import java.io.PrintWriter;
 
 import javax.servlet.http.HttpServletResponse;
@@ -30,67 +31,9 @@ import org.apache.commons.lang.StringUtils;
  */
 public class TextInstruction extends AbstractInstruction {
 
-    @Override
-    public void doRender(Invocation inv) throws Exception {
-        String encoding = resolvePlaceHolder(this.encoding, inv);
-        String contentType = resolvePlaceHolder(this.contentType, inv);
-        String text = resolvePlaceHolder(this.text, inv);
-
-        HttpServletResponse response = inv.getResponse();
-        if (encoding != null) {
-            response.setCharacterEncoding(encoding);
-            if (logger.isDebugEnabled()) {
-                logger.debug("set response.setCharacterEncoding:"//
-                        + response.getCharacterEncoding());
-            }
-        }
-        if (contentType != null) {
-            response.setContentType(contentType);
-            if (logger.isDebugEnabled()) {
-                logger.debug("set response.setContentType:" + response.getContentType());
-            }
-        }
-        if (StringUtils.isNotEmpty(text)) {
-            //
-            if (response.getContentType() == null) {
-                response.setContentType("text");
-                if (logger.isDebugEnabled()) {
-                    logger.debug("set response.setContentType by default:"
-                            + response.getContentType());
-                }
-            }
-            //
-            PrintWriter out = response.getWriter();
-            out.write(text);
-            out.flush();
-        }
-    }
-
     //-------------------------------------------
 
     private String text;
-
-    private String contentType;
-
-    private String encoding;
-
-    public TextInstruction contentType(String contentType) {
-        this.contentType = contentType;
-        return this;
-    }
-
-    public String contentType() {
-        return contentType;
-    }
-
-    public TextInstruction encoding(String encoding) {
-        this.encoding = encoding;
-        return this;
-    }
-
-    public String encoding() {
-        return encoding;
-    }
 
     public String text() {
         return text;
@@ -101,22 +44,63 @@ public class TextInstruction extends AbstractInstruction {
         return this;
     }
 
-    public TextInstruction html(String html) {
-        this.text = html;
-        contentType("text/html");
-        return this;
+    //-------------------------------------------
+
+    @Override
+    public void doRender(Invocation inv) throws Exception {
+        if (StringUtils.isEmpty(text)) {
+            return;
+        }
+        HttpServletResponse response = inv.getResponse();
+        int contentTypeIndex = text.indexOf(':');
+        if (contentTypeIndex > 0) {
+            int mainContentTypeIndex = text.indexOf(";");
+            if (mainContentTypeIndex < 0 || mainContentTypeIndex > contentTypeIndex) {
+                mainContentTypeIndex = contentTypeIndex;
+            }
+            String mainContentType = text.substring(0, mainContentTypeIndex);
+            if (mainContentType.length() == 0) {
+                mainContentType = "text/html";
+            } else if (mainContentType.equals("json")) {
+                mainContentType = "application/x-json";
+            } else if (mainContentType.equals("html")) {
+                mainContentType = "text/html";
+            } else if (mainContentType.equals("xml")) {
+                mainContentType = "text/xml";
+            } else if (mainContentType.equals("text") || mainContentType.equals("plain")) {
+                mainContentType = "text/plain";
+            } else if (!mainContentType.startsWith("text/")
+                    && !mainContentType.startsWith("application/")) {
+                throw new IllegalArgumentException("wrong Content-Type in instruction: " + text);
+            }
+            String contentType = mainContentType;
+            if (contentTypeIndex != mainContentTypeIndex) {
+                contentType = mainContentType
+                        + text.substring(mainContentTypeIndex, contentTypeIndex);
+            }
+            response.setContentType(contentType);
+            if (logger.isDebugEnabled()) {
+                logger.debug("set response content-type: " + response.getContentType());
+            }
+            sendResponse(response, text.substring(contentTypeIndex + 1));
+        } else {
+            if (response.getContentType() == null) {
+                response.setContentType("text/html");
+                if (logger.isDebugEnabled()) {
+                    logger.debug("set response content-type by default: "
+                            + response.getContentType());
+                }
+            }
+            sendResponse(response, text);
+        }
     }
 
-    public TextInstruction xml(String xml) {
-        this.text = xml;
-        contentType("text/xml");
-        return this;
-    }
-
-    public TextInstruction json(String json) {
-        this.text = json;
-        contentType("application/x-json");
-        return this;
+    private void sendResponse(HttpServletResponse response, String text) throws IOException {
+        if (StringUtils.isNotEmpty(text)) {
+            PrintWriter out = response.getWriter();
+            out.write(text);
+            out.flush();
+        }
     }
 
     @Override

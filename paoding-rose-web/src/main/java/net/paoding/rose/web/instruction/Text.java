@@ -24,25 +24,15 @@ public class Text implements InstructionHelper {
 
     public static TextInstruction text(Object value) {
         TextInstruction instruction = new TextInstruction();
-        instruction.text(value == null ? "" : value.toString());
-        return instruction;
-    }
-
-    public static TextInstruction html(String html) {
-        TextInstruction instruction = new TextInstruction();
-        instruction.html(html);
-        return instruction;
-    }
-
-    public static TextInstruction xml(String xml) {
-        TextInstruction instruction = new TextInstruction();
-        instruction.xml(xml);
-        return instruction;
-    }
-
-    public static TextInstruction json(String json) {
-        TextInstruction instruction = new TextInstruction();
-        instruction.json(json);
+        String text = (value == null) ? "" : value.toString();
+        if (text.length() > 0) {
+            if (!(value instanceof CharSequence)) {
+                if (value.getClass().getName().equalsIgnoreCase("JSONObject")) {
+                    text = "json:" + text;
+                }
+            }
+        }
+        instruction.text(text);
         return instruction;
     }
 }
