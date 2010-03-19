@@ -392,14 +392,21 @@ public final class ActionEngine implements Engine {
                 }
             }
             if (StringUtils.isNotBlank(httpFeatures.contentType())) {
-                response.setContentType(httpFeatures.contentType());
+                String contentType = httpFeatures.contentType();
+                if (contentType.equals("json")) {
+                    contentType = "application/x-json";
+                } else if (contentType.equals("xml")) {
+                    contentType = "text/xml";
+                }
+                response.setContentType(contentType);
                 if (logger.isDebugEnabled()) {
                     logger.debug("set response.contentType by HttpFeatures:"
                             + response.getContentType());
                 }
             }
         }
-        if (response.getCharacterEncoding() == null) {
+        String oldEncoding = response.getCharacterEncoding();
+        if (StringUtils.isBlank(oldEncoding) || oldEncoding.startsWith("ISO-")) {
             String encoding = request.getCharacterEncoding();
             assert encoding != null;
             response.setCharacterEncoding(encoding);
@@ -408,12 +415,8 @@ public final class ActionEngine implements Engine {
                         + response.getCharacterEncoding());
             }
         }
-        if (response.getContentType() == null) {
-            response.setContentType("text/html;charset=" + response.getCharacterEncoding());
-            if (logger.isDebugEnabled()) {
-                logger.debug("set response.contentType by default:" + response.getContentType());
-            }
-        }
+
+        // !!不用写设置content-type代码，web容器会自动把修改后的charset加进去!
     }
 
     @Override

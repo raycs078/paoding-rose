@@ -37,11 +37,18 @@ public class TextInstruction extends AbstractInstruction {
         String text = resolvePlaceHolder(this.text, inv);
 
         HttpServletResponse response = inv.getResponse();
-        if (contentType != null) {
-            response.setContentType(contentType);
-        }
         if (encoding != null) {
             response.setCharacterEncoding(encoding);
+            if (logger.isDebugEnabled()) {
+                logger.debug("set response.setCharacterEncoding:"//
+                        + response.getCharacterEncoding());
+            }
+        }
+        if (contentType != null) {
+            response.setContentType(contentType);
+            if (logger.isDebugEnabled()) {
+                logger.debug("set response.setContentType:" + response.getContentType());
+            }
         }
         if (StringUtils.isNotEmpty(text)) {
             PrintWriter out = response.getWriter();
@@ -99,7 +106,7 @@ public class TextInstruction extends AbstractInstruction {
 
     public TextInstruction json(String json) {
         this.text = json;
-        contentType("text/json");
+        contentType("application/x-json");
         return this;
     }
 

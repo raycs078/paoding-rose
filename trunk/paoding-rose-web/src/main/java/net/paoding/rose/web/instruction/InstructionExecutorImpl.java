@@ -96,8 +96,7 @@ public class InstructionExecutorImpl implements InstructionExecutor {
                 return null;
             }
             if (str.charAt(0) == '@') {
-                return Text.html(str.substring(1)); // 使用html而非plain，如有需要可以通过@
-                // HttpFeatures进行设置更改
+                return Text.plain(str.substring(1)); // 具体content-type等信息由@HttpFeatures决定
             }
             if (str.charAt(0) == '/') {
                 return View.name(str);
