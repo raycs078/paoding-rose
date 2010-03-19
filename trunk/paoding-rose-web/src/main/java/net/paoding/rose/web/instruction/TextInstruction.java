@@ -51,6 +51,15 @@ public class TextInstruction extends AbstractInstruction {
             }
         }
         if (StringUtils.isNotEmpty(text)) {
+            //
+            if (response.getContentType() == null) {
+                response.setContentType("text");
+                if (logger.isDebugEnabled()) {
+                    logger.debug("set response.setContentType by default:"
+                            + response.getContentType());
+                }
+            }
+            //
             PrintWriter out = response.getWriter();
             out.write(text);
             out.flush();
@@ -87,7 +96,7 @@ public class TextInstruction extends AbstractInstruction {
         return text;
     }
 
-    public TextInstruction plain(String text) {
+    public TextInstruction text(String text) {
         this.text = text;
         return this;
     }

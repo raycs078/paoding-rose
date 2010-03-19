@@ -22,9 +22,9 @@ package net.paoding.rose.web.instruction;
  */
 public class Text implements InstructionHelper {
 
-    public static TextInstruction plain(Object value) {
+    public static TextInstruction text(Object value) {
         TextInstruction instruction = new TextInstruction();
-        instruction.plain(value == null ? "" : value.toString());
+        instruction.text(value == null ? "" : value.toString());
         return instruction;
     }
 
