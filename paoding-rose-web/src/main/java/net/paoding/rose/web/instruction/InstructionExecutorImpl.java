@@ -89,14 +89,14 @@ public class InstructionExecutorImpl implements InstructionExecutor {
             logger.debug("parset instruction:" + ins.getClass().getName() + ": '" + ins + "'");
         }
         if (ClassUtils.isPrimitiveOrWrapper(ins.getClass())) {
-            return Text.plain(ins);
+            return Text.text(ins);
         } else if (ins instanceof CharSequence) {
             String str = ins.toString();
             if (str.length() == 0 || str.equals("@")) {
                 return null;
             }
             if (str.charAt(0) == '@') {
-                return Text.plain(str.substring(1)); // 具体content-type等信息由@HttpFeatures决定
+                return Text.text(str.substring(1)); // 具体content-type等信息由@HttpFeatures决定
             }
             if (str.charAt(0) == '/') {
                 return View.name(str);
@@ -216,7 +216,7 @@ public class InstructionExecutorImpl implements InstructionExecutor {
         } else if (ins instanceof byte[]) {
             return new InputStreamInstruction(new ByteArrayInputStream((byte[]) ins));
         } else {
-            return Text.plain(ins.toString());
+            return Text.text(ins.toString());
         }
     }
 
