@@ -36,7 +36,7 @@ import net.paoding.rose.web.impl.thread.Rose;
 public class MappingController {
 
     @Get
-    @HttpFeatures(contentType = "application/rss+xml")
+    @HttpFeatures(contentType = "application/xml")
     public String list(Rose rose) throws Exception {
         MappingNode root = rose.getMappingTree();
         StringBuilder sb = new StringBuilder(2048);
