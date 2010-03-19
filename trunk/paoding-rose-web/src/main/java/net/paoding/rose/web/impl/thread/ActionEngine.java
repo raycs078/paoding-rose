@@ -80,6 +80,8 @@ public final class ActionEngine implements Engine {
 
     private final MethodParameterResolver methodParameterResolver;
 
+    private Map<String, Pattern> patterns = Collections.emptyMap();
+
     private transient String toStringCache;
 
     public ActionEngine(Module module, Class<?> controllerClass, Object controller, Method method) {
@@ -199,51 +201,45 @@ public final class ActionEngine implements Engine {
         IfParamExists if2 = ((ActionEngine) o).method.getAnnotation(IfParamExists.class);
         boolean e1 = (if1 != null);
         boolean e2 = (if2 != null);
-        if (e1 != e2) {
-            return (e1 ? -1 : 1);
-        } else if (e1) {
-            return if2.value()[0].length() - if1.value()[0].length();
-        } else {
-            return method.getName().length() - ((ActionEngine) o).method.getName().length();
-        }
+        return (e1 == e2) ? 0 : (e1 ? -1 : 1);
     }
 
-    private Map<String, Pattern> patterns = Collections.emptyMap();
-
     @Override
-    public boolean isAccepted(HttpServletRequest request) {
+    public int isAccepted(HttpServletRequest request) {
         assert request != null;
         IfParamExists ifParamExists = method.getAnnotation(IfParamExists.class);
         if (ifParamExists != null) {
-            String[] values = ifParamExists.value();
-            assert values.length == 1;// TODO: 目前只支持1个参数配置的
+            String value = ifParamExists.value();
             // create&form
-            String[] terms = StringUtils.split(values[0], "&");
+            String[] terms = StringUtils.split(value, "&");
             assert terms.length == 1;
             int index = terms[0].indexOf('=');
             if (index == -1) {
                 String paramValue = request.getParameter(terms[0]);
-                return StringUtils.isNotBlank(paramValue);
+                return StringUtils.isNotBlank(paramValue) ? 10 : -1;
             } else {
                 String paramName = terms[0].substring(0, index).trim();
                 String expected = terms[0].substring(index + 1).trim();
                 String paramValue = request.getParameter(paramName);
                 if (StringUtils.isBlank(expected)) {
                     // xxx=等价于xxx的
-                    return paramValue != null;
+                    return StringUtils.isNotBlank(paramValue) ? 11 : -1;
                 } else if (expected.startsWith(":")) {
+                    Pattern pattern = patterns.get(expected);
+                    if (paramValue == null) {
+                        return -1;
+                    }
                     String regex = expected.substring(1);
-                    Pattern pattern = patterns.get(regex);
                     if (pattern == null) {
                         try {
                             pattern = Pattern.compile(regex);
                             synchronized (this) {// patterns为非同步map
                                 if (patterns.size() == 0) {
                                     HashMap<String, Pattern> _patterns = new HashMap<String, Pattern>();
-                                    _patterns.put(regex, pattern);
+                                    _patterns.put(expected, pattern);
                                     this.patterns = _patterns;
                                 } else if (!patterns.containsKey(regex)) {
-                                    this.patterns.put(regex, pattern);
+                                    this.patterns.put(expected, pattern);
                                 }
                             }
                         } catch (PatternSyntaxException e) {
@@ -253,13 +249,13 @@ public final class ActionEngine implements Engine {
                                             + method.getName(), e);
                         }
                     }
-                    return pattern != null && pattern.matcher(paramValue).matches();
+                    return pattern != null && pattern.matcher(paramValue).matches() ? 12 : -1;
                 } else {
-                    return expected.equals(paramValue);
+                    return expected.equals(paramValue) ? 13 : -1;
                 }
             }
         }
-        return true;
+        return 1;
     }
 
     @Override
@@ -427,6 +423,10 @@ public final class ActionEngine implements Engine {
                     contentType = "application/x-json";
                 } else if (contentType.equals("xml")) {
                     contentType = "text/xml";
+                } else if (contentType.equals("html")) {
+                    contentType = "text/html";
+                } else if (contentType.equals("plain") || contentType.equals("text")) {
+                    contentType = "text/plain";
                 }
                 response.setContentType(contentType);
                 if (logger.isDebugEnabled()) {

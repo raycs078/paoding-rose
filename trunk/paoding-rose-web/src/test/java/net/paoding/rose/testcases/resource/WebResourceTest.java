@@ -39,8 +39,8 @@ public class WebResourceTest extends TestCase {
         }
 
         @Override
-        public boolean isAccepted(HttpServletRequest rose) {
-            return true;
+        public int isAccepted(HttpServletRequest rose) {
+            return 1;
         }
 
         @Override
@@ -66,8 +66,8 @@ public class WebResourceTest extends TestCase {
         }
 
         @Override
-        public boolean isAccepted(HttpServletRequest rose) {
-            return true;
+        public int isAccepted(HttpServletRequest rose) {
+            return 1;
         }
 
         @Override
@@ -93,8 +93,8 @@ public class WebResourceTest extends TestCase {
         }
 
         @Override
-        public boolean isAccepted(HttpServletRequest rose) {
-            return true;
+        public int isAccepted(HttpServletRequest rose) {
+            return 1;
         }
 
         @Override

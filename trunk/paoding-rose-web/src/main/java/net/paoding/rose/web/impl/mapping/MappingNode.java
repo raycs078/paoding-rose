@@ -420,18 +420,27 @@ public class MappingNode implements Comparable<MappingNode>, Iterable<MappingNod
         if (engines == null) {
             return false;
         }
+        int accepted = 0;
+        Engine selected = null;
         for (Engine engine : engines) {
-            if (engine.isAccepted(request)) {
+            int candidate = engine.isAccepted(request);
+            if (candidate > accepted) {
+                selected = engine;
+                accepted = candidate;
+            } else if (candidate <= 0) {
                 if (logger.isDebugEnabled()) {
-                    logger.debug("[" + requestPath.getRosePath() + "] it's accepted by engine: "
-                            + engine);
+                    logger.debug("[" + requestPath.getRosePath()
+                            + "] it's not accepted by engine: " + engine);
                 }
-                mr.setEngine(engine);
-                return true;
-            } else if (logger.isDebugEnabled()) {
-                logger.debug("[" + requestPath.getRosePath() + "] it's not accepted by engine: "
-                        + engine);
             }
+        }
+        if (selected != null) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("[" + requestPath.getRosePath() + "] it's accepted by engine: "
+                        + selected);
+            }
+            mr.setEngine(selected);
+            return true;
         }
         return false;
     }

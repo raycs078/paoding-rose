@@ -99,8 +99,8 @@ public class ModuleEngine implements Engine {
     }
 
     @Override
-    public boolean isAccepted(HttpServletRequest rose) {
-        return true;
+    public int isAccepted(HttpServletRequest rose) {
+        return 1;
     }
 
     @Override
