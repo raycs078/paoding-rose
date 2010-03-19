@@ -22,7 +22,12 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -203,6 +208,8 @@ public final class ActionEngine implements Engine {
         }
     }
 
+    private Map<String, Pattern> patterns = Collections.emptyMap();
+
     @Override
     public boolean isAccepted(HttpServletRequest request) {
         assert request != null;
@@ -224,6 +231,29 @@ public final class ActionEngine implements Engine {
                 if (StringUtils.isBlank(expected)) {
                     // xxx=等价于xxx的
                     return paramValue != null;
+                } else if (expected.startsWith(":")) {
+                    String regex = expected.substring(1);
+                    Pattern pattern = patterns.get(regex);
+                    if (pattern == null) {
+                        try {
+                            pattern = Pattern.compile(regex);
+                            synchronized (this) {// patterns为非同步map
+                                if (patterns.size() == 0) {
+                                    HashMap<String, Pattern> _patterns = new HashMap<String, Pattern>();
+                                    _patterns.put(regex, pattern);
+                                    this.patterns = _patterns;
+                                } else if (!patterns.containsKey(regex)) {
+                                    this.patterns.put(regex, pattern);
+                                }
+                            }
+                        } catch (PatternSyntaxException e) {
+                            logger.error(//
+                                    "@IfParamExists pattern error, controller="
+                                            + controllerClass.getName() + ", method="
+                                            + method.getName(), e);
+                        }
+                    }
+                    return pattern != null && pattern.matcher(paramValue).matches();
                 } else {
                     return expected.equals(paramValue);
                 }
