@@ -41,5 +41,5 @@ public @interface IfParamExists {
      * 
      * @return
      */
-    String[] value();
+    String value();
 }

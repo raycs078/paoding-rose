@@ -30,7 +30,13 @@ public class IfController {
     }
 
     @Get
-    @IfParamExists("c=2")
+    @IfParamExists("c=3")
+    public String c3() {
+        return "c3";
+    }
+
+    @Get
+    @IfParamExists("c=:[0-9]+")
     public String c2() {
         return "c2";
     }

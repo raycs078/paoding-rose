@@ -93,7 +93,7 @@ public class ViewDispatcherImpl implements ViewDispatcher, ApplicationContextAwa
         View view = viewResolver.resolveViewName(viewPath, locale);
         if (view instanceof AbstractView) {
             if (viewPath.endsWith(".xml")) {
-                ((AbstractView) view).setContentType("text/xml; charset=UTF-8");
+                ((AbstractView) view).setContentType("text/xml;charset=UTF-8");
             }
         }
         return view;
@@ -112,7 +112,7 @@ public class ViewDispatcherImpl implements ViewDispatcher, ApplicationContextAwa
                 logger.debug("to get velocity view resolver.");
             }
             return new DyContentTypeViewResolver(getVelocityViewResolver(inv, viewPath),
-                    "text/xml; charset=UTF-8");
+                    "text/xml;charset=UTF-8");
         }
         if (viewPath.endsWith(".jsp")) {
             if (logger.isDebugEnabled()) {

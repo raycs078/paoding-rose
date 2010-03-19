@@ -41,7 +41,14 @@ public interface Engine extends Comparable<Engine> {
     @Override
     public int compareTo(Engine o);
 
-    public boolean isAccepted(HttpServletRequest request);
+    /**
+     * 除了地址匹配之外，哪些因素可能拒绝或同意由这个engine来处理？
+     * 所有匹配地址的engine都会被询问，返回值0或负数表示不接受，大于等于1的表示可以，值越大越优先
+     * 
+     * @param request
+     * @return
+     */
+    public int isAccepted(HttpServletRequest request);
 
     /**
      * 处理web请求
