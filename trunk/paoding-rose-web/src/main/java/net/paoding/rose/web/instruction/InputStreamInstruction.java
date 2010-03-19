@@ -24,6 +24,9 @@ import javax.servlet.http.HttpServletResponse;
 
 import net.paoding.rose.web.Invocation;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /**
  * 
  * @author zhiliang.wang
@@ -31,22 +34,17 @@ import net.paoding.rose.web.Invocation;
  */
 public class InputStreamInstruction extends AbstractInstruction {
 
-    private int bufferSize = 1024;
+    protected static Log logger = LogFactory.getLog(InputStreamInstruction.class);
+
+    private int bufferSize = 2048;
 
     private InputStream inputStream;
-
-    private String contentType;
 
     public InputStreamInstruction() {
     }
 
     public InputStreamInstruction(InputStream inputStream) {
         setInputStream(inputStream);
-    }
-
-    public InputStreamInstruction(InputStream inputStream, String contentType) {
-        setInputStream(inputStream);
-        setContentType(contentType);
     }
 
     public void setInputStream(InputStream inputStream) {
@@ -59,10 +57,6 @@ public class InputStreamInstruction extends AbstractInstruction {
         }
     }
 
-    public void setContentType(String contentType) {
-        this.contentType = contentType;
-    }
-
     @Override
     protected void doRender(Invocation inv) throws IOException, ServletException, Exception {
         InputStream inputStream = this.inputStream;
@@ -71,9 +65,7 @@ public class InputStreamInstruction extends AbstractInstruction {
         }
         HttpServletResponse response = inv.getResponse();
         if (response.getContentType() == null) {
-            String contentType = this.contentType == null ? "application/octet-stream"
-                    : this.contentType;
-            response.setContentType(contentType);
+            response.setContentType("application/octet-stream");
             if (logger.isDebugEnabled()) {
                 logger.debug("set response.contentType by default:" + response.getContentType());
             }

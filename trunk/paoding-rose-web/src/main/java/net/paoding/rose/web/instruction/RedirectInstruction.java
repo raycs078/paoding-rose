@@ -20,6 +20,9 @@ import java.io.IOException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.RequestPath;
 
@@ -30,6 +33,8 @@ import net.paoding.rose.web.RequestPath;
  */
 public class RedirectInstruction extends AbstractInstruction {
 
+    protected static  Log logger = LogFactory.getLog(RedirectInstruction.class);
+    
     @Override
     public void doRender(Invocation inv) throws IOException {
         String location = resolvePlaceHolder(location(), inv);

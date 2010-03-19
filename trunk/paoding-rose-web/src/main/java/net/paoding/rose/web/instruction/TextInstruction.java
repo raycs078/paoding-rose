@@ -16,13 +16,15 @@
 package net.paoding.rose.web.instruction;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 
+import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 
 import net.paoding.rose.web.Invocation;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * 
@@ -30,6 +32,8 @@ import org.apache.commons.lang.StringUtils;
  * 
  */
 public class TextInstruction extends AbstractInstruction {
+
+    protected static Log logger = LogFactory.getLog(TextInstruction.class);
 
     //-------------------------------------------
 
@@ -97,8 +101,15 @@ public class TextInstruction extends AbstractInstruction {
 
     private void sendResponse(HttpServletResponse response, String text) throws IOException {
         if (StringUtils.isNotEmpty(text)) {
-            PrintWriter out = response.getWriter();
-            out.write(text);
+            String encoding = response.getCharacterEncoding();
+            if (encoding == null) {
+                encoding = "UTF-8";
+                response.setCharacterEncoding("UTF-8");
+            }
+            byte[] content = text.getBytes(encoding);
+            response.setContentLength(content.length);
+            ServletOutputStream out = response.getOutputStream();
+            out.write(content);
             out.flush();
         }
     }

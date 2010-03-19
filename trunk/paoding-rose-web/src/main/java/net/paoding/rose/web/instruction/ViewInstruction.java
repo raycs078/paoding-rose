@@ -34,6 +34,8 @@ import net.paoding.rose.web.impl.view.ViewDispatcherImpl;
 import net.paoding.rose.web.impl.view.ViewPathCache;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.AnnotatedGenericBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.GenericBeanDefinition;
@@ -49,6 +51,8 @@ import org.springframework.web.servlet.ViewResolver;
  * 
  */
 public class ViewInstruction extends AbstractInstruction {
+
+    protected static Log logger = LogFactory.getLog(ViewInstruction.class);
 
     public static final String ROSE_INVOCATION = "roseInvocation";
 
