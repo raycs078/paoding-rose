@@ -19,9 +19,6 @@ import java.io.IOException;
 
 import javax.servlet.ServletException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import net.paoding.rose.util.PlaceHolderUtils;
 import net.paoding.rose.web.Invocation;
 
@@ -31,8 +28,6 @@ import net.paoding.rose.web.Invocation;
  * 
  */
 public abstract class AbstractInstruction implements Instruction {
-
-    protected Log logger = LogFactory.getLog(getClass());
 
     protected Instruction preInstruction;
 
