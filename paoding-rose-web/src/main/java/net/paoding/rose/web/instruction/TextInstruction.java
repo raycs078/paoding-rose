@@ -56,17 +56,19 @@ public class TextInstruction extends AbstractInstruction {
             return;
         }
         HttpServletResponse response = inv.getResponse();
-        int contentTypeIndex = text.indexOf(':');
+        String mainContentType = null; // text中说明的mainContentType，分号之前的部分(如有分号的话）
+        final int contentTypeIndex = text.indexOf(':');
+        int mainContentTypeIndex = -1;
         if (contentTypeIndex > 0) {
-            int mainContentTypeIndex = text.indexOf(";");
+            mainContentTypeIndex = text.indexOf(";");
             if (mainContentTypeIndex < 0 || mainContentTypeIndex > contentTypeIndex) {
                 mainContentTypeIndex = contentTypeIndex;
             }
-            String mainContentType = text.substring(0, mainContentTypeIndex);
+            mainContentType = text.substring(0, mainContentTypeIndex);
             if (mainContentType.length() == 0) {
                 mainContentType = "text/html";
             } else if (mainContentType.equals("json")) {
-                mainContentType = "application/x-json";
+                mainContentType = "application/json";
             } else if (mainContentType.equals("html")) {
                 mainContentType = "text/html";
             } else if (mainContentType.equals("xml")) {
@@ -75,12 +77,20 @@ public class TextInstruction extends AbstractInstruction {
                 mainContentType = "text/plain";
             } else if (!mainContentType.startsWith("text/")
                     && !mainContentType.startsWith("application/")) {
-                throw new IllegalArgumentException("wrong Content-Type in instruction: " + text);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("'" + mainContentType + "' is not a content-type, skip it! ");
+                }
+                mainContentType = null;
             }
-            String contentType = mainContentType;
+        }
+        if (mainContentType != null) {
+            assert contentTypeIndex > 0;
+            final String contentType;
             if (contentTypeIndex != mainContentTypeIndex) {
                 contentType = mainContentType
                         + text.substring(mainContentTypeIndex, contentTypeIndex);
+            } else {
+                contentType = mainContentType;
             }
             response.setContentType(contentType);
             if (logger.isDebugEnabled()) {
