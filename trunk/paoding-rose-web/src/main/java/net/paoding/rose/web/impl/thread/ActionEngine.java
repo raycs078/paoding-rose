@@ -420,7 +420,7 @@ public final class ActionEngine implements Engine {
             if (StringUtils.isNotBlank(httpFeatures.contentType())) {
                 String contentType = httpFeatures.contentType();
                 if (contentType.equals("json")) {
-                    contentType = "application/x-json";
+                    contentType = "application/json";
                 } else if (contentType.equals("xml")) {
                     contentType = "text/xml";
                 } else if (contentType.equals("html")) {
