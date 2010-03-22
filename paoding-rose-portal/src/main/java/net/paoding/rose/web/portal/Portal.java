@@ -86,7 +86,7 @@ public interface Portal {
      * 
      * @return
      */
-    public List<? extends Window> getWindows();
+    public List<Window> getWindows();
 
     /**
      * 返回这个 {@link Portal} 对象邦定的 {@link Invocation} 对象

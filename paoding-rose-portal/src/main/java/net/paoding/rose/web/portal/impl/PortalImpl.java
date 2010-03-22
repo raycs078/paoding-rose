@@ -89,9 +89,9 @@ class PortalImpl implements Portal, PortalListener {
     }
 
     @Override
-    public List<WindowImpl> getWindows() {
+    public List<Window> getWindows() {
         synchronized (windows) {
-            return new ArrayList<WindowImpl>(windows);
+            return new ArrayList<Window>(windows);
         }
     }
 
