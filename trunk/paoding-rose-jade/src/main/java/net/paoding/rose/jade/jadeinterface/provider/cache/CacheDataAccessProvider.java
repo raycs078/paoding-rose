@@ -7,7 +7,6 @@ import net.paoding.rose.jade.jadeinterface.provider.DataAccessProvider;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
-import org.springframework.transaction.PlatformTransactionManager;
 
 /**
  * 提供支持缓存的 {@link DataAccessProvider} 包装器实现。
@@ -45,10 +44,4 @@ public class CacheDataAccessProvider implements DataAccessProvider, ApplicationC
                 cacheProvider);
     }
 
-    @Override
-    public PlatformTransactionManager createTransactionManager(String dataSourceName) {
-
-        // TODO: 使用支持事务的缓存
-        return dataAccessProvider.createTransactionManager(dataSourceName);
-    }
 }
