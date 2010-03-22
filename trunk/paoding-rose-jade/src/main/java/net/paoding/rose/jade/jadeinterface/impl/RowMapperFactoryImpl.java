@@ -1,75 +1,65 @@
+/*
+ * Copyright 2009-2010 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License i distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package net.paoding.rose.jade.jadeinterface.impl;
 
-import java.lang.reflect.Array;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import net.paoding.rose.jade.jadeinterface.annotation.MapKey;
+import net.paoding.rose.jade.jadeinterface.impl.mapper.ArrayRowMapper;
+import net.paoding.rose.jade.jadeinterface.impl.mapper.ListRowMapper;
+import net.paoding.rose.jade.jadeinterface.impl.mapper.MapEntryColumnRowMapper;
+import net.paoding.rose.jade.jadeinterface.impl.mapper.MapEntryRowMapper;
+import net.paoding.rose.jade.jadeinterface.impl.mapper.SetRowMapper;
 import net.paoding.rose.jade.jadeinterface.provider.Modifier;
 
 import org.apache.commons.lang.ClassUtils;
-import org.springframework.dao.TypeMismatchDataAccessException;
-import org.springframework.jdbc.IncorrectResultSetColumnCountException;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.ColumnMapRowMapper;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.SingleColumnRowMapper;
-import org.springframework.jdbc.support.JdbcUtils;
-import org.springframework.util.NumberUtils;
 
 /**
- * 
+ * 支持DAO方法返回类型：
+ * <p>
+ * <ul>
+ * <li>int/Integer、long/Long等primitive&wrapper：期望返回单列，0行或1行</li>
+ * <li>String、BigDecimal：期望返回单列，0行或1行</li>
+ * <li>java.util.Date及其子类：期望返回单列，0行或1行</li>
+ * <li>byte[]：期望返回单列，0行或1行</li>
+ * <li>Blob、Clob：期望返回单，0行或1行</li>
+ * <li><code>数组(String[]、User[]等)：期望返回单列，多行；</li>
+ * <li>数组(User[]等)：期望返回多列，多行；</li>
+ * <li>集合(List<;Integer>、Set<String>等): 期望返回单列，多行；</li>
+ * <li>集合(List<User>、Set<User>等): 期望返回单列，多行；</li>
+ * <li>映射(Map<String, Date>): 期望返回2列，多行</li>
+ * <li>映射(Map<String, User>): 期望返回多列，多行</li>
+ * <li>映射(Map<String, String[]>): 期望返回多列，多行</li>
+ * <ul>
+ * TODO: 将以上的尖括号变为HTML可识别
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
+ * @author 廖涵 [in355hz@gmail.com]
  */
 public class RowMapperFactoryImpl implements RowMapperFactory {
 
-    // 获得返回的集合元素类型
-    private static Class<?> getRowType(Modifier modifier) {
-
-        Class<?> returnClassType = modifier.getReturnType();
-        Class<?> rowType = returnClassType;
-
-        if (Collection.class.isAssignableFrom(returnClassType)) {
-
-            // 仅支持  List / Collection / Set
-            if ((returnClassType != List.class) && (returnClassType != Collection.class)
-                    && (returnClassType != Set.class)) {
-                throw new IllegalArgumentException("error collection type "
-                        + returnClassType.getName() + "; only support List, Set, Collection");
-            }
-            // 获取集合元素类型
-            Class<?>[] genericTypes = modifier.getGenericReturnType();
-            if (genericTypes.length < 1) {
-                throw new IllegalArgumentException(modifier + ": Collection<T> must be generic");
-            }
-            rowType = genericTypes[0];
-
-        } else if (Map.class == returnClassType) {
-
-            // 获取  Map<K, V> 值元素类型
-            Class<?>[] genericTypes = modifier.getGenericReturnType();
-            if (genericTypes.length != 2) {
-                throw new IllegalArgumentException(modifier + ": Map<K, V> must be generic");
-            }
-            rowType = genericTypes[1]; // 取  V 类型
-
-        } else if (returnClassType.isArray()) {
-
-            // 数组类型, 支持多重数组
-            rowType = returnClassType.getComponentType();
-        }
-
-        return rowType;
-    }
+    private static Log logger = LogFactory.getLog(RowMapperFactory.class);
 
     @Override
     public RowMapper getRowMapper(Modifier modifier) {
@@ -85,19 +75,16 @@ public class RowMapperFactoryImpl implements RowMapperFactory {
         // 根据类型创建  RowMapper
         RowMapper rowMapper;
 
-        if ((String.class == rowType) // NL
-                || Date.class.isAssignableFrom(rowType)
-                || (ClassUtils.wrapperToPrimitive(rowType) != null)) {
-            // 目前只考虑  java.lang.String, java.util.Date(java.sql.Date, 
-            // java.sql.Time, java.sql.Timestamp) 及基本类型
+        // 返回单列的查询的(或者返回只有2列的Map类型查询的)
+        if (TypeUtils.isColumnType(rowType)) {
             if (returnClassType == Map.class) {
-                rowMapper = new KeyValuePairColumnRowMapper(modifier, rowType);
+                rowMapper = new MapEntryColumnRowMapper(modifier, rowType);
             } else {
                 rowMapper = new SingleColumnRowMapper(rowType);
             }
-
-        } else {
-            // 处理组合的类型
+        }
+        // 返回多列的，用Bean对象、集合、映射、数组来表示每一行的
+        else {
             if (rowType == Map.class) {
                 rowMapper = new ColumnMapRowMapper();
             } else if (rowType.isArray()) {
@@ -105,231 +92,67 @@ public class RowMapperFactoryImpl implements RowMapperFactory {
             } else if ((rowType == List.class) || (rowType == Collection.class)) {
                 rowMapper = new ListRowMapper(modifier);
             } else if (rowType == Set.class) {
-                rowMapper = new ListRowMapper(modifier);
+                rowMapper = new SetRowMapper(modifier);
             } else {
                 rowMapper = new BeanPropertyRowMapper(rowType);
             }
-
+            // 如果DAO方法最终返回的是Map，rowMapper要返回Map.Entry对象
             if (returnClassType == Map.class) {
-                rowMapper = new KeyValuePairRowMapper(modifier, rowMapper);
+                rowMapper = new MapEntryRowMapper(modifier, rowMapper);
             }
+        }
+
+        if (logger.isInfoEnabled()) {
+            logger.info("using rowMapper " + rowMapper + " for " + modifier);
         }
 
         return rowMapper;
     }
 
-    // 用数组返回每一列
-    protected static class ArrayRowMapper implements RowMapper {
-
-        private Class<?> componentType;
-
-        public ArrayRowMapper(Class<?> returnType) {
-            this.componentType = returnType.getComponentType();
+    // 获得返回的集合元素类型
+    private static Class<?> getRowType(Modifier modifier) {
+        Class<?> returnClassType = modifier.getReturnType();
+        if (Collection.class.isAssignableFrom(returnClassType)) {
+            return getRowTypeFromCollectionType(modifier, returnClassType);
+        } else if (Map.class == returnClassType) {
+            return getRowTypeFromMapType(modifier, returnClassType);
+        } else if (returnClassType.isArray() && returnClassType.getComponentType() != byte[].class) {
+            // 数组类型, 支持多重数组
+            return returnClassType.getComponentType();
         }
 
-        @Override
-        public Object mapRow(ResultSet rs, int rowNum) throws SQLException {
-            int columnSize = rs.getMetaData().getColumnCount();
-            Object array = Array.newInstance(componentType, columnSize);
-            for (int i = 0; i < columnSize; i++) {
-                Array.set(array, i, JdbcUtils.getResultSetValue(rs, // NL
-                        (i + 1), componentType));
-            }
-            return array;
-        }
+        // 此时代表整个DAO方法只关心结果集第一行
+        return returnClassType;
     }
 
-    // 以  Map<K, V> 返回每一列
-    public static class KeyValuePairColumnRowMapper implements RowMapper {
-
-        private String keyColumn;
-
-        private int keyColumnIndex = 0, valueColumnIndex = 0;
-
-        private Class<?> keyType, valueType;
-
-        public KeyValuePairColumnRowMapper(Modifier modifier, Class<?> requiredType) {
-
-            // 获取 Key 类型与列
-            MapKey mapKey = modifier.getAnnotation(MapKey.class);
-            Class<?>[] genericTypes = modifier.getGenericReturnType();
-            if (genericTypes.length < 1) {
-                throw new IllegalArgumentException("Map generic");
-            }
-
-            // 设置 Key 类型与列
-            this.keyColumn = (mapKey != null) ? mapKey.value() : MapKey.DEFAULT_KEY;
-            this.keyType = genericTypes[0];
-            this.valueType = genericTypes[1];
+    private static Class<?> getRowTypeFromMapType(Modifier modifier, Class<?> returnClassType) {
+        Class<?> rowType;
+        // 获取  Map<K, V> 值元素类型
+        Class<?>[] genericTypes = modifier.getGenericReturnTypes();
+        if (genericTypes.length != 2) {
+            throw new IllegalArgumentException("the returned generic type '"
+                    + returnClassType.getName() + "' should has two actual type parameters.");
         }
-
-        public Object mapRow(ResultSet rs, int rowNum) throws SQLException {
-
-            // 验证列的数目
-            ResultSetMetaData rsmd = rs.getMetaData();
-            int nrOfColumns = rsmd.getColumnCount();
-            if (nrOfColumns != 2) {
-                throw new IncorrectResultSetColumnCountException(2, nrOfColumns);
-            }
-
-            if (keyColumnIndex == 0) {
-                keyColumnIndex = rs.findColumn(keyColumn);
-                valueColumnIndex = (keyColumnIndex == 1) ? 2 : 1;
-            }
-
-            // 从  JDBC ResultSet 获取  Key
-            Object key = JdbcUtils.getResultSetValue(rs, keyColumnIndex, keyType);
-            if (key != null && !keyType.isInstance(key)) {
-                try {
-                    key = convertValueToRequiredType(key, keyType);
-                } catch (IllegalArgumentException ex) {
-                    throw new TypeMismatchDataAccessException( // NL
-                            "Type mismatch affecting row number " + rowNum + " and column type '"
-                                    + rsmd.getColumnTypeName(keyColumnIndex) + "': "
-                                    + ex.getMessage());
-                }
-            }
-
-            // 从  JDBC ResultSet 获取  Value
-            Object value = JdbcUtils.getResultSetValue(rs, valueColumnIndex, valueType);
-            if (value != null && !valueType.isInstance(value)) {
-                try {
-                    value = convertValueToRequiredType(value, valueType);
-                } catch (IllegalArgumentException ex) {
-                    throw new TypeMismatchDataAccessException( // NL
-                            "Type mismatch affecting row number " + rowNum + " and column type '"
-                                    + rsmd.getColumnTypeName(valueColumnIndex) + "': "
-                                    + ex.getMessage());
-                }
-            }
-
-            return new KeyValuePair(key, value);
-        }
+        rowType = genericTypes[1]; // 取  V 类型
+        return rowType;
     }
 
-    // 用  Map<K, V> 返回每一列
-    protected static class KeyValuePairRowMapper implements RowMapper {
-
-        private final RowMapper mapper;
-
-        private String keyColumn;
-
-        private int keyColumnIndex = 0;
-
-        private Class<?> keyType;
-
-        public KeyValuePairRowMapper(Modifier modifier, RowMapper mapper) {
-
-            MapKey mapKey = modifier.getAnnotation(MapKey.class);
-            Class<?>[] genericTypes = modifier.getGenericReturnType();
-            if (genericTypes.length < 1) {
-                throw new IllegalArgumentException("Map generic");
-            }
-
-            this.keyColumn = (mapKey != null) ? mapKey.value() : MapKey.DEFAULT_KEY;
-            this.keyType = genericTypes[0];
-            this.mapper = mapper;
+    private static Class<?> getRowTypeFromCollectionType(Modifier modifier, Class<?> returnClassType) {
+        Class<?> rowType;
+        // 仅支持  List / Collection / Set
+        if ((returnClassType != List.class) && (returnClassType != Collection.class)
+                && (returnClassType != Set.class)) {
+            throw new IllegalArgumentException("error collection type " + returnClassType.getName()
+                    + "; only support List, Set, Collection");
         }
-
-        @Override
-        public Object mapRow(ResultSet rs, int rowNum) throws SQLException {
-
-            if (keyColumnIndex == 0) {
-                keyColumnIndex = rs.findColumn(keyColumn);
-            }
-
-            // 从  JDBC ResultSet 获取 Key
-            Object key = JdbcUtils.getResultSetValue(rs, keyColumnIndex, keyType);
-            if (key != null && !keyType.isInstance(key)) {
-                try {
-                    key = convertValueToRequiredType(key, keyType);
-                } catch (IllegalArgumentException ex) {
-                    ResultSetMetaData rsmd = rs.getMetaData();
-                    throw new TypeMismatchDataAccessException( // NL
-                            "Type mismatch affecting row number " + rowNum + " and column type '"
-                                    + rsmd.getColumnTypeName(keyColumnIndex) + "': "
-                                    + ex.getMessage());
-                }
-            }
-
-            Object value = mapper.mapRow(rs, rowNum);
-            return new KeyValuePair(key, value);
+        // 获取集合元素类型
+        Class<?>[] genericTypes = modifier.getGenericReturnTypes();
+        if (genericTypes.length != 1) {
+            throw new IllegalArgumentException("the returned generic type '"
+                    + returnClassType.getName() + "' should has a actual type parameter.");
         }
+        rowType = genericTypes[0];
+        return rowType;
     }
 
-    // 用  List<T> 返回每一列
-    protected static class ListRowMapper extends CollectionRowMapper {
-
-        public ListRowMapper(Modifier modifier) {
-            super(modifier);
-        }
-
-        @Override
-        @SuppressWarnings("unchecked")
-        protected Collection createCollection(int columnSize) {
-            return new ArrayList(columnSize);
-        }
-    }
-
-    // 用  Set<T> 返回每一列
-    protected static class SetRowMapper extends CollectionRowMapper {
-
-        public SetRowMapper(Modifier modifier) {
-            super(modifier);
-        }
-
-        @Override
-        @SuppressWarnings("unchecked")
-        protected Collection createCollection(int columnSize) {
-            return new HashSet(columnSize);
-        }
-    }
-
-    // 用  Collection<T> 返回每一列, 这是基类
-    protected abstract static class CollectionRowMapper implements RowMapper {
-
-        private Class<?> elementType;
-
-        public CollectionRowMapper(Modifier modifier) {
-            Class<?>[] genericTypes = modifier.getGenericReturnType();
-            if (genericTypes.length < 1) {
-                throw new IllegalArgumentException("Collection generic");
-            }
-            elementType = genericTypes[0];
-        }
-
-        @Override
-        @SuppressWarnings("unchecked")
-        public Object mapRow(ResultSet rs, int rowNum) throws SQLException {
-            int columnSize = rs.getMetaData().getColumnCount();
-            Collection list = createCollection(columnSize);
-            for (int i = 0; i < columnSize; i++) {
-                list.add(JdbcUtils.getResultSetValue(rs, i, elementType));
-            }
-            return list;
-        }
-
-        @SuppressWarnings("unchecked")
-        protected abstract Collection createCollection(int columnSize);
-    }
-
-    // 转换对象到指定的类型, 参考 org.springframework.jdbc.core.SingleColumnRowMapper
-    protected static Object convertValueToRequiredType(Object value, Class<?> requiredType) {
-
-        if (String.class.equals(requiredType)) {
-            return value.toString();
-
-        } else if (Number.class.isAssignableFrom(requiredType)) {
-            if (value instanceof Number) {
-                return NumberUtils.convertNumberToTargetClass(((Number) value), requiredType);
-            } else {
-                return NumberUtils.parseNumber(value.toString(), requiredType);
-            }
-
-        } else {
-            throw new IllegalArgumentException("Value [" + value + "] is of type ["
-                    + value.getClass().getName() + "] and cannot be converted to required type ["
-                    + requiredType.getName() + "]");
-        }
-    }
 }

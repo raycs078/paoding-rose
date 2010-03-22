@@ -7,21 +7,22 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 使用：{#link MapKey} 标注需要指定作为 {@link java.util.Map}#Key 的字段名。
+ * Jade支持DAO方法返回Map形式的，默认情况下Jade选取第一列作为Map的key。
+ * <p>
+ * 我们推荐您在写返回map的SQL时，把key放到第一列，但是如果真不想这样做，你可以通过本注解，即{@link MapKey}进行指定。
  * 
- * @author han.liao
+ * @author 王志亮 [qieqie.wang@gmail.com]
+ * @author 廖涵 [in355hz@gmail.com]
  */
 @Target( { ElementType.METHOD })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface MapKey {
 
-    String DEFAULT_KEY = "id";
-
     /**
-     * 指出用查询结果的哪个字段作为 Key
+     * 指出要被当成map key的字段名称
      * 
-     * @return 查询结果的字段名
+     * @return
      */
-    String value() default DEFAULT_KEY;
+    String value();
 }

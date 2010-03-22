@@ -41,7 +41,7 @@ public class Definition {
 
     @Override
     public int hashCode() {
-        return clazz.hashCode();
+        return clazz.hashCode() * 13;
     }
 
     @Override
