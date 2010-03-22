@@ -23,7 +23,7 @@ public class ModifierTests extends TestCase {
 
             System.out.println(modifier);
             System.out.println("ReturnType: " + modifier.getReturnType());
-            System.out.println("GenericReturnType: " + modifier.getGenericReturnType());
+            System.out.println("GenericReturnTypes: " + modifier.getGenericReturnTypes());
             System.out.println("@Deprecated Annotation: " + annotation);
             System.out.println("ParameterAnnotations: " + Arrays.toString(annotations));
             System.out.println();

@@ -1,3 +1,18 @@
+/*
+ * Copyright 2009-2010 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License i distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package net.paoding.rose.jade.jadeinterface.provider;
 
 import java.lang.annotation.Annotation;
@@ -11,7 +26,8 @@ import net.paoding.rose.jade.jadeinterface.impl.GenericUtils;
 /**
  * 提供 Modifier 包装对 DAO 方法的访问。
  * 
- * @author han.liao[in355hz@gmail.com]
+ * @author 王志亮 [qieqie.wang@gmail.com]
+ * @author 廖涵 [in355hz@gmail.com]
  */
 public class Modifier {
 
@@ -19,7 +35,7 @@ public class Modifier {
 
     private final Method method;
 
-    private final Class<?>[] genericReturnType;
+    private final Class<?>[] genericReturnTypes;
 
     private final Map<Class<? extends Annotation>, Annotation[]> parameterAnnotations = new HashMap<Class<? extends Annotation>, Annotation[]>(
             8, 1.0f);
@@ -28,7 +44,7 @@ public class Modifier {
         this.definition = definition;
         this.method = method;
 
-        genericReturnType = GenericUtils.getActualClass(method.getGenericReturnType());
+        genericReturnTypes = GenericUtils.getActualClass(method.getGenericReturnType());
 
         Annotation[][] annotations = method.getParameterAnnotations();
         for (int index = 0; index < annotations.length; index++) {
@@ -59,12 +75,16 @@ public class Modifier {
         return method.getReturnType();
     }
 
-    public Class<?>[] getGenericReturnType() {
-        return genericReturnType;
+    public Class<?>[] getGenericReturnTypes() {
+        return genericReturnTypes;
     }
 
     public <T extends Annotation> T getAnnotation(Class<T> annotationClass) {
         return method.getAnnotation(annotationClass);
+    }
+
+    public Method getMethod() {
+        return method;
     }
 
     @SuppressWarnings("unchecked")
