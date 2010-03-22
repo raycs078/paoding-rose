@@ -6,7 +6,6 @@ import java.lang.reflect.Proxy;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.util.ClassUtils;
 
 /**
@@ -44,13 +43,4 @@ public class DataAccessProviderMock implements DataAccessProvider {
                 });
     }
 
-    @Override
-    public PlatformTransactionManager createTransactionManager(String dataSourceName) {
-
-        if (logger.isWarnEnabled()) {
-            logger.warn("jade is not configured");
-        }
-
-        throw new IllegalStateException("jade is not configured");
-    }
 }

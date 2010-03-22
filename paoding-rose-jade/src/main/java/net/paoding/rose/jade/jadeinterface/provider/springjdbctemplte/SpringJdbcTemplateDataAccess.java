@@ -1,3 +1,18 @@
+/*
+ * Copyright 2009-2010 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License i distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package net.paoding.rose.jade.jadeinterface.provider.springjdbctemplte;
 
 import java.sql.Connection;
@@ -27,29 +42,10 @@ import org.springframework.util.Assert;
 /**
  * 通过 SpringJdbcTemplate 实现的 {@link DataAccess}.
  * 
- * @author han.liao
+ * @author 王志亮 [qieqie.wang@gmail.com]
+ * @author 廖涵 [in355hz@gmail.com]
  */
 public class SpringJdbcTemplateDataAccess implements DataAccess {
-
-    // 创建  PreparedStatement 时指定  Statement.RETURN_GENERATED_KEYS 属性
-    private static class GenerateKeysPreparedStatementCreator implements PreparedStatementCreator,
-            SqlProvider {
-
-        private final String sql;
-
-        public GenerateKeysPreparedStatementCreator(String sql) {
-            Assert.notNull(sql, "SQL must not be null");
-            this.sql = sql;
-        }
-
-        public PreparedStatement createPreparedStatement(Connection con) throws SQLException {
-            return con.prepareStatement(this.sql, Statement.RETURN_GENERATED_KEYS);
-        }
-
-        public String getSql() {
-            return this.sql;
-        }
-    }
 
     private static final Pattern PATTERN = Pattern.compile("\\:([a-zA-Z0-9_\\.]*)");
 
@@ -103,74 +99,6 @@ public class SpringJdbcTemplateDataAccess implements DataAccess {
         sql = resolveParam(sql, parameters, values);
 
         return insertReturnId(sql, values.toArray());
-    }
-
-    /**
-     * 执行 SELECT 语句。
-     * 
-     * @param sql - 执行的语句
-     * @param parameters - 参数
-     * @param rowMapper - 对象映射方式
-     * 
-     * @return 返回的对象列表
-     */
-    protected List<?> select(String sql, Object[] parameters, RowMapper rowMapper) {
-
-        if (parameters.length > 0) {
-
-            return jdbcTemplate.query(sql, parameters, rowMapper);
-
-        } else {
-
-            return jdbcTemplate.query(sql, rowMapper);
-        }
-    }
-
-    /**
-     * 执行 UPDATE / DELETE 语句。
-     * 
-     * @param sql - 执行的语句
-     * @param parameters - 参数
-     * 
-     * @return 更新的记录数目
-     */
-    protected int update(String sql, Object[] parameters) {
-
-        if (parameters.length > 0) {
-
-            return jdbcTemplate.update(sql, parameters);
-
-        } else {
-
-            return jdbcTemplate.update(sql);
-        }
-    }
-
-    /**
-     * 执行 INSERT 语句，并返回插入对象的 ID.
-     * 
-     * @param sql - 执行的语句
-     * @param parameters - 参数
-     * 
-     * @return 插入对象的 ID
-     */
-    protected Number insertReturnId(String sql, Object[] parameters) {
-
-        if (parameters.length > 0) {
-
-            PreparedStatementCallbackReturnId callbackReturnId = new PreparedStatementCallbackReturnId(
-                    new ArgPreparedStatementSetter(parameters));
-
-            return (Number) jdbcTemplate.execute(new GenerateKeysPreparedStatementCreator(sql),
-                    callbackReturnId);
-
-        } else {
-
-            PreparedStatementCallbackReturnId callbackReturnId = new PreparedStatementCallbackReturnId();
-
-            return (Number) jdbcTemplate.execute(new GenerateKeysPreparedStatementCreator(sql),
-                    callbackReturnId);
-        }
     }
 
     /**
@@ -258,5 +186,93 @@ public class SpringJdbcTemplateDataAccess implements DataAccess {
         }
 
         return sql;
+    }
+
+    /**
+     * 执行 SELECT 语句。
+     * 
+     * @param sql - 执行的语句
+     * @param parameters - 参数
+     * @param rowMapper - 对象映射方式
+     * 
+     * @return 返回的对象列表
+     */
+    protected List<?> select(String sql, Object[] parameters, RowMapper rowMapper) {
+
+        if (parameters.length > 0) {
+
+            return jdbcTemplate.query(sql, parameters, rowMapper);
+
+        } else {
+
+            return jdbcTemplate.query(sql, rowMapper);
+        }
+    }
+
+    /**
+     * 执行 UPDATE / DELETE 语句。
+     * 
+     * @param sql - 执行的语句
+     * @param parameters - 参数
+     * 
+     * @return 更新的记录数目
+     */
+    protected int update(String sql, Object[] parameters) {
+
+        if (parameters.length > 0) {
+
+            return jdbcTemplate.update(sql, parameters);
+
+        } else {
+
+            return jdbcTemplate.update(sql);
+        }
+    }
+
+    /**
+     * 执行 INSERT 语句，并返回插入对象的 ID.
+     * 
+     * @param sql - 执行的语句
+     * @param parameters - 参数
+     * 
+     * @return 插入对象的 ID
+     */
+    protected Number insertReturnId(String sql, Object[] parameters) {
+
+        if (parameters.length > 0) {
+
+            PreparedStatementCallbackReturnId callbackReturnId = new PreparedStatementCallbackReturnId(
+                    new ArgPreparedStatementSetter(parameters));
+
+            return (Number) jdbcTemplate.execute(new GenerateKeysPreparedStatementCreator(sql),
+                    callbackReturnId);
+
+        } else {
+
+            PreparedStatementCallbackReturnId callbackReturnId = new PreparedStatementCallbackReturnId();
+
+            return (Number) jdbcTemplate.execute(new GenerateKeysPreparedStatementCreator(sql),
+                    callbackReturnId);
+        }
+    }
+
+    // 创建  PreparedStatement 时指定  Statement.RETURN_GENERATED_KEYS 属性
+    private static class GenerateKeysPreparedStatementCreator implements PreparedStatementCreator,
+            SqlProvider {
+
+        private final String sql;
+
+        public GenerateKeysPreparedStatementCreator(String sql) {
+            Assert.notNull(sql, "SQL must not be null");
+            this.sql = sql;
+        }
+
+        public PreparedStatement createPreparedStatement(Connection con) throws SQLException {
+            return con.prepareStatement(this.sql, Statement.RETURN_GENERATED_KEYS);
+        }
+
+        public String getSql() {
+            return this.sql;
+        }
     }
 }
