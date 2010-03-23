@@ -15,6 +15,8 @@
  */
 package net.paoding.rose.jade.jadeinterface.provider.springjdbctemplte;
 
+import java.util.Map;
+
 import javax.sql.DataSource;
 
 import net.paoding.rose.jade.jadeinterface.datasource.DataSourceFactory;
@@ -24,6 +26,7 @@ import net.paoding.rose.jade.jadeinterface.provider.DataAccess;
 import net.paoding.rose.jade.jadeinterface.provider.DataAccessProvider;
 
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
@@ -33,7 +36,7 @@ import org.springframework.context.ApplicationContextAware;
  * @author 王志亮 [qieqie.wang@gmail.com]
  * @author 廖涵 [in355hz@gmail.com]
  */
-public class SpringJdbcTemplateDataAccessProvider extends AbstractDataAccessProvider implements
+public class JdbcTemplateDataAccessProvider extends AbstractDataAccessProvider implements
         ApplicationContextAware {
 
     protected ApplicationContext applicationContext;
@@ -45,16 +48,20 @@ public class SpringJdbcTemplateDataAccessProvider extends AbstractDataAccessProv
 
     @Override
     protected DataAccess createDataAccess(DataSource dataSource) {
-        return new SpringJdbcTemplateDataAccess(dataSource);
+        return new JdbcTemplateDataAccess(dataSource);
     }
 
     @Override
     protected DataSourceFactory createDataSourceFactory() {
-
-        // 创建  springDataSourceFactory
-        SpringDataSourceFactory springDataSourceFactory = new SpringDataSourceFactory();
-        springDataSourceFactory.setApplicationContext(applicationContext);
-
-        return springDataSourceFactory;
+        Map<?, ?> beansOfType = applicationContext.getBeansOfType(DataSourceFactory.class);
+        if (beansOfType.size() > 1) {
+            throw new NoSuchBeanDefinitionException(DataSourceFactory.class,
+                    "expected single bean but found " + beansOfType.size());
+        } else if (beansOfType.size() == 1) {
+            return (DataSourceFactory) beansOfType.values().iterator().next();
+        }
+        SpringDataSourceFactory dataSourceFactory = new SpringDataSourceFactory();
+        dataSourceFactory.setApplicationContext(applicationContext);
+        return dataSourceFactory;
     }
 }

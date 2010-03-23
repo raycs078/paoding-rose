@@ -10,17 +10,8 @@ http://www.springframework.org/schema/context
 http://www.springframework.org/schema/context/spring-context-2.5.xsd
 http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-2.5.xsd
 http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.5.xsd"
-	default-autowire="byName" default-lazy-init="false">
+	default-autowire="no" default-lazy-init="true">
 
-	<!-- 配置  Dao 处理器 -->
-	<bean id="jadeDaoProcessor"
-		class="net.paoding.rose.jade.jadeinterface.impl.JadeDaoProcessor" />
+	<bean class="net.paoding.rose.jade.jadeinterface.impl.JadeDaoProcessor" />
 
-	<!-- 使用  WebApp 配置的 DataAccessProvider -->
-	<bean id="jadeDataAccessProviderHolder"
-		class="net.paoding.rose.jade.jadeinterface.app.DataAccessProviderHolder" />
-
-	<!-- 事务管理器 -->
-	<bean id="jadeTransactionManager"
-		class="net.paoding.rose.jade.jadeinterface.transaction.TransactionManagerImpl" />
 </beans>

@@ -12,7 +12,7 @@ import net.paoding.rose.jade.jadeinterface.exql.impl.ExqlContextImpl;
 import net.paoding.rose.jade.jadeinterface.exql.impl.ExqlPatternImpl;
 import net.paoding.rose.jade.jadeinterface.provider.DataAccess;
 import net.paoding.rose.jade.jadeinterface.provider.Modifier;
-import net.paoding.rose.jade.jadeinterface.provider.springjdbctemplte.SpringJdbcTemplateDataAccess;
+import net.paoding.rose.jade.jadeinterface.provider.springjdbctemplte.JdbcTemplateDataAccess;
 
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.BadSqlGrammarException;
@@ -23,7 +23,7 @@ import org.springframework.jdbc.core.RowMapper;
  * 
  * @author han.liao
  */
-public class ExqlDataAccess extends SpringJdbcTemplateDataAccess {
+public class ExqlDataAccess extends JdbcTemplateDataAccess {
 
     public ExqlDataAccess(DataSource dataSource) {
         super(dataSource);
