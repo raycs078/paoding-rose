@@ -163,6 +163,8 @@ public class RoseFilter extends GenericFilterBean {
 
     private MappingNode mappingTree;
 
+    private String[] namespaces = new String[0];
+
     private IgnoredPath[] ignoredPaths = new IgnoredPath[] {
             new IgnoredPathStarts(RoseConstants.VIEWS_PATH_WITH_END_SEP),
             new IgnoredPathEquals("/favicon.ico") };
@@ -179,6 +181,10 @@ public class RoseFilter extends GenericFilterBean {
 
     public void setInstructionExecutor(InstructionExecutor instructionExecutor) {
         this.instructionExecutor = instructionExecutor;
+    }
+
+    public void setNamespaces(String[] namespaces) {
+        this.namespaces = namespaces;
     }
 
     /**
@@ -341,7 +347,7 @@ public class RoseFilter extends GenericFilterBean {
 
     private List<Module> prepareModules(WebApplicationContext rootContext) throws Exception {
         // 自动扫描识别web层对象，纳入Rose管理
-        List<ModuleResource> moduleInfoList = new RoseModuleInfos().findModuleResources();
+        List<ModuleResource> moduleInfoList = new RoseModuleInfos().findModuleResources(namespaces);
         return new ModulesBuilder().build(rootContext, moduleInfoList);
     }
 

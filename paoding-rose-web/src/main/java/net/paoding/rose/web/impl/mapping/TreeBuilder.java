@@ -22,9 +22,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import net.paoding.rose.web.annotation.ReqMethod;
 import net.paoding.rose.web.impl.module.ControllerRef;
 import net.paoding.rose.web.impl.module.MethodRef;
@@ -33,6 +30,9 @@ import net.paoding.rose.web.impl.thread.ActionEngine;
 import net.paoding.rose.web.impl.thread.ControllerEngine;
 import net.paoding.rose.web.impl.thread.Engine;
 import net.paoding.rose.web.impl.thread.ModuleEngine;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * 
@@ -170,13 +170,7 @@ public class TreeBuilder {
 
     private String[] getActionCandidates(ReqMethod reqMethod) {
         if (reqMethod == ReqMethod.GET) {
-            return new String[] { "/index", "/get", "/render" };
-        }
-        if (reqMethod == ReqMethod.POST) {
-            return new String[] { "/post", "/add", "/create", "/update" };
-        }
-        if (reqMethod == ReqMethod.PUT) {
-            return new String[] { "/put", "/update" };
+            return new String[] { "/get", "/index", };
         }
         return new String[] { "/" + reqMethod.toString().toLowerCase() };
     }
