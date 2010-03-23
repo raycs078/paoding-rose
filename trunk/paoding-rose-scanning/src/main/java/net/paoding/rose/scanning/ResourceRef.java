@@ -17,6 +17,7 @@ package net.paoding.rose.scanning;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Properties;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.springframework.core.io.Resource;
@@ -28,16 +29,20 @@ import org.springframework.core.io.Resource;
  */
 public class ResourceRef {
 
+    private Properties properties;
+
     private Resource resource;
 
     private String[] modifiers;
 
-    public ResourceRef() {
-    }
-
-    public ResourceRef(Resource resource, String[] modifiers) {
+    public ResourceRef(Resource resource, String[] modifiers, Properties p) {
         setResource(resource);
         setModifiers(modifiers);
+        this.properties = p;
+    }
+
+    public Properties getProperties() {
+        return properties;
     }
 
     public void setResource(Resource resource) {
@@ -59,6 +64,11 @@ public class ResourceRef {
     public boolean hasModifier(String modifier) {
         return ArrayUtils.contains(modifiers, "**") || ArrayUtils.contains(modifiers, "*")
                 || ArrayUtils.contains(modifiers, modifier);
+    }
+
+    public boolean hasNamespace(String namespace) {
+        return ArrayUtils.contains(modifiers, "ROOT_NAMESPACE")
+                || ArrayUtils.contains(modifiers, namespace);
     }
 
     @Override

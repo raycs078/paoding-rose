@@ -7,6 +7,11 @@
 	<version>1.0-SNAPSHOT</version>
 	<name>paoding-rose-scanning</name>
 	<url>http://maven.apache.org</url>
+	
+	<properties>
+		<Implementation-Version>0.9.7-20100324</Implementation-Version>
+	</properties>
+	
 	<dependencies>
 		<dependency>
 			<groupId>junit</groupId>
@@ -99,10 +104,8 @@
 				<configuration>
 					<archive>
 						<manifestEntries>
-							<Rose>controllers, applicationContext, messages</Rose>
-							<Implementation-Title>Paoding Rose</Implementation-Title>
-							<Implementation-Version>0.9.6-20100316</Implementation-Version>
-							<Rose-Version>0.9.6-20100316</Rose-Version>
+							<Implementation-Title>rose-scanning</Implementation-Title>
+							<Implementation-Version>${Implementation-Version}</Implementation-Version>
 						</manifestEntries>
 					</archive>
 				</configuration>
