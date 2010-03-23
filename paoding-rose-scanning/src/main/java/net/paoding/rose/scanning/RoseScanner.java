@@ -17,6 +17,7 @@ package net.paoding.rose.scanning;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.ref.SoftReference;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -26,8 +27,10 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Properties;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
@@ -38,6 +41,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.core.io.support.ResourcePatternResolver;
 
@@ -86,6 +90,12 @@ public class RoseScanner {
 
     // -------------------------------------------------------------
 
+    public List<ResourceRef> getClassesFolderResources(String[] namespaces) throws IOException {
+        List<ResourceRef> resources = getClassesFolderResources();
+        resources = filterNamespaces(namespaces, resources);
+        return resources;
+    }
+
     /**
      * 将要被扫描的普通类地址(比如WEB-INF/classes或target/classes之类的地址)
      * 
@@ -126,7 +136,19 @@ public class RoseScanner {
                         continue;
                     }
                     Resource resource = new FileSystemResource(file);
-                    ResourceRef resourceRef = new ResourceRef(resource, new String[] { "**" });
+                    String[] modifier = new String[] { "**" };
+                    Properties p = new Properties();
+                    Resource rosePropertiesResource = new UrlResource(urlObject.toString()
+                            + "/META-INF/rose.properties");
+                    if (rosePropertiesResource.exists()) {
+                        InputStream in = rosePropertiesResource.getInputStream();
+                        p.load(in);
+                        in.close();
+                        if (StringUtils.isNotBlank(p.getProperty("rose"))) {
+                            modifier = StringUtils.split(p.getProperty("rose"), " ,;");
+                        }
+                    }
+                    ResourceRef resourceRef = new ResourceRef(resource, modifier, p);
                     if (classesFolderResources.contains(resourceRef)) {
                         // 删除重复的地址
                         if (logger.isDebugEnabled()) {
@@ -174,6 +196,12 @@ public class RoseScanner {
         return Collections.unmodifiableList(classesFolderResources);
     }
 
+    public List<ResourceRef> getJarResources(String[] namespaces) throws IOException {
+        List<ResourceRef> resources = getJarResources();
+        resources = filterNamespaces(namespaces, resources);
+        return resources;
+    }
+
     /**
      * 将要被扫描的jar资源
      * 
@@ -202,11 +230,26 @@ public class RoseScanner {
                                 logger.debug("skip replicated jar resource: " + path);// 在多个 linux环境 下发现有重复,fix it!
                             }
                         } else {
-                            String[] modifier = getManifestRoseValue(resource.getFile());
+                            String[] modifier = new String[0];
+                            Properties p = new Properties();
+                            Resource rosePropertiesResource = new UrlResource(urlObject.toString()
+                                    + "/rose.properties");
+                            if (rosePropertiesResource.exists()) {
+                                InputStream in = rosePropertiesResource.getInputStream();
+                                p.load(in);
+                                in.close();
+                                if (StringUtils.isNotBlank(p.getProperty("rose"))) {
+                                    modifier = StringUtils.split(p.getProperty("rose"), " ,;");
+                                }
+                            }
+                            if (modifier.length == 0) {
+                                modifier = getManifestRoseValue(resource.getFile());
+                            }
                             if (modifier.length > 0) {
-                                jarResources.add(new ResourceRef(resource, modifier));
-                                if (logger.isDebugEnabled()) {
-                                    logger.debug("add jar resource: " + path);
+                                ResourceRef resourceRef = new ResourceRef(resource, modifier, p);
+                                jarResources.add(resourceRef);
+                                if (logger.isInfoEnabled()) {
+                                    logger.info("add jar resource: " + resourceRef);
                                 }
                             } else {
                                 if (logger.isDebugEnabled()) {
@@ -252,6 +295,29 @@ public class RoseScanner {
             }
         }
         return result.toArray(new String[0]);
+    }
+
+    private List<ResourceRef> filterNamespaces(String[] namespaces, List<ResourceRef> resources) {
+        if (namespaces.length > 0) {
+            resources = new ArrayList<ResourceRef>(resources);
+            for (Iterator<ResourceRef> iter = resources.iterator(); iter.hasNext();) {
+                ResourceRef resourceRef = iter.next();
+                boolean hasNamespace = false;
+                for (String namespace : namespaces) {
+                    if (resourceRef.hasNamespace(namespace)) {
+                        hasNamespace = true;
+                        break;
+                    }
+                }
+                if (!hasNamespace) {
+                    iter.remove();
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("remove not namespace rose resource: " + resourceRef);
+                    }
+                }
+            }
+        }
+        return resources;
     }
 
 }
