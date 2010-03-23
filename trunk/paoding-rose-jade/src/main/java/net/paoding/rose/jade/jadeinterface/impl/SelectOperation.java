@@ -16,6 +16,7 @@
 package net.paoding.rose.jade.jadeinterface.impl;
 
 import java.lang.reflect.Array;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
@@ -58,16 +59,23 @@ public class SelectOperation implements JdbcOperation {
 
     @Override
     public Object execute(DataAccess dataAccess, Object[] args) {
-
         // 将参数放入  Map
-        HashMap<String, Object> parameters = new HashMap<String, Object>(annotations.length * 2);
-        for (int i = 0; i < annotations.length; i++) {
-            SQLParam annotation = annotations[i];
-            if (annotation != null) {
-                parameters.put(annotation.value(), args[i]);
+        Map<String, Object> parameters;
+        if (args == null || args.length == 0) {
+            parameters = Collections.emptyMap();
+        } else {
+            parameters = new HashMap<String, Object>(args.length * 2);
+            for (int i = 0; i < args.length; i++) {
+                parameters.put("$" + (i + 1), args[i]);
             }
-        }
+            for (int i = 0; i < annotations.length; i++) {
+                SQLParam annotation = annotations[i];
+                if (annotation != null) {
+                    parameters.put(annotation.value(), args[i]);
+                }
+            }
 
+        }
         // 执行查询
         List<?> listResult = dataAccess.select(jdQL, modifier, parameters, rowMapper);
         final int sizeResult = listResult.size();

@@ -17,6 +17,7 @@ package net.paoding.rose.jade.jadeinterface.impl;
 
 import java.lang.reflect.Array;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -55,9 +56,23 @@ public class UpdateOperation implements JdbcOperation {
     @Override
     public Object execute(DataAccess dataAccess, Object[] args) {
 
-        // 将参数放入  Map, 并且检查是否需要批量执行
-        Map<String, Object> parameters = new HashMap<String, Object>(annotations.length);
+        // 将参数放入  Map
+        Map<String, Object> parameters;
+        if (args == null || args.length == 0) {
+            parameters = Collections.emptyMap();
+        } else {
+            parameters = new HashMap<String, Object>(args.length * 2);
+            for (int i = 0; i < args.length; i++) {
+                parameters.put("$" + (i + 1), args[i]);
+            }
+            for (int i = 0; i < annotations.length; i++) {
+                SQLParam annotation = annotations[i];
+                if (annotation != null) {
+                    parameters.put(annotation.value(), args[i]);
+                }
+            }
 
+        }
         // 批量执行的参数与集合
         SQLParam batchParam = null;
         Collection<?> collection = null;

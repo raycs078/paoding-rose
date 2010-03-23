@@ -47,7 +47,16 @@ import org.springframework.util.Assert;
  */
 public class JdbcTemplateDataAccess implements DataAccess {
 
-    private static final Pattern PATTERN = Pattern.compile("\\:([a-zA-Z0-9_\\.]*)");
+    private static final Pattern NAMED_PARAM_PATTERN = Pattern
+            .compile("(\\:|\\$([a-zA-Z0-9_\\.]+))");
+
+    public static void main(String[] args) {
+        String sql = "SELECT * FROM :user WHERE name=$1";
+        Matcher matcher = NAMED_PARAM_PATTERN.matcher(sql);
+        while (matcher.find()) {
+            System.out.println(matcher.group());
+        }
+    }
 
     private JdbcTemplate jdbcTemplate = new JdbcTemplate();
 
@@ -113,7 +122,7 @@ public class JdbcTemplateDataAccess implements DataAccess {
     private String resolveParam(String sql, Map<String, ?> parameters, final List<Object> values) {
 
         // 匹配符合  :name 格式的参数
-        Matcher matcher = PATTERN.matcher(sql);
+        Matcher matcher = NAMED_PARAM_PATTERN.matcher(sql);
         if (matcher.find()) {
 
             StringBuilder builder = new StringBuilder();
@@ -122,7 +131,12 @@ public class JdbcTemplateDataAccess implements DataAccess {
 
             do {
                 // 提取参数名称
-                final String name = matcher.group(1).trim();
+                final String name;
+                if (matcher.group().charAt(0) == '$') {
+                    name = matcher.group();
+                } else {
+                    name = matcher.group(1);
+                }
 
                 Object value = null;
 
