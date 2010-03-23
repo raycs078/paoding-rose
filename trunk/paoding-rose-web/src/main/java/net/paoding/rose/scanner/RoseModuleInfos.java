@@ -21,7 +21,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -39,7 +38,6 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.core.io.Resource;
-import org.springframework.util.Log4jConfigurer;
 
 /**
  * 
@@ -47,13 +45,6 @@ import org.springframework.util.Log4jConfigurer;
  * 
  */
 public class RoseModuleInfos {
-
-    public static void main(String[] args) throws IOException {
-        Log4jConfigurer.initLogging("src/test/java/log4j.properties");
-        List<ModuleResource> moduleInfos = new RoseModuleInfos().findModuleResources();
-        System.out.println("context resource="
-                + Arrays.toString(moduleInfos.toArray(new ModuleResource[0])));
-    }
 
     protected Log logger = LogFactory.getLog(RoseModuleInfos.class);
 
@@ -63,7 +54,8 @@ public class RoseModuleInfos {
 
     private FileSystemManager fsManager = new FileSystemManager();
 
-    public synchronized List<ModuleResource> findModuleResources() throws IOException {
+    public synchronized List<ModuleResource> findModuleResources(String[] namespaces)
+            throws IOException {
         if (moduleResourceList == null) {
             if (logger.isDebugEnabled()) {
                 logger.debug("do find module resources!");
@@ -74,8 +66,8 @@ public class RoseModuleInfos {
             //
             RoseScanner roseScanner = RoseScanner.getInstance();
             List<ResourceRef> resources = new ArrayList<ResourceRef>();
-            resources.addAll(roseScanner.getClassesFolderResources());
-            resources.addAll(roseScanner.getJarResources());
+            resources.addAll(roseScanner.getClassesFolderResources(namespaces));
+            resources.addAll(roseScanner.getJarResources(namespaces));
             List<FileObject> rootObjects = new ArrayList<FileObject>();
 
             for (ResourceRef resourceRef : resources) {
