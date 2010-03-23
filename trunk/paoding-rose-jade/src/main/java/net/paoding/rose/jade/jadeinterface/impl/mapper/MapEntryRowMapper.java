@@ -19,7 +19,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 
-import net.paoding.rose.jade.jadeinterface.annotation.MapKey;
+import net.paoding.rose.jade.jadeinterface.annotation.KeyColumnOfMap;
 import net.paoding.rose.jade.jadeinterface.provider.Modifier;
 
 import org.apache.commons.lang.StringUtils;
@@ -57,7 +57,7 @@ public class MapEntryRowMapper implements RowMapper {
             throw new IllegalArgumentException("please set map generic parameters in method: "
                     + modifier.getMethod());
         }
-        MapKey mapKey = modifier.getAnnotation(MapKey.class);
+        KeyColumnOfMap mapKey = modifier.getAnnotation(KeyColumnOfMap.class);
         this.keyColumn = (mapKey != null) ? mapKey.value() : null;
         this.keyType = genericTypes[0];
         this.mapper = mapper;

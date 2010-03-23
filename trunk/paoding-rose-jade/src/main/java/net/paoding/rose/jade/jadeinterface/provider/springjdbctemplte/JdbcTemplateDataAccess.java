@@ -45,13 +45,13 @@ import org.springframework.util.Assert;
  * @author 王志亮 [qieqie.wang@gmail.com]
  * @author 廖涵 [in355hz@gmail.com]
  */
-public class SpringJdbcTemplateDataAccess implements DataAccess {
+public class JdbcTemplateDataAccess implements DataAccess {
 
     private static final Pattern PATTERN = Pattern.compile("\\:([a-zA-Z0-9_\\.]*)");
 
     private JdbcTemplate jdbcTemplate = new JdbcTemplate();
 
-    public SpringJdbcTemplateDataAccess(DataSource dataSource) {
+    public JdbcTemplateDataAccess(DataSource dataSource) {
         jdbcTemplate.setDataSource(dataSource);
     }
 

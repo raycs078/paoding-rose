@@ -19,7 +19,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 
-import net.paoding.rose.jade.jadeinterface.annotation.MapKey;
+import net.paoding.rose.jade.jadeinterface.annotation.KeyColumnOfMap;
 import net.paoding.rose.jade.jadeinterface.provider.Modifier;
 
 import org.apache.commons.lang.StringUtils;
@@ -60,7 +60,7 @@ public class MapEntryColumnRowMapper implements RowMapper {
         }
 
         // 获取 Key 类型与列
-        MapKey mapKey = modifier.getAnnotation(MapKey.class);
+        KeyColumnOfMap mapKey = modifier.getAnnotation(KeyColumnOfMap.class);
         // 设置 Key 类型与列
         this.keyColumn = (mapKey != null) ? mapKey.value() : null;
         this.keyType = genericTypes[0];

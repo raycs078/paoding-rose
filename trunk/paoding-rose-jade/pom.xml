@@ -9,6 +9,10 @@
 	<version>0.9.2-SNAPSHOT</version>
 	<name>paoding-rose-jade</name>
 
+	<properties>
+		<Implementation-Version>0.9.7-20100324</Implementation-Version>
+	</properties>
+	
 	<!-- 开发人员说明 -->
 	<developers>
 		<developer>
@@ -130,10 +134,8 @@
 				<configuration>
 					<archive>
 						<manifestEntries>
-							<Rose>applicationContext</Rose>
-							<Implementation-Title>Paoding Jade</Implementation-Title>
-							<Implementation-Version>0.9.7-20100316</Implementation-Version>
-							<Rose-Version>0.9.7-20100316</Rose-Version>
+							<Implementation-Title>rose-jade</Implementation-Title>
+							<Implementation-Version>${Implementation-Version}</Implementation-Version>
 						</manifestEntries>
 					</archive>
 				</configuration>

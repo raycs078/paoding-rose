@@ -22,7 +22,10 @@ public class SpringDataSourceFactory implements DataSourceFactory, ApplicationCo
 
     @Override
     public DataSource getDataSource(String dataSourceName) {
-        return (DataSource) applicationContext.getBean(dataSourceName + "DataSource",
-                DataSource.class);
+        assert dataSourceName != null;
+        dataSourceName = dataSourceName.trim();
+        String beanName = dataSourceName.length() == 0 ? "dataSource" : dataSourceName
+                + "DataSource";
+        return (DataSource) applicationContext.getBean(beanName, DataSource.class);
     }
 }
