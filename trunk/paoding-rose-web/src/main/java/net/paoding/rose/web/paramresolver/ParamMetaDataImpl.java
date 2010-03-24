@@ -17,6 +17,7 @@ package net.paoding.rose.web.paramresolver;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -33,9 +34,7 @@ class ParamMetaDataImpl implements ParamMetaData {
 
     private Class<?> paramType;
 
-    private String paramName;
-
-    private String secondParamName;
+    private String[] paramNames = new String[2];
 
     private Map<Object, Object> userObjectMap;
 
@@ -47,7 +46,7 @@ class ParamMetaDataImpl implements ParamMetaData {
             String paramName, int index) {
         this.controllerClass = controllerClass;
         this.method = method;
-        this.paramName = paramName;
+        this.setParamName(paramName);
         this.paramType = paramType;
         this.index = index;
         this.annotations = method.getParameterAnnotations()[index];
@@ -115,20 +114,26 @@ class ParamMetaDataImpl implements ParamMetaData {
     }
 
     public String getParamName() {
-        return paramName;
+        return paramNames[0];
     }
 
-    public void setSecondParamName(String secondParamName) {
-        this.secondParamName = secondParamName;
+    public void addAliasParamName(String aliasParamName) {
+        if (paramNames[1] == null) {
+            paramNames[1] = aliasParamName;
+        } else {
+            String[] newArray = Arrays.copyOf(paramNames, paramNames.length + 2);
+            newArray[paramNames.length + 1] = aliasParamName;
+            this.paramNames = newArray;
+        }
     }
 
     @Override
     public String[] getParamNames() {
-        return new String[] { paramName, secondParamName };
+        return paramNames;
     }
 
     public void setParamName(String paramName) {
-        this.paramName = paramName;
+        paramNames[0] = paramName;
     }
 
 }

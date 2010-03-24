@@ -155,7 +155,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
         @Override
         public boolean supports(ParamMetaData metaData) {
             if (inner.supports(metaData)) {
-                tagUriIndexParamIfNeccessary(metaData);
+                addIndexAliasParamNameIfNeccessary(metaData);
                 return true;
             }
             return false;
@@ -923,10 +923,10 @@ public class ResolverFactoryImpl implements ResolverFactory {
         }
     }
 
-    private static boolean tagUriIndexParamIfNeccessary(ParamMetaData paramMetaData) {
+    private static boolean addIndexAliasParamNameIfNeccessary(ParamMetaData paramMetaData) {
         Class<?>[] paramTypes = paramMetaData.getMethod().getParameterTypes();
         int index = paramMetaData.getIndex(); // index是从0开始的
-        int uriParamIndex = 0; // uriParamIndex，有效的值是从1开始的
+        int uriParamIndex = 0; // uriParamIndex，有效的值是从**1**开始的
         int breakIndex = 0;// breakIndex从0开始的
         for (; breakIndex < paramTypes.length && breakIndex <= index; breakIndex++) {
             Class<?> type = paramTypes[breakIndex];
@@ -944,7 +944,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
             }
         }
         if ((breakIndex - 1) == index) {
-            ((ParamMetaDataImpl) paramMetaData).setSecondParamName("$" + uriParamIndex);
+            paramMetaData.addAliasParamName("$" + uriParamIndex);
             return true;
         }
         return false;
