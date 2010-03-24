@@ -338,4 +338,10 @@ public interface Invocation {
      */
     public Invocation getHeadInvocation();
 
+    /**
+     * 
+     * @return
+     */
+    public String getResourceId();
+
 }
