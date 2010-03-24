@@ -1,8 +1,10 @@
 package net.paoding.rose.jade.jadeinterface.exql.impl;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -13,6 +15,7 @@ import org.apache.commons.jexl.Expression;
 import org.apache.commons.jexl.ExpressionFactory;
 import org.apache.commons.jexl.JexlContext;
 import org.apache.commons.jexl.JexlHelper;
+import org.apache.commons.lang.math.NumberUtils;
 
 /**
  * 默认使用: Apache Common Jexl 引擎实现表达式处理。
@@ -34,11 +37,87 @@ public class ExprResolverImpl implements ExprResolver {
     // 参数前缀
     private static final String VAR_PREFIX = "_mapVars";
 
+    // 带验证的  java.util.Map 实现
+    public static class CheckingMap implements Map<String, Object> {
+
+        protected Map<String, Object> map;
+
+        public CheckingMap(Map<String, Object> map) {
+            this.map = map;
+        }
+
+        @Override
+        public void clear() {
+            map.clear();
+        }
+
+        @Override
+        public boolean containsKey(Object key) {
+            if (!map.containsKey(key)) {
+                throw new Error("jdQL param not found: " + key);
+            }
+            return map.containsKey(key);
+        }
+
+        @Override
+        public boolean containsValue(Object value) {
+            return map.containsValue(value);
+        }
+
+        @Override
+        public Set<java.util.Map.Entry<String, Object>> entrySet() {
+            return map.entrySet();
+        }
+
+        @Override
+        public Object get(Object key) {
+            if (!map.containsKey(key)) {
+                throw new Error("jdQL param not found: " + key);
+            }
+            return map.get(key);
+        }
+
+        @Override
+        public boolean isEmpty() {
+            return map.isEmpty();
+        }
+
+        @Override
+        public Set<String> keySet() {
+            return map.keySet();
+        }
+
+        @Override
+        public Object put(String key, Object value) {
+            return map.put(key, value);
+        }
+
+        @Override
+        public void putAll(Map<? extends String, ? extends Object> m) {
+            map.putAll(m);
+        }
+
+        @Override
+        public Object remove(Object key) {
+            return map.remove(key);
+        }
+
+        @Override
+        public int size() {
+            return map.size();
+        }
+
+        @Override
+        public Collection<Object> values() {
+            return map.values();
+        }
+    }
+
     // 参数表
-    protected final HashMap<String, Object> mapVars = new HashMap<String, Object>();
+    protected final Map<String, Object> mapVars = new CheckingMap(new HashMap<String, Object>());
 
     // 常量表
-    protected final HashMap<String, Object> mapConsts = new HashMap<String, Object>();
+    protected final Map<String, Object> mapConsts = new CheckingMap(new HashMap<String, Object>());
 
     // Common Jexl 上下文
     protected final JexlContext context = JexlHelper.createContext();
@@ -131,18 +210,28 @@ public class ExprResolverImpl implements ExprResolver {
                 builder.append(expression.substring(index, matcher.start()));
 
                 String prefix = matcher.group(1);
+                String name = matcher.group(2);
                 if (":".equals(prefix)) {
-                    // 拼出变量访问语句
-                    builder.append(VAR_PREFIX);
-                    builder.append("[\'");
-                    builder.append(matcher.group(2));
-                    builder.append("\']");
+                    if (NumberUtils.isDigits(name)) {
+                        // 按顺序访问变量
+                        builder.append(VAR_PREFIX);
+                        builder.append("[\':");
+                        builder.append(name);
+                        builder.append("\']");
+
+                    } else {
+                        // 按名称访问变量
+                        builder.append(VAR_PREFIX);
+                        builder.append("[\'");
+                        builder.append(name);
+                        builder.append("\']");
+                    }
 
                 } else if ("$".equals(prefix)) {
                     // 拼出常量访问语句
                     builder.append(CONST_PREFIX);
                     builder.append("[\'");
-                    builder.append(matcher.group(2));
+                    builder.append(name);
                     builder.append("\']");
                 }
 
@@ -178,17 +267,18 @@ public class ExprResolverImpl implements ExprResolver {
         map.put("current", new Date());
         map.put("numbers", new Integer[] { 1, 2, 3, 5, 8, 13, 21, 34 });
         map.put("index", 5);
+        map.put(":2", 2);
 
         ExprResolver exprResolver = new ExprResolverImpl(map, map);
 
         System.out.println( // NL
                 exprResolver.executeExpr( // NL
-                        "$numbers[:index]"));
+                        "$numbers[:index] + :2"));
         System.out.println( // NL
                 exprResolver.executeExpr( // NL
-                        ":current.year - ($current.month + $current.day)"));
+                        ":current.year - ($current.month + $current.day) - :2"));
         System.out.println( // NL
                 exprResolver.executeExpr( // NL
-                        ":current.year - ($current.month + $current.day) + $numbers[:index]"));
+                        ":current.year - ($current.month + $current.day) + $numbers[:index] + :2"));
     }
 }
