@@ -141,8 +141,8 @@ public class ExprResolverImpl implements ExprResolver {
                     }
 
                     if (!mapVars.containsKey(name)) {
-                        throw new IllegalArgumentException("Variable not defined in DAO method: "
-                                + name);
+                        throw new IllegalArgumentException("Variable \'" + name
+                                + "\' not defined in DAO method");
                     }
 
                     // 按名称访问变量
@@ -154,8 +154,8 @@ public class ExprResolverImpl implements ExprResolver {
                 } else if ("$".equals(prefix)) {
 
                     if (!mapVars.containsKey(name)) {
-                        throw new IllegalArgumentException("Constant not defined in DAO class: "
-                                + name);
+                        throw new IllegalArgumentException("Constant \'" + name
+                                + "\' not defined in DAO class");
                     }
 
                     // 拼出常量访问语句
