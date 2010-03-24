@@ -71,7 +71,7 @@ public class RoseAppContext {
                 contextConfigLocation = APP_CONTEXT_CONFIG_LOCATION;
             }
 
-            List<Resource> jarContextResources = RoseJarContextResources.findContextResources();
+            List<Resource> jarContextResources = RoseJarContextResources.findContextResources(new String[]{});
             if (logger.isInfoEnabled()) {
                 logger.info("jarContextResources: "
                         + ArrayUtils.toString(jarContextResources.toArray()));

@@ -151,8 +151,7 @@ import org.springframework.web.util.NestedServletException;
 public class RoseFilter extends GenericFilterBean {
 
     /** 默认的applicationContext地址 */
-    public static final String DEFAULT_CONTEXT_CONFIG_LOCATION = //
-    "/WEB-INF/applicationContext*.xml,classpath:applicationContext*.xml";
+    public static final String DEFAULT_CONTEXT_CONFIG_LOCATION = "/WEB-INF/applicationContext*.xml";
 
     /** 使用的applicationContext地址 */
     private String contextConfigLocation;
@@ -320,8 +319,9 @@ public class RoseFilter extends GenericFilterBean {
                 contextConfigLocation = DEFAULT_CONTEXT_CONFIG_LOCATION;
             }
         }
-        List<Resource> jarContextResources = RoseJarContextResources.findContextResources();
-        String[] messageBasenames = RoseJarContextResources.findMessageBasenames();
+        List<Resource> jarContextResources = RoseJarContextResources
+                .findContextResources(namespaces);
+        String[] messageBasenames = RoseJarContextResources.findMessageBasenames(namespaces);
         if (logger.isInfoEnabled()) {
             logger.info("jarContextResources: "
                     + ArrayUtils.toString(jarContextResources.toArray()));
