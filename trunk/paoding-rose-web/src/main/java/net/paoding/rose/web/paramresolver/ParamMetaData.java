@@ -61,6 +61,8 @@ public interface ParamMetaData {
      */
     public String getParamName();
 
+    public String[] getParamNames();
+
     public <T extends Annotation> T getAnnotation(Class<T> annotationClass);
 
     public <T extends Annotation> boolean isAnnotationPresent(Class<T> annotationClass);

@@ -25,6 +25,7 @@ import java.util.List;
 
 import net.paoding.rose.util.Empty;
 
+import org.apache.commons.lang.math.NumberUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -278,6 +279,8 @@ public class MappingImpl implements Mapping {
                     }
                     if (paramName.length() == 0) {
                         paramName = "param" + paramIndex;
+                    } else if (NumberUtils.isDigits(paramName)) {
+                        paramName = "$" + paramName;
                     }
                     //
                     constants.add(buf.substring(nextIndex, startIndex));

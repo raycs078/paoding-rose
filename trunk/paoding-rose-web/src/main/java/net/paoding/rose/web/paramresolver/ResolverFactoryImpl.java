@@ -44,11 +44,11 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import net.paoding.rose.web.Invocation;
+import net.paoding.rose.web.annotation.Create;
 import net.paoding.rose.web.annotation.DefValue;
 import net.paoding.rose.web.annotation.FlashParam;
 import net.paoding.rose.web.annotation.Param;
 import net.paoding.rose.web.annotation.Pattern;
-import net.paoding.rose.web.annotation.Create;
 import net.paoding.rose.web.impl.module.Module;
 import net.paoding.rose.web.impl.thread.InvocationBean;
 import net.paoding.rose.web.impl.thread.Rose;
@@ -126,7 +126,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
             new ModelResolver(), //
             new FlashResolver(), //
             new ModuleResolver(), //
-            new StringResolver(), //
+            new XResolver(new StringResolver()), //
             new RequestResolver(), //
             new ResponseResolver(), //
             new HttpSessionResolver(), //
@@ -134,15 +134,44 @@ public class ResolverFactoryImpl implements ResolverFactory {
             new MultipartRequestResolver(), //
             new MultipartHttpServletRequestResolver(), //
             new ServletContextResolver(), //
-            new ArrayResolver(),//
-            new ListResolver(), //
-            new SetResolver(), //
-            new MapResolver(), //
+            new XResolver(new ArrayResolver()),//
+            new XResolver(new ListResolver()), //
+            new XResolver(new SetResolver()), //
+            new XResolver(new MapResolver()), //
             new BindingResultResolver(), //
-            new DateResolver(), //
-            new EditorResolver(), //
+            new XResolver(new DateResolver()), //
+            new XResolver(new EditorResolver()), //
             new BeanResolver(), //
     };
+
+    private static class XResolver implements ParamResolver {
+
+        ParamResolver inner;
+
+        public XResolver(ParamResolver inner) {
+            this.inner = inner;
+        }
+
+        @Override
+        public boolean supports(ParamMetaData metaData) {
+            if (inner.supports(metaData)) {
+                tagUriIndexParamIfNeccessary(metaData);
+                return true;
+            }
+            return false;
+        }
+
+        @Override
+        public Object resolve(Invocation inv, ParamMetaData metaData) throws Exception {
+            return inner.resolve(inv, metaData);
+        }
+
+        @Override
+        public String toString() {
+            return inner.toString();
+        }
+
+    }
 
     public ResolverFactoryImpl() {
     }
@@ -150,7 +179,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
     private final List<ParamResolver> customerResolvers = new ArrayList<ParamResolver>();
 
     public void addCustomerResolver(ParamResolver resolver) {
-        customerResolvers.add(resolver);
+        customerResolvers.add(new XResolver(resolver));
     }
 
     @Override
@@ -317,7 +346,15 @@ public class ResolverFactoryImpl implements ResolverFactory {
 
         @Override
         public String resolve(Invocation inv, ParamMetaData paramMetaData) {
-            return inv.getParameter(paramMetaData.getParamName());
+            for (String paramName : paramMetaData.getParamNames()) {
+                if (paramName != null) {
+                    String value = inv.getParameter(paramName);
+                    if (value != null) {
+                        return value;
+                    }
+                }
+            }
+            return null;
         }
     }
 
@@ -474,8 +511,16 @@ public class ResolverFactoryImpl implements ResolverFactory {
                             + ", the request is not a MultipartRequest");
                 }
             }
-        } else if (StringUtils.isNotEmpty(paramMetaData.getParamName())) {
-            Object toConvert = inv.getRequest().getParameterValues(paramMetaData.getParamName());
+        } else {
+            Object toConvert = null;
+            for (String paramName : paramMetaData.getParamNames()) {
+                if (paramName != null) {
+                    toConvert = inv.getRequest().getParameterValues(paramName);
+                    if (toConvert != null) {
+                        break;
+                    }
+                }
+            }
             if (toConvert != null) {
                 if (((String[]) toConvert).length == 1) {
                     toConvert = ((String[]) toConvert)[0].split(",");
@@ -760,8 +805,15 @@ public class ResolverFactoryImpl implements ResolverFactory {
 
         @Override
         public Date resolve(Invocation inv, ParamMetaData metaData) throws Exception {
-            String text = inv.getParameter(metaData.getParamName());
-
+            String text = null;
+            for (String paramName : metaData.getParamNames()) {
+                if (paramName != null) {
+                    text = inv.getParameter(paramName);
+                    if (text != null) {
+                        break;
+                    }
+                }
+            }
             Date date = resolveUtilDate(text, metaData);
             return DatePatterns.changeType(date, metaData.getParamType());
         }
@@ -832,10 +884,13 @@ public class ResolverFactoryImpl implements ResolverFactory {
             if (flashParam != null) {
                 toConvert = inv.getFlash().get(flashParam.value());
             }
-            if (toConvert == null) {
-                Param param = metaData.getAnnotation(Param.class);
-                if (param != null) {
-                    toConvert = inv.getParameter(param.value());
+
+            for (String paramName : metaData.getParamNames()) {
+                if (paramName != null) {
+                    toConvert = inv.getRequest().getParameter(paramName);
+                    if (toConvert != null) {
+                        break;
+                    }
                 }
             }
             if (toConvert == null) {
@@ -868,4 +923,30 @@ public class ResolverFactoryImpl implements ResolverFactory {
         }
     }
 
+    private static boolean tagUriIndexParamIfNeccessary(ParamMetaData paramMetaData) {
+        Class<?>[] paramTypes = paramMetaData.getMethod().getParameterTypes();
+        int index = paramMetaData.getIndex(); // index是从0开始的
+        int uriParamIndex = 0; // uriParamIndex，有效的值是从1开始的
+        int breakIndex = 0;// breakIndex从0开始的
+        for (; breakIndex < paramTypes.length && breakIndex <= index; breakIndex++) {
+            Class<?> type = paramTypes[breakIndex];
+            if (type.isArray()) {
+                type = type.getComponentType();
+            } else if (Collection.class.isAssignableFrom(type)) {
+                Class<?>[] generics = compileGenericParameterTypesDetail(paramMetaData.getMethod(),
+                        paramMetaData.getIndex());
+                assert generics.length > 0;
+                type = generics[0];
+            }
+            if (ClassUtils.isPrimitiveOrWrapper(type) || type == String.class
+                    || Date.class.isAssignableFrom(type)) {
+                uriParamIndex++;
+            }
+        }
+        if ((breakIndex - 1) == index) {
+            ((ParamMetaDataImpl) paramMetaData).setSecondParamName("$" + uriParamIndex);
+            return true;
+        }
+        return false;
+    }
 }
