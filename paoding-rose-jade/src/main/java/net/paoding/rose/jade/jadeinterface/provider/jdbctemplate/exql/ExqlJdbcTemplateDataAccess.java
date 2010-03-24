@@ -23,13 +23,13 @@ import org.springframework.jdbc.core.RowMapper;
  * 
  * @author han.liao
  */
-public class ExqlDataAccess extends JdbcTemplateDataAccess {
+public class ExqlJdbcTemplateDataAccess extends JdbcTemplateDataAccess {
 
-    public ExqlDataAccess() {
+    public ExqlJdbcTemplateDataAccess() {
         super();
     }
 
-    public ExqlDataAccess(DataSource dataSource) {
+    public ExqlJdbcTemplateDataAccess(DataSource dataSource) {
         super(dataSource);
     }
 
@@ -71,8 +71,9 @@ public class ExqlDataAccess extends JdbcTemplateDataAccess {
             pattern.execute(context, parameters, modifier.getDefinition().getConstants());
 
         } catch (Exception e) {
-            throw new BadSqlGrammarException("ExqlPattern.execute", jdQL,
-                    new SQLSyntaxErrorException("Error executing pattern", e));
+            String daoInfo = modifier.toString();
+            throw new BadSqlGrammarException(daoInfo, jdQL, new SQLSyntaxErrorException(daoInfo
+                    + " @SQL('" + jdQL + "')", e));
         }
 
         return context;

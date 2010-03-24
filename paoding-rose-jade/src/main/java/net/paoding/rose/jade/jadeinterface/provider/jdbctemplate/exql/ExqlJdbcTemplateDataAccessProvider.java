@@ -13,6 +13,6 @@ public class ExqlJdbcTemplateDataAccessProvider extends JdbcTemplateDataAccessPr
 
     @Override
     protected JdbcTemplateDataAccess createEmptyJdbcTemplateDataAccess() {
-        return new ExqlDataAccess();
+        return new ExqlJdbcTemplateDataAccess();
     }
 }
