@@ -61,6 +61,19 @@ public interface ParamMetaData {
      */
     public String getParamName();
 
+    /**
+     * 增加一个别名
+     * 
+     * @param aliasParamName
+     * @return
+     */
+    public void addAliasParamName(String aliasParamName);
+
+    /**
+     * 返回所有别名，数组元素如果为null，表示无效
+     * 
+     * @return
+     */
     public String[] getParamNames();
 
     public <T extends Annotation> T getAnnotation(Class<T> annotationClass);
