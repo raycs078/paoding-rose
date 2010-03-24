@@ -20,7 +20,6 @@ import static net.paoding.rose.RoseConstants.CONTROLLERS_DIRECTORY_NAME;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -30,7 +29,6 @@ import java.util.Properties;
 
 import net.paoding.rose.RoseConstants;
 import net.paoding.rose.scanning.ResourceRef;
-import net.paoding.rose.scanning.RoseScanner;
 import net.paoding.rose.scanning.vfs.FileName;
 import net.paoding.rose.scanning.vfs.FileObject;
 import net.paoding.rose.scanning.vfs.FileSystemManager;
@@ -55,7 +53,6 @@ public class RoseModuleInfos {
 
     private FileSystemManager fsManager = new FileSystemManager();
 
-    @SuppressWarnings("unchecked")
     public synchronized List<ModuleResource> findModuleResources(String[] namespaces)
             throws IOException {
         if (moduleResourceList == null) {
@@ -66,33 +63,7 @@ public class RoseModuleInfos {
             moduleResourceList = new LinkedList<ModuleResource>();
             moduleResourceMap = new HashMap<FileObject, ModuleResource>();
             //
-            RoseScanner roseScanner = RoseScanner.getInstance();
-            List<ResourceRef> resources = new ArrayList<ResourceRef>();
-            try {
-                // 为兼容旧的scanning // 2010.03.24
-                // TODO: 2010.04.24之后应该删除此try-catch代码，直接使用roseScanner.getClassesFolderResources(namespaces)
-                Method getClassesFolderResources = RoseScanner.class.getMethod(
-                        "getClassesFolderResources", String[].class);
-                Method getJarResources = RoseScanner.class.getMethod("getJarResources",
-                        String[].class);
-                resources.addAll((List<ResourceRef>) getClassesFolderResources.invoke(roseScanner,
-                        (Object) namespaces));
-                resources.addAll((List<ResourceRef>) getJarResources.invoke(roseScanner,
-                        (Object) namespaces));
-            } catch (NoSuchMethodException e) {
-                if (namespaces != null && namespaces.length > 0) {
-                    throw new IllegalStateException(
-                            "PLEASE UPDATE paoding-rose-scanning.jar for support rose namespaces filter, or remove roseFilter's namespaces init-param");
-                }
-                logger.warn(//
-                        "PLEASE UPDATE paoding-rose-scanning.jar for support rose namespaces filter");
-                resources.addAll(roseScanner.getClassesFolderResources());
-                resources.addAll(roseScanner.getJarResources());
-            } catch (Exception e) {
-                logger.error("", e);
-            }
-            resources.addAll(roseScanner.getClassesFolderResources(namespaces));
-            resources.addAll(roseScanner.getJarResources(namespaces));
+            List<ResourceRef> resources = RoseFolders.getRoseFolders(namespaces);
             List<FileObject> rootObjects = new ArrayList<FileObject>();
 
             for (ResourceRef resourceRef : resources) {

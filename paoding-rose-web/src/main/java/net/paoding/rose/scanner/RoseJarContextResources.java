@@ -16,12 +16,10 @@
 package net.paoding.rose.scanner;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
 import net.paoding.rose.scanning.ResourceRef;
-import net.paoding.rose.scanning.RoseScanner;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -29,7 +27,6 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.util.ClassUtils;
-import org.springframework.util.Log4jConfigurer;
 
 /**
  * 
@@ -38,25 +35,23 @@ import org.springframework.util.Log4jConfigurer;
  */
 public class RoseJarContextResources {
 
-    public static void main(String[] args) throws IOException {
-        Log4jConfigurer.initLogging("src/test/java/log4j.properties");
-        List<Resource> resources = RoseJarContextResources.findContextResources();
-        System.out.println("context resource="
-                + Arrays.toString(resources.toArray(new Resource[0])));
-    }
-
     protected static Log logger = LogFactory.getLog(RoseJarContextResources.class);
 
-    public static List<Resource> findContextResources() throws IOException {
-        List<ResourceRef> jarResources = RoseScanner.getInstance().getJarResources();
+    public static List<Resource> findContextResources(String[] namespaces) throws IOException {
+        List<ResourceRef> folders = RoseFolders.getRoseFolders(namespaces);
         ResourcePatternResolver resourcePatternResolver = new PathMatchingResourcePatternResolver(
                 ClassUtils.getDefaultClassLoader());
         List<Resource> ctxResources = new LinkedList<Resource>();
-        for (ResourceRef resourceInfo : jarResources) {
+        for (ResourceRef resourceInfo : folders) {
             if (resourceInfo.hasModifier("applicationContext")) {
                 Resource resource = resourceInfo.getResource();
-                String jarPath = resource.getFile().getAbsolutePath().replace('\\', '/');
-                String ctxPath = "jar:file:" + jarPath + "!/applicationContext*.xml";
+                String path = resource.getFile().getAbsolutePath().replace('\\', '/');
+                String ctxPath;
+                if (resource.getFilename().endsWith(".jar")) {
+                    ctxPath = "jar:file:" + path + "!/applicationContext*.xml";
+                } else {
+                    ctxPath = "file:" + path + "/applicationContext*.xml";
+                }
                 Resource[] founds = resourcePatternResolver.getResources(ctxPath);
                 for (Resource found : founds) {
                     ctxResources.add(found);
@@ -69,14 +64,20 @@ public class RoseJarContextResources {
         return ctxResources;
     }
 
-    public static String[] findMessageBasenames() throws IOException {
-        List<ResourceRef> jarResources = RoseScanner.getInstance().getJarResources();
+    public static String[] findMessageBasenames(String[] namespaces) throws IOException {
+        List<ResourceRef> folders = RoseFolders.getRoseFolders(namespaces);
         List<String> ctxResources = new LinkedList<String>();
-        for (ResourceRef resourceInfo : jarResources) {
+        for (ResourceRef resourceInfo : folders) {
             if (resourceInfo.hasModifier("messages")) {
                 Resource resource = resourceInfo.getResource();
-                String jarPath = resource.getFile().getAbsolutePath().replace('\\', '/');
-                ctxResources.add("jar:file:" + jarPath + "!/messages*");
+                String path = resource.getFile().getAbsolutePath().replace('\\', '/');
+                String msgPath;
+                if (resource.getFilename().endsWith(".jar")) {
+                    msgPath = "jar:file:" + path + "!/messages*";
+                } else {
+                    msgPath = "file:" + path + "/messages*";
+                }
+                ctxResources.add(msgPath);
             }
         }
         return ctxResources.toArray(new String[0]);
