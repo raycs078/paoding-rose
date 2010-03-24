@@ -28,6 +28,8 @@ public class ExqlCompiler {
 
     private static final String SHARP = "#";
 
+    private static final String JOIN = "!";
+
     private static final String KEYWORD_IF = "if";
 
     private static final String KEYWORD_FOR = "for";
@@ -36,7 +38,7 @@ public class ExqlCompiler {
 
     // 正则表达式
     private static final Pattern PATTERN_KEYWORD = Pattern.compile( // NL
-            "\\:\\:|([\\:\\$]{1}[a-zA-Z0-9_\\.]+)|\\{([^\\{\\}]+)\\}\\?|#(#|if|for)?");
+            "\\:\\:|([\\:\\$]{1}[a-zA-Z0-9_\\.]+)|\\{([^\\{\\}]+)\\}\\?|#(#|!|if|for)?");
 
     private static final Pattern PATTERN_IN = Pattern.compile(// NL
             "([a-zA-Z0-9_]*)\\s+in\\s+(.+)");
@@ -160,7 +162,7 @@ public class ExqlCompiler {
                 }
             }
             // 处理  ##(:expr) 形式的子句
-            else if (keyword.equals(SHARP)) {
+            else if (keyword.equals(SHARP) || keyword.equals(JOIN)) {
 
                 // 获取括号内的内容
                 expr = findBrace(BRACE_LEFT, BRACE_RIGHT);
@@ -441,7 +443,7 @@ public class ExqlCompiler {
                 + " WHERE #if(:expr3) {e = $expr3} #else {e IS NULL}"
                 + "#for(variant in $expr4.bytes) { AND c = :variant}" // NL
                 + " {AND d = :expr5}? {AND f = $expr6}?" // NL
-                + " BY ##(:expr7) ASC";
+                + " BY #!(:expr7) ASC";
 
         // 在输入中查找  PREFIX 字符
         Matcher matcher = PATTERN_KEYWORD.matcher(string);

@@ -112,7 +112,7 @@ public class ExqlPatternImpl implements ExqlPattern {
                 .compile("SELECT #(:expr1.length()), :expr2.class.name,"
                         + " ##(:expr3) WHERE #if(:expr4) {e = :expr4} #else {e IS NULL}"
                         + "#for(variant in :expr5.bytes) { AND c = :variant}" // NL
-                        + " GROUP BY ##(:expr1) ASC");
+                        + " GROUP BY #!(:expr1) ASC");
 
         ExqlContext context = new ExqlContextImpl();
 
