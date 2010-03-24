@@ -934,7 +934,10 @@ public class ResolverFactoryImpl implements ResolverFactory {
                 type = type.getComponentType();
             } else if (Collection.class.isAssignableFrom(type)) {
                 Class<?>[] generics = compileGenericParameterTypesDetail(paramMetaData.getMethod(),
-                        paramMetaData.getIndex());
+                        breakIndex);
+                if (generics == null) {
+                    return false;
+                }
                 assert generics.length > 0;
                 type = generics[0];
             }
@@ -944,7 +947,14 @@ public class ResolverFactoryImpl implements ResolverFactory {
             }
         }
         if ((breakIndex - 1) == index) {
-            paramMetaData.addAliasParamName("$" + uriParamIndex);
+            String alias = "$" + uriParamIndex;
+            paramMetaData.addAliasParamName(alias);
+            if (logger.isDebugEnabled()) {
+                logger.debug("add index alias paramName: '" + alias + "' for "
+                        + paramMetaData.getControllerClass().getName() + "."
+                        + paramMetaData.getMethod().getName() + "(..."
+                        + paramMetaData.getParamType() + "[index=" + breakIndex + "] ...");
+            }
             return true;
         }
         return false;
