@@ -31,6 +31,7 @@ import javax.sql.DataSource;
 import net.paoding.rose.jade.jadeinterface.provider.DataAccess;
 import net.paoding.rose.jade.jadeinterface.provider.Modifier;
 
+import org.apache.commons.lang.math.NumberUtils;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -47,16 +48,7 @@ import org.springframework.util.Assert;
  */
 public class JdbcTemplateDataAccess implements DataAccess {
 
-    private static final Pattern NAMED_PARAM_PATTERN = Pattern
-            .compile("(\\:|\\$([a-zA-Z0-9_\\.]+))");
-
-    public static void main(String[] args) {
-        String sql = "SELECT * FROM :user WHERE name=$1";
-        Matcher matcher = NAMED_PARAM_PATTERN.matcher(sql);
-        while (matcher.find()) {
-            System.out.println(matcher.group());
-        }
-    }
+    private static final Pattern NAMED_PARAM_PATTERN = Pattern.compile("(\\:([a-zA-Z0-9_\\.]+))");
 
     private JdbcTemplate jdbcTemplate = new JdbcTemplate();
 
@@ -131,11 +123,9 @@ public class JdbcTemplateDataAccess implements DataAccess {
 
             do {
                 // 提取参数名称
-                final String name;
-                if (matcher.group().charAt(0) == '$') {
+                String name = matcher.group(1);
+                if (NumberUtils.isDigits(name)) {
                     name = matcher.group();
-                } else {
-                    name = matcher.group(1);
                 }
 
                 Object value = null;

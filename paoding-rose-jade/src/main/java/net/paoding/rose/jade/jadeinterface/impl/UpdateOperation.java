@@ -63,7 +63,7 @@ public class UpdateOperation implements JdbcOperation {
         } else {
             parameters = new HashMap<String, Object>(args.length * 2);
             for (int i = 0; i < args.length; i++) {
-                parameters.put("$" + (i + 1), args[i]);
+                parameters.put(":" + (i + 1), args[i]);
             }
             for (int i = 0; i < annotations.length; i++) {
                 SQLParam annotation = annotations[i];
