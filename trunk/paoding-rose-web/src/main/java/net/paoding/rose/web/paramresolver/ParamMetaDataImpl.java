@@ -121,7 +121,7 @@ class ParamMetaDataImpl implements ParamMetaData {
         if (paramNames[1] == null) {
             paramNames[1] = aliasParamName;
         } else {
-            String[] newArray = Arrays.copyOf(paramNames, paramNames.length + 2);
+            String[] newArray = Arrays.copyOf(paramNames, paramNames.length + 1);
             newArray[paramNames.length] = aliasParamName;
             this.paramNames = newArray;
         }
