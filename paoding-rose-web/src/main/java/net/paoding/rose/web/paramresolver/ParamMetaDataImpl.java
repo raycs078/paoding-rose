@@ -35,6 +35,8 @@ class ParamMetaDataImpl implements ParamMetaData {
 
     private String paramName;
 
+    private String secondParamName;
+
     private Map<Object, Object> userObjectMap;
 
     private Annotation[] annotations;
@@ -114,6 +116,15 @@ class ParamMetaDataImpl implements ParamMetaData {
 
     public String getParamName() {
         return paramName;
+    }
+
+    public void setSecondParamName(String secondParamName) {
+        this.secondParamName = secondParamName;
+    }
+
+    @Override
+    public String[] getParamNames() {
+        return new String[] { paramName, secondParamName };
     }
 
     public void setParamName(String paramName) {
