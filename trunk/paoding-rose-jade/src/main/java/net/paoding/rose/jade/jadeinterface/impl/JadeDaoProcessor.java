@@ -23,7 +23,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import net.paoding.rose.jade.jadeinterface.provider.springjdbctemplte.JdbcTemplateDataAccessProvider;
+import net.paoding.rose.jade.jadeinterface.provider.jdbctemplate.JdbcTemplateDataAccessProvider;
+import net.paoding.rose.jade.jadeinterface.provider.jdbctemplate.exql.ExqlJdbcTemplateDataAccessProvider;
 import net.paoding.rose.scanning.ResourceRef;
 import net.paoding.rose.scanning.RoseScanner;
 
@@ -94,7 +95,7 @@ public class JadeDaoProcessor implements BeanFactoryPostProcessor, ApplicationCo
         if (urls.size() > 0) {
             JadeDaoComponentProvider provider = new JadeDaoComponentProvider(true);
 
-            JdbcTemplateDataAccessProvider dataAccessProvider = new JdbcTemplateDataAccessProvider();
+            JdbcTemplateDataAccessProvider dataAccessProvider = createJdbcTemplateDataAccessProvider();
             dataAccessProvider.setApplicationContext(applicationContext);
 
             Set<String> daoClassNames = new HashSet<String>();
@@ -129,5 +130,9 @@ public class JadeDaoProcessor implements BeanFactoryPostProcessor, ApplicationCo
                 }
             }
         }
+    }
+
+    protected JdbcTemplateDataAccessProvider createJdbcTemplateDataAccessProvider() {
+        return new ExqlJdbcTemplateDataAccessProvider();
     }
 }
