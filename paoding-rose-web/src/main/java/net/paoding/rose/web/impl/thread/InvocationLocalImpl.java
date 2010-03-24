@@ -215,4 +215,9 @@ public class InvocationLocalImpl implements InvocationLocal {
     public Invocation getHeadInvocation() {
         return required().getHeadInvocation();
     }
+
+    @Override
+    public String getResourceId() {
+        return required().getResourceId();
+    }
 }
