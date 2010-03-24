@@ -132,14 +132,22 @@ public final class MethodParameterResolver {
                     }
                 }
                 // 
-
+                String paramName = parameterNames[i];
+                if (paramName == null) {
+                    for (String name : paramMetaDatas[i].getParamNames()) {
+                        if ((paramName = name) != null) {
+                            break;
+                        }
+                    }
+                }
+                assert paramName != null;
                 FieldError fieldError = new FieldError(//
                         "method", // 该出错字段所在的对象的名字；对于这类异常我们统一规定名字为method
-                        parameterNames[i], // 出错的字段的名字；取其参数名
-                        inv.getParameter(parameterNames[i]), // 被拒绝的值
+                        paramName, // 出错的字段的名字；取其参数名
+                        inv.getParameter(paramName), // 被拒绝的值
                         true,//whether this error represents a binding failure (like a type mismatch); else, it is a validation failure
                         new String[] { e.getErrorCode() },// "typeMismatch"
-                        new String[] { inv.getParameter(parameterNames[i]) }, //the array of arguments to be used to resolve this message
+                        new String[] { inv.getParameter(paramName) }, //the array of arguments to be used to resolve this message
                         null // the default message to be used to resolve this message
                 );
                 parameterBindingResult.addError(fieldError);
