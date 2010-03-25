@@ -46,13 +46,15 @@ class WindowFuture<T> implements Future<T> {
 
     @Override
     public boolean cancel(boolean mayInterruptIfRunning) {
-        Object value = this.window.get(Window.FUTURE_CANCEL_ENABLE_ATTR);
-        if (value != null && (Boolean.FALSE.equals(value) || "false".equals(value))) {
-            if (logger.isDebugEnabled()) {
-                logger.debug("future not cancelable, window['" + window.getPath()
-                        + "'].cancel.enable=" + value);
+        if (mayInterruptIfRunning) {
+            Object value = this.window.get(Window.FUTURE_CANCEL_ENABLE_ATTR);
+            if (value != null && (Boolean.FALSE.equals(value) || "false".equals(value))) {
+                mayInterruptIfRunning = false;
+                if (logger.isDebugEnabled()) {
+                    logger.debug("future not cancelable, window['" + window.getPath()
+                            + "'].cancel.enable=" + value);
+                }
             }
-            return false;
         }
         if (future.cancel(mayInterruptIfRunning)) {
             ((PortalListener) window.getPortal()).onWindowCanceled(window);
