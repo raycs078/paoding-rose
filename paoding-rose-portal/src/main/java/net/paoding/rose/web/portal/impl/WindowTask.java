@@ -18,6 +18,7 @@ package net.paoding.rose.web.portal.impl;
 import java.util.concurrent.ExecutorService;
 
 import javax.servlet.RequestDispatcher;
+import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -52,11 +53,10 @@ final class WindowTask implements Runnable {
             window.getPortal().onWindowStarted(window);
 
             // doRequest
-            final WindowRequest request = new WindowRequest(window.getPortal().getRequest());
-            final WindowResponse response = new WindowResponse(window);
+            final HttpServletRequest request = window.getRequest();
             final RequestDispatcher rd = request.getRequestDispatcher(window.getPath());
             request.setAttribute("$$paoding-rose-portal.window", window);
-            rd.forward(request, response);
+            rd.forward(request, window.getResponse());
 
             // done!
             window.getPortal().onWindowDone(window);

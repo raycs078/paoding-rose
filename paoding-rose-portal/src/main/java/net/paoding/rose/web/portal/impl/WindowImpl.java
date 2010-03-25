@@ -15,10 +15,6 @@
  */
 package net.paoding.rose.web.portal.impl;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 
 import javax.servlet.http.HttpServletResponse;
@@ -44,9 +40,11 @@ class WindowImpl implements Window {
 
     private String statusMessage = "";
 
-    private Map<String, Object> attributes;
-
     private PortalImpl portal;
+
+    private WindowRequest request;
+
+    private WindowResponse response;
 
     private Future<?> future;
 
@@ -54,10 +52,20 @@ class WindowImpl implements Window {
         this.portal = portal;
         this.name = name;
         this.path = windowPath;
+        this.request = new WindowRequest(portal.getRequest());
+        this.response = new WindowResponse(this);
     }
 
     public PortalImpl getPortal() {
         return portal;
+    }
+
+    public WindowRequest getRequest() {
+        return request;
+    }
+
+    public WindowResponse getResponse() {
+        return response;
     }
 
     @Override
@@ -71,33 +79,22 @@ class WindowImpl implements Window {
 
     @Override
     public void set(String key, Object value) {
-        if (attributes == null) {
-            attributes = new ConcurrentHashMap<String, Object>();
-        }
-        attributes.put(key, value);
+        request.setAttribute(key, value);
     }
 
     @Override
     public Object get(String key) {
-        return (attributes == null) ? null : attributes.get(key);
+        return request.getAttribute(key);
     }
 
     @Override
     public void setTitle(Object title) {
-        set("title", title);
-    }
-
-    @Override
-    public Map<String, Object> getAttributes() {
-        if (attributes == null) {
-            return Collections.emptyMap();
-        }
-        return Collections.unmodifiableMap(new HashMap<String, Object>(attributes));
+        set(TITLE_ATTR, title);
     }
 
     @Override
     public Object getTitle() {
-        Object value = get("title");
+        Object value = get(TITLE_ATTR);
         if (value == null) {
             value = name;
         }

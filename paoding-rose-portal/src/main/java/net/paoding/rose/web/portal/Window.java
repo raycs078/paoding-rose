@@ -15,8 +15,10 @@
  */
 package net.paoding.rose.web.portal;
 
-import java.util.Map;
 import java.util.concurrent.Future;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * {@link Window}封装了一个portal下的窗口信息，包括该窗口的名字、请求地址以及处理完后最终的响应状态和页面文本内容。
@@ -28,11 +30,36 @@ import java.util.concurrent.Future;
 public interface Window {
 
     /**
+     * 如果window属性中设置此属性为Boolean.FALSE或"false"字符串，window的“执行”将不可被取消(
+     * 当什么事情都没发生)
+     * 
+     * @see #set(String, Object)
+     * @see Future#cancel(boolean)
+     */
+    public static final String FUTURE_CANCEL_ENABLE_ATTR = "_future.cancel.enable_";
+
+    public static final String TITLE_ATTR = "_title_";
+
+    /**
      * 该窗口所属的portal对象，如果一个窗口要把自己的数据“透露”给其他窗口，必须通过 Portal 对象实现
      * 
      * @return
      */
     public Portal getPortal();
+
+    /**
+     * 返回该window所使用的request对象
+     * 
+     * @return
+     */
+    public HttpServletRequest getRequest();
+
+    /**
+     * 返回该window所使用的response对象
+     * 
+     * @return
+     */
+    public HttpServletResponse getResponse();
 
     /**
      * 返回该窗口请求任务的future对象，通常Portal控制器应该不需要主动使用这个方法，但在必要的情况下，
@@ -112,13 +139,6 @@ public interface Window {
      * @return
      */
     public Object get(String key);
-
-    /**
-     * 获取设置到这个window的所有属性
-     * 
-     * @return
-     */
-    public Map<String, Object> getAttributes();
 
     /**
      * 设置窗口的Title属性，实现上应保证 也设置一份到 {@link #set(String, Object)}
