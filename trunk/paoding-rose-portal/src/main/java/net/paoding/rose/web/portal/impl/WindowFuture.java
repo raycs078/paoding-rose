@@ -21,6 +21,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import net.paoding.rose.web.portal.PortalListener;
+import net.paoding.rose.web.portal.Window;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * 
@@ -28,6 +32,8 @@ import net.paoding.rose.web.portal.PortalListener;
  * 
  */
 class WindowFuture<T> implements Future<T> {
+
+    private static Log logger = LogFactory.getLog(WindowFuture.class);
 
     private final Future<T> future;
 
@@ -40,6 +46,14 @@ class WindowFuture<T> implements Future<T> {
 
     @Override
     public boolean cancel(boolean mayInterruptIfRunning) {
+        Object value = this.window.get(Window.FUTURE_CANCEL_ENABLE_ATTR);
+        if (value != null && (Boolean.FALSE.equals(value) || "false".equals(value))) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("future not cancelable, window['" + window.getPath()
+                        + "'].cancel.enable=" + value);
+            }
+            return false;
+        }
         if (future.cancel(mayInterruptIfRunning)) {
             ((PortalListener) window.getPortal()).onWindowCanceled(window);
             return true;
