@@ -74,14 +74,10 @@ public class ParameterNameDiscovererImpl {
                     continue;
                 }
             }
-            if (ClassUtils.isPrimitiveOrWrapper(parameterTypes[i])
-                    || parameterTypes[i] == String.class
-                    || Map.class.isAssignableFrom(parameterTypes[i])
-                    || Collection.class.isAssignableFrom(parameterTypes[i])
-                    || parameterTypes[i].isArray()) {
+            String rawName = getParameterRawName(parameterTypes[i]);
+            if (rawName == null) {
                 continue;
             }
-            String rawName = getParameterRawName(parameterTypes[i]);
             names[i] = rawName;
             Integer count = counts.get(rawName);
             if (count == null) {
@@ -116,11 +112,16 @@ public class ParameterNameDiscovererImpl {
     }
 
     protected String getParameterRawName(Class<?> clz) {
-        if (clz.isArray()) {
-            return getParameterRawName(clz.getComponentType()) + 's';
+        if (ClassUtils.isPrimitiveOrWrapper(clz) //
+                || clz == String.class // 
+                || Map.class.isAssignableFrom(clz) //
+                || Collection.class.isAssignableFrom(clz) //
+                || clz.isArray() //
+                || clz == MultipartFile.class) {
+            return null;
         }
         if (clz == MultipartFile.class) {
-            return "file";
+            return null;
         }
         return ClassUtils.getShortNameAsProperty(clz);
     }
