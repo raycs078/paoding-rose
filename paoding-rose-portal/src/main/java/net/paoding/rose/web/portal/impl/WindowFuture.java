@@ -51,8 +51,8 @@ class WindowFuture<T> implements Future<T> {
             if (value != null && (Boolean.FALSE.equals(value) || "false".equals(value))) {
                 mayInterruptIfRunning = false;
                 if (logger.isDebugEnabled()) {
-                    logger.debug("future not cancelable, window['" + window.getPath()
-                            + "'].cancel.enable=" + value);
+                    logger.debug("can't interrupt window when running , window['"
+                            + window.getPath() + "'].cancel.enable=" + value);
                 }
             }
         }
