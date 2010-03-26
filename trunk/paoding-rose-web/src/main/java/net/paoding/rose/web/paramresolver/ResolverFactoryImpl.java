@@ -413,11 +413,29 @@ public class ResolverFactoryImpl implements ResolverFactory {
             MultipartFile multipartFile = null;
             if (inv.getRequest() instanceof MultipartRequest) {
                 MultipartRequest multipartRequest = (MultipartRequest) inv.getRequest();
-                multipartFile = multipartRequest.getFile(paramMetaData.getParamName());
+                String fileName = paramMetaData.getParamName();
+                if (StringUtils.isBlank(fileName)) {
+                    @SuppressWarnings("unchecked")
+                    Iterator<String> allFileNames = multipartRequest.getFileNames();
+                    if (allFileNames.hasNext()) {
+                        fileName = allFileNames.next();
+                    }
+                }
+                if (StringUtils.isNotBlank(fileName)) {
+                    multipartFile = multipartRequest.getFile(fileName);
+                }
                 if (multipartFile == null) {
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("not found MultipartFile named:"
-                                + paramMetaData.getParamName());
+                    if (StringUtils.isNotBlank(fileName)) {
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("not found any multipartFiles in this request: "
+                                    + inv.getRequestPath().getUri());
+                        }
+                    } else {
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("not found MultipartFile named:"
+                                    + paramMetaData.getParamName() + " in this request: "
+                                    + inv.getRequestPath().getUri());
+                        }
                     }
                 }
             } else {
