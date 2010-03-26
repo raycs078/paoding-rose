@@ -427,8 +427,8 @@ public class ResolverFactoryImpl implements ResolverFactory {
                 if (multipartFile == null) {
                     if (StringUtils.isNotBlank(fileName)) {
                         if (logger.isDebugEnabled()) {
-                            logger.debug("not found any multipartFiles in this request: "
-                                    + inv.getRequestPath().getUri());
+                            logger.debug("not found multipartFile named " + fileName
+                                    + " in this request: " + inv.getRequestPath().getUri());
                         }
                     } else {
                         if (logger.isDebugEnabled()) {
@@ -440,7 +440,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
                 }
             } else {
                 if (logger.isDebugEnabled()) {
-                    logger.debug("cann't " + "set MultipartFile param to method "
+                    logger.debug("cann't set MultipartFile param to method "
                             + ", the request is not a MultipartRequest");
                 }
             }
