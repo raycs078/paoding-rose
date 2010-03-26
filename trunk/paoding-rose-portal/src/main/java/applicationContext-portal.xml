@@ -12,21 +12,26 @@ http://www.springframework.org/schema/tx http://www.springframework.org/schema/t
 http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.5.xsd"
 	default-autowire="byName" default-lazy-init="false">
 
-    <!-- 两个Resolver以及一个Interceptor是Portal框架插入到Rose的接口实现 -->
-    
+	<!-- 两个Resolver以及一个Interceptor是Portal框架插入到Rose的接口实现 -->
+
 	<bean id="portalResolver" class="net.paoding.rose.web.portal.impl.PortalResolver">
 		<property name="portalFactory" ref="portalFactory" />
 	</bean>
-	
-    <bean id="windowResolver" class="net.paoding.rose.web.portal.impl.WindowResolver" />
+
+	<bean id="windowResolver" class="net.paoding.rose.web.portal.impl.WindowResolver" />
 
 	<bean id="portalWaitInterceptor" class="net.paoding.rose.web.portal.impl.PortalWaitInterceptor" />
-    
-    <!-- portalBeanPostProcessor读取web.xml的配置，初始化portalExecutor中的参数，以及从applicationContext识别PortalListener对象进行登记添加 -->
+
+	<bean id="mergeWindowAttributesToModelInterceptor"
+		class="net.paoding.rose.web.portal.impl.MergeWindowAttributesToModelInterceptor" />
+
+	<!--
+		portalBeanPostProcessor读取web.xml的配置，初始化portalExecutor中的参数，以及从applicationContext识别PortalListener对象进行登记添加
+	-->
 
 	<bean id="portalBeanPostProcessor"
 		class="net.paoding.rose.web.portal.impl.PortalBeanPostProcessor" />
-	
+
 	<bean id="portalFactory" class="net.paoding.rose.web.portal.impl.PortalFactoryImpl">
 		<property name="executorService" ref="portalExecutorService" />
 		<property name="portalListener" ref="portalListeners" />
@@ -35,7 +40,8 @@ http://www.springframework.org/schema/aop http://www.springframework.org/schema/
 	<bean id="portalExecutorService"
 		class="net.paoding.rose.web.portal.impl.ThreadPoolExcutorServiceFactoryBean">
 		<property name="threadPoolTaskExecutor">
-			<bean id="portalExecutor" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor"/>
+			<bean id="portalExecutor"
+				class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor" />
 		</property>
 	</bean>
 

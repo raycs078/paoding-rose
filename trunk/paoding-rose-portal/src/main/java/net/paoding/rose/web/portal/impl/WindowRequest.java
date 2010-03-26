@@ -38,13 +38,15 @@ class WindowRequest extends HttpServletRequestWrapper {
     /**
      * 窗口请求对象私有的、有别于其他窗口的属性
      */
-    private Map<String, Object> privateAttributes = Collections
-            .synchronizedMap(new HashMap<String, Object>());
+    private Map<String, Object> privateAttributes;
 
     /**
      * 那些属性是这个窗口所不要的，在此标志
      */
-    private Set<String> deleteAttributes = Collections.synchronizedSet(new HashSet<String>(4));
+    private Set<String> deleteAttributes;
+
+    /** 锁 */
+    private Object mutex = this;
 
     public WindowRequest(HttpServletRequest request) {
         super(request);
@@ -58,12 +60,17 @@ class WindowRequest extends HttpServletRequestWrapper {
      * @param name Name of the attribute to retrieve
      */
     public Object getAttribute(String name) {
-        if (deleteAttributes.contains(name)) {
-            return null;
-        }
-        Object value = privateAttributes.get(name);
-        if (value == null) {
-            value = super.getAttribute(name);
+        Object value = null;
+        synchronized (mutex) {
+            if (deleteAttributes != null && deleteAttributes.contains(name)) {
+                return null;
+            }
+            if (privateAttributes == null) {
+                value = privateAttributes.get(name);
+            }
+            if (value == null) {
+                value = super.getAttribute(name);
+            }
         }
         return value;
     }
@@ -74,14 +81,18 @@ class WindowRequest extends HttpServletRequestWrapper {
     @SuppressWarnings("unchecked")
     public Enumeration getAttributeNames() {
         HashSet<String> keys;
-        synchronized (privateAttributes) {
-            keys = new HashSet<String>(privateAttributes.keySet());
-        }
-        Enumeration<String> names = super.getAttributeNames();
-        while (names.hasMoreElements()) {
-            String name = (String) names.nextElement();
-            if (!deleteAttributes.contains(name)) {
-                keys.add(name);
+        synchronized (mutex) {
+            if (privateAttributes == null) {
+                keys = new HashSet<String>();
+            } else {
+                keys = new HashSet<String>(privateAttributes.keySet());
+            }
+            Enumeration<String> names = super.getAttributeNames();
+            while (names.hasMoreElements()) {
+                String name = (String) names.nextElement();
+                if (deleteAttributes == null || !deleteAttributes.contains(name)) {
+                    keys.add(name);
+                }
             }
         }
         return new Enumerator(keys);
@@ -93,8 +104,18 @@ class WindowRequest extends HttpServletRequestWrapper {
      * @param name Name of the attribute to remove
      */
     public void removeAttribute(String name) {
-        privateAttributes.remove(name);
-        deleteAttributes.add(name);
+        if (name == null) {
+            throw new NullPointerException("don't set a NULL named attribute");
+        }
+        synchronized (mutex) {
+            if (privateAttributes != null) {
+                privateAttributes.remove(name);
+            }
+            if (deleteAttributes == null) {
+                deleteAttributes = new HashSet<String>(4);
+                deleteAttributes.add(name);
+            }
+        }
     }
 
     /**
@@ -105,12 +126,29 @@ class WindowRequest extends HttpServletRequestWrapper {
      * @param value Value of the attribute to set
      */
     public void setAttribute(String name, Object value) {
-        privateAttributes.put(name, value);
-        if (value == null) {
-            deleteAttributes.add(name);
-        } else {
-            deleteAttributes.remove(name);
+        if (name == null) {
+            throw new NullPointerException("don't set a NULL named attribute");
         }
+        if (value == null) {
+            removeAttribute(name);
+            return;
+        }
+        synchronized (mutex) {
+            if (privateAttributes == null) {
+                privateAttributes = new HashMap<String, Object>();
+            }
+            privateAttributes.put(name, value);
+            if (deleteAttributes != null) {
+                deleteAttributes.remove(name);
+            }
+        }
+    }
+
+    public Map<String, Object> getPrivateAttributes() {
+        if (privateAttributes == null || privateAttributes.size() == 0) {
+            return Collections.emptyMap();
+        }
+        return Collections.unmodifiableMap(privateAttributes);
     }
 
 }

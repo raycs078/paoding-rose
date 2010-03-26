@@ -15,6 +15,7 @@
  */
 package net.paoding.rose.web.portal.impl;
 
+import java.util.Map;
 import java.util.concurrent.Future;
 
 import javax.servlet.http.HttpServletResponse;
@@ -85,6 +86,11 @@ class WindowImpl implements Window {
     @Override
     public Object get(String key) {
         return request.getAttribute(key);
+    }
+
+    @Override
+    public Map<String, Object> getAttributes() {
+        return request.getPrivateAttributes();
     }
 
     @Override
