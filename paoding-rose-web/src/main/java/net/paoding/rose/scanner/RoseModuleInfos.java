@@ -28,7 +28,9 @@ import java.util.Map;
 import java.util.Properties;
 
 import net.paoding.rose.RoseConstants;
+import net.paoding.rose.scanning.LoadScope;
 import net.paoding.rose.scanning.ResourceRef;
+import net.paoding.rose.scanning.RoseScanner;
 import net.paoding.rose.scanning.vfs.FileName;
 import net.paoding.rose.scanning.vfs.FileObject;
 import net.paoding.rose.scanning.vfs.FileSystemManager;
@@ -53,7 +55,7 @@ public class RoseModuleInfos {
 
     private FileSystemManager fsManager = new FileSystemManager();
 
-    public synchronized List<ModuleResource> findModuleResources(String[] namespaces)
+    public synchronized List<ModuleResource> findModuleResources(LoadScope scope)
             throws IOException {
         if (moduleResourceList == null) {
             if (logger.isDebugEnabled()) {
@@ -63,7 +65,8 @@ public class RoseModuleInfos {
             moduleResourceList = new LinkedList<ModuleResource>();
             moduleResourceMap = new HashMap<FileObject, ModuleResource>();
             //
-            List<ResourceRef> resources = RoseFolders.getRoseFolders(namespaces);
+            List<ResourceRef> resources = RoseScanner.getInstance().getJarOrClassesFolderResources(
+                    scope.getScope("controllers"));
             List<FileObject> rootObjects = new ArrayList<FileObject>();
 
             for (ResourceRef resourceRef : resources) {

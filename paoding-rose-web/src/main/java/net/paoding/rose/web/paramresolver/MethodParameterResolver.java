@@ -122,7 +122,6 @@ public final class MethodParameterResolver {
                         } else if (paramMetaDatas[i].getParamType() == float.class) {
                             parameters[i] = Float.valueOf(0);
                         } else {
-
                             parameters[i] = typeConverter.convertIfNecessary("0", paramMetaDatas[i]
                                     .getParamType());
                         }
