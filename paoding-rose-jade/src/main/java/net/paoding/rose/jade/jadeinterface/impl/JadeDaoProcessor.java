@@ -17,7 +17,6 @@ package net.paoding.rose.jade.jadeinterface.impl;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -62,12 +61,9 @@ public class JadeDaoProcessor implements BeanFactoryPostProcessor, ApplicationCo
     @Override
     public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory)
             throws BeansException {
-
-        List<ResourceRef> resources = new ArrayList<ResourceRef>();
+        final List<ResourceRef> resources;
         try {
-            RoseScanner roseScanner = RoseScanner.getInstance();
-            resources.addAll(roseScanner.getClassesFolderResources());
-            resources.addAll(roseScanner.getJarResources());
+            resources = RoseScanner.getInstance().getJarOrClassesFolderResources();
         } catch (IOException e) {
             throw new ApplicationContextException(
                     "error on getJarResources/getClassesFolderResources", e);
