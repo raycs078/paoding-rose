@@ -27,18 +27,13 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
-import java.util.jar.Attributes;
-import java.util.jar.JarFile;
-import java.util.jar.Manifest;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -51,12 +46,6 @@ import org.springframework.core.io.support.ResourcePatternResolver;
 public class RoseScanner {
 
     private static SoftReference<RoseScanner> softReference;
-
-    public static void main(String[] args) {
-        URL url = ApplicationContext.class
-                .getResource("/org/springframework/context/ApplicationContext.class");
-        System.out.println(url);
-    }
 
     public synchronized static RoseScanner getInstance() {
         if (softReference == null || softReference.get() == null) {
@@ -72,8 +61,7 @@ public class RoseScanner {
 
     protected Date createTime = new Date();
 
-    protected ResourcePatternResolver resourcePatternResolver = new PathMatchingResourcePatternResolver(
-            Thread.currentThread().getContextClassLoader());
+    protected ResourcePatternResolver resourcePatternResolver = new PathMatchingResourcePatternResolver();
 
     private List<ResourceRef> classesFolderResources;
 
@@ -89,10 +77,46 @@ public class RoseScanner {
     }
 
     // -------------------------------------------------------------
+    public List<ResourceRef> getJarOrClassesFolderResources() throws IOException {
+        return getJarOrClassesFolderResources(null);
+    }
 
-    public List<ResourceRef> getClassesFolderResources(String[] namespaces) throws IOException {
-        List<ResourceRef> resources = getClassesFolderResources();
-        resources = filterNamespaces(namespaces, resources);
+    public List<ResourceRef> getJarOrClassesFolderResources(String[] scope) throws IOException {
+        List<ResourceRef> resources;
+        if (scope == null) {
+            resources = new LinkedList<ResourceRef>();
+            resources.addAll(getClassesFolderResources());
+            resources.addAll(getJarResources());
+        } else if (scope.length == 0) {
+            return new ArrayList<ResourceRef>();
+        } else {
+            resources = new LinkedList<ResourceRef>();
+            for (String namespace : scope) {
+                String packagePath = namespace.replace('.', '/');
+                Resource[] packageResources = resourcePatternResolver.getResources(packagePath);
+                for (Resource pkgResource : packageResources) {
+                    String uri = pkgResource.getURI().toString();
+                    uri = StringUtils.removeEnd(uri, packagePath);
+                    int beginIndex = uri.lastIndexOf("file:");
+                    if (beginIndex == -1) {
+                        beginIndex = 0;
+                    } else {
+                        beginIndex += "file:".length();
+                    }
+                    int endIndex = uri.lastIndexOf('!');
+                    if (endIndex == -1) {
+                        endIndex = uri.length();
+                    }
+                    String path = uri.substring(beginIndex, endIndex);
+                    Resource folder = new FileSystemResource(path);
+                    ResourceRef ref = ResourceRef.toResourceRef(folder);
+                    if (ref.getModifiers() == null) {
+                        ref.setModifiers(new String[] { "**" });
+                    }
+                    resources.add(ref);
+                }
+            }
+        }
         return resources;
     }
 
@@ -196,12 +220,6 @@ public class RoseScanner {
         return Collections.unmodifiableList(classesFolderResources);
     }
 
-    public List<ResourceRef> getJarResources(String[] namespaces) throws IOException {
-        List<ResourceRef> resources = getJarResources();
-        resources = filterNamespaces(namespaces, resources);
-        return resources;
-    }
-
     /**
      * 将要被扫描的jar资源
      * 
@@ -220,9 +238,9 @@ public class RoseScanner {
                     try {
                         String path = URLDecoder.decode(urlObject.getPath(), "UTF-8"); // fix 20%
                         if (path.startsWith("file:")) {
-                            path = path.substring("file:".length(), path.lastIndexOf("!/"));
+                            path = path.substring("file:".length(), path.lastIndexOf('!'));
                         } else {
-                            path = path.substring(0, path.lastIndexOf("!/"));
+                            path = path.substring(0, path.lastIndexOf('!'));
                         }
                         Resource resource = new FileSystemResource(path);
                         if (jarResources.contains(resource)) {
@@ -230,26 +248,11 @@ public class RoseScanner {
                                 logger.debug("skip replicated jar resource: " + path);// 在多个 linux环境 下发现有重复,fix it!
                             }
                         } else {
-                            String[] modifier = new String[0];
-                            Properties p = new Properties();
-                            Resource rosePropertiesResource = new UrlResource(urlObject.toString()
-                                    + "/rose.properties");
-                            if (rosePropertiesResource.exists()) {
-                                InputStream in = rosePropertiesResource.getInputStream();
-                                p.load(in);
-                                in.close();
-                                if (StringUtils.isNotBlank(p.getProperty("rose"))) {
-                                    modifier = StringUtils.split(p.getProperty("rose"), " ,;");
-                                }
-                            }
-                            if (modifier.length == 0) {
-                                modifier = getManifestRoseValue(resource.getFile());
-                            }
-                            if (modifier.length > 0) {
-                                ResourceRef resourceRef = new ResourceRef(resource, modifier, p);
-                                jarResources.add(resourceRef);
+                            ResourceRef ref = ResourceRef.toResourceRef(resource);
+                            if (ref.getModifiers() != null) {
+                                jarResources.add(ref);
                                 if (logger.isInfoEnabled()) {
-                                    logger.info("add jar resource: " + resourceRef);
+                                    logger.info("add jar resource: " + ref);
                                 }
                             } else {
                                 if (logger.isDebugEnabled()) {
@@ -273,51 +276,6 @@ public class RoseScanner {
             }
         }
         return Collections.unmodifiableList(jarResources);
-    }
-
-    protected String[] getManifestRoseValue(File pathname) throws IOException {
-        JarFile jarFile = new JarFile(pathname);
-        Manifest manifest = jarFile.getManifest();
-        if (manifest == null) {
-            return new String[0];
-        }
-        Attributes attributes = manifest.getMainAttributes();
-        String attrValue = attributes.getValue("Rose");
-        if (attrValue == null) {
-            return new String[0];
-        }
-        String[] splits = StringUtils.split(attrValue, ",");
-        ArrayList<String> result = new ArrayList<String>(splits.length);
-        for (String split : splits) {
-            split = split.trim();
-            if (StringUtils.isNotEmpty(split)) {
-                result.add(split);
-            }
-        }
-        return result.toArray(new String[0]);
-    }
-
-    private List<ResourceRef> filterNamespaces(String[] namespaces, List<ResourceRef> resources) {
-        if (namespaces.length > 0) {
-            resources = new ArrayList<ResourceRef>(resources);
-            for (Iterator<ResourceRef> iter = resources.iterator(); iter.hasNext();) {
-                ResourceRef resourceRef = iter.next();
-                boolean hasNamespace = false;
-                for (String namespace : namespaces) {
-                    if (resourceRef.hasNamespace(namespace)) {
-                        hasNamespace = true;
-                        break;
-                    }
-                }
-                if (!hasNamespace) {
-                    iter.remove();
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("remove not namespace rose resource: " + resourceRef);
-                    }
-                }
-            }
-        }
-        return resources;
     }
 
 }
