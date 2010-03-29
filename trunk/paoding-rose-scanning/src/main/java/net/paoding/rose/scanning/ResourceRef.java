@@ -94,15 +94,19 @@ public class ResourceRef {
 
     public void setModifiers(String[] modifiers) {
         this.modifiers = modifiers;
-        StringBuilder sb = new StringBuilder();
-        final String separator = ", ";
-        for (String m : modifiers) {
-            sb.append(m).append(separator);
+        if (modifiers == null) {
+            properties.remove("rose");
+        } else {
+            StringBuilder sb = new StringBuilder();
+            final String separator = ", ";
+            for (String m : modifiers) {
+                sb.append(m).append(separator);
+            }
+            if (sb.length() > 0) {
+                sb.setLength(sb.length() - separator.length());
+            }
+            properties.put("rose", sb.toString());
         }
-        if (sb.length() > 0) {
-            sb.setLength(sb.length() - separator.length());
-        }
-        properties.put("rose", sb.toString());
     }
 
     public boolean hasModifier(String modifier) {
