@@ -44,22 +44,30 @@ public class ResourceRef {
     private String[] modifiers;
 
     public static ResourceRef toResourceRef(Resource folder) throws IOException {
-        ResourceRef rr = new ResourceRef(folder, null, new Properties());
+        ResourceRef rr = new ResourceRef(folder, null, null);
         String[] modifiers = null;
         Resource rosePropertiesResource = rr.getInnerResource("/META-INF/rose.properties");
         if (rosePropertiesResource.exists()) {
             InputStream in = rosePropertiesResource.getInputStream();
-            rr.getProperties().load(in);
+            rr.properties.load(in);
             in.close();
-            if (StringUtils.isNotEmpty(rr.getProperties().getProperty("rose"))) {
-                modifiers = StringUtils.split(rr.getProperties().getProperty("rose"), ", ;\n\r\t");
+            String attrValue = rr.properties.getProperty("rose");
+            if (attrValue == null) {
+                attrValue = rr.properties.getProperty("Rose");
             }
-        } else {
+            if (attrValue != null) {
+                modifiers = StringUtils.split(attrValue, ", ;\n\r\t");
+            }
+        }
+        if (modifiers == null) {
             JarFile jarFile = new JarFile(rr.getResource().getFile());
             Manifest manifest = jarFile.getManifest();
             if (manifest != null) {
                 Attributes attributes = manifest.getMainAttributes();
-                String attrValue = attributes.getValue("Rose");
+                String attrValue = attributes.getValue("rose");
+                if (attrValue == null) {
+                    attrValue = attributes.getValue("Rose");
+                }
                 if (attrValue != null) {
                     modifiers = StringUtils.split(attrValue, ", ;\n\r\t");
                 }
@@ -70,9 +78,13 @@ public class ResourceRef {
     }
 
     public ResourceRef(Resource resource, String[] modifiers, Properties p) {
-        properties.putAll(p);
         setResource(resource);
-        setModifiers(modifiers);
+        if (modifiers != null) {
+            setModifiers(modifiers);
+        }
+        if (p != null) {
+            properties.putAll(p);
+        }
     }
 
     public Properties getProperties() {
