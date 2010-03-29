@@ -61,8 +61,7 @@ public class ResourceRef {
                 Attributes attributes = manifest.getMainAttributes();
                 String attrValue = attributes.getValue("Rose");
                 if (attrValue != null) {
-                    modifiers = StringUtils.split(rr.getProperties().getProperty("rose"),
-                            ", ;\n\r\t");
+                    modifiers = StringUtils.split(attrValue, ", ;\n\r\t");
                 }
             }
         }
