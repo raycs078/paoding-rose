@@ -41,14 +41,8 @@ public class RoseResources {
 
     public static List<Resource> findContextResources(LoadScope load) throws IOException {
         String[] scope = load.getScope("applicationContext");
-        List<ResourceRef> resources;
-        if (scope == null) {
-            resources = new LinkedList<ResourceRef>();
-            resources.addAll(RoseScanner.getInstance().getClassesFolderResources());
-            resources.addAll(RoseScanner.getInstance().getJarResources());
-        } else {
-            resources = RoseScanner.getInstance().getJarOrClassesFolderResources(scope);
-        }
+        List<ResourceRef> resources = RoseScanner.getInstance().getJarOrClassesFolderResources(
+                scope);
         List<Resource> ctxResources = new LinkedList<Resource>();
         ResourcePatternResolver resourcePatternResolver = new PathMatchingResourcePatternResolver();
         for (ResourceRef ref : resources) {
@@ -67,14 +61,8 @@ public class RoseResources {
 
     public static String[] findMessageBasenames(LoadScope load) throws IOException {
         String[] scope = load.getScope("messages");
-        List<ResourceRef> resources;
-        if (scope == null) {
-            resources = new LinkedList<ResourceRef>();
-            resources.addAll(RoseScanner.getInstance().getClassesFolderResources());
-            resources.addAll(RoseScanner.getInstance().getJarResources());
-        } else {
-            resources = RoseScanner.getInstance().getJarOrClassesFolderResources(scope);
-        }
+        List<ResourceRef> resources = RoseScanner.getInstance().getJarOrClassesFolderResources(
+                scope);
         List<String> messagesResources = new LinkedList<String>();
         for (ResourceRef ref : resources) {
             if (ref.hasModifier("messages")) {
