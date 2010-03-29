@@ -18,11 +18,11 @@ package net.paoding.rose.app;
 import java.io.IOException;
 import java.util.List;
 
-import net.paoding.rose.scanner.RoseJarContextResources;
+import net.paoding.rose.scanner.RoseResources;
+import net.paoding.rose.scanning.LoadScope;
 import net.paoding.rose.web.impl.context.RoseContextLoader;
 
 import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeansException;
@@ -41,7 +41,6 @@ public class RoseAppContext {
     /**
      * 默认的 ApplicationContext 加载路径
      */
-    public static final String APP_CONTEXT_CONFIG_LOCATION = "classpath:applicationContext*.xml";
 
     private final Log logger = LogFactory.getLog(this.getClass());
 
@@ -53,32 +52,31 @@ public class RoseAppContext {
      * @param contextConfigLocation - 配置加载路径
      */
     public RoseAppContext() {
-        this(APP_CONTEXT_CONFIG_LOCATION);
+        this("");
     }
 
     /**
      * 创建 RoseAppContext.
      * 
-     * @param contextConfigLocation - 配置加载路径
+     * @param packages - "com.xiaonei.yourapp, com.xiaonei.myapp" ... <br>
+     *        表示加载这些package所在的jar或根class目录的/applicationContext*.xml文件
      */
-    public RoseAppContext(String contextConfigLocation) {
-
+    public RoseAppContext(String packages) {
+        if (packages.indexOf("applicationContext") != -1 || packages.indexOf(".xml") != -1) {
+            throw new IllegalArgumentException(
+                    "the 'packages' arg should be a list of packages, not a applicatioinContext path here!(2010-03-29)");
+        }
+        LoadScope loadScope = new LoadScope(packages, "applicationContext");
         try {
             String namespace = "rose.app.root";
 
-            // 确认所使用的 applicationContext 配置
-            if (StringUtils.isBlank(contextConfigLocation)) {
-                contextConfigLocation = APP_CONTEXT_CONFIG_LOCATION;
-            }
-
-            List<Resource> jarContextResources = RoseJarContextResources.findContextResources(new String[]{});
+            List<Resource> ctxResources = RoseResources.findContextResources(loadScope);
             if (logger.isInfoEnabled()) {
-                logger.info("jarContextResources: "
-                        + ArrayUtils.toString(jarContextResources.toArray()));
+                logger.info("jarContextResources: " + ArrayUtils.toString(ctxResources.toArray()));
             }
 
-            rootContext = RoseContextLoader.createApplicationContext(null, jarContextResources,
-                    contextConfigLocation, namespace);
+            rootContext = RoseContextLoader.createApplicationContext(null, ctxResources, "",
+                    namespace);
 
             if (logger.isInfoEnabled()) {
                 logger.info("Built root XmlApplicationContext [" + rootContext + "]");

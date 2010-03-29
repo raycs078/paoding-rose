@@ -28,8 +28,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import net.paoding.rose.scanner.ModuleResource;
-import net.paoding.rose.scanner.RoseJarContextResources;
 import net.paoding.rose.scanner.RoseModuleInfos;
+import net.paoding.rose.scanner.RoseResources;
+import net.paoding.rose.scanning.LoadScope;
 import net.paoding.rose.web.ParamValidator;
 import net.paoding.rose.web.RequestPath;
 import net.paoding.rose.web.annotation.ReqMethod;
@@ -162,11 +163,11 @@ public class RoseFilter extends GenericFilterBean {
 
     private MappingNode mappingTree;
 
-    private String[] namespaces = new String[0];
-
     private IgnoredPath[] ignoredPaths = new IgnoredPath[] {
             new IgnoredPathStarts(RoseConstants.VIEWS_PATH_WITH_END_SEP),
             new IgnoredPathEquals("/favicon.ico") };
+
+    private LoadScope load = new LoadScope("", "controllers");
 
     /**
      * 改变默认行为，告知Rose要读取的applicationContext地址
@@ -182,8 +183,15 @@ public class RoseFilter extends GenericFilterBean {
         this.instructionExecutor = instructionExecutor;
     }
 
-    public void setNamespaces(String[] namespaces) {
-        this.namespaces = namespaces;
+    /**
+     * <pre>
+     * like: &quot;controllers: com.renren.xoa, com.renren.yourapp; applicationContext: com.renren.another&quot; , etc
+     * </pre>
+     * 
+     * @param load
+     */
+    public void setLoad(String load) {
+        this.load = new LoadScope(load, "controllers");
     }
 
     /**
@@ -319,9 +327,8 @@ public class RoseFilter extends GenericFilterBean {
                 contextConfigLocation = DEFAULT_CONTEXT_CONFIG_LOCATION;
             }
         }
-        List<Resource> jarContextResources = RoseJarContextResources
-                .findContextResources(namespaces);
-        String[] messageBasenames = RoseJarContextResources.findMessageBasenames(namespaces);
+        List<Resource> jarContextResources = RoseResources.findContextResources(load);
+        String[] messageBasenames = RoseResources.findMessageBasenames(load);
         if (logger.isInfoEnabled()) {
             logger.info("jarContextResources: "
                     + ArrayUtils.toString(jarContextResources.toArray()));
@@ -347,7 +354,7 @@ public class RoseFilter extends GenericFilterBean {
 
     private List<Module> prepareModules(WebApplicationContext rootContext) throws Exception {
         // 自动扫描识别web层对象，纳入Rose管理
-        List<ModuleResource> moduleInfoList = new RoseModuleInfos().findModuleResources(namespaces);
+        List<ModuleResource> moduleInfoList = new RoseModuleInfos().findModuleResources(load);
         return new ModulesBuilder().build(rootContext, moduleInfoList);
     }
 
