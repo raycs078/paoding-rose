@@ -65,7 +65,7 @@ class WindowRequest extends HttpServletRequestWrapper {
             if (deleteAttributes != null && deleteAttributes.contains(name)) {
                 return null;
             }
-            if (privateAttributes == null) {
+            if (privateAttributes != null) {
                 value = privateAttributes.get(name);
             }
             if (value == null) {
