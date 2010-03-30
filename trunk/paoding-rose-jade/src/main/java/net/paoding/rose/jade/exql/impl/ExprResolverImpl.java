@@ -1,4 +1,4 @@
-package net.paoding.rose.jade.jadeinterface.exql.impl;
+package net.paoding.rose.jade.exql.impl;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -7,7 +7,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import net.paoding.rose.jade.jadeinterface.exql.ExprResolver;
+import net.paoding.rose.jade.exql.ExprResolver;
 
 import org.apache.commons.jexl.Expression;
 import org.apache.commons.jexl.ExpressionFactory;

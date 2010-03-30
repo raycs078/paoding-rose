@@ -1,11 +1,11 @@
-package net.paoding.rose.jade.jadeinterface.exql;
+package net.paoding.rose.jade.exql;
 
 import java.util.HashMap;
 
 import junit.framework.Assert;
 import junit.framework.TestCase;
-import net.paoding.rose.jade.jadeinterface.exql.impl.ExqlContextImpl;
-import net.paoding.rose.jade.jadeinterface.exql.impl.ExqlPatternImpl;
+import net.paoding.rose.jade.exql.impl.ExqlContextImpl;
+import net.paoding.rose.jade.exql.impl.ExqlPatternImpl;
 
 public class ExqlPatternTests extends TestCase {
 

@@ -1,4 +1,4 @@
-package net.paoding.rose.jade.jadeinterface.provider.jdbctemplate.exql;
+package net.paoding.rose.jade.provider.jdbctemplate.exql;
 
 import java.sql.SQLSyntaxErrorException;
 import java.util.List;
@@ -6,13 +6,13 @@ import java.util.Map;
 
 import javax.sql.DataSource;
 
-import net.paoding.rose.jade.jadeinterface.exql.ExqlContext;
-import net.paoding.rose.jade.jadeinterface.exql.ExqlPattern;
-import net.paoding.rose.jade.jadeinterface.exql.impl.ExqlContextImpl;
-import net.paoding.rose.jade.jadeinterface.exql.impl.ExqlPatternImpl;
-import net.paoding.rose.jade.jadeinterface.provider.DataAccess;
-import net.paoding.rose.jade.jadeinterface.provider.Modifier;
-import net.paoding.rose.jade.jadeinterface.provider.jdbctemplate.JdbcTemplateDataAccess;
+import net.paoding.rose.jade.exql.ExqlContext;
+import net.paoding.rose.jade.exql.ExqlPattern;
+import net.paoding.rose.jade.exql.impl.ExqlContextImpl;
+import net.paoding.rose.jade.exql.impl.ExqlPatternImpl;
+import net.paoding.rose.jade.provider.DataAccess;
+import net.paoding.rose.jade.provider.Modifier;
+import net.paoding.rose.jade.provider.jdbctemplate.JdbcTemplateDataAccess;
 
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.BadSqlGrammarException;

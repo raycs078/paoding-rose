@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.paoding.rose.jade.jadeinterface.provider.jdbctemplate;
+package net.paoding.rose.jade.provider.jdbctemplate;
 
-import net.paoding.rose.jade.jadeinterface.provider.DataAccessProvider;
+import net.paoding.rose.jade.provider.DataAccessProvider;
 
 /**
  * 提供 SpringJdbcTemplate 实现的 {@link DataAccessProvider}.

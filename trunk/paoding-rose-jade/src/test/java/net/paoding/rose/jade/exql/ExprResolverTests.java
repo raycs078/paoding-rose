@@ -1,4 +1,4 @@
-package net.paoding.rose.jade.jadeinterface.exql;
+package net.paoding.rose.jade.exql;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -7,7 +7,7 @@ import java.util.Map;
 
 import junit.framework.Assert;
 import junit.framework.TestCase;
-import net.paoding.rose.jade.jadeinterface.exql.impl.ExprResolverImpl;
+import net.paoding.rose.jade.exql.impl.ExprResolverImpl;
 
 public class ExprResolverTests extends TestCase {
 

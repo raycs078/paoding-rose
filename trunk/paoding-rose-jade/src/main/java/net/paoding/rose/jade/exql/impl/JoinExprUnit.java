@@ -1,9 +1,9 @@
-package net.paoding.rose.jade.jadeinterface.exql.impl;
+package net.paoding.rose.jade.exql.impl;
 
-import net.paoding.rose.jade.jadeinterface.exql.ExprResolver;
-import net.paoding.rose.jade.jadeinterface.exql.ExqlContext;
-import net.paoding.rose.jade.jadeinterface.exql.ExqlUnit;
-import net.paoding.rose.jade.jadeinterface.exql.util.ExqlUtils;
+import net.paoding.rose.jade.exql.ExprResolver;
+import net.paoding.rose.jade.exql.ExqlContext;
+import net.paoding.rose.jade.exql.ExqlUnit;
+import net.paoding.rose.jade.exql.util.ExqlUtils;
 
 /**
  * 直接输出表达式内容的语句单元, 例如: '##(:expr)' 形式的表达式，内容不经转义输出。

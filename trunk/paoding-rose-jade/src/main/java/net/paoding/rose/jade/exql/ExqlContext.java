@@ -1,4 +1,4 @@
-package net.paoding.rose.jade.jadeinterface.exql;
+package net.paoding.rose.jade.exql;
 
 /**
  * 定义输出的上下文接口。

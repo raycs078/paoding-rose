@@ -1,8 +1,8 @@
-package net.paoding.rose.jade.jadeinterface.provider.cache;
+package net.paoding.rose.jade.provider.cache;
 
-import net.paoding.rose.jade.jadeinterface.cache.CacheProvider;
-import net.paoding.rose.jade.jadeinterface.provider.DataAccess;
-import net.paoding.rose.jade.jadeinterface.provider.DataAccessProvider;
+import net.paoding.rose.jade.cache.CacheProvider;
+import net.paoding.rose.jade.provider.DataAccess;
+import net.paoding.rose.jade.provider.DataAccessProvider;
 
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;

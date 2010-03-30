@@ -1,6 +1,6 @@
-package net.paoding.rose.jade.jadeinterface.impl;
+package net.paoding.rose.jade.core;
 
-import net.paoding.rose.jade.jadeinterface.provider.DataAccess;
+import net.paoding.rose.jade.provider.DataAccess;
 
 /**
  * 定义一组数据库操作。

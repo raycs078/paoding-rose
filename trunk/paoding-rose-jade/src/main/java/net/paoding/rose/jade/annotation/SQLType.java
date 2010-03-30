@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.paoding.rose.jade.jadeinterface.annotation;
+package net.paoding.rose.jade.annotation;
 
 /**
  * SQL类型标识。

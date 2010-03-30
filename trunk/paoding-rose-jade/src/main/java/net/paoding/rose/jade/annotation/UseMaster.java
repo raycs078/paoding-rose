@@ -1,4 +1,4 @@
-package net.paoding.rose.jade.jadeinterface.annotation;
+package net.paoding.rose.jade.annotation;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;

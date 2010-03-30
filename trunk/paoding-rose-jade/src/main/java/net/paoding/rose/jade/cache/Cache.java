@@ -1,4 +1,4 @@
-package net.paoding.rose.jade.jadeinterface.cache;
+package net.paoding.rose.jade.cache;
 
 /**
  * 定义 Cache 实例，一个 Cache 实例代表一个缓存实例，支持其中的 get, set 等缓存操作。

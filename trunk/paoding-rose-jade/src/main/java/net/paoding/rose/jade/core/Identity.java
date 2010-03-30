@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.paoding.rose.jade.jadeinterface;
+package net.paoding.rose.jade.core;
 
 /**
  * 在Jade DAO方法声明其返回类型为 {@link Identity}表示，在执行插入语句后返回数据库设置的ID（自增ID等）

@@ -1,4 +1,4 @@
-package net.paoding.rose.jade.jadeinterface.exql;
+package net.paoding.rose.jade.exql;
 
 import java.util.Map;
 

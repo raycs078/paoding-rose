@@ -13,19 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.paoding.rose.jade.jadeinterface.impl;
+package net.paoding.rose.jade.core;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import net.paoding.rose.jade.jadeinterface.impl.mapper.ArrayRowMapper;
-import net.paoding.rose.jade.jadeinterface.impl.mapper.ListRowMapper;
-import net.paoding.rose.jade.jadeinterface.impl.mapper.MapEntryColumnRowMapper;
-import net.paoding.rose.jade.jadeinterface.impl.mapper.MapEntryRowMapper;
-import net.paoding.rose.jade.jadeinterface.impl.mapper.SetRowMapper;
-import net.paoding.rose.jade.jadeinterface.provider.Modifier;
+import net.paoding.rose.jade.core.mapper.ArrayRowMapper;
+import net.paoding.rose.jade.core.mapper.ListRowMapper;
+import net.paoding.rose.jade.core.mapper.MapEntryColumnRowMapper;
+import net.paoding.rose.jade.core.mapper.MapEntryRowMapper;
+import net.paoding.rose.jade.core.mapper.SetRowMapper;
+import net.paoding.rose.jade.provider.Modifier;
 
 import org.apache.commons.lang.ClassUtils;
 import org.apache.commons.logging.Log;

@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.paoding.rose.jade.jadeinterface.provider;
+package net.paoding.rose.jade.provider;
 
 import java.util.Collections;
 import java.util.Map;
 
-import net.paoding.rose.jade.jadeinterface.impl.GenericUtils;
+import net.paoding.rose.jade.core.GenericUtils;
 
 /**
  * 提供 Definition 包装对 DAO 的定义。

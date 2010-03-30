@@ -1,4 +1,4 @@
-package net.paoding.rose.jade.jadeinterface.provider;
+package net.paoding.rose.jade.provider;
 
 import java.util.Map;
 

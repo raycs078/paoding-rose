@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.paoding.rose.jade.jadeinterface.impl.mapper;
+package net.paoding.rose.jade.core.mapper;
 
 import java.lang.reflect.Array;
 import java.sql.ResultSet;

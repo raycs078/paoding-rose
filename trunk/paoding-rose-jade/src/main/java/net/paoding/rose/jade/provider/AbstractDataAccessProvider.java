@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.paoding.rose.jade.jadeinterface.provider;
+package net.paoding.rose.jade.provider;
 
 import javax.sql.DataSource;
 
-import net.paoding.rose.jade.jadeinterface.datasource.DataSourceFactory;
+import net.paoding.rose.jade.datasource.DataSourceFactory;
 
 /**
  * 基本的 {@link DataAccessProvider} 实现, 子类可以实现以下两个抽象方法提供定制的

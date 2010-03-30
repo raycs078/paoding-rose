@@ -1,4 +1,4 @@
-package net.paoding.rose.jade.jadeinterface.impl;
+package net.paoding.rose.jade.core;
 
 import java.math.BigDecimal;
 import java.sql.Blob;

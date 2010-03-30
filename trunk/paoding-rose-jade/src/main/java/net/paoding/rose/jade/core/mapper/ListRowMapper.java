@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.paoding.rose.jade.jadeinterface.impl.mapper;
+package net.paoding.rose.jade.core.mapper;
 
 import java.util.ArrayList;
 import java.util.Collection;
 
-import net.paoding.rose.jade.jadeinterface.provider.Modifier;
+import net.paoding.rose.jade.provider.Modifier;
 
 /**
  * 将SQL结果集的一行映射为List
