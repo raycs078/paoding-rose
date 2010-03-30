@@ -20,7 +20,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.concurrent.ConcurrentHashMap;
 
-import net.paoding.rose.jade.jadeinterface.annotation.Dao;
+import net.paoding.rose.jade.jadeinterface.annotation.DAO;
 import net.paoding.rose.jade.jadeinterface.provider.DataAccess;
 import net.paoding.rose.jade.jadeinterface.provider.DataAccessProvider;
 import net.paoding.rose.jade.jadeinterface.provider.Definition;
@@ -89,14 +89,14 @@ public class JadeDaoFactoryBean<T> implements FactoryBean, InitializingBean {
                     + ": daoClass should be a interface");
         }
 
-        Dao dao = daoClass.getAnnotation(Dao.class);
+        DAO dao = daoClass.getAnnotation(DAO.class);
         if (dao == null) {
             throw new IllegalArgumentException(daoClass.getName() // NL
                     + ": not @Dao annotated ");
         }
 
         final Definition definition = new Definition(daoClass);
-        final DataAccess dataAccess = dataAccessProvider.createDataAccess(dao.catalog());
+        final DataAccess dataAccess = dataAccessProvider.createDataAccess(daoClass.getName());
         return (T) Proxy.newProxyInstance(ClassUtils.getDefaultClassLoader(),
                 new Class[] { daoClass }, new InvocationHandler() {
 

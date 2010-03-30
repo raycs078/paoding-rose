@@ -24,18 +24,18 @@ import java.lang.annotation.Target;
 
 /**
  * 
- * 用此{@link Dao}注解标注在一个符合Jade编写规范的DAO接口类上，明确标注这是Jade DAO接口。
+ * 用此{@link DAO}注解标注在一个符合Jade编写规范的DAO接口类上，明确标注这是Jade DAO接口。
  * 
  * <p>
  * 只要符合2个原则的类将被识别为Jade DAO：<br>
  * <ul>
  * <li>DAO必须是独立的接口类，即：不能是内部类接口；</li>
- * <li>DAO接口上标注了Dao类，或所继承的父接口标注了此注解(即{@link Dao}注解)；</li>
+ * <li>DAO接口上标注了Dao类，或所继承的父接口标注了此注解(即{@link DAO}注解)；</li>
  * </ul>
  * <p>
  * 
- * 如果DAO接口被打包成为一个jar的，为了要被Jade识别，必须在这个jar的META-INFO/rose.properties文件中包含rose=dao的标识(
- * 标识rose=*亦可以，但建议开发者们精确标志dao而非*，这有助于提高启动速度)。
+ * 如果DAO接口被打包成为一个jar的，为了要被Jade识别，必须在这个jar的META-INFO/rose.
+ * properties文件中包含rose=dao的标识( 标识rose=*亦可以，但建议开发者们精确标志dao而非*，这有助于提高启动速度)。
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  * @author 廖涵 [in355hz@gmail.com]
@@ -44,12 +44,5 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
 @Documented
-public @interface Dao {
-
-    /**
-     * 指定此所标注的 DAO 所要使用的数据源名称。
-     * 
-     * @return 使用的数据源
-     */
-    String catalog() default "";
+public @interface DAO {
 }
