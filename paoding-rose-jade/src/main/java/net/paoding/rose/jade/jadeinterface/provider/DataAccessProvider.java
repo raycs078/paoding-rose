@@ -15,7 +15,6 @@
  */
 package net.paoding.rose.jade.jadeinterface.provider;
 
-
 /**
  * 定义: DataAccess 的供应者接口。
  * 
@@ -27,7 +26,7 @@ public interface DataAccessProvider {
     /**
      * 创建一个: {@link DataAccess} 对象。
      * 
-     * @param catalog - 数据源名称
+     * @param catalog -
      * 
      * @return DataAccess 对象
      */

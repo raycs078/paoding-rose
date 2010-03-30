@@ -21,7 +21,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import net.paoding.rose.jade.jadeinterface.annotation.Dao;
+import net.paoding.rose.jade.jadeinterface.annotation.DAO;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -170,7 +170,7 @@ public class JadeDaoComponentProvider implements ResourceLoaderAware {
      * {@link Controller @Controller} stereotype annotations.
      */
     protected void registerDefaultFilters() {
-        addIncludeFilter(new AnnotationTypeFilter(Dao.class));
+        addIncludeFilter(new AnnotationTypeFilter(DAO.class));
     }
 
     /**
