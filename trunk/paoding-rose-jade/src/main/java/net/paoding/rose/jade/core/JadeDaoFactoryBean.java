@@ -22,7 +22,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import net.paoding.rose.jade.annotation.DAO;
 import net.paoding.rose.jade.provider.DataAccess;
-import net.paoding.rose.jade.provider.DataAccessProvider;
 import net.paoding.rose.jade.provider.Definition;
 import net.paoding.rose.jade.provider.Modifier;
 
@@ -47,7 +46,7 @@ public class JadeDaoFactoryBean<T> implements FactoryBean, InitializingBean {
 
     private ConcurrentHashMap<Method, JdbcOperation> jdbcOperations = new ConcurrentHashMap<Method, JdbcOperation>();
 
-    private DataAccessProvider dataAccessProvider;
+    private DataAccess dataAccess;
 
     private T dao;
 
@@ -57,8 +56,8 @@ public class JadeDaoFactoryBean<T> implements FactoryBean, InitializingBean {
         this.daoClass = daoClass;
     }
 
-    public void setDataAccessProvider(DataAccessProvider dataAccessProvider) {
-        this.dataAccessProvider = dataAccessProvider;
+    public void setDataAccess(DataAccess dataAccess) {
+        this.dataAccess = dataAccess;
     }
 
     @Override
@@ -96,7 +95,6 @@ public class JadeDaoFactoryBean<T> implements FactoryBean, InitializingBean {
         }
 
         final Definition definition = new Definition(daoClass);
-        final DataAccess dataAccess = dataAccessProvider.createDataAccess(daoClass.getName());
         return (T) Proxy.newProxyInstance(ClassUtils.getDefaultClassLoader(),
                 new Class[] { daoClass }, new InvocationHandler() {
 
