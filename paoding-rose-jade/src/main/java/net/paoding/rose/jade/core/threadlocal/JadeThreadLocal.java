@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.paoding.rose.jade.provider.threadlocal;
+package net.paoding.rose.jade.core.threadlocal;
 
 import java.util.Map;
 
