@@ -13,12 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.paoding.rose.jade.core.threadlocal;
+package net.paoding.rose.jade.core;
 
 import java.util.List;
 import java.util.Map;
 
-import net.paoding.rose.jade.annotation.SQLType;
 import net.paoding.rose.jade.provider.DataAccess;
 import net.paoding.rose.jade.provider.Modifier;
 
@@ -31,14 +30,14 @@ import org.springframework.jdbc.core.RowMapper;
  * 
  */
 
-public class DataAccessThreadLocalWrapper implements DataAccess {
+public class DataAccessWrapper implements DataAccess {
 
-    private DataAccess targetDataAccess;
+    protected DataAccess targetDataAccess;
 
-    public DataAccessThreadLocalWrapper() {
+    public DataAccessWrapper() {
     }
 
-    public DataAccessThreadLocalWrapper(DataAccess dataAccess) {
+    public DataAccessWrapper(DataAccess dataAccess) {
         this.targetDataAccess = dataAccess;
     }
 
@@ -49,32 +48,17 @@ public class DataAccessThreadLocalWrapper implements DataAccess {
     @Override
     public List<?> select(String sql, Modifier modifier, Map<String, ?> parameters,
             RowMapper rowMapper) {
-        JadeThreadLocal.set(SQLType.READ, sql, modifier, parameters);
-        try {
-            return targetDataAccess.select(sql, modifier, parameters, rowMapper);
-        } finally {
-            JadeThreadLocal.remove();
-        }
+        return targetDataAccess.select(sql, modifier, parameters, rowMapper);
     }
 
     @Override
     public int update(String sql, Modifier modifier, Map<String, ?> parameters) {
-        JadeThreadLocal.set(SQLType.WRITE, sql, modifier, parameters);
-        try {
-            return targetDataAccess.update(sql, modifier, parameters);
-        } finally {
-            JadeThreadLocal.remove();
-        }
+        return targetDataAccess.update(sql, modifier, parameters);
     }
 
     @Override
     public Number insertReturnId(String sql, Modifier modifier, Map<String, ?> parameters) {
-        JadeThreadLocal.set(SQLType.WRITE, sql, modifier, parameters);
-        try {
-            return targetDataAccess.insertReturnId(sql, modifier, parameters);
-        } finally {
-            JadeThreadLocal.remove();
-        }
+        return targetDataAccess.insertReturnId(sql, modifier, parameters);
     }
 
 }

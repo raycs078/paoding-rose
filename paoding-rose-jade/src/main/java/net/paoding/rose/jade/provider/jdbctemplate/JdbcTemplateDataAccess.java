@@ -20,10 +20,14 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
+import java.util.Map;
 
 import javax.sql.DataSource;
 
 import net.paoding.rose.jade.provider.DataAccess;
+import net.paoding.rose.jade.provider.SQLInterpreterResult;
+import net.paoding.rose.jade.provider.SQLInterpreter;
+import net.paoding.rose.jade.provider.Modifier;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreator;
@@ -36,7 +40,9 @@ import org.springframework.util.Assert;
  * @author 王志亮 [qieqie.wang@gmail.com]
  * @author 廖涵 [in355hz@gmail.com]
  */
-public abstract class JdbcTemplateDataAccess implements DataAccess {
+public class JdbcTemplateDataAccess implements DataAccess {
+
+    private SQLInterpreter[] interpreters = new SQLInterpreter[0];
 
     private JdbcTemplate jdbcTemplate = new JdbcTemplate();
 
@@ -51,6 +57,56 @@ public abstract class JdbcTemplateDataAccess implements DataAccess {
         this.jdbcTemplate.setDataSource(dataSource);
     }
 
+    public void setInterpreters(SQLInterpreter[] interpreters) {
+        this.interpreters = interpreters;
+    }
+
+    @Override
+    public List<?> select(final String sql, Modifier modifier, Map<String, ?> parameters,
+            RowMapper rowMapper) {
+        String sqlString = sql;
+        Object[] arrayParameters = null;
+        SQLInterpreterResult ir = null;
+        for (SQLInterpreter interpreter : interpreters) {
+            ir = interpreter.interpret(sql, modifier, parameters, arrayParameters);
+            if (ir != null) {
+                sqlString = ir.getSQL();
+                arrayParameters = ir.getParameters();
+            }
+        }
+        return selectByJdbcTemplate(sqlString, arrayParameters, rowMapper);
+    }
+
+    @Override
+    public int update(final String sql, Modifier modifier, Map<String, ?> parameters) {
+        String sqlString = sql;
+        Object[] arrayParameters = null;
+        SQLInterpreterResult ir = null;
+        for (SQLInterpreter interpreter : interpreters) {
+            ir = interpreter.interpret(sql, modifier, parameters, arrayParameters);
+            if (ir != null) {
+                sqlString = ir.getSQL();
+                arrayParameters = ir.getParameters();
+            }
+        }
+        return updateByJdbcTemplate(sqlString, arrayParameters);
+    }
+
+    @Override
+    public Number insertReturnId(final String sql, Modifier modifier, Map<String, ?> parameters) {
+        String sqlString = sql;
+        Object[] arrayParameters = null;
+        SQLInterpreterResult ir = null;
+        for (SQLInterpreter interpreter : interpreters) {
+            ir = interpreter.interpret(sqlString, modifier, parameters, arrayParameters);
+            if (ir != null) {
+                sqlString = ir.getSQL();
+                arrayParameters = ir.getParameters();
+            }
+        }
+        return insertReturnIdByJdbcTemplate(sqlString, arrayParameters);
+    }
+
     /**
      * 执行 SELECT 语句。
      * 
@@ -62,7 +118,7 @@ public abstract class JdbcTemplateDataAccess implements DataAccess {
      */
     protected List<?> selectByJdbcTemplate(String sql, Object[] parameters, RowMapper rowMapper) {
 
-        if (parameters.length > 0) {
+        if (parameters != null && parameters.length > 0) {
 
             return jdbcTemplate.query(sql, parameters, rowMapper);
 
@@ -82,7 +138,7 @@ public abstract class JdbcTemplateDataAccess implements DataAccess {
      */
     protected int updateByJdbcTemplate(String sql, Object[] parameters) {
 
-        if (parameters.length > 0) {
+        if (parameters != null && parameters.length > 0) {
 
             return jdbcTemplate.update(sql, parameters);
 
@@ -102,7 +158,7 @@ public abstract class JdbcTemplateDataAccess implements DataAccess {
      */
     protected Number insertReturnIdByJdbcTemplate(String sql, Object[] parameters) {
 
-        if (parameters.length > 0) {
+        if (parameters != null && parameters.length > 0) {
 
             PreparedStatementCallbackReturnId callbackReturnId = new PreparedStatementCallbackReturnId(
                     new ArgPreparedStatementSetter(parameters));

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.paoding.rose.jade.core.threadlocal;
+package net.paoding.rose.jade.core;
 
 import java.util.Map;
 
@@ -26,17 +26,17 @@ import net.paoding.rose.jade.provider.Modifier;
  * @author 廖涵 [in355hz@gmail.com]
  * 
  */
-public class JadeThreadLocal {
+public class SQLThreadLocal {
 
-    private static final ThreadLocal<JadeThreadLocal> locals = new ThreadLocal<JadeThreadLocal>();
+    private static final ThreadLocal<SQLThreadLocal> locals = new ThreadLocal<SQLThreadLocal>();
 
-    public static JadeThreadLocal get() {
+    public static SQLThreadLocal get() {
         return locals.get();
     }
 
-    static JadeThreadLocal set(SQLType sqlType, String sql, Modifier modifier,
+    static SQLThreadLocal set(SQLType sqlType, String sql, Modifier modifier,
             Map<String, ?> parameters) {
-        JadeThreadLocal local = new JadeThreadLocal(sqlType, sql, modifier, parameters);
+        SQLThreadLocal local = new SQLThreadLocal(sqlType, sql, modifier, parameters);
         locals.set(local);
         return local;
     }
@@ -53,7 +53,7 @@ public class JadeThreadLocal {
 
     private Map<String, ?> parameters;
 
-    private JadeThreadLocal(SQLType sqlType, String sql, Modifier modifier,
+    private SQLThreadLocal(SQLType sqlType, String sql, Modifier modifier,
             Map<String, ?> parameters) {
         this.sqlType = sqlType;
         this.sql = sql;

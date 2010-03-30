@@ -76,6 +76,7 @@ public class SelectOperation implements JdbcOperation {
             }
 
         }
+
         // 执行查询
         List<?> listResult = dataAccess.select(jdQL, modifier, parameters, rowMapper);
         final int sizeResult = listResult.size();

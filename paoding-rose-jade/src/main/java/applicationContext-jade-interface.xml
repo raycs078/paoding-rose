@@ -12,9 +12,12 @@ http://www.springframework.org/schema/tx http://www.springframework.org/schema/t
 http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.5.xsd"
 	default-autowire="no" default-lazy-init="true">
 
-	<bean class="net.paoding.rose.jade.core.JadeDaoProcessor" />
+	<bean id="jade.daoProcessor" class="net.paoding.rose.jade.core.JadeDaoProcessor" />
 
-	<bean id="dataAccessProvider"
-		class="net.paoding.rose.jade.provider.jdbctemplate.exql.ExqlJdbcTemplateDataAccessProvider" />
+	<bean id="jada.dataAccessProvider"
+		class="net.paoding.rose.jade.provider.jdbctemplate.JdbcTemplateDataAccessProvider" />
+
+	<bean id="jade.expressQueryLangugeInterpreter"
+		class="net.paoding.rose.jade.provider.jdbctemplate.ExpressQueryLangugeInterpreter" />
 
 </beans>
