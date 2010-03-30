@@ -22,6 +22,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import net.paoding.rose.jade.provider.DataAccess;
 import net.paoding.rose.jade.provider.DataAccessProvider;
 import net.paoding.rose.scanning.ResourceRef;
 import net.paoding.rose.scanning.RoseScanner;
@@ -90,7 +91,16 @@ public class JadeDaoProcessor implements BeanFactoryPostProcessor, ApplicationCo
         if (urls.size() > 0) {
             JadeDaoComponentProvider provider = new JadeDaoComponentProvider(true);
 
-            DataAccessProvider dataAccessProvider = createJdbcTemplateDataAccessProvider();
+            final DataAccessProvider dataAccessProvider = new DataAccessProvider() {
+
+                final DataAccessProvider orignaldataAccessProvider = createJdbcTemplateDataAccessProvider();
+
+                @Override
+                public DataAccess createDataAccess(Class<?> daoClass) {
+                    DataAccess dataAccess = orignaldataAccessProvider.createDataAccess(daoClass);
+                    return new SQLThreadLocalWrapper(dataAccess);
+                }
+            };
 
             Set<String> daoClassNames = new HashSet<String>();
 
@@ -109,9 +119,7 @@ public class JadeDaoProcessor implements BeanFactoryPostProcessor, ApplicationCo
                     daoClassNames.add(daoClassName);
 
                     MutablePropertyValues propertyValues = beanDefinition.getPropertyValues();
-                    SQLThreadLocalWrapper dataAccess = new SQLThreadLocalWrapper(dataAccessProvider
-                            .createDataAccess(daoClassName));
-                    propertyValues.addPropertyValue("dataAccess", dataAccess);
+                    propertyValues.addPropertyValue("dataAccessProvider", dataAccessProvider);
                     propertyValues.addPropertyValue("daoClass", daoClassName);
                     ScannedGenericBeanDefinition scannedBeanDefinition = (ScannedGenericBeanDefinition) beanDefinition;
                     scannedBeanDefinition.setPropertyValues(propertyValues);

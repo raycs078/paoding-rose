@@ -18,7 +18,7 @@ public class DataAccessProviderMock implements DataAccessProvider {
     private static final Log logger = LogFactory.getLog(DataAccessProvider.class);
 
     @Override
-    public DataAccess createDataAccess(String dataSourceName) {
+    public DataAccess createDataAccess(Class<?> daoClass) {
 
         if (logger.isWarnEnabled()) {
             logger.warn("jade is not configured, return mock instance");
