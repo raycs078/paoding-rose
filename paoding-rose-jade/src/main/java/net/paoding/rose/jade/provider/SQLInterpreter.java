@@ -2,6 +2,8 @@ package net.paoding.rose.jade.provider;
 
 import java.util.Map;
 
+import javax.sql.DataSource;
+
 import org.springframework.core.annotation.Order;
 
 /**
@@ -17,13 +19,14 @@ public interface SQLInterpreter {
 
     /**
      * 
+     * @param dataSource
      * @param sql
      * @param modifier
      * @param parametersAsMap
      * @param parametersAsArray 可以为null
      * @return
      */
-    SQLInterpreterResult interpret(String sql, Modifier modifier, Map<String, ?> parametersAsMap,
-            Object[] parametersAsArray);
+    SQLInterpreterResult interpret(DataSource dataSource, String sql, Modifier modifier,
+            Map<String, Object> parametersAsMap, Object[] parametersAsArray);
 
 }

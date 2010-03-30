@@ -43,7 +43,7 @@ public class CacheDataAccess implements DataAccess {
     }
 
     @Override
-    public List<?> select(String sql, Modifier modifier, Map<String, ?> parameters,
+    public List<?> select(String sql, Modifier modifier, Map<String, Object> parameters,
             RowMapper rowMapper) {
 
         net.paoding.rose.jade.annotation.Cache cacheAnno = modifier
@@ -88,7 +88,7 @@ public class CacheDataAccess implements DataAccess {
     }
 
     @Override
-    public int update(String sql, Modifier modifier, Map<String, ?> parameters) {
+    public int update(String sql, Modifier modifier, Map<String, Object> parameters) {
 
         // 先执行原有的语句
         int number = dataAccess.update(sql, modifier, parameters);
@@ -114,7 +114,7 @@ public class CacheDataAccess implements DataAccess {
     }
 
     @Override
-    public Number insertReturnId(String sql, Modifier modifier, Map<String, ?> parameters) {
+    public Number insertReturnId(String sql, Modifier modifier, Map<String, Object> parameters) {
 
         // 先执行原有的语句
         Number number = dataAccess.insertReturnId(sql, modifier, parameters);
@@ -160,7 +160,7 @@ public class CacheDataAccess implements DataAccess {
      * 
      * @return 最终的缓存 KEY
      */
-    private static String buildKey(String key, Map<String, ?> parameters) {
+    private static String buildKey(String key, Map<String, Object> parameters) {
 
         // 匹配符合  :name 格式的参数
         Matcher matcher = PATTERN.matcher(key);
