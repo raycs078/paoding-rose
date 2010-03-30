@@ -50,19 +50,19 @@ public class JdbcOperationFactoryImpl implements JdbcOperationFactory {
         if (sqlType == SQLType.AUTO_DETECT) {
             // 用正则表达式匹配  SELECT 语句
             if (SELECT_PATTERN.matcher(jdQL).find()) {
-                sqlType = SQLType.SELECT;
+                sqlType = SQLType.READ;
             } else {
-                sqlType = SQLType.UPDATE;
+                sqlType = SQLType.WRITE;
             }
         }
 
-        if (SQLType.SELECT == sqlType) {
+        if (SQLType.READ == sqlType) {
             // 获得  RowMapper
             RowMapper rowMapper = rowMapperFactory.getRowMapper(modifier);
             // SELECT 查询
             return new SelectOperation(jdQL, modifier, rowMapper);
 
-        } else if (SQLType.UPDATE == sqlType) {
+        } else if (SQLType.WRITE == sqlType) {
             // INSERT / UPDATE / DELETE 查询
             return new UpdateOperation(jdQL, modifier);
         }
