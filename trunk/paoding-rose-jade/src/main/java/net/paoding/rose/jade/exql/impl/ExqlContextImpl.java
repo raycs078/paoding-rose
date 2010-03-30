@@ -7,13 +7,14 @@ import java.util.Date;
 
 import net.paoding.rose.jade.exql.ExqlContext;
 import net.paoding.rose.jade.exql.util.ExqlUtils;
+import net.paoding.rose.jade.provider.SQLInterpreterResult;
 
 /**
  * 实现简单的输出上下文。
  * 
  * @author han.liao
  */
-public class ExqlContextImpl implements ExqlContext {
+public class ExqlContextImpl implements ExqlContext, SQLInterpreterResult {
 
     // 输出的常量
     private static final String NULL = "NULL";
@@ -142,6 +143,19 @@ public class ExqlContextImpl implements ExqlContext {
             }
         }
     }
+
+    //------------------implements InterpreterResult methods
+    @Override
+    public Object[] getParameters() {
+        return getParams();
+    }
+
+    @Override
+    public String getSQL() {
+        return flushOut();
+    }
+
+    //--------------
 
     // 进行简单测试
     public static void main(String... args) throws Exception {
