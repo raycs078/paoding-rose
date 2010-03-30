@@ -41,7 +41,7 @@ class SQLThreadLocalWrapper extends DataAccessWrapper {
     }
 
     @Override
-    public List<?> select(String sql, Modifier modifier, Map<String, ?> parameters,
+    public List<?> select(String sql, Modifier modifier, Map<String, Object> parameters,
             RowMapper rowMapper) {
         SQLThreadLocal.set(SQLType.READ, sql, modifier, parameters);
         try {
@@ -52,7 +52,7 @@ class SQLThreadLocalWrapper extends DataAccessWrapper {
     }
 
     @Override
-    public int update(String sql, Modifier modifier, Map<String, ?> parameters) {
+    public int update(String sql, Modifier modifier, Map<String, Object> parameters) {
         SQLThreadLocal.set(SQLType.WRITE, sql, modifier, parameters);
         try {
             return targetDataAccess.update(sql, modifier, parameters);
@@ -62,7 +62,7 @@ class SQLThreadLocalWrapper extends DataAccessWrapper {
     }
 
     @Override
-    public Number insertReturnId(String sql, Modifier modifier, Map<String, ?> parameters) {
+    public Number insertReturnId(String sql, Modifier modifier, Map<String, Object> parameters) {
         SQLThreadLocal.set(SQLType.WRITE, sql, modifier, parameters);
         try {
             return targetDataAccess.insertReturnId(sql, modifier, parameters);

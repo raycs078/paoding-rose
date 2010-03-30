@@ -25,9 +25,9 @@ import java.util.Map;
 import javax.sql.DataSource;
 
 import net.paoding.rose.jade.provider.DataAccess;
-import net.paoding.rose.jade.provider.SQLInterpreterResult;
-import net.paoding.rose.jade.provider.SQLInterpreter;
 import net.paoding.rose.jade.provider.Modifier;
+import net.paoding.rose.jade.provider.SQLInterpreter;
+import net.paoding.rose.jade.provider.SQLInterpreterResult;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreator;
@@ -62,13 +62,14 @@ public class JdbcTemplateDataAccess implements DataAccess {
     }
 
     @Override
-    public List<?> select(final String sql, Modifier modifier, Map<String, ?> parameters,
+    public List<?> select(final String sql, Modifier modifier, Map<String, Object> parameters,
             RowMapper rowMapper) {
         String sqlString = sql;
         Object[] arrayParameters = null;
         SQLInterpreterResult ir = null;
         for (SQLInterpreter interpreter : interpreters) {
-            ir = interpreter.interpret(sql, modifier, parameters, arrayParameters);
+            ir = interpreter.interpret(jdbcTemplate.getDataSource(), sql, modifier, parameters,
+                    arrayParameters);
             if (ir != null) {
                 sqlString = ir.getSQL();
                 arrayParameters = ir.getParameters();
@@ -78,12 +79,13 @@ public class JdbcTemplateDataAccess implements DataAccess {
     }
 
     @Override
-    public int update(final String sql, Modifier modifier, Map<String, ?> parameters) {
+    public int update(final String sql, Modifier modifier, Map<String, Object> parameters) {
         String sqlString = sql;
         Object[] arrayParameters = null;
         SQLInterpreterResult ir = null;
         for (SQLInterpreter interpreter : interpreters) {
-            ir = interpreter.interpret(sql, modifier, parameters, arrayParameters);
+            ir = interpreter.interpret(jdbcTemplate.getDataSource(), sql, modifier, parameters,
+                    arrayParameters);
             if (ir != null) {
                 sqlString = ir.getSQL();
                 arrayParameters = ir.getParameters();
@@ -93,12 +95,13 @@ public class JdbcTemplateDataAccess implements DataAccess {
     }
 
     @Override
-    public Number insertReturnId(final String sql, Modifier modifier, Map<String, ?> parameters) {
+    public Number insertReturnId(final String sql, Modifier modifier, Map<String, Object> parameters) {
         String sqlString = sql;
         Object[] arrayParameters = null;
         SQLInterpreterResult ir = null;
         for (SQLInterpreter interpreter : interpreters) {
-            ir = interpreter.interpret(sqlString, modifier, parameters, arrayParameters);
+            ir = interpreter.interpret(jdbcTemplate.getDataSource(), sqlString, modifier,
+                    parameters, arrayParameters);
             if (ir != null) {
                 sqlString = ir.getSQL();
                 arrayParameters = ir.getParameters();

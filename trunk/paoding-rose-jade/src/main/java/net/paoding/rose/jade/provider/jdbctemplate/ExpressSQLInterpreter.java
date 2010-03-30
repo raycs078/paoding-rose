@@ -3,6 +3,8 @@ package net.paoding.rose.jade.provider.jdbctemplate;
 import java.sql.SQLSyntaxErrorException;
 import java.util.Map;
 
+import javax.sql.DataSource;
+
 import net.paoding.rose.jade.exql.ExqlPattern;
 import net.paoding.rose.jade.exql.impl.ExqlContextImpl;
 import net.paoding.rose.jade.exql.impl.ExqlPatternImpl;
@@ -22,8 +24,8 @@ public class ExpressSQLInterpreter implements SQLInterpreter {
 
     @Override
     // 转换   JDQL 语句为正常的  SQL 语句
-    public SQLInterpreterResult interpret(String sql, Modifier modifier, Map<String, ?> parametersAsMap,
-            Object[] parametersAsArray) {
+    public SQLInterpreterResult interpret(DataSource dataSource, String sql, Modifier modifier,
+            Map<String, Object> parametersAsMap, Object[] parametersAsArray) {
 
         // 转换语句中的表达式
         ExqlPattern pattern = ExqlPatternImpl.compile(sql);

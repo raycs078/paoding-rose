@@ -7,6 +7,8 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.sql.DataSource;
+
 import net.paoding.rose.jade.provider.DataAccess;
 import net.paoding.rose.jade.provider.SQLInterpreterResult;
 import net.paoding.rose.jade.provider.SQLInterpreter;
@@ -27,12 +29,12 @@ public class SimpleNamedParamSQLInterpreter implements SQLInterpreter {
 
     @Override
     // 转换   JDQL 语句为正常的  SQL 语句
-    public SQLInterpreterResult interpret(String sql, Modifier modifier, Map<String, ?> parametersAsMap,
-            Object[] parametersAsArray) {
+    public SQLInterpreterResult interpret(DataSource dataSource, String sql, Modifier modifier,
+            Map<String, Object> parametersAsMap, Object[] parametersAsArray) {
         return resolveParam(sql, parametersAsMap);
     }
 
-    private SQLInterpreterResult resolveParam(String sql, Map<String, ?> parameters) {
+    private SQLInterpreterResult resolveParam(String sql, Map<String, Object> parameters) {
 
         final List<Object> parametersAsList = new LinkedList<Object>();
 

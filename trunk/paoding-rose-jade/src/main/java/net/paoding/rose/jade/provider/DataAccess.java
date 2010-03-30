@@ -38,7 +38,7 @@ public interface DataAccess {
      * 
      * @return 返回的对象列表
      */
-    public List<?> select(String sql, Modifier modifier, Map<String, ?> parameters,
+    public List<?> select(String sql, Modifier modifier, Map<String, Object> parameters,
             RowMapper rowMapper);
 
     /**
@@ -50,7 +50,7 @@ public interface DataAccess {
      * 
      * @return 更新的记录数目
      */
-    public int update(String sql, Modifier modifier, Map<String, ?> parameters);
+    public int update(String sql, Modifier modifier, Map<String, Object> parameters);
 
     /**
      * 执行 INSERT 语句，并返回插入对象的 ID.
@@ -61,5 +61,5 @@ public interface DataAccess {
      * 
      * @return 插入对象的 ID
      */
-    public Number insertReturnId(String sql, Modifier modifier, Map<String, ?> parameters);
+    public Number insertReturnId(String sql, Modifier modifier, Map<String, Object> parameters);
 }

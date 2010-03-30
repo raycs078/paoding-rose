@@ -22,7 +22,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import net.paoding.rose.jade.provider.DataAccess;
 import net.paoding.rose.jade.provider.DataAccessProvider;
 import net.paoding.rose.scanning.ResourceRef;
 import net.paoding.rose.scanning.RoseScanner;
@@ -110,7 +109,7 @@ public class JadeDaoProcessor implements BeanFactoryPostProcessor, ApplicationCo
                     daoClassNames.add(daoClassName);
 
                     MutablePropertyValues propertyValues = beanDefinition.getPropertyValues();
-                    DataAccess dataAccess = new SQLThreadLocalWrapper(dataAccessProvider
+                    SQLThreadLocalWrapper dataAccess = new SQLThreadLocalWrapper(dataAccessProvider
                             .createDataAccess(daoClassName));
                     propertyValues.addPropertyValue("dataAccess", dataAccess);
                     propertyValues.addPropertyValue("daoClass", daoClassName);

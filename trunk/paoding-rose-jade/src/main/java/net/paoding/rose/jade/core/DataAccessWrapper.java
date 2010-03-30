@@ -46,18 +46,18 @@ public class DataAccessWrapper implements DataAccess {
     }
 
     @Override
-    public List<?> select(String sql, Modifier modifier, Map<String, ?> parameters,
+    public List<?> select(String sql, Modifier modifier, Map<String, Object> parameters,
             RowMapper rowMapper) {
         return targetDataAccess.select(sql, modifier, parameters, rowMapper);
     }
 
     @Override
-    public int update(String sql, Modifier modifier, Map<String, ?> parameters) {
+    public int update(String sql, Modifier modifier, Map<String, Object> parameters) {
         return targetDataAccess.update(sql, modifier, parameters);
     }
 
     @Override
-    public Number insertReturnId(String sql, Modifier modifier, Map<String, ?> parameters) {
+    public Number insertReturnId(String sql, Modifier modifier, Map<String, Object> parameters) {
         return targetDataAccess.insertReturnId(sql, modifier, parameters);
     }
 
