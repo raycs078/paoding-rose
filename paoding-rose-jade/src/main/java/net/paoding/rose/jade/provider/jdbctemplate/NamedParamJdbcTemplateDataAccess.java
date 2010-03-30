@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.paoding.rose.jade.jadeinterface.provider.jdbctemplate;
+package net.paoding.rose.jade.provider.jdbctemplate;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -24,8 +24,8 @@ import java.util.regex.Pattern;
 
 import javax.sql.DataSource;
 
-import net.paoding.rose.jade.jadeinterface.provider.DataAccess;
-import net.paoding.rose.jade.jadeinterface.provider.Modifier;
+import net.paoding.rose.jade.provider.DataAccess;
+import net.paoding.rose.jade.provider.Modifier;
 
 import org.apache.commons.lang.math.NumberUtils;
 import org.springframework.beans.BeanWrapper;

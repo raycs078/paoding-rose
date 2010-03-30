@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.paoding.rose.jade.jadeinterface.impl;
+package net.paoding.rose.jade.core;
 
 import java.lang.reflect.Array;
 import java.util.Collections;
@@ -23,9 +23,9 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
-import net.paoding.rose.jade.jadeinterface.annotation.SQLParam;
-import net.paoding.rose.jade.jadeinterface.provider.DataAccess;
-import net.paoding.rose.jade.jadeinterface.provider.Modifier;
+import net.paoding.rose.jade.annotation.SQLParam;
+import net.paoding.rose.jade.provider.DataAccess;
+import net.paoding.rose.jade.provider.Modifier;
 
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.jdbc.core.RowMapper;

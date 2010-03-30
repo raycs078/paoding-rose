@@ -1,8 +1,8 @@
-package net.paoding.rose.jade.jadeinterface.exql.impl;
+package net.paoding.rose.jade.exql.impl;
 
-import net.paoding.rose.jade.jadeinterface.exql.ExprResolver;
-import net.paoding.rose.jade.jadeinterface.exql.ExqlContext;
-import net.paoding.rose.jade.jadeinterface.exql.ExqlUnit;
+import net.paoding.rose.jade.exql.ExprResolver;
+import net.paoding.rose.jade.exql.ExqlContext;
+import net.paoding.rose.jade.exql.ExqlUnit;
 
 /**
  * 原样输出文本的语句单元, 通常是语句中不含表达式的部分。

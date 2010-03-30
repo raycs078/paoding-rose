@@ -1,4 +1,4 @@
-package net.paoding.rose.jade.jadeinterface.cache;
+package net.paoding.rose.jade.cache;
 
 /**
  * 定义 CacheProvider 接口从缓存池名称获取实例。

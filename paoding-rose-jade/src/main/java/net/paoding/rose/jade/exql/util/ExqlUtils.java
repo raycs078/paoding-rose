@@ -1,4 +1,4 @@
-package net.paoding.rose.jade.jadeinterface.exql.util;
+package net.paoding.rose.jade.exql.util;
 
 import java.lang.reflect.Array;
 import java.util.Arrays;
@@ -6,8 +6,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 
-import net.paoding.rose.jade.jadeinterface.exql.ExprResolver;
-import net.paoding.rose.jade.jadeinterface.exql.ExqlPattern;
+import net.paoding.rose.jade.exql.ExprResolver;
+import net.paoding.rose.jade.exql.ExqlPattern;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

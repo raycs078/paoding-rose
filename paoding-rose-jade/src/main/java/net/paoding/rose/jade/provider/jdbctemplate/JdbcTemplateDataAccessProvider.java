@@ -13,16 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.paoding.rose.jade.jadeinterface.provider.jdbctemplate;
+package net.paoding.rose.jade.provider.jdbctemplate;
 
 import java.util.Map;
 
 import javax.sql.DataSource;
 
-import net.paoding.rose.jade.jadeinterface.datasource.DataSourceFactory;
-import net.paoding.rose.jade.jadeinterface.datasource.SpringDataSourceFactory;
-import net.paoding.rose.jade.jadeinterface.provider.AbstractDataAccessProvider;
-import net.paoding.rose.jade.jadeinterface.provider.DataAccess;
+import net.paoding.rose.jade.datasource.DataSourceFactory;
+import net.paoding.rose.jade.datasource.SpringDataSourceFactory;
+import net.paoding.rose.jade.provider.AbstractDataAccessProvider;
+import net.paoding.rose.jade.provider.DataAccess;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;

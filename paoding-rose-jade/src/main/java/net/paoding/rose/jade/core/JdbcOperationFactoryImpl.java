@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.paoding.rose.jade.jadeinterface.impl;
+package net.paoding.rose.jade.core;
 
 import java.util.regex.Pattern;
 
-import net.paoding.rose.jade.jadeinterface.annotation.SQL;
-import net.paoding.rose.jade.jadeinterface.annotation.SQLType;
-import net.paoding.rose.jade.jadeinterface.provider.Modifier;
+import net.paoding.rose.jade.annotation.SQL;
+import net.paoding.rose.jade.annotation.SQLType;
+import net.paoding.rose.jade.provider.Modifier;
 
 import org.springframework.jdbc.core.RowMapper;
 

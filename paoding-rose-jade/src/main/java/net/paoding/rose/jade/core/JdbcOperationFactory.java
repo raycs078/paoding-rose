@@ -1,6 +1,6 @@
-package net.paoding.rose.jade.jadeinterface.impl;
+package net.paoding.rose.jade.core;
 
-import net.paoding.rose.jade.jadeinterface.provider.Modifier;
+import net.paoding.rose.jade.provider.Modifier;
 
 /**
  * 定义创建: {@link JdbcOperation} 的工厂。

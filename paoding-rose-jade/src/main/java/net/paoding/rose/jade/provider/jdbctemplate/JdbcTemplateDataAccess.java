@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.paoding.rose.jade.jadeinterface.provider.jdbctemplate;
+package net.paoding.rose.jade.provider.jdbctemplate;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -23,7 +23,7 @@ import java.util.List;
 
 import javax.sql.DataSource;
 
-import net.paoding.rose.jade.jadeinterface.provider.DataAccess;
+import net.paoding.rose.jade.provider.DataAccess;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreator;

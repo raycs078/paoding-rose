@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.paoding.rose.jade.jadeinterface.provider;
+package net.paoding.rose.jade.provider;
 
 import java.util.List;
 import java.util.Map;

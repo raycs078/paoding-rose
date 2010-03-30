@@ -1,4 +1,4 @@
-package net.paoding.rose.jade.jadeinterface.exql;
+package net.paoding.rose.jade.exql;
 
 /**
  * 定义处理表达式的接口, 以兼容不同的表达式语法。

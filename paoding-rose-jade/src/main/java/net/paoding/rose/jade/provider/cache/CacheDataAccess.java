@@ -1,4 +1,4 @@
-package net.paoding.rose.jade.jadeinterface.provider.cache;
+package net.paoding.rose.jade.provider.cache;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -9,10 +9,10 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import net.paoding.rose.jade.jadeinterface.cache.Cache;
-import net.paoding.rose.jade.jadeinterface.cache.CacheProvider;
-import net.paoding.rose.jade.jadeinterface.provider.DataAccess;
-import net.paoding.rose.jade.jadeinterface.provider.Modifier;
+import net.paoding.rose.jade.cache.Cache;
+import net.paoding.rose.jade.cache.CacheProvider;
+import net.paoding.rose.jade.provider.DataAccess;
+import net.paoding.rose.jade.provider.Modifier;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -46,8 +46,8 @@ public class CacheDataAccess implements DataAccess {
     public List<?> select(String sql, Modifier modifier, Map<String, ?> parameters,
             RowMapper rowMapper) {
 
-        net.paoding.rose.jade.jadeinterface.annotation.Cache cacheAnno = modifier
-                .getAnnotation(net.paoding.rose.jade.jadeinterface.annotation.Cache.class);
+        net.paoding.rose.jade.annotation.Cache cacheAnno = modifier
+                .getAnnotation(net.paoding.rose.jade.annotation.Cache.class);
         if (cacheAnno != null) {
 
             // 检查返回值类型是否能够缓存
@@ -93,8 +93,8 @@ public class CacheDataAccess implements DataAccess {
         // 先执行原有的语句
         int number = dataAccess.update(sql, modifier, parameters);
 
-        net.paoding.rose.jade.jadeinterface.annotation.CacheDelete cacheDelete = modifier
-                .getAnnotation(net.paoding.rose.jade.jadeinterface.annotation.CacheDelete.class);
+        net.paoding.rose.jade.annotation.CacheDelete cacheDelete = modifier
+                .getAnnotation(net.paoding.rose.jade.annotation.CacheDelete.class);
         if (cacheDelete != null) {
 
             Cache cache = cacheProvider.getCacheByPool(cacheDelete.pool());
@@ -119,8 +119,8 @@ public class CacheDataAccess implements DataAccess {
         // 先执行原有的语句
         Number number = dataAccess.insertReturnId(sql, modifier, parameters);
 
-        net.paoding.rose.jade.jadeinterface.annotation.CacheDelete cacheDelete = modifier
-                .getAnnotation(net.paoding.rose.jade.jadeinterface.annotation.CacheDelete.class);
+        net.paoding.rose.jade.annotation.CacheDelete cacheDelete = modifier
+                .getAnnotation(net.paoding.rose.jade.annotation.CacheDelete.class);
         if (cacheDelete != null) {
 
             Cache cache = cacheProvider.getCacheByPool(cacheDelete.pool());

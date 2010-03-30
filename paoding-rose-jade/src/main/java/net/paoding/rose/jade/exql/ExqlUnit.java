@@ -1,4 +1,4 @@
-package net.paoding.rose.jade.jadeinterface.exql;
+package net.paoding.rose.jade.exql;
 
 /**
  * 定义一个语句输出单元, 可以进行组装。

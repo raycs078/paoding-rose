@@ -1,12 +1,12 @@
-package net.paoding.rose.jade.jadeinterface.exql.impl;
+package net.paoding.rose.jade.exql.impl;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 
-import net.paoding.rose.jade.jadeinterface.exql.ExqlContext;
-import net.paoding.rose.jade.jadeinterface.exql.util.ExqlUtils;
+import net.paoding.rose.jade.exql.ExqlContext;
+import net.paoding.rose.jade.exql.util.ExqlUtils;
 
 /**
  * 实现简单的输出上下文。

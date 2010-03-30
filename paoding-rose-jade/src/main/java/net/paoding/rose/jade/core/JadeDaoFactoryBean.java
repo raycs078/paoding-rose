@@ -13,18 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.paoding.rose.jade.jadeinterface.impl;
+package net.paoding.rose.jade.core;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.concurrent.ConcurrentHashMap;
 
-import net.paoding.rose.jade.jadeinterface.annotation.DAO;
-import net.paoding.rose.jade.jadeinterface.provider.DataAccess;
-import net.paoding.rose.jade.jadeinterface.provider.DataAccessProvider;
-import net.paoding.rose.jade.jadeinterface.provider.Definition;
-import net.paoding.rose.jade.jadeinterface.provider.Modifier;
+import net.paoding.rose.jade.annotation.DAO;
+import net.paoding.rose.jade.provider.DataAccess;
+import net.paoding.rose.jade.provider.DataAccessProvider;
+import net.paoding.rose.jade.provider.Definition;
+import net.paoding.rose.jade.provider.Modifier;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

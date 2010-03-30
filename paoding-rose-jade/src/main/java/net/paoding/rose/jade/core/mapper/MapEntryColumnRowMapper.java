@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.paoding.rose.jade.jadeinterface.impl.mapper;
+package net.paoding.rose.jade.core.mapper;
 
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 
-import net.paoding.rose.jade.jadeinterface.annotation.KeyColumnOfMap;
-import net.paoding.rose.jade.jadeinterface.provider.Modifier;
+import net.paoding.rose.jade.annotation.KeyColumnOfMap;
+import net.paoding.rose.jade.provider.Modifier;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;

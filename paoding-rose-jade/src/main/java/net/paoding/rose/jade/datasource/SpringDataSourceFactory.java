@@ -1,4 +1,4 @@
-package net.paoding.rose.jade.jadeinterface.datasource;
+package net.paoding.rose.jade.datasource;
 
 import javax.sql.DataSource;
 

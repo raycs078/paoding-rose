@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.paoding.rose.jade.jadeinterface.impl;
+package net.paoding.rose.jade.core;
 
-import net.paoding.rose.jade.jadeinterface.provider.Modifier;
+import net.paoding.rose.jade.provider.Modifier;
 
 import org.springframework.jdbc.core.RowMapper;
 

@@ -1,14 +1,14 @@
-package net.paoding.rose.jade.jadeinterface.exql.impl;
+package net.paoding.rose.jade.exql.impl;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import net.paoding.rose.jade.jadeinterface.exql.ExprResolver;
-import net.paoding.rose.jade.jadeinterface.exql.ExqlContext;
-import net.paoding.rose.jade.jadeinterface.exql.ExqlPattern;
-import net.paoding.rose.jade.jadeinterface.exql.ExqlUnit;
+import net.paoding.rose.jade.exql.ExprResolver;
+import net.paoding.rose.jade.exql.ExqlContext;
+import net.paoding.rose.jade.exql.ExqlPattern;
+import net.paoding.rose.jade.exql.ExqlUnit;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

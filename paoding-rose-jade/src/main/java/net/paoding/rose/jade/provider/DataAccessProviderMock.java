@@ -1,4 +1,4 @@
-package net.paoding.rose.jade.jadeinterface.provider;
+package net.paoding.rose.jade.provider;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;

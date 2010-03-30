@@ -1,9 +1,9 @@
-package net.paoding.rose.jade.jadeinterface.exql.impl;
+package net.paoding.rose.jade.exql.impl;
 
-import net.paoding.rose.jade.jadeinterface.exql.ExprResolver;
-import net.paoding.rose.jade.jadeinterface.exql.ExqlContext;
-import net.paoding.rose.jade.jadeinterface.exql.ExqlUnit;
-import net.paoding.rose.jade.jadeinterface.exql.util.ExqlUtils;
+import net.paoding.rose.jade.exql.ExprResolver;
+import net.paoding.rose.jade.exql.ExqlContext;
+import net.paoding.rose.jade.exql.ExqlUnit;
+import net.paoding.rose.jade.exql.util.ExqlUtils;
 
 /**
  * 按条件选择输出子单元内容的语句单元, 例如: '#if (:expr) {...} #else {...}' 形式的语句。

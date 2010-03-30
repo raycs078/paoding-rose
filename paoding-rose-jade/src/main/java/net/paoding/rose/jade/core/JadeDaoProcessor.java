@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.paoding.rose.jade.jadeinterface.impl;
+package net.paoding.rose.jade.core;
 
 import java.io.File;
 import java.io.IOException;
@@ -22,7 +22,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import net.paoding.rose.jade.jadeinterface.provider.DataAccessProvider;
+import net.paoding.rose.jade.provider.DataAccessProvider;
 import net.paoding.rose.scanning.ResourceRef;
 import net.paoding.rose.scanning.RoseScanner;
 

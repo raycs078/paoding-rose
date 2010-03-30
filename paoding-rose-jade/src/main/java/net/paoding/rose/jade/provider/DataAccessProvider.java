@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.paoding.rose.jade.jadeinterface.provider;
+package net.paoding.rose.jade.provider;
 
 /**
  * 定义: DataAccess 的供应者接口。

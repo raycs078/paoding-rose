@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.paoding.rose.jade.jadeinterface.impl;
+package net.paoding.rose.jade.core;
 
 import java.io.IOException;
 import java.util.LinkedHashSet;
@@ -21,7 +21,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import net.paoding.rose.jade.jadeinterface.annotation.DAO;
+import net.paoding.rose.jade.annotation.DAO;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

@@ -1,4 +1,4 @@
-package net.paoding.rose.jade.jadeinterface.cache;
+package net.paoding.rose.jade.cache;
 
 import java.util.concurrent.ConcurrentHashMap;
 
