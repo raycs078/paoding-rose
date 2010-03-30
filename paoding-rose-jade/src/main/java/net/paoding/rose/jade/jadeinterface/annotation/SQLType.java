@@ -29,12 +29,12 @@ public enum SQLType {
     /**
      * 查询类型语句
      */
-    SELECT,
+    READ,
 
     /**
      * 更新类型语句
      */
-    UPDATE,
+    WRITE,
 
     /**
      * 未知类型，将使用Jade的默认规则判断：所有以SELECT开始的语句是查询类型的，其他的是更新类型的

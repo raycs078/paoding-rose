@@ -14,4 +14,7 @@ http://www.springframework.org/schema/aop http://www.springframework.org/schema/
 
 	<bean class="net.paoding.rose.jade.jadeinterface.impl.JadeDaoProcessor" />
 
+	<bean id="dataAccessProvider"
+		class="net.paoding.rose.jade.jadeinterface.provider.jdbctemplate.exql.ExqlJdbcTemplateDataAccessProvider" />
+
 </beans>
