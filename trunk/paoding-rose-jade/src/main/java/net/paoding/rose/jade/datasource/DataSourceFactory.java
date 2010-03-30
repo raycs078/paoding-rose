@@ -10,11 +10,10 @@ import javax.sql.DataSource;
 public interface DataSourceFactory {
 
     /**
-     * 获取指定名称的 {@link javax.sql.DataSource} 实例。
      * 
      * @param dataSourceName - 数据源名称
      * 
      * @return {@link javax.sql.DataSource} 实例
      */
-    DataSource getDataSource(String dataSourceName);
+    DataSource getDataSource(Class<?> daoClass);
 }

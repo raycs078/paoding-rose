@@ -17,7 +17,7 @@ http://www.springframework.org/schema/aop http://www.springframework.org/schema/
 	<bean id="jada.dataAccessProvider"
 		class="net.paoding.rose.jade.provider.jdbctemplate.JdbcTemplateDataAccessProvider" />
 
-	<bean id="jade.expressQueryLangugeInterpreter"
-		class="net.paoding.rose.jade.provider.jdbctemplate.ExpressQueryLangugeInterpreter" />
+	<bean id="jade.expressSQLInterpreter"
+		class="net.paoding.rose.jade.provider.jdbctemplate.ExpressSQLInterpreter" />
 
 </beans>

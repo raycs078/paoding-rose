@@ -22,6 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import net.paoding.rose.jade.annotation.DAO;
 import net.paoding.rose.jade.provider.DataAccess;
+import net.paoding.rose.jade.provider.DataAccessProvider;
 import net.paoding.rose.jade.provider.Definition;
 import net.paoding.rose.jade.provider.Modifier;
 
@@ -46,7 +47,7 @@ public class JadeDaoFactoryBean<T> implements FactoryBean, InitializingBean {
 
     private ConcurrentHashMap<Method, JdbcOperation> jdbcOperations = new ConcurrentHashMap<Method, JdbcOperation>();
 
-    private DataAccess dataAccess;
+    private DataAccessProvider dataAccessProvider;
 
     private T dao;
 
@@ -56,8 +57,8 @@ public class JadeDaoFactoryBean<T> implements FactoryBean, InitializingBean {
         this.daoClass = daoClass;
     }
 
-    public void setDataAccess(DataAccess dataAccess) {
-        this.dataAccess = dataAccess;
+    public void setDataAccessProvider(DataAccessProvider dataAccessProvider) {
+        this.dataAccessProvider = dataAccessProvider;
     }
 
     @Override
@@ -122,7 +123,7 @@ public class JadeDaoFactoryBean<T> implements FactoryBean, InitializingBean {
                             operation = jdbcOperationFactory.getJdbcOperation(modifier);
                             jdbcOperations.putIfAbsent(method, operation);
                         }
-
+                        DataAccess dataAccess = dataAccessProvider.createDataAccess(daoClass);
                         return operation.execute(dataAccess, args);
                     }
                 });

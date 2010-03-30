@@ -2,6 +2,9 @@ package net.paoding.rose.jade.datasource;
 
 import javax.sql.DataSource;
 
+import net.paoding.rose.jade.annotation.DAO;
+
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeansException;
@@ -25,17 +28,36 @@ public class SpringDataSourceFactory implements DataSourceFactory, ApplicationCo
     }
 
     @Override
-    public DataSource getDataSource(String catalog) {
-        assert catalog != null;
-        catalog = catalog.trim();
+    public DataSource getDataSource(Class<?> daoClass) {
+        String catalog = daoClass.getAnnotation(DAO.class).catalog();
+        if (StringUtils.isBlank(catalog)) {
+            catalog = daoClass.getName();
+        }
+        return getDataSourceByClassName(catalog);
+    }
+
+    public DataSource getDataSource(String nameSuffix) {
+        String key = "jade.dataSource." + nameSuffix;
+        if (nameSuffix == null || nameSuffix.length() == 0) {
+            key = "jade.dataSource";
+        }
+        if (applicationContext.containsBean(key)) {
+            return (DataSource) applicationContext.getBean(key, DataSource.class);
+        }
+        return null;
+    }
+
+    private DataSource getDataSourceByClassName(String catalog) {
         String tempCatalog = catalog;
+        DataSource dataSource;
         while (tempCatalog != null) {
-            String key = "jade.dataSource." + tempCatalog;
-            if (applicationContext.containsBean(key)) {
+            dataSource = getDataSource(tempCatalog);
+            if (dataSource != null) {
                 if (logger.isDebugEnabled()) {
-                    logger.debug("found dataSource '" + key + "' for catalog '" + catalog + "'.");
+                    logger.debug("found dataSource 'jade.dataSource." + tempCatalog
+                            + "' for catalog '" + catalog + "'.");
                 }
-                return (DataSource) applicationContext.getBean(key, DataSource.class);
+                return dataSource;
             }
             int index = tempCatalog.lastIndexOf('.');
             if (index == -1) {
@@ -44,14 +66,14 @@ public class SpringDataSourceFactory implements DataSourceFactory, ApplicationCo
                 tempCatalog = tempCatalog.substring(0, index);
             }
         }
-        String key = "jade.dataSource";
-        if (applicationContext.containsBean(key)) {
+        dataSource = getDataSource("");
+        if (dataSource != null) {
             if (logger.isDebugEnabled()) {
-                logger.debug("found dataSource '" + key + "' for catalog '" + catalog + "'.");
+                logger.debug("found dataSource 'jade.dataSource' for catalog '" + catalog + "'.");
             }
-            return (DataSource) applicationContext.getBean(key, DataSource.class);
+            return dataSource;
         }
-        key = "dataSource";
+        String key = "dataSource";
         if (applicationContext.containsBean(key)) {
             if (logger.isDebugEnabled()) {
                 logger.debug("found dataSource '" + key + "' for catalog '" + catalog + "'.");

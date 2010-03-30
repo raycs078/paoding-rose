@@ -42,15 +42,16 @@ public abstract class AbstractDataAccessProvider implements DataAccessProvider {
     }
 
     @Override
-    public DataAccess createDataAccess(String catalog) {
+    public DataAccess createDataAccess(Class<?> daoClass) {
 
         if (dataSourceFactory == null) {
             dataSourceFactory = createDataSourceFactory();
         }
 
-        DataSource dataSource = dataSourceFactory.getDataSource(catalog);
+        DataSource dataSource = dataSourceFactory.getDataSource(daoClass);
         if (dataSource == null) {
-            throw new NullPointerException("DataSource: " + catalog);
+            throw new NullPointerException("not found dataSource for dao: '" + daoClass.getName()
+                    + "'.");
         }
 
         return createDataAccess(dataSource);

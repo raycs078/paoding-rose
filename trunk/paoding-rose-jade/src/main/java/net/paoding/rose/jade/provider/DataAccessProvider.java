@@ -30,5 +30,5 @@ public interface DataAccessProvider {
      * 
      * @return DataAccess 对象
      */
-    public DataAccess createDataAccess(String catalog);
+    public DataAccess createDataAccess(Class<?> daoClass);
 }
