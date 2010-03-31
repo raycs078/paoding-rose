@@ -127,7 +127,7 @@ public class UpdateOperation implements JdbcOperation {
         }
         if (batchReturnClazz == int.class || batchReturnClazz == Integer.class) {
             int updated = 0;
-            for (int i = 0; i < list.size(); i++) {
+            for (int i = 0; i < updatedArray.length; i++) {
                 updated += updatedArray[i];
             }
             return updated;
