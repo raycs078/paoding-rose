@@ -20,6 +20,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -160,28 +161,44 @@ public class JdbcTemplateDataAccess implements DataAccess {
         if (parametersList.size() == 0) {
             return new int[0];
         }
-        List<Object[]> a = new ArrayList<Object[]>(parametersList.size());
-        String sqlString = null;
-        for (int i = 0; i < a.size(); i++) {
-            Object[] arrayParameters = null;
+
+        HashMap<String, List<Object[]>> batches = new HashMap<String, List<Object[]>>();
+        Map<String, int[]> positions = new HashMap<String, int[]>();
+        for (int i = 0; i < parametersList.size(); i++) {
+            Object[] statemenetParameters = null;
+            String sqlString = null;
             SQLInterpreterResult ir = null;
             for (SQLInterpreter interpreter : interpreters) {
                 ir = interpreter.interpret(jdbcTemplate.getDataSource(), sql, modifier,
-                        parametersList.get(i), arrayParameters);
+                        parametersList.get(i), statemenetParameters);
                 if (ir != null) {
                     if (sqlString != null && !sqlString.equals(ir.getSQL())) {
                         throw new IllegalArgumentException("batchUpdate");
                     }
                     sqlString = ir.getSQL();
-                    arrayParameters = ir.getParameters();
+                    statemenetParameters = ir.getParameters();
                 }
             }
-            a.add(arrayParameters);
+            if (sqlString == null) {
+                sqlString = sql;
+            }
+            List<Object[]> batchParameters = batches.get(sqlString);
+            if (batchParameters == null) {
+                batchParameters = new ArrayList<Object[]>(parametersList.size());
+                batches.put(sqlString, batchParameters);
+            }
+            int[] subPositions = positions.get(sqlString);
+            if (subPositions == null) {
+                subPositions = new int[parametersList.size() + 1];
+                positions.put(sqlString, subPositions);
+            }
+            subPositions[subPositions[parametersList.size()]] = i;
+            subPositions[parametersList.size()] = subPositions[parametersList.size()] + 1;
+            batchParameters.add(statemenetParameters);
         }
-        if (sqlString == null) {
-            sqlString = sql;
-        }
-        return batchUpdateByJdbcTemplate(sqlString, a);
+        int[] updated = new int[parametersList.size()];
+        batchUpdateByJdbcTemplate(batches, updated, positions);
+        return updated;
     }
 
     /**
@@ -192,33 +209,40 @@ public class JdbcTemplateDataAccess implements DataAccess {
      * 
      * @return 更新的记录数目
      */
-    protected int[] batchUpdateByJdbcTemplate(String sql, final List<Object[]> parametersList) {
-        if (parametersList == null || parametersList.size() == 0) {
-            return new int[0];
-        }
-        return jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
+    protected void batchUpdateByJdbcTemplate(Map<String, List<Object[]>> ps, int[] updated,
+            Map<String, int[]> positions) {
+        for (Map.Entry<String, List<Object[]>> batch : ps.entrySet()) {
+            String sql = batch.getKey();
+            final List<Object[]> parametersList = batch.getValue();
+            int[] subUpdated = jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
 
-            @Override
-            public int getBatchSize() {
-                return parametersList.size();
-            }
+                @Override
+                public int getBatchSize() {
+                    return parametersList.size();
+                }
 
-            @Override
-            public void setValues(PreparedStatement ps, int i) throws SQLException {
-                Object[] args = parametersList.get(i);
-                for (int j = 0; j < args.length; j++) {
-                    Object arg = args[j];
-                    if (arg instanceof SqlParameterValue) {
-                        SqlParameterValue paramValue = (SqlParameterValue) arg;
-                        StatementCreatorUtils.setParameterValue(ps, j + 1, paramValue, paramValue
-                                .getValue());
-                    } else {
-                        StatementCreatorUtils.setParameterValue(ps, j + 1,
-                                SqlTypeValue.TYPE_UNKNOWN, arg);
+                @Override
+                public void setValues(PreparedStatement ps, int i) throws SQLException {
+                    Object[] args = parametersList.get(i);
+                    for (int j = 0; j < args.length; j++) {
+                        Object arg = args[j];
+                        if (arg instanceof SqlParameterValue) {
+                            SqlParameterValue paramValue = (SqlParameterValue) arg;
+                            StatementCreatorUtils.setParameterValue(ps, j + 1, paramValue,
+                                    paramValue.getValue());
+                        } else {
+                            StatementCreatorUtils.setParameterValue(ps, j + 1,
+                                    SqlTypeValue.TYPE_UNKNOWN, arg);
+                        }
                     }
                 }
+            });
+
+            int[] subPositions = positions.get(sql);
+            for (int i = 0; i < subUpdated.length; i++) {
+                updated[subPositions[i]] = subUpdated[i];
             }
-        });
+        }
 
     }
 
