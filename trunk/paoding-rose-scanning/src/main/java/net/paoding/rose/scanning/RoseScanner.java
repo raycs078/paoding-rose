@@ -96,6 +96,8 @@ public class RoseScanner {
                 Resource[] packageResources = resourcePatternResolver.getResources(packagePath);
                 for (Resource pkgResource : packageResources) {
                     String uri = pkgResource.getURI().toString();
+                    uri = StringUtils.removeEnd(uri, "/");
+                    packagePath = StringUtils.removeEnd(packagePath, "/");
                     uri = StringUtils.removeEnd(uri, packagePath);
                     int beginIndex = uri.lastIndexOf("file:");
                     if (beginIndex == -1) {
@@ -110,10 +112,9 @@ public class RoseScanner {
                     String path = uri.substring(beginIndex, endIndex);
                     Resource folder = new FileSystemResource(path);
                     ResourceRef ref = ResourceRef.toResourceRef(folder);
-                    if (ref.getModifiers() == null) {
-                        ref.setModifiers(new String[] { "**" });
+                    if (!resources.contains(ref)) {
+                        resources.add(ref);
                     }
-                    resources.add(ref);
                 }
             }
         }

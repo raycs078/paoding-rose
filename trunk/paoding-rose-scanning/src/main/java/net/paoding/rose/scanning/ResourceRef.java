@@ -25,6 +25,8 @@ import java.util.jar.Manifest;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -37,6 +39,8 @@ import org.springframework.core.io.support.ResourcePatternResolver;
  */
 public class ResourceRef {
 
+    private static final Log logger = LogFactory.getLog(ResourceRef.class);
+
     private Properties properties = new Properties();
 
     private Resource resource;
@@ -48,6 +52,9 @@ public class ResourceRef {
         String[] modifiers = null;
         Resource rosePropertiesResource = rr.getInnerResource("/META-INF/rose.properties");
         if (rosePropertiesResource.exists()) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("rosePropertiesResource exists: " + rosePropertiesResource);
+            }
             InputStream in = rosePropertiesResource.getInputStream();
             rr.properties.load(in);
             in.close();
@@ -57,19 +64,39 @@ public class ResourceRef {
             }
             if (attrValue != null) {
                 modifiers = StringUtils.split(attrValue, ", ;\n\r\t");
+                if (logger.isDebugEnabled()) {
+                    logger.debug("modifiers[by properties][" + rr.getResource() + "]="
+                            + Arrays.toString(modifiers));
+                }
+            }
+        } else {
+            if (logger.isDebugEnabled()) {
+                logger.debug("rosePropertiesResource not found: " + rosePropertiesResource);
             }
         }
         if (modifiers == null) {
-            JarFile jarFile = new JarFile(rr.getResource().getFile());
-            Manifest manifest = jarFile.getManifest();
-            if (manifest != null) {
-                Attributes attributes = manifest.getMainAttributes();
-                String attrValue = attributes.getValue("rose");
-                if (attrValue == null) {
-                    attrValue = attributes.getValue("Rose");
+            if (!"jar".equals(rr.getProtocol())) {
+                modifiers = new String[] { "**" };
+                if (logger.isDebugEnabled()) {
+                    logger.debug("modifiers[by default][" + rr.getResource() + "]="
+                            + Arrays.toString(modifiers));
                 }
-                if (attrValue != null) {
-                    modifiers = StringUtils.split(attrValue, ", ;\n\r\t");
+            } else {
+                JarFile jarFile = new JarFile(rr.getResource().getFile());
+                Manifest manifest = jarFile.getManifest();
+                if (manifest != null) {
+                    Attributes attributes = manifest.getMainAttributes();
+                    String attrValue = attributes.getValue("rose");
+                    if (attrValue == null) {
+                        attrValue = attributes.getValue("Rose");
+                    }
+                    if (attrValue != null) {
+                        modifiers = StringUtils.split(attrValue, ", ;\n\r\t");
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("modifiers[by manifest.mf][" + rr.getResource() + "]="
+                                    + Arrays.toString(modifiers));
+                        }
+                    }
                 }
             }
         }
@@ -121,48 +148,40 @@ public class ResourceRef {
     }
 
     public boolean hasModifier(String modifier) {
+        if (modifier.startsWith("<") && modifier.endsWith(">")) {
+            return ArrayUtils.contains(modifiers, modifier.substring(1, modifier.length() - 1));
+        }
         return ArrayUtils.contains(modifiers, "**") || ArrayUtils.contains(modifiers, "*")
                 || ArrayUtils.contains(modifiers, modifier);
     }
 
-    public boolean hasNamespace(String namespace) throws IOException {
-        boolean hasNamespaceByMetaInf = ArrayUtils.contains(modifiers, "ROOT_NAMESPACE")
-                || ArrayUtils.contains(modifiers, namespace);
-        if (!hasNamespaceByMetaInf) {
-            String packagePath = namespace.replace('.', '/');
-            Resource packageResource = getInnerResource(packagePath);
-            if (packageResource != null && packageResource.exists()) {
-                return true;
-            }
-        }
-        return hasNamespaceByMetaInf;
-    }
-
     public Resource getInnerResource(String subPath) throws IOException {
-        if (!subPath.startsWith("/")) {
-            subPath = "/" + subPath;
-        }
+        String rootPath = resource.getURI().getPath();
         if (getProtocol().equals("jar")) {
-            return new UrlResource("jar:file:" + resource.getFile().getPath() + "!" + subPath);
+            return new UrlResource("jar:file:" + rootPath + "!" + subPath);
         } else {
-            return new FileSystemResource("file:" + resource.getFile().getPath() + subPath);
+            if (!subPath.startsWith("/") && !rootPath.endsWith("/")) {
+                subPath = "/" + subPath;
+            }
+            return new FileSystemResource(rootPath + subPath); // 已使用FileSystemResource不用file:打头
         }
     }
 
     public Resource[] getInnerResources(ResourcePatternResolver resourcePatternResolver,
             String subPath) throws IOException {
-        subPath = getInnerPath(subPath);
+        subPath = getInnerResourcePattern(subPath);
         return resourcePatternResolver.getResources(subPath);
     }
 
-    public String getInnerPath(String subPath) throws IOException {
-        if (!subPath.startsWith("/")) {
-            subPath = "/" + subPath;
-        }
+    public String getInnerResourcePattern(String subPath) throws IOException {
+        String rootPath = resource.getURI().getPath();
         if (getProtocol().equals("jar")) {
-            subPath = "jar:file:" + resource.getFile().getPath() + "!" + subPath;
+            subPath = "jar:file:" + rootPath + "!" + subPath;
         } else {
-            subPath = "file:" + resource.getFile().getPath() + subPath;
+            if (!subPath.startsWith("/") && !rootPath.endsWith("/")) {
+                subPath = "/" + subPath;
+            }
+            subPath = "file:" + rootPath + subPath;
         }
         return subPath;
     }
