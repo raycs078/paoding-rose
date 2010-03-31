@@ -75,7 +75,7 @@ public class JadeDaoProcessor implements BeanFactoryPostProcessor, ApplicationCo
                     Resource resource = resourceInfo.getResource();
                     File resourceFile = resource.getFile();
                     if (resourceFile.isFile()) {
-                        urls.add("jar:file:" + resourceFile.getAbsolutePath() + "!/");
+                        urls.add("jar:file:" + resourceFile.toURI().getPath() + "!"); // not "!/"
                     } else if (resourceFile.isDirectory()) {
                         urls.add(resourceFile.toURI().toString());
                     }
@@ -86,7 +86,7 @@ public class JadeDaoProcessor implements BeanFactoryPostProcessor, ApplicationCo
         }
 
         if (logger.isInfoEnabled()) {
-            logger.info("found " + urls.size() + " jade urls");
+            logger.info("found " + urls.size() + " jade urls: " + urls);
         }
         if (urls.size() > 0) {
             JadeDaoComponentProvider provider = new JadeDaoComponentProvider(true);
