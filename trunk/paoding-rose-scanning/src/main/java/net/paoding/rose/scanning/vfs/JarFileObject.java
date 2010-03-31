@@ -68,7 +68,7 @@ public class JarFileObject implements FileObject {
         if (logger.isDebugEnabled()) {
             logger.debug("represent jar: " + jar);
         }
-        int index = jar.indexOf("!/");
+        int index = jar.indexOf("!");
         if (index != -1) {
             jarFilePath = jar.substring(0, index);
             this.path = jar.substring(index + 2);
