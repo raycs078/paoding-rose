@@ -15,9 +15,9 @@
  */
 package net.paoding.rose.jade.core;
 
-import java.lang.reflect.Array;
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import net.paoding.rose.jade.annotation.SQLParam;
@@ -35,7 +35,7 @@ import org.springframework.util.NumberUtils;
  */
 public class UpdateOperation implements JdbcOperation {
 
-    private final String jdQL;
+    private final String sql;
 
     private final SQLParam[] sqlParamAnnotations;
 
@@ -43,9 +43,8 @@ public class UpdateOperation implements JdbcOperation {
 
     private final Modifier modifier;
 
-    public UpdateOperation(String jdQL, Modifier modifier) {
-
-        this.jdQL = jdQL;
+    public UpdateOperation(String sql, Modifier modifier) {
+        this.sql = sql;
         this.modifier = modifier;
         this.returnType = modifier.getReturnType();
         this.sqlParamAnnotations = modifier.getParameterAnnotations(SQLParam.class);
@@ -58,7 +57,13 @@ public class UpdateOperation implements JdbcOperation {
 
     @Override
     public Object execute(DataAccess dataAccess, Map<String, Object> parameters) {
-        if (parameters.get(":1") instanceof Collection<?>) {
+        if (parameters.get(":1") instanceof List<?>) {
+            Class<?> returnType = modifier.getReturnType();
+            if (returnType != void.class && returnType != int[].class
+                    && returnType != Integer[].class && returnType != int.class
+                    && returnType != Integer.class) {
+                throw new IllegalArgumentException("error return type for batch update.");
+            }
             // 批量执行查询
             return executeBatch(dataAccess, parameters);
         } else {
@@ -69,67 +74,63 @@ public class UpdateOperation implements JdbcOperation {
 
     private Object executeBatch(DataAccess dataAccess, Map<String, Object> parameters) {
 
-        Class<?> batchReturnClazz = returnType;
-        Class<?> returnClazz = batchReturnClazz;
+        List<?> list = (List<?>) parameters.get(":1");
 
-        Collection<?> collection = (Collection<?>) parameters.get(":1");
+        int[] updatedArray;
 
-        Object returnArray = null;
-        boolean successful = true;
-        int updated = 0;
+        if (true) {
+            List<Map<String, Object>> parametersList = new ArrayList<Map<String, Object>>(list
+                    .size());
+            for (Object arg : list) {
 
-        // 转换基本类型
-        if (batchReturnClazz.isPrimitive()) {
-            batchReturnClazz = ClassUtils.primitiveToWrapper(batchReturnClazz);
-        }
+                HashMap<String, Object> clone = new HashMap<String, Object>(parameters);
 
-        if (batchReturnClazz.isArray()) {
-            // 返回数组
-            returnClazz = batchReturnClazz.getComponentType();
-            returnArray = Array.newInstance(batchReturnClazz.getComponentType(), collection.size());
-        } else if (batchReturnClazz == Boolean.class) {
-            // 返回成功与否
-            returnClazz = Boolean.class;
-        } else if ((batchReturnClazz == Integer.class) || (batchReturnClazz == Long.class)
-                || Number.class.isAssignableFrom(batchReturnClazz)) {
-            // 返回更新纪录数
-            returnClazz = Integer.class;
-        }
-
-        int index = 0;
-
-        // 批量执行查询
-        for (Object arg : collection) {
-
-            HashMap<String, Object> clone = new HashMap<String, Object>(parameters);
-
-            // 更新执行参数
-            clone.put(":1", arg);
-            if (this.sqlParamAnnotations[0] != null) {
-                clone.put(this.sqlParamAnnotations[0].value(), arg);
+                // 更新执行参数
+                clone.put(":1", arg);
+                if (this.sqlParamAnnotations[0] != null) {
+                    clone.put(this.sqlParamAnnotations[0].value(), arg);
+                }
+                parametersList.add(clone);
             }
+            updatedArray = dataAccess.batchUpdate(sql, modifier, parametersList);
+        } else {
+            // 批量执行查询
+            int index = 0;
+            updatedArray = new int[list.size()];
+            for (Object arg : list) {
 
-            Object value = executeSignle(dataAccess, clone, returnClazz);
+                HashMap<String, Object> clone = new HashMap<String, Object>(parameters);
 
-            if (batchReturnClazz.isArray()) {
-                Array.set(returnArray, index, value);
-            } else if (returnClazz == Boolean.class) {
-                successful = successful && ((Boolean) value).booleanValue();
-            } else if (returnClazz == Integer.class) {
-                updated += ((Number) value).intValue();
+                // 更新执行参数
+                clone.put(":1", arg);
+                if (this.sqlParamAnnotations[0] != null) {
+                    clone.put(this.sqlParamAnnotations[0].value(), arg);
+                }
+                updatedArray[index] = (Integer) executeSignle(dataAccess, clone, int.class);
+
+                index++;
             }
-
-            index++;
         }
-
-        // 转换返回值
-        if (batchReturnClazz.isArray()) {
-            return returnArray;
-        } else if (batchReturnClazz == Boolean.class) {
-            return Boolean.valueOf(successful);
-        } else if (Number.class.isAssignableFrom(batchReturnClazz)) {
-            return NumberUtils.convertNumberToTargetClass(Integer.valueOf(updated),
-                    batchReturnClazz);
+        Class<?> batchReturnClazz = modifier.getReturnType();
+        if (batchReturnClazz == int[].class) {
+            return updatedArray;
+        }
+        if (batchReturnClazz == Integer[].class) {
+            Integer[] ret = new Integer[updatedArray.length];
+            for (int i = 0; i < ret.length; i++) {
+                ret[i] = updatedArray[i];
+            }
+            return updatedArray;
+        }
+        if (batchReturnClazz == void.class) {
+            return null;
+        }
+        if (batchReturnClazz == int.class || batchReturnClazz == Integer.class) {
+            int updated = 0;
+            for (int i = 0; i < list.size(); i++) {
+                updated += updatedArray[i];
+            }
+            return updated;
         }
 
         return null;
@@ -141,7 +142,7 @@ public class UpdateOperation implements JdbcOperation {
         if (returnType == Identity.class) {
 
             // 执行 INSERT 查询
-            Number number = dataAccess.insertReturnId(jdQL, modifier, parameters);
+            Number number = dataAccess.insertReturnId(sql, modifier, parameters);
 
             // 将结果转成方法的返回类型
             return new Identity(number);
@@ -149,7 +150,7 @@ public class UpdateOperation implements JdbcOperation {
         } else {
 
             // 执行 UPDATE / DELETE 查询
-            int updated = dataAccess.update(jdQL, modifier, parameters);
+            int updated = dataAccess.update(sql, modifier, parameters);
 
             // 转换基本类型
             if (returnType.isPrimitive()) {
