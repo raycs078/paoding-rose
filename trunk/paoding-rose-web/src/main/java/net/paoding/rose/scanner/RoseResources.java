@@ -66,7 +66,7 @@ public class RoseResources {
         List<String> messagesResources = new LinkedList<String>();
         for (ResourceRef ref : resources) {
             if (ref.hasModifier("messages")) {
-                messagesResources.add(ref.getInnerPath("/messages"));
+                messagesResources.add(ref.getInnerResourcePattern("/messages"));
             }
         }
         return messagesResources.toArray(new String[0]);
