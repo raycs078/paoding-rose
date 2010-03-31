@@ -16,14 +16,12 @@
 package net.paoding.rose.jade.core;
 
 import java.lang.reflect.Array;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
-import net.paoding.rose.jade.annotation.SQLParam;
 import net.paoding.rose.jade.provider.DataAccess;
 import net.paoding.rose.jade.provider.Modifier;
 
@@ -38,9 +36,7 @@ import org.springframework.jdbc.core.RowMapper;
  */
 public class SelectOperation implements JdbcOperation {
 
-    private final String jdQL;
-
-    private final SQLParam[] annotations;
+    private final String sql;
 
     private final RowMapper rowMapper;
 
@@ -48,37 +44,23 @@ public class SelectOperation implements JdbcOperation {
 
     private final Modifier modifier;
 
-    public SelectOperation(String jdQL, Modifier modifier, RowMapper rowMapper) {
+    public SelectOperation(String sql, Modifier modifier, RowMapper rowMapper) {
 
-        this.jdQL = jdQL;
+        this.sql = sql;
         this.modifier = modifier;
         this.returnType = modifier.getReturnType();
-        this.annotations = modifier.getParameterAnnotations(SQLParam.class);
         this.rowMapper = rowMapper;
     }
 
     @Override
-    public Object execute(DataAccess dataAccess, Object[] args) {
-        // 将参数放入  Map
-        Map<String, Object> parameters;
-        if (args == null || args.length == 0) {
-            parameters = Collections.emptyMap();
-        } else {
-            parameters = new HashMap<String, Object>(args.length * 2);
-            for (int i = 0; i < args.length; i++) {
-                parameters.put(":" + (i + 1), args[i]);
-            }
-            for (int i = 0; i < annotations.length; i++) {
-                SQLParam annotation = annotations[i];
-                if (annotation != null) {
-                    parameters.put(annotation.value(), args[i]);
-                }
-            }
+    public Modifier getModifier() {
+        return modifier;
+    }
 
-        }
-
+    @Override
+    public Object execute(DataAccess dataAccess, Map<String, Object> parameters) {
         // 执行查询
-        List<?> listResult = dataAccess.select(jdQL, modifier, parameters, rowMapper);
+        List<?> listResult = dataAccess.select(sql, modifier, parameters, rowMapper);
         final int sizeResult = listResult.size();
 
         // 将 Result 转成方法的返回类型

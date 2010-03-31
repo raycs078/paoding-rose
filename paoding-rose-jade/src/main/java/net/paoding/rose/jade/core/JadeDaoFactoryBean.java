@@ -18,9 +18,12 @@ package net.paoding.rose.jade.core;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import net.paoding.rose.jade.annotation.DAO;
+import net.paoding.rose.jade.annotation.SQLParam;
 import net.paoding.rose.jade.provider.DataAccess;
 import net.paoding.rose.jade.provider.DataAccessProvider;
 import net.paoding.rose.jade.provider.Definition;
@@ -123,8 +126,26 @@ public class JadeDaoFactoryBean<T> implements FactoryBean, InitializingBean {
                             operation = jdbcOperationFactory.getJdbcOperation(modifier);
                             jdbcOperations.putIfAbsent(method, operation);
                         }
+                        //
+                        // 将参数放入  Map
+                        Map<String, Object> parameters;
+                        if (args == null || args.length == 0) {
+                            parameters = new HashMap<String, Object>(4);
+                        } else {
+                            parameters = new HashMap<String, Object>(args.length * 2 + 4);
+                            SQLParam[] sqlParams = operation.getModifier().getParameterAnnotations(
+                                    SQLParam.class);
+                            for (int i = 0; i < args.length; i++) {
+                                parameters.put(":" + (i + 1), args[i]);
+                                SQLParam sqlParam = sqlParams[i];
+                                if (sqlParam != null) {
+                                    parameters.put(sqlParam.value(), args[i]);
+                                }
+                            }
+                        }
+                        //
                         DataAccess dataAccess = dataAccessProvider.createDataAccess(daoClass);
-                        return operation.execute(dataAccess, args);
+                        return operation.execute(dataAccess, parameters);
                     }
                 });
     }

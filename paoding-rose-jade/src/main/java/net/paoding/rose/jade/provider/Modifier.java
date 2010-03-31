@@ -40,6 +40,8 @@ public class Modifier {
     private final Map<Class<? extends Annotation>, Annotation[]> parameterAnnotations = new HashMap<Class<? extends Annotation>, Annotation[]>(
             8, 1.0f);
 
+    private final int parameterCount;
+
     public Modifier(Definition definition, Method method) {
         this.definition = definition;
         this.method = method;
@@ -47,6 +49,7 @@ public class Modifier {
         genericReturnTypes = GenericUtils.getActualClass(method.getGenericReturnType());
 
         Annotation[][] annotations = method.getParameterAnnotations();
+        parameterCount = annotations.length;
         for (int index = 0; index < annotations.length; index++) {
             for (Annotation annotation : annotations[index]) {
 
@@ -54,7 +57,7 @@ public class Modifier {
                 Annotation[] annotationArray = parameterAnnotations.get(annotationType);
                 if (annotationArray == null) {
                     annotationArray = (Annotation[]) Array.newInstance( // NL
-                            annotationType, annotations.length);
+                            annotationType, parameterCount);
                     parameterAnnotations.put(annotationType, annotationArray);
                 }
 
@@ -91,7 +94,8 @@ public class Modifier {
     public <T extends Annotation> T[] getParameterAnnotations(Class<T> annotationClass) {
         T[] annotations = (T[]) parameterAnnotations.get(annotationClass);
         if (annotations == null) {
-            annotations = (T[]) Array.newInstance(annotationClass, 0);
+            annotations = (T[]) Array.newInstance(annotationClass, parameterCount);
+            parameterAnnotations.put(annotationClass, annotations);
         }
         return annotations;
     }
