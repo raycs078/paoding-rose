@@ -187,7 +187,10 @@ public class ResourceRef {
     }
 
     public String getProtocol() {
-        if (resource.getFilename().toLowerCase().endsWith(".jar")) {
+        if (resource.getFilename().toLowerCase().endsWith(".jar")
+                || resource.getFilename().toLowerCase().endsWith(".zip")
+                || resource.getFilename().toLowerCase().endsWith(".tar")
+                || resource.getFilename().toLowerCase().endsWith(".gz")) {
             return "jar";
         }
         return "file";
