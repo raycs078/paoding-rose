@@ -61,4 +61,9 @@ public class DataAccessWrapper implements DataAccess {
         return targetDataAccess.insertReturnId(sql, modifier, parameters);
     }
 
+    @Override
+    public int[] batchUpdate(String sql, Modifier modifier, List<Map<String, Object>> parametersList) {
+        return targetDataAccess.batchUpdate(sql, modifier, parametersList);
+    }
+
 }

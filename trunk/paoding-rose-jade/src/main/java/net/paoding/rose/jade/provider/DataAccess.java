@@ -53,6 +53,15 @@ public interface DataAccess {
     public int update(String sql, Modifier modifier, Map<String, Object> parameters);
 
     /**
+     * 
+     * @param sql
+     * @param modifier
+     * @param parametersList
+     * @return
+     */
+    public int[] batchUpdate(String sql, Modifier modifier, List<Map<String, Object>> parametersList);
+
+    /**
      * 执行 INSERT 语句，并返回插入对象的 ID.
      * 
      * @param sql - 执行的语句
