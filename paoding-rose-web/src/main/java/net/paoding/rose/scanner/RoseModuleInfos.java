@@ -78,10 +78,10 @@ public class RoseModuleInfos {
                     File resourceFile = resource.getFile();
                     FileObject rootObject = null;
                     if (resourceFile.isFile()) {
-                        String path = "jar:file:" + resourceFile.getAbsolutePath() + "!/";
+                        String path = "jar:file:" + resource.getURI().getPath() + "!";
                         rootObject = fsManager.resolveFile(path);
                     } else if (resourceFile.isDirectory()) {
-                        rootObject = fsManager.resolveFile(resourceFile.getAbsolutePath());
+                        rootObject = fsManager.resolveFile(resource.getURI().getPath());
                     }
                     if (rootObject == null) {
                         if (logger.isInfoEnabled()) {
