@@ -17,7 +17,6 @@ package net.paoding.rose.jade.core;
 
 import java.lang.reflect.Array;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -38,7 +37,7 @@ public class UpdateOperation implements JdbcOperation {
 
     private final String jdQL;
 
-    private final SQLParam[] annotations;
+    private final SQLParam[] sqlParamAnnotations;
 
     private final Class<?> returnType;
 
@@ -49,73 +48,31 @@ public class UpdateOperation implements JdbcOperation {
         this.jdQL = jdQL;
         this.modifier = modifier;
         this.returnType = modifier.getReturnType();
-        this.annotations = modifier.getParameterAnnotations(SQLParam.class);
+        this.sqlParamAnnotations = modifier.getParameterAnnotations(SQLParam.class);
     }
 
     @Override
-    public Object execute(DataAccess dataAccess, Object[] args) {
+    public Modifier getModifier() {
+        return modifier;
+    }
 
-        // 将参数放入  Map
-        Map<String, Object> parameters;
-        if (args == null || args.length == 0) {
-            parameters = Collections.emptyMap();
-        } else {
-            parameters = new HashMap<String, Object>(args.length * 2);
-            for (int i = 0; i < args.length; i++) {
-                parameters.put(":" + (i + 1), args[i]);
-            }
-            for (int i = 0; i < annotations.length; i++) {
-                SQLParam annotation = annotations[i];
-                if (annotation != null) {
-                    parameters.put(annotation.value(), args[i]);
-                }
-            }
-
-        }
-        // 批量执行的参数与集合
-        SQLParam batchParam = null;
-        Collection<?> collection = null;
-
-        for (int i = 0; i < annotations.length; i++) {
-
-            // 检查参数的 Annotation
-            SQLParam annotation = annotations[i];
-
-            // 参数必须用  @SQLParam 标注
-            if (args[i] instanceof Collection<?>) {
-
-                if (batchParam != null) {
-                    throw new IllegalArgumentException(modifier
-                            + ": Too many collection arguments in batch method");
-                }
-
-                // 批量的第一个参数必须是集合
-                if (i == 0) {
-                    batchParam = annotation;
-                    collection = (Collection<?>) args[i];
-                } else {
-                    parameters.put(annotation.value(), args[i]);
-                }
-            } else {
-                // 纪录参数
-                parameters.put(annotation.value(), args[i]);
-            }
-        }
-
-        if (batchParam != null) {
+    @Override
+    public Object execute(DataAccess dataAccess, Map<String, Object> parameters) {
+        if (parameters.get(":1") instanceof Collection<?>) {
             // 批量执行查询
-            return executeBatch(dataAccess, batchParam.value(), collection, parameters);
+            return executeBatch(dataAccess, parameters);
         } else {
             // 单个执行查询
-            return execute(dataAccess, returnType, parameters);
+            return executeSignle(dataAccess, parameters, returnType);
         }
     }
 
-    private Object executeBatch(DataAccess dataAccess, String parameterName,
-            Collection<?> collection, Map<String, Object> parameters) {
+    private Object executeBatch(DataAccess dataAccess, Map<String, Object> parameters) {
 
         Class<?> batchReturnClazz = returnType;
         Class<?> returnClazz = batchReturnClazz;
+
+        Collection<?> collection = (Collection<?>) parameters.get(":1");
 
         Object returnArray = null;
         boolean successful = true;
@@ -144,10 +101,15 @@ public class UpdateOperation implements JdbcOperation {
         // 批量执行查询
         for (Object arg : collection) {
 
-            // 更新执行参数
-            parameters.put(parameterName, arg);
+            HashMap<String, Object> clone = new HashMap<String, Object>(parameters);
 
-            Object value = execute(dataAccess, returnClazz, parameters);
+            // 更新执行参数
+            clone.put(":1", arg);
+            if (this.sqlParamAnnotations[0] != null) {
+                clone.put(this.sqlParamAnnotations[0].value(), arg);
+            }
+
+            Object value = executeSignle(dataAccess, clone, returnClazz);
 
             if (batchReturnClazz.isArray()) {
                 Array.set(returnArray, index, value);
@@ -173,10 +135,10 @@ public class UpdateOperation implements JdbcOperation {
         return null;
     }
 
-    private Object execute(DataAccess dataAccess, Class<?> returnClazz,
-            Map<String, Object> parameters) {
+    private Object executeSignle(DataAccess dataAccess, Map<String, Object> parameters,
+            Class<?> returnType) {
 
-        if (returnClazz == Identity.class) {
+        if (returnType == Identity.class) {
 
             // 执行 INSERT 查询
             Number number = dataAccess.insertReturnId(jdQL, modifier, parameters);
@@ -190,20 +152,20 @@ public class UpdateOperation implements JdbcOperation {
             int updated = dataAccess.update(jdQL, modifier, parameters);
 
             // 转换基本类型
-            if (returnClazz.isPrimitive()) {
-                returnClazz = ClassUtils.primitiveToWrapper(returnClazz);
+            if (returnType.isPrimitive()) {
+                returnType = ClassUtils.primitiveToWrapper(returnType);
             }
 
             // 将结果转成方法的返回类型
-            if (returnClazz == Boolean.class) {
+            if (returnType == Boolean.class) {
                 return Boolean.valueOf(updated > 0);
-            } else if (returnClazz == Long.class) {
+            } else if (returnType == Long.class) {
                 return Long.valueOf(updated);
-            } else if (returnClazz == Integer.class) {
+            } else if (returnType == Integer.class) {
                 return Integer.valueOf(updated);
-            } else if (Number.class.isAssignableFrom(returnClazz)) {
+            } else if (Number.class.isAssignableFrom(returnType)) {
                 return NumberUtils.convertNumberToTargetClass( // NL
-                        Integer.valueOf(updated), returnClazz);
+                        Integer.valueOf(updated), returnType);
             }
         }
 

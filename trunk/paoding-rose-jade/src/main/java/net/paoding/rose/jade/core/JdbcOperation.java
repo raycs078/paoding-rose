@@ -1,6 +1,9 @@
 package net.paoding.rose.jade.core;
 
+import java.util.Map;
+
 import net.paoding.rose.jade.provider.DataAccess;
+import net.paoding.rose.jade.provider.Modifier;
 
 /**
  * 定义一组数据库操作。
@@ -10,10 +13,12 @@ import net.paoding.rose.jade.provider.DataAccess;
  */
 public interface JdbcOperation {
 
+    public Modifier getModifier();
+
     /**
      * 执行所需的数据库操作。
      * 
      * @return
      */
-    public Object execute(DataAccess dataAccess, Object[] args);
+    public Object execute(DataAccess dataAccess, Map<String, Object> parameters);
 }
