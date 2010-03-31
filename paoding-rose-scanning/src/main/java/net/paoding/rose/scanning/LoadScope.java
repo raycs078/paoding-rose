@@ -48,13 +48,19 @@ public class LoadScope {
             if (StringUtils.isBlank(loadScope)) {
                 continue;
             }
-            componetConf = componetConf.trim(); // 代表"controllers:com.renren.xoa, com.renren.yourapp"串
+            // 代表"controllers=com.renren.xoa, com.renren.yourapp"串
+            componetConf = componetConf.trim();
             int componetTypeIndex;
             String componetType = defType; // 代表"controllers", "applicationContext", "dao", "messages", "*"等串
             String componetConfValue = componetConf;
-            if ((componetTypeIndex = componetConf.indexOf(':')) != -1) {
+            if ((componetTypeIndex = componetConf.indexOf('=')) != -1) {
                 componetType = componetConf.substring(0, componetTypeIndex).trim();
                 componetConfValue = componetConf.substring(componetTypeIndex + 1).trim();
+            }
+            if (componetType.startsWith("!")) {
+                componetType = componetType.substring(1);
+            } else {
+                componetConfValue = componetConfValue + ", net.paoding.rose";
             }
             String[] packages = StringUtils.split(componetConfValue, ", \t\n\r\0");//都好和\t之间有一个空格
             this.load.put(componetType, packages);
