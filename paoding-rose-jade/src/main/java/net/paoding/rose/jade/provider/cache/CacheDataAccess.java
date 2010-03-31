@@ -209,6 +209,11 @@ public class CacheDataAccess implements DataAccess {
 
         return key;
     }
+    
+    @Override
+    public int[] batchUpdate(String sql, Modifier modifier, List<Map<String, Object>> parametersList) {
+        throw new UnsupportedOperationException();
+    }
 
     // 测试代码
     public static void main(String... args) {
