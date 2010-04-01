@@ -29,6 +29,7 @@ import java.util.jar.JarFile;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.util.ResourceUtils;
 
 /**
  * 
@@ -64,17 +65,24 @@ public class JarFileObject implements FileObject {
         }
     }
 
-    public JarFileObject(String jar) throws IOException {
+    public JarFileObject(String jarPath) throws IOException {
         if (logger.isDebugEnabled()) {
-            logger.debug("represent jar: " + jar);
+            logger.debug("represent jar: " + jarPath);
         }
-        int index = jar.indexOf("!");
-        if (index != -1) {
-            jarFilePath = jar.substring(0, index);
-            this.path = jar.substring(index + 2);
+        if (jarPath.endsWith("!")) {
+            jarPath = jarPath + "/";
+        }
+        int index = jarPath.indexOf("!");
+        if (index > 0) {
+            jarFilePath = jarPath.substring(0, index);
+            if (jarPath.endsWith("!/") || jarPath.endsWith("!")) {
+                this.path = "";
+            } else {
+                this.path = jarPath.substring(index + 2);
+            }
             this.path = this.path.replace('\\', '/');
         } else {
-            jarFilePath = jar;
+            jarFilePath = jarPath;
             this.path = "";
             this.name = "";
         }
@@ -103,7 +111,7 @@ public class JarFileObject implements FileObject {
                 }
             }
             if (entry == null) {
-                throw new FileNotFoundException(jar);
+                throw new FileNotFoundException(jarPath);
             }
             if (entry.isDirectory() && !this.path.endsWith("/")) {
                 this.path = this.path + "/";
@@ -192,7 +200,7 @@ public class JarFileObject implements FileObject {
     public FileObject getParent() throws IOException {
         if (entry == null) return null;
         String parentPath = path.substring(0, path.lastIndexOf('/', path.length() - 2));
-        return new JarFileObject(jarFilePath + "!/" + parentPath);
+        return new JarFileObject(jarFilePath + ResourceUtils.JAR_URL_SEPARATOR + parentPath);
     }
 
     @Override
