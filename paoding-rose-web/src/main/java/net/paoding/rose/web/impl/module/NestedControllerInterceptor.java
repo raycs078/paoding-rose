@@ -47,10 +47,6 @@ public class NestedControllerInterceptor extends ControllerInterceptorWrapper im
         }
 
         public Builder name(String name) {
-            if (name.indexOf('.') != -1) {
-                throw new IllegalArgumentException("illegal name '" + name
-                        + "', the dot char is not allowed.");
-            }
             this.name = name;
             return this;
         }
@@ -65,8 +61,7 @@ public class NestedControllerInterceptor extends ControllerInterceptorWrapper im
             if (oncePerRequest) {
                 interceptor = new OncePerRequestInterceptorWrapper(interceptor);
             }
-            NestedControllerInterceptor wrapper = new NestedControllerInterceptor(
-                    interceptor);
+            NestedControllerInterceptor wrapper = new NestedControllerInterceptor(interceptor);
             wrapper.setName(name);
             return wrapper;
         }

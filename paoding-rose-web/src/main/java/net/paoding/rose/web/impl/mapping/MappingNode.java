@@ -28,6 +28,7 @@ import net.paoding.rose.web.impl.thread.Engine;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.util.Assert;
 
 /**
  * {@link MappingNode}代表匹配树的一个结点，树的结点能够包含一个或多个被称为资源的 {@link WebResource} 对象
@@ -89,7 +90,7 @@ public class MappingNode implements Comparable<MappingNode>, Iterable<MappingNod
         this.setMapping(mapping);
         this.setParent(parent);
         if (parent != null) {
-            assert parentResource != null;
+            Assert.isTrue(parentResource != null);
             this.parentResource = parentResource;
         }
     }
@@ -179,7 +180,7 @@ public class MappingNode implements Comparable<MappingNode>, Iterable<MappingNod
     }
 
     public void addResource(WebResource resource) {
-        assert resource != null;
+        Assert.isTrue(resource != null);
         if (resources.length == 0) {
             resources = new WebResource[] { resource };
         } else {
@@ -214,7 +215,7 @@ public class MappingNode implements Comparable<MappingNode>, Iterable<MappingNod
 
                 @Override
                 public void setMappingNode(MappingNode mappingNode) {
-                    assert mappingNode == newNode;
+                    Assert.isTrue(mappingNode == newNode);
                 }
 
                 @Override
@@ -352,7 +353,7 @@ public class MappingNode implements Comparable<MappingNode>, Iterable<MappingNod
                     if (prev.getResource() == null) {
                         prev.setResource(cur.getParentResource());
                         bindEngine(request, requestPath, prev);
-                        assert prev.getEngine() != null;
+                        Assert.isTrue(prev.getEngine() != null);
                     }
                 }
                 if (cur.leftMostChild == null) {

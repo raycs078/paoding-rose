@@ -74,7 +74,7 @@ public interface Module {
      * 
      * @return
      */
-    public String getModulePath();
+    public String getRelativePath();
 
     /**
      * 本模块的ApplicationContext对象。

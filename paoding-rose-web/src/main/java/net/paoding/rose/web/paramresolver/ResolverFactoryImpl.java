@@ -64,6 +64,7 @@ import org.springframework.beans.SimpleTypeConverter;
 import org.springframework.beans.TypeConverter;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.MessageSource;
+import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.Errors;
@@ -956,7 +957,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
                 if (generics == null) {
                     return false;
                 }
-                assert generics.length > 0;
+                Assert.isTrue(generics.length > 0);
                 type = generics[0];
             }
             if (ClassUtils.isPrimitiveOrWrapper(type) || type == String.class
@@ -964,14 +965,14 @@ public class ResolverFactoryImpl implements ResolverFactory {
                 uriParamIndex++;
             }
         }
-        if ((breakIndex - 1) == index) {
+        if ((breakIndex - 1) == index && uriParamIndex > 0) {
             String alias = "$" + uriParamIndex;
             paramMetaData.addAliasParamName(alias);
             if (logger.isDebugEnabled()) {
                 logger.debug("add index alias paramName: '" + alias + "' for "
                         + paramMetaData.getControllerClass().getName() + "."
                         + paramMetaData.getMethod().getName() + "(..."
-                        + paramMetaData.getParamType() + "[index=" + breakIndex + "] ...");
+                        + paramMetaData.getParamType() + "[index=" + breakIndex + "] ...)");
             }
             return true;
         }

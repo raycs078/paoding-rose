@@ -68,7 +68,6 @@ public class RoseAppContext {
         }
         LoadScope loadScope = new LoadScope(packages, "applicationContext");
         try {
-            String namespace = "rose.app.root";
 
             List<Resource> ctxResources = RoseResources.findContextResources(loadScope);
             if (logger.isInfoEnabled()) {
@@ -76,7 +75,7 @@ public class RoseAppContext {
             }
 
             rootContext = RoseContextLoader.createApplicationContext(null, ctxResources, "",
-                    namespace);
+                    "rose.root", "rose.root");
 
             if (logger.isInfoEnabled()) {
                 logger.info("Built root XmlApplicationContext [" + rootContext + "]");

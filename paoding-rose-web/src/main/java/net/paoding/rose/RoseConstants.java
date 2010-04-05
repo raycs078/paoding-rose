@@ -39,7 +39,7 @@ public interface RoseConstants {
     /**
      * 控制器需在这个目录下或它的子目录下，一个工程如果有很多controllers，都将被扫描进来
      */
-    public static final String CONTROLLERS_DIRECTORY_NAME = "controllers";
+    public static final String CONTROLLERS = "controllers";
 
     /**
      * 资源控制器都以其中一个字符串为结尾。

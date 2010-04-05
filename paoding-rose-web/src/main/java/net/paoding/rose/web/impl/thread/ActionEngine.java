@@ -57,6 +57,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.core.SpringVersion;
+import org.springframework.util.Assert;
 import org.springframework.validation.Errors;
 
 /**
@@ -92,13 +93,12 @@ public final class ActionEngine implements Engine {
         interceptors = compileInterceptors();
         methodParameterResolver = compileParamResolvers();
         validators = compileValidators();
-        if (logger.isDebugEnabled()) {
-            logger
-                    .debug("action info: " + controllerClass.getName() + "." + method.getName()
-                            + ":");
-            logger.debug("\t interceptors:" + Arrays.toString(interceptors));
-            logger.debug("\t validators:" + Arrays.toString(validators));
-        }
+        //        if (logger.isDebugEnabled()) {
+        //            logger.debug("action info: " + controllerClass.getName() //
+        //                    + "." + method.getName() + ":");
+        //            logger.debug("\t interceptors:" + Arrays.toString(interceptors));
+        //            logger.debug("\t validators:" + Arrays.toString(validators));
+        //        }
     }
 
     public NestedControllerInterceptor[] getRegisteredInterceptors() {
@@ -187,7 +187,7 @@ public final class ActionEngine implements Engine {
 
     @Override
     public int compareTo(Engine o) {
-        assert o.getClass() == this.getClass();
+        Assert.isTrue(o.getClass() == this.getClass());
         // 还有All放最后!
         ReqMapping rm1 = method.getAnnotation(ReqMapping.class);
         ReqMapping rm2 = ((ActionEngine) o).method.getAnnotation(ReqMapping.class);
@@ -206,13 +206,13 @@ public final class ActionEngine implements Engine {
 
     @Override
     public int isAccepted(HttpServletRequest request) {
-        assert request != null;
+        Assert.isTrue(request != null);
         IfParamExists ifParamExists = method.getAnnotation(IfParamExists.class);
         if (ifParamExists != null) {
             String value = ifParamExists.value();
             // create&form
             String[] terms = StringUtils.split(value, "&");
-            assert terms.length == 1;
+            Assert.isTrue(terms.length == 1);
             int index = terms[0].indexOf('=');
             if (index == -1) {
                 String paramValue = request.getParameter(terms[0]);
@@ -438,7 +438,7 @@ public final class ActionEngine implements Engine {
         String oldEncoding = response.getCharacterEncoding();
         if (StringUtils.isBlank(oldEncoding) || oldEncoding.startsWith("ISO-")) {
             String encoding = request.getCharacterEncoding();
-            assert encoding != null;
+            Assert.isTrue(encoding != null);
             response.setCharacterEncoding(encoding);
             if (logger.isDebugEnabled()) {
                 logger.debug("set response.characterEncoding by default:"

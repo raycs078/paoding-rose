@@ -32,12 +32,12 @@ import java.lang.annotation.Target;
 @Documented
 public @interface Interceptor {
 
-    /**
-     * 明确标注拦截器的名字
-     * 
-     * @return
-     */
-    String name() default "";
+//    /**
+//     * 明确标注拦截器的名字
+//     * 
+//     * @return
+//     */
+//    String name() default "";
 
     /**
      * 对用户的每一个请求，只执行一次拦截？

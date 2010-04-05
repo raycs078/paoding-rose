@@ -43,7 +43,7 @@ public class ModuleController implements BaseController {
             sb.append("<tr><td>mappingPath</td><td>").append(module.getMappingPath()).append(
                     "</td></tr>");
             // relativePackagePath
-            sb.append("<tr><td>relativePackagePath</td><td>").append(module.getModulePath())
+            sb.append("<tr><td>relativePackagePath</td><td>").append(module.getRelativePath())
                     .append("</td></tr>");
             // url
             sb.append("<tr valign=\"top\"><td>url</td><td>").append(module.getUrl()).append(
