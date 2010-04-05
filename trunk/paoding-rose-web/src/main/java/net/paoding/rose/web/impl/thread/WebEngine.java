@@ -36,6 +36,7 @@ import net.paoding.rose.web.var.FlashImpl;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.util.Assert;
 
 /**
  * {@link WebEngine}从{@link RoseFilter}接收web请求，并按照Rose规则进行处理.
@@ -76,7 +77,7 @@ public class WebEngine implements Engine {
 
     @Override
     public int compareTo(Engine o) {
-        assert o.getClass() == this.getClass();
+        Assert.isTrue(o.getClass() == this.getClass());
         return 0;
     }
 

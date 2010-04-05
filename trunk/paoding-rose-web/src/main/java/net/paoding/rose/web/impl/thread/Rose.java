@@ -35,6 +35,7 @@ import net.paoding.rose.web.impl.module.Module;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.util.Assert;
 
 /**
  * 
@@ -116,7 +117,7 @@ public class Rose implements EngineChain {
             return false;
         }
         MatchResult mr = matchResults.get(matchResults.size() - 1);
-        assert mr.getResource() != null;
+        Assert.isTrue(mr.getResource() != null);
         if (!mr.getResource().isMethodAllowed(this.path.getMethod())) {
             /* 405 Method Not Allowed
              * The method specified in the Request-Line is not allowed for the

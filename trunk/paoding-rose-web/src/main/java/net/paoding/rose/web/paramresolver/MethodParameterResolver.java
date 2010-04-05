@@ -27,6 +27,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.TypeConverter;
 import org.springframework.beans.TypeMismatchException;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.util.Assert;
 import org.springframework.validation.FieldError;
 
 /**
@@ -139,7 +140,7 @@ public final class MethodParameterResolver {
                         }
                     }
                 }
-                assert paramName != null;
+                Assert.isTrue(paramName != null);
                 FieldError fieldError = new FieldError(//
                         "method", // 该出错字段所在的对象的名字；对于这类异常我们统一规定名字为method
                         paramName, // 出错的字段的名字；取其参数名

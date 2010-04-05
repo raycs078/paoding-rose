@@ -25,6 +25,7 @@ import net.paoding.rose.web.Invocation;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.util.Assert;
 
 /**
  * 
@@ -84,7 +85,7 @@ public class TextInstruction extends AbstractInstruction {
             }
         }
         if (mainContentType != null) {
-            assert contentTypeIndex > 0;
+            Assert.isTrue(contentTypeIndex > 0);
             final String contentType;
             if (contentTypeIndex != mainContentTypeIndex) {
                 contentType = mainContentType

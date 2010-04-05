@@ -28,10 +28,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import net.paoding.rose.scanner.ModuleResource;
-import net.paoding.rose.scanner.RoseModuleInfos;
+import net.paoding.rose.scanner.ModuleResourceProvider;
+import net.paoding.rose.scanner.ModuleResourceProviderImpl;
 import net.paoding.rose.scanner.RoseResources;
 import net.paoding.rose.scanning.LoadScope;
-import net.paoding.rose.web.ParamValidator;
+import net.paoding.rose.util.Snippet;
 import net.paoding.rose.web.RequestPath;
 import net.paoding.rose.web.annotation.ReqMethod;
 import net.paoding.rose.web.impl.context.RoseContextLoader;
@@ -47,17 +48,14 @@ import net.paoding.rose.web.impl.mapping.ignored.IgnoredPathEnds;
 import net.paoding.rose.web.impl.mapping.ignored.IgnoredPathEquals;
 import net.paoding.rose.web.impl.mapping.ignored.IgnoredPathRegexMatch;
 import net.paoding.rose.web.impl.mapping.ignored.IgnoredPathStarts;
-import net.paoding.rose.web.impl.module.ControllerRef;
 import net.paoding.rose.web.impl.module.Module;
 import net.paoding.rose.web.impl.module.ModulesBuilder;
-import net.paoding.rose.web.impl.module.NestedControllerInterceptor;
+import net.paoding.rose.web.impl.module.ModulesBuilderImpl;
 import net.paoding.rose.web.impl.thread.Rose;
 import net.paoding.rose.web.impl.thread.WebEngine;
 import net.paoding.rose.web.instruction.InstructionExecutor;
 import net.paoding.rose.web.instruction.InstructionExecutorImpl;
-import net.paoding.rose.web.paramresolver.ParamResolver;
 
-import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.core.SpringVersion;
@@ -163,11 +161,15 @@ public class RoseFilter extends GenericFilterBean {
 
     private MappingNode mappingTree;
 
+    private Class<? extends ModuleResourceProvider> moduleResourceProviderClass = ModuleResourceProviderImpl.class;
+
+    private Class<? extends ModulesBuilder> modulesBuilderClass = ModulesBuilderImpl.class;
+
+    private LoadScope load = new LoadScope("", "controllers");
+
     private IgnoredPath[] ignoredPaths = new IgnoredPath[] {
             new IgnoredPathStarts(RoseConstants.VIEWS_PATH_WITH_END_SEP),
             new IgnoredPathEquals("/favicon.ico") };
-
-    private LoadScope load = new LoadScope("", "controllers");
 
     /**
      * 改变默认行为，告知Rose要读取的applicationContext地址
@@ -183,6 +185,15 @@ public class RoseFilter extends GenericFilterBean {
         this.instructionExecutor = instructionExecutor;
     }
 
+    public void setModuleResourceProviderClass(
+            Class<? extends ModuleResourceProvider> moduleResourceProviderClass) {
+        this.moduleResourceProviderClass = moduleResourceProviderClass;
+    }
+
+    public void setModulesBuilderClass(Class<? extends ModulesBuilder> modulesBuilderClass) {
+        this.modulesBuilderClass = modulesBuilderClass;
+    }
+
     /**
      * <pre>
      * like: &quot;controllers: com.renren.xoa, com.renren.yourapp; applicationContext: com.renren.another&quot; , etc
@@ -196,11 +207,11 @@ public class RoseFilter extends GenericFilterBean {
 
     /**
      * @see #quicklyPass(RequestPath)
-     * @param ignoredPaths
+     * @param ignoredPathStrings
      */
-    public void setIgnoredPaths(String[] ignoredPaths) {
-        List<IgnoredPath> list = new ArrayList<IgnoredPath>(ignoredPaths.length + 2);
-        for (String ignoredPath : ignoredPaths) {
+    public void setIgnoredPaths(String[] ignoredPathStrings) {
+        List<IgnoredPath> list = new ArrayList<IgnoredPath>(ignoredPathStrings.length + 2);
+        for (String ignoredPath : ignoredPathStrings) {
             ignoredPath = ignoredPath.trim();
             if (StringUtils.isEmpty(ignoredPath)) {
                 continue;
@@ -227,12 +238,12 @@ public class RoseFilter extends GenericFilterBean {
                 }
             }
         }
-        IgnoredPath[] _ignoredPaths = Arrays.copyOf(this.ignoredPaths, this.ignoredPaths.length
+        IgnoredPath[] ignoredPaths = Arrays.copyOf(this.ignoredPaths, this.ignoredPaths.length
                 + list.size());
-        for (int i = this.ignoredPaths.length; i < _ignoredPaths.length; i++) {
-            _ignoredPaths[i] = list.get(i - this.ignoredPaths.length);
+        for (int i = this.ignoredPaths.length; i < ignoredPaths.length; i++) {
+            ignoredPaths[i] = list.get(i - this.ignoredPaths.length);
         }
-        this.ignoredPaths = _ignoredPaths;
+        this.ignoredPaths = ignoredPaths;
     }
 
     /**
@@ -241,14 +252,32 @@ public class RoseFilter extends GenericFilterBean {
     @Override
     protected final void initFilterBean() throws ServletException {
         try {
-            logger.info("Rose Initializing...");
-            getServletContext().log("Rose Initializing...");
+            if (logger.isInfoEnabled()) {
+                logger.info("[init] call 'init/rootContext'");
+            }
+
+            WebApplicationContext rootContext = prepareRootApplicationContext();
+
+            if (logger.isInfoEnabled()) {
+                logger.info("[init] exits from 'init/rootContext'");
+                logger.info("[init] call 'init/module'");
+            }
 
             // 识别 Rose 程序模块
-            this.modules = prepareModules(prepareRootApplicationContext());
+            this.modules = prepareModules(rootContext);
+
+            if (logger.isInfoEnabled()) {
+                logger.info("[init] exits from 'init/module'");
+                logger.info("[init] call 'init/mappingTree'");
+            }
 
             // 创建匹配树以及各个结点的上的执行逻辑(Engine)
             this.mappingTree = prepareMappingTree(modules);
+
+            if (logger.isInfoEnabled()) {
+                logger.info("[init] exits from 'init/mappingTree'");
+                logger.info("[init] exits from 'init'");
+            }
 
             // 打印启动信息
             printRoseInfos();
@@ -316,6 +345,9 @@ public class RoseFilter extends GenericFilterBean {
      * @throws IOException
      */
     private WebApplicationContext prepareRootApplicationContext() throws IOException {
+        if (logger.isInfoEnabled()) {
+            logger.info("[init/rootContext] starting ...");
+        }
         String contextConfigLocation = this.contextConfigLocation;
         // 确认所使用的applicationContext配置
         if (StringUtils.isBlank(contextConfigLocation)) {
@@ -327,35 +359,84 @@ public class RoseFilter extends GenericFilterBean {
                 contextConfigLocation = DEFAULT_CONTEXT_CONFIG_LOCATION;
             }
         }
-        List<Resource> jarContextResources = RoseResources.findContextResources(load);
-        String[] messageBasenames = RoseResources.findMessageBasenames(load);
         if (logger.isInfoEnabled()) {
-            logger.info("jarContextResources: "
-                    + ArrayUtils.toString(jarContextResources.toArray()));
-            logger.info("jarMessageResources: " + ArrayUtils.toString(messageBasenames));
+            logger.info("[init/rootContext] call 'applicationContext'");
+        }
+        List<Resource> applicationContextResources = RoseResources.findContextResources(load);
+
+        if (logger.isInfoEnabled()) {
+            logger.info("[init/rootContext] exits from 'applicationContext'");
+            logger.info("[init/rootContext] call 'messages'");
         }
 
-        messageBasenames = Arrays.copyOf(messageBasenames, messageBasenames.length + 2);
-        messageBasenames[messageBasenames.length - 2] = "classpath:messages";
+        String[] messageBasenames = RoseResources.findMessageBasenames(load);
+
+        if (logger.isInfoEnabled()) {
+            logger.info("[init/rootContext] exits from 'messages'");
+            logger.info("[init/rootContext] add default messages base name: '/WEB-INF/messages'");
+        }
+
+        messageBasenames = Arrays.copyOf(messageBasenames, messageBasenames.length + 1);
         messageBasenames[messageBasenames.length - 1] = "/WEB-INF/messages";
 
+        if (logger.isInfoEnabled()) {
+            logger.info("[init/rootContext] call 'webctx.create'");
+        }
+
         WebApplicationContext rootContext = RoseContextLoader.createWebApplicationContext(
-                getServletContext(), jarContextResources, contextConfigLocation, messageBasenames,
-                "rose.root");
+                getServletContext(), applicationContextResources, contextConfigLocation,
+                messageBasenames, "rose.root", "rose.root");
+
+        if (logger.isInfoEnabled()) {
+            logger.info("[init/rootContext] exits from 'webctx.create'");
+        }
 
         /* enable: WebApplicationContextUtils.getWebApplicationContext() */
         getServletContext().setAttribute(
                 WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE, rootContext);
-        logger.info("Published rose.root WebApplicationContext [" + rootContext
-                + "] as ServletContext attribute with name ["
-                + WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE + "]");
+
+        if (logger.isInfoEnabled()) {
+            logger.info("[init/rootContext] Published rose.root WebApplicationContext ["
+                    + rootContext + "] as ServletContext attribute with name ["
+                    + WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE + "]");
+        }
+
         return rootContext;
     }
 
     private List<Module> prepareModules(WebApplicationContext rootContext) throws Exception {
-        // 自动扫描识别web层对象，纳入Rose管理
-        List<ModuleResource> moduleInfoList = new RoseModuleInfos().findModuleResources(load);
-        return new ModulesBuilder().build(rootContext, moduleInfoList);
+        // 自动扫描识别web层资源，纳入Rose管理
+        if (logger.isInfoEnabled()) {
+            logger.info("[init/mudule] starting ...");
+        }
+
+        ModuleResourceProvider provider = moduleResourceProviderClass.newInstance();
+
+        if (logger.isInfoEnabled()) {
+            logger.info("[init/module] using provider: " + provider);
+            logger.info("[init/module] call 'moduleResource': to find all module resources.");
+        }
+        List<ModuleResource> moduleResources = provider.findModuleResources(load);
+
+        if (logger.isInfoEnabled()) {
+            logger.info("[init/mudule] exits 'moduleResource'");
+        }
+
+        ModulesBuilder modulesBuilder = modulesBuilderClass.newInstance();
+
+        if (logger.isInfoEnabled()) {
+            logger.info("[init/module] using modulesBuilder: " + modulesBuilder);
+            logger.info("[init/module] call 'moduleBuild': to build modules.");
+        }
+
+        List<Module> modules = modulesBuilder.build(moduleResources, rootContext);
+
+        if (logger.isInfoEnabled()) {
+            logger.info("[init/module] exits from 'moduleBuild'");
+            logger.info("[init/mudule] found " + modules.size() + " modules.");
+        }
+
+        return modules;
     }
 
     private MappingNode prepareMappingTree(List<Module> modules) {
@@ -439,69 +520,12 @@ public class RoseFilter extends GenericFilterBean {
     }
 
     private void printRoseInfos() {
-        if (logger.isInfoEnabled()) {
-            final StringBuilder sb = new StringBuilder(4096);
-            dumpModules(sb);
-            String strModuleInfos = sb.toString();
-            getServletContext().log(strModuleInfos);
+        if (logger.isDebugEnabled()) {
+            logger.debug(Snippet.dumpModules(modules));
         }
-        logger.info(String.format("Rose Initiated (version=%s)", RoseVersion.getVersion()));
-        // 控制台提示
-        getServletContext().log(
-                String.format("Rose Initiated (version=%s)", RoseVersion.getVersion()));
+        String msg = String.format("[init] rose initialized, %s modules loaded! (version=%s)",
+                modules.size(), RoseVersion.getVersion());
+        logger.info(msg);
+        getServletContext().log(msg);
     }
-
-    //----------
-
-    // 后续可以提取出来放到什么地方，是不是采用模板语言来定义?
-    private void dumpModules(final StringBuilder sb) {
-        sb.append("\n--------Modules(Total ").append(modules.size()).append(")--------");
-        sb.append("\n");
-        for (int i = 0; i < modules.size(); i++) {
-            final Module module = modules.get(i);
-            sb.append("module ").append(i + 1).append(":");
-            sb.append("\n\tmappingPath='").append(module.getMappingPath());
-            sb.append("';\n\tpackageRelativePath='").append(module.getModulePath());
-            sb.append("';\n\turl='").append(module.getUrl());
-            sb.append("';\n\tcontrollers=[");
-            final List<ControllerRef> controllerMappings = module.getControllers();
-
-            for (final ControllerRef controller : controllerMappings) {
-                sb.append("'").append(Arrays.toString(controller.getMappingPaths())).append("'=")
-                        .append(controller.getControllerClass().getSimpleName()).append(", ");
-            }
-            if (!controllerMappings.isEmpty()) {
-                sb.setLength(sb.length() - 2);
-            }
-            sb.append("];\n\tparamResolvers=[");
-            for (ParamResolver resolver : module.getCustomerResolvers()) {
-                sb.append(resolver.getClass().getSimpleName()).append(", ");
-            }
-            if (module.getCustomerResolvers().size() > 0) {
-                sb.setLength(sb.length() - 2);
-            }
-            sb.append("];\n\tvalidators=[");
-            for (ParamValidator validator : module.getValidators()) {
-                sb.append(validator.getClass().getSimpleName()).append(", ");
-            }
-            if (module.getValidators().size() > 0) {
-                sb.setLength(sb.length() - 2);
-            }
-            sb.append("];\n\tinterceptors=[");
-            for (NestedControllerInterceptor interceptor : module.getInterceptors()) {
-                sb.append(interceptor.getName()).append("(").append(interceptor.getPriority())
-                        .append("), ");
-            }
-            if (module.getInterceptors().size() > 0) {
-                sb.setLength(sb.length() - 2);
-            }
-            sb.append("];\n\terrorHander=").append(
-                    module.getErrorHandler() == null ? "<null>" : module.getErrorHandler());
-            // final Mapping<Controller> def = module.getDefaultController();
-            // sb.append(";\n\tdefaultController=").append(def == null ? "<null>" : def.getPath());
-            sb.append("\n\n");
-        }
-        sb.append("--------end--------");
-    }
-
 }

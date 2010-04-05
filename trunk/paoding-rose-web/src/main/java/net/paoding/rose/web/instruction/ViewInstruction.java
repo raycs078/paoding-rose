@@ -152,7 +152,7 @@ public class ViewInstruction extends AbstractInstruction {
             return viewName;
         }
         // 其他的按惯例行走
-        String viewRelativePath = inv.getViewModule().getModulePath();
+        String viewRelativePath = inv.getViewModule().getRelativePath();
         ViewPathCache viewPathCache = globalViewPathCaches.get(viewRelativePath);
         if (viewPathCache == null) {
             String directoryPath = RoseConstants.VIEWS_PATH + viewRelativePath;

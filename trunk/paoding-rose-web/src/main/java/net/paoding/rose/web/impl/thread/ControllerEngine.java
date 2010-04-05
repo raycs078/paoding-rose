@@ -26,6 +26,7 @@ import net.paoding.rose.web.impl.module.Module;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.util.Assert;
 
 /**
  * @author 王志亮 [qieqie.wang@gmail.com]
@@ -84,7 +85,7 @@ public class ControllerEngine implements Engine {
 
     @Override
     public int compareTo(Engine o) {
-        assert o.getClass() == this.getClass();
+        Assert.isTrue(o.getClass() == this.getClass());
         return 0;
     }
 

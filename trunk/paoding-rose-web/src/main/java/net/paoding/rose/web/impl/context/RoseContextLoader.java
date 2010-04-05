@@ -61,9 +61,10 @@ public class RoseContextLoader {
             List<Resource> contextResources,//
             String configLocations, //
             String[] messageBasenames, //
+            String uniqueId, //
             String namespace) throws IOException {
         return createWebApplicationContext(servletContext, null, contextResources, configLocations,
-                messageBasenames, namespace);
+                messageBasenames, uniqueId, namespace);
     }
 
     public static XmlWebApplicationContext createWebApplicationContext(
@@ -71,9 +72,10 @@ public class RoseContextLoader {
             List<Resource> contextResources,//
             String configLocations, //
             String[] messageBasenames, //
+            String uniqueId, //
             String namespace) throws IOException {
         return createWebApplicationContext(null, parent, contextResources, configLocations,
-                messageBasenames, namespace);
+                messageBasenames, uniqueId, namespace);
     }
 
     /**
@@ -94,11 +96,13 @@ public class RoseContextLoader {
             List<Resource> contextResources,//
             String configLocations, //
             String[] messageBasenames, //
+            String uniqueId, //
             String namespace) throws IOException {
 
         long startTime = System.currentTimeMillis();
 
-        String loadingMsg = "Loading Spring '" + namespace + "' WebApplicationContext";
+        String loadingMsg = "[webctx.create] Loading Spring '" + namespace
+                + "' WebApplicationContext";
         logger.info(loadingMsg);
         if (servletContext == null && parent != null) {
             servletContext = parent.getServletContext();
@@ -107,28 +111,24 @@ public class RoseContextLoader {
             servletContext.log(loadingMsg);
         }
         RoseXmlWebApplicationContext wac = new RoseXmlWebApplicationContext();
+        wac.setParent(parent);
         wac.setServletContext(servletContext);
         wac.setContextResources(contextResources);
+        wac.setId(uniqueId);
         wac.setNamespace(namespace);
         if (configLocations != null) {
             wac.setConfigLocation(configLocations);
         }
         wac.setMessageBaseNames(messageBasenames);
-        if (parent != null) {
-            wac.setParent(parent);
-            wac.setId(parent.getId() + "::" + namespace);
-        } else {
-            wac.setId(namespace);
-        }
         wac.refresh();
 
         // 日志打印
         if (logger.isDebugEnabled()) {
             long elapsedTime = System.currentTimeMillis() - startTime;
-            logger.debug("Using context class [" + wac.getClass().getName() + "] for " + namespace
-                    + " WebApplicationContext");
-            logger.info(namespace + " WebApplicationContext: initialization completed in "
-                    + elapsedTime + " ms");
+            logger.debug("[webctx.create] Using context class [" + wac.getClass().getName()
+                    + "] for " + namespace + " WebApplicationContext");
+            logger.info("[webctx.create] " + namespace
+                    + " WebApplicationContext: initialization completed in " + elapsedTime + " ms");
         }
         return wac;
     }
@@ -146,6 +146,7 @@ public class RoseContextLoader {
     public static ApplicationContext createApplicationContext(ApplicationContext parent, //
             List<Resource> contextResources,//
             String configLocations, //
+            String uniqueId, //
             String namespace) throws IOException {
 
         long startTime = System.currentTimeMillis();
@@ -160,14 +161,7 @@ public class RoseContextLoader {
         if (configLocations != null) {
             xac.setConfigLocation(configLocations);
         }
-
-        if (parent != null) {
-            xac.setParent(parent);
-            xac.setId(parent.getId() + "::" + namespace);
-        } else {
-            xac.setId(namespace);
-        }
-
+        xac.setId(uniqueId);
         xac.refresh();
 
         // 日志打印

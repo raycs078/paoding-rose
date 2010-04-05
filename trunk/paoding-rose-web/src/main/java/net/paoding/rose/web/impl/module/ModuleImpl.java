@@ -42,7 +42,7 @@ public class ModuleImpl implements Module {
     private URL url;
 
     // 该模块相对于所在目录树controllers的地址，以'/'分隔，空串或以'/'开始
-    private String modulePath;
+    private String relativePath;
 
     // url父目录对应的module,如果本module是根module,则parent==null
     private Module parent;
@@ -78,12 +78,12 @@ public class ModuleImpl implements Module {
     // 本模块使用的上传解析器(如果本模块的applicationContext没有，则使用上级模块的multipartResolver)
     //    private MultipartResolver multipartResolver;F
 
-    public ModuleImpl(Module parent, URL url, String mappingPath, String modulePath,
+    public ModuleImpl(Module parent, URL url, String mappingPath, String relativePath,
             WebApplicationContext context) {
         this.parent = parent;
         this.url = url;
         this.mappingPath = mappingPath;
-        this.modulePath = modulePath;
+        this.relativePath = relativePath;
         this.applicationContext = context;
     }
 
@@ -103,8 +103,8 @@ public class ModuleImpl implements Module {
     }
 
     @Override
-    public String getModulePath() {
-        return modulePath;
+    public String getRelativePath() {
+        return relativePath;
     }
 
     @Override

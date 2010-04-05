@@ -107,7 +107,8 @@ public class ErrorHandlerDispatcher implements ControllerErrorHandler {
                 return delegate.onError(inv, ex);
             }
         }
-        throw new Error(ex.getClass().getName());
+        throw new Error(
+                "not found errorHandlerMethod for exceptionClass" + ex.getClass().getName(), ex);
     }
 
     @Override

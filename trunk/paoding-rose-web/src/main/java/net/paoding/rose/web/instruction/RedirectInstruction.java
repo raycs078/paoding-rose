@@ -22,6 +22,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.util.Assert;
 
 import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.RequestPath;
@@ -33,15 +34,15 @@ import net.paoding.rose.web.RequestPath;
  */
 public class RedirectInstruction extends AbstractInstruction {
 
-    protected static  Log logger = LogFactory.getLog(RedirectInstruction.class);
-    
+    protected static Log logger = LogFactory.getLog(RedirectInstruction.class);
+
     @Override
     public void doRender(Invocation inv) throws IOException {
         String location = resolvePlaceHolder(location(), inv);
         if (sc == null || sc == 302) {
             inv.getResponse().sendRedirect(location);
         } else {
-            assert sc == HttpServletResponse.SC_MOVED_PERMANENTLY;
+            Assert.isTrue(sc == HttpServletResponse.SC_MOVED_PERMANENTLY);
             inv.getResponse().setStatus(sc);
             inv.getResponse().setHeader("Location", location);
         }

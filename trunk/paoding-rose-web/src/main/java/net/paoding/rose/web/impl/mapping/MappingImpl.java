@@ -26,8 +26,6 @@ import java.util.List;
 import net.paoding.rose.util.Empty;
 
 import org.apache.commons.lang.math.NumberUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 /**
  * {@link MappingImpl}实现了使用<strong>正则表达式</strong>定义匹配字符串的 {@link Mapping}
@@ -54,7 +52,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class MappingImpl implements Mapping {
 
-    private static final Log logger = LogFactory.getLog(MappingImpl.class);
+//    private static final Log logger = LogFactory.getLog(MappingImpl.class);
 
     /** 为定义正则表达式参数所使用的规则 */
     private static final String DEFAULT_REGEX = "([^/]+)";
@@ -319,11 +317,11 @@ public class MappingImpl implements Mapping {
             constants.add(path);
         }
         this.constants = constants.toArray(new String[constants.size()]);
-        if (logger.isDebugEnabled()) {
-            logger.debug("mapping: path=" + this.path + "; pattern=" + this.mappingPattern
-                    + "; params=" + Arrays.toString(this.paramNames) + "; constants="
-                    + Arrays.toString(this.constants));
-        }
+//        if (logger.isDebugEnabled()) {
+//            logger.debug("mapping: path=" + this.path + "; pattern=" + this.mappingPattern
+//                    + "; params=" + Arrays.toString(this.paramNames) + "; constants="
+//                    + Arrays.toString(this.constants));
+//        }
     }
 
     @Override

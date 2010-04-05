@@ -33,14 +33,12 @@ public abstract class AbstractControllerTest extends TestCase {
 
     protected MockFilterChain chain = new MockFilterChain();
 
-
     public void innerSetUp() throws Exception {
-        
+
     }
-    
+
     @Before
     public void setUp() throws Exception {
-        System.out.println("====================setUp TEST=========== " + getClass().getName());
         filter = RoseTestEnv.instance().getRoseFilter();
         servletContext = filter.getFilterConfig().getServletContext();
         request = new MockHttpServletRequest(servletContext) {
