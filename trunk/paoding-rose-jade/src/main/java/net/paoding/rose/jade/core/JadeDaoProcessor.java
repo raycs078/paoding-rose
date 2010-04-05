@@ -40,6 +40,7 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationContextException;
 import org.springframework.context.annotation.ScannedGenericBeanDefinition;
 import org.springframework.core.io.Resource;
+import org.springframework.util.ResourceUtils;
 
 /**
  * 
@@ -75,7 +76,8 @@ public class JadeDaoProcessor implements BeanFactoryPostProcessor, ApplicationCo
                     Resource resource = resourceInfo.getResource();
                     File resourceFile = resource.getFile();
                     if (resourceFile.isFile()) {
-                        urls.add("jar:file:" + resourceFile.toURI().getPath() + "!"); // not "!/"
+                        urls.add("jar:file:" + resourceFile.toURI().getPath()
+                                + ResourceUtils.JAR_URL_SEPARATOR);
                     } else if (resourceFile.isDirectory()) {
                         urls.add(resourceFile.toURI().toString());
                     }

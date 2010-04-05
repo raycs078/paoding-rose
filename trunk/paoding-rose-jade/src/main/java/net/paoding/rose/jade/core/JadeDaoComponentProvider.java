@@ -20,6 +20,7 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import net.paoding.rose.jade.annotation.DAO;
 
@@ -39,6 +40,7 @@ import org.springframework.core.type.classreading.CachingMetadataReaderFactory;
 import org.springframework.core.type.classreading.MetadataReader;
 import org.springframework.core.type.classreading.MetadataReaderFactory;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
+import org.springframework.core.type.filter.RegexPatternTypeFilter;
 import org.springframework.core.type.filter.TypeFilter;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Controller;
@@ -144,15 +146,9 @@ public class JadeDaoComponentProvider implements ResourceLoaderAware {
         this.excludeFilters.add(0, excludeFilter);
     }
 
-/**
- * 
-     * Reset the configured type filters.
+    /**
      * 
-     * @param useDefaultFilters whether to re-register the default filters
-     *        for the {@link Component @Component}, {@link Repository
-     *        @Repository}, {@link Service @Service}, and
-     *        {@link Controller @Controller} stereotype annotations
-     * @see #registerDefaultFilters()
+     * @param useDefaultFilters
      */
     public void resetFilters(boolean useDefaultFilters) {
         this.includeFilters.clear();
@@ -170,6 +166,8 @@ public class JadeDaoComponentProvider implements ResourceLoaderAware {
      * {@link Controller @Controller} stereotype annotations.
      */
     protected void registerDefaultFilters() {
+        addExcludeFilter(new InverseTypeFilter(new RegexPatternTypeFilter(Pattern.compile(
+                "DAO.class$", Pattern.CASE_INSENSITIVE))));
         addIncludeFilter(new AnnotationTypeFilter(DAO.class));
     }
 
@@ -180,9 +178,12 @@ public class JadeDaoComponentProvider implements ResourceLoaderAware {
      * @return a corresponding Set of autodetected bean definitions
      */
     public Set<BeanDefinition> findCandidateComponents(String uriPrefix) {
+        if (!uriPrefix.endsWith("/")) {
+            uriPrefix = uriPrefix + "/";
+        }
         Set<BeanDefinition> candidates = new LinkedHashSet<BeanDefinition>();
         try {
-            String packageSearchPath = uriPrefix + "/" + this.resourcePattern;
+            String packageSearchPath = uriPrefix + this.resourcePattern;
             Resource[] resources = this.resourcePatternResolver.getResources(packageSearchPath);
             boolean traceEnabled = logger.isTraceEnabled();
             boolean debugEnabled = logger.isDebugEnabled();
@@ -191,7 +192,14 @@ public class JadeDaoComponentProvider implements ResourceLoaderAware {
                 if (traceEnabled) {
                     logger.trace("Scanning " + resource);
                 }
-                if (resource.isReadable()) {
+                // resourcePatternResolver.getResources出来的classPathResources，metadataReader对其进行getInputStream的时候为什么返回null呢？
+                // 不得不做一个exists判断
+                if (!resource.exists()) {
+                    if (traceEnabled) {
+                        logger.trace("Ignored because not exists:" + resource);
+                    }
+                }
+                else if (resource.isReadable()) {
                     MetadataReader metadataReader = this.metadataReaderFactory
                             .getMetadataReader(resource);
                     if (isCandidateComponent(metadataReader)) {
@@ -206,7 +214,7 @@ public class JadeDaoComponentProvider implements ResourceLoaderAware {
                             candidates.add(sbd);
                         } else {
                             if (debugEnabled) {
-                                logger.debug("Ignored because not a concrete top-level class: "
+                                logger.debug("Ignored because not a interface top-level class: "
                                         + resource);
                             }
                         }
