@@ -15,15 +15,10 @@
  */
 package net.paoding.rose.scanning;
 
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
-import org.springframework.core.io.Resource;
 
 /**
  * 
@@ -32,10 +27,34 @@ import org.springframework.core.io.Resource;
  */
 public class LoadScope {
 
+    // controllers->com.yourcompany.yourapp
+    // applicationContext->com.yourcampany.yourapp
+    // ...
     private Map<String, String[]> load = new HashMap<String, String[]>();
 
-    public LoadScope(String loadScope, String defType) {
-        init(loadScope, defType);
+    /**
+     * 通过一个一个开发者设置的字符串，创建一个LoadScope对象。
+     * 如果在loadScope中没有指定componetType的，使用defType作为他的componetType.
+     * <p>
+     * loadScopeString: componetConf [; componetConf]*<br>
+     * componetConf: [componetType = ] componetConfValue<br>
+     * componetType: 'controllers' | 'applicationContext' | 'messages' |
+     * '*' <br>
+     * componetConfValue: package [, packages]*<br>
+     * 
+     * @param loadScopeString
+     * @param defType
+     */
+    public LoadScope(String loadScopeString, String defType) {
+        init(loadScopeString, defType);
+    }
+
+    public String[] getScope(String componentType) {
+        String[] scope = this.load.get(componentType);
+        if (scope == null) {
+            scope = this.load.get("*");
+        }
+        return scope;
     }
 
     private void init(String loadScope, String defType) {
@@ -65,37 +84,5 @@ public class LoadScope {
             String[] packages = StringUtils.split(componetConfValue, ", \t\n\r\0");//都好和\t之间有一个空格
             this.load.put(componetType, packages);
         }
-    }
-
-    public String[] getScope(String componentType) {
-        String[] scope = this.load.get(componentType);
-        if (scope == null) {
-            scope = this.load.get("*");
-        }
-        return scope;
-    }
-
-    public List<ResourceRef> filter(String componentType, List<ResourceRef> input)
-            throws IOException {
-        assert componentType != null;
-        if (this.load.size() == 0 || this.load.get(componentType) == null) {
-            return input;
-        }
-        String[] packages = load.get(componentType);
-        if (packages == null) {
-            packages = this.load.get("*");
-        }
-        ArrayList<ResourceRef> output = new ArrayList<ResourceRef>(input);
-        for (Iterator<ResourceRef> iter = output.iterator(); iter.hasNext();) {
-            ResourceRef r = iter.next();
-            for (String pkg : packages) {
-                pkg = pkg.replace('.', '/');
-                Resource pkgResource = r.getInnerResource(pkg);
-                if (!pkgResource.exists()) {
-                    iter.remove();
-                }
-            }
-        }
-        return output;
     }
 }

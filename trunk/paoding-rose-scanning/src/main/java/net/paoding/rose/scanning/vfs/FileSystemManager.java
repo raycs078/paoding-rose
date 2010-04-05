@@ -15,7 +15,16 @@
  */
 package net.paoding.rose.scanning.vfs;
 
+import java.io.File;
 import java.io.IOException;
+import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.util.ResourceUtils;
 
 /**
  * 
@@ -24,17 +33,75 @@ import java.io.IOException;
  */
 public class FileSystemManager {
 
-    public FileObject resolveFile(String path) throws IOException {
-        if (path.startsWith("jar:file:")) {
-            FileObject jar = new JarFileObject(path.substring("jar:file:".length()));
-            return jar;
-        } else if (path.startsWith("jar:")) {
-            FileObject jar = new JarFileObject(path.substring("jar:".length()));
-            return jar;
-        } else {
-            FileObject file = new SimpleFileObject(path);
-            return file;
+    protected Log logger = LogFactory.getLog(FileSystemManager.class);
+
+    private Map<String, FileObject> cached = new HashMap<String, FileObject>();
+
+    public FileObject resolveFile(String urlString) throws IOException {
+        if (logger.isTraceEnabled()) {
+            logger.trace("[fs] resolveFile ... by urlString '" + urlString + "'");
         }
+        FileObject object = cached.get(urlString);
+        if (object == null && !urlString.endsWith("/")) {
+            object = cached.get(urlString + "/");
+        }
+        if (object != null) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("[fs] found cached file for '" + urlString + "'");
+            }
+            return object;
+        }
+        // not found in cache, resolves it!
+        return resolveFile(new URL(urlString));
+    }
+
+    public synchronized FileObject resolveFile(URL url) throws IOException {
+        if (logger.isTraceEnabled()) {
+            logger.trace("[fs] resolveFile ... by url '" + url + "'");
+        }
+        String key = url.toString();
+        FileObject object = cached.get(key);
+        if (object == null) {
+            if (ResourceUtils.isJarURL(url)) {
+                if (!url.getPath().endsWith("/")) {
+                    object = resolveFile(new URL(url + "/"));
+                }
+                if (object == null || !object.exists()) {
+                    object = new JarFileObject(this, url);
+                    if (logger.isTraceEnabled()) {
+                        logger.trace("[fs] create jarFileObject for '" + url + "'");
+                    }
+                }
+            } else {
+                File file = ResourceUtils.getFile(url);
+                if (file.isDirectory()) {
+                    if (!url.toString().endsWith("/")) {
+                        url = new URL(url + "/");
+                    }
+                } else if (file.isFile()) {
+                    if (url.toString().endsWith("/")) {
+                        url = new URL(StringUtils.removeEnd(url.toString(), "/"));
+                    }
+                }
+                object = new SimpleFileObject(this, url);
+                if (logger.isTraceEnabled()) {
+                    logger.trace("[fs] create simpleFileObject for '" + url + "'");
+                }
+            }
+            cached.put(key, object);
+            if (!key.equals(object.getURL().toString())) {
+                cached.put(object.getURL().toString(), object);
+            }
+        } else {
+            if (logger.isTraceEnabled()) {
+                logger.trace("[fs] found cached file for '" + url + "'");
+            }
+        }
+        return object;
+    }
+
+    public void clearCache() {
+        cached.clear();
     }
 
 }
