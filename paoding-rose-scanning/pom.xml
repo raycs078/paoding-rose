@@ -9,7 +9,7 @@
 	<url>http://maven.apache.org</url>
 	
 	<properties>
-		<Implementation-Version>0.9.7-20100324</Implementation-Version>
+		<Implementation-Version>0.9.7-20100405</Implementation-Version>
 	</properties>
 	
 	<dependencies>

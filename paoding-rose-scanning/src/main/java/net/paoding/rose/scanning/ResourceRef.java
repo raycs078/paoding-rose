@@ -31,13 +31,15 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.core.io.support.ResourcePatternResolver;
+import org.springframework.util.Assert;
+import org.springframework.util.ResourceUtils;
 
 /**
  * 
  * 
  * @author zhiliang.wang 王志亮 [qieqie.wang@gmail.com]
  */
-public class ResourceRef {
+public class ResourceRef implements Comparable<ResourceRef> {
 
     private static final Log logger = LogFactory.getLog(ResourceRef.class);
 
@@ -50,10 +52,10 @@ public class ResourceRef {
     public static ResourceRef toResourceRef(Resource folder) throws IOException {
         ResourceRef rr = new ResourceRef(folder, null, null);
         String[] modifiers = null;
-        Resource rosePropertiesResource = rr.getInnerResource("/META-INF/rose.properties");
+        Resource rosePropertiesResource = rr.getInnerResource("META-INF/rose.properties");
         if (rosePropertiesResource.exists()) {
             if (logger.isDebugEnabled()) {
-                logger.debug("rosePropertiesResource exists: " + rosePropertiesResource);
+                logger.debug("found rose.properties: " + rosePropertiesResource.getURI());
             }
             InputStream in = rosePropertiesResource.getInputStream();
             rr.properties.load(in);
@@ -65,20 +67,17 @@ public class ResourceRef {
             if (attrValue != null) {
                 modifiers = StringUtils.split(attrValue, ", ;\n\r\t");
                 if (logger.isDebugEnabled()) {
-                    logger.debug("modifiers[by properties][" + rr.getResource() + "]="
+                    logger.debug("modifiers[by properties][" + rr.getResource().getURI() + "]="
                             + Arrays.toString(modifiers));
                 }
             }
-        } else {
-            if (logger.isDebugEnabled()) {
-                logger.debug("rosePropertiesResource not found: " + rosePropertiesResource);
-            }
         }
+        //
         if (modifiers == null) {
             if (!"jar".equals(rr.getProtocol())) {
                 modifiers = new String[] { "**" };
                 if (logger.isDebugEnabled()) {
-                    logger.debug("modifiers[by default][" + rr.getResource() + "]="
+                    logger.debug("modifiers[by default][" + rr.getResource().getURI() + "]="
                             + Arrays.toString(modifiers));
                 }
             } else {
@@ -93,8 +92,8 @@ public class ResourceRef {
                     if (attrValue != null) {
                         modifiers = StringUtils.split(attrValue, ", ;\n\r\t");
                         if (logger.isDebugEnabled()) {
-                            logger.debug("modifiers[by manifest.mf][" + rr.getResource() + "]="
-                                    + Arrays.toString(modifiers));
+                            logger.debug("modifiers[by manifest.mf][" + rr.getResource().getURI()
+                                    + "]=" + Arrays.toString(modifiers));
                         }
                     }
                 }
@@ -156,13 +155,11 @@ public class ResourceRef {
     }
 
     public Resource getInnerResource(String subPath) throws IOException {
+        Assert.isTrue(!subPath.startsWith("/"));
         String rootPath = resource.getURI().getPath();
         if (getProtocol().equals("jar")) {
-            return new UrlResource("jar:file:" + rootPath + "!" + subPath);
+            return new UrlResource("jar:file:" + rootPath + "!/" + subPath);
         } else {
-            if (!subPath.startsWith("/") && !rootPath.endsWith("/")) {
-                subPath = "/" + subPath;
-            }
             return new FileSystemResource(rootPath + subPath); // 已使用FileSystemResource不用file:打头
         }
     }
@@ -174,13 +171,11 @@ public class ResourceRef {
     }
 
     public String getInnerResourcePattern(String subPath) throws IOException {
+        Assert.isTrue(!subPath.startsWith("/"));
         String rootPath = resource.getURI().getPath();
         if (getProtocol().equals("jar")) {
-            subPath = "jar:file:" + rootPath + "!" + subPath;
+            subPath = "jar:file:" + rootPath + ResourceUtils.JAR_URL_SEPARATOR + subPath;
         } else {
-            if (!subPath.startsWith("/") && !rootPath.endsWith("/")) {
-                subPath = "/" + subPath;
-            }
             subPath = "file:" + rootPath + subPath;
         }
         return subPath;
@@ -194,6 +189,15 @@ public class ResourceRef {
             return "jar";
         }
         return "file";
+    }
+
+    @Override
+    public int compareTo(ResourceRef o) {
+        try {
+            return this.resource.getURI().compareTo(o.resource.getURI());
+        } catch (IOException e) {
+            throw new Error(e);
+        }
     }
 
     @Override

@@ -17,7 +17,6 @@ package net.paoding.rose.scanning;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.ref.SoftReference;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -29,16 +28,16 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Properties;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.core.io.support.ResourcePatternResolver;
+import org.springframework.util.Assert;
+import org.springframework.util.ResourceUtils;
 
 /**
  * @author zhiliang.wang 王志亮 [qieqie.wang@gmail.com]
@@ -82,17 +81,32 @@ public class RoseScanner {
     }
 
     public List<ResourceRef> getJarOrClassesFolderResources(String[] scope) throws IOException {
+        if (logger.isInfoEnabled()) {
+            logger.info("[findFiles] start to found classes folders "
+                    + "or rosed jar files by scope:" + Arrays.toString(scope));
+        }
         List<ResourceRef> resources;
         if (scope == null) {
             resources = new LinkedList<ResourceRef>();
+            if (logger.isDebugEnabled()) {
+                logger.debug("[findFiles] call 'classesFolder'");
+            }
             resources.addAll(getClassesFolderResources());
+            //
+            if (logger.isDebugEnabled()) {
+                logger.debug("[findFiles] exits from 'classesFolder'");
+                logger.debug("[findFiles] call 'jarFile'");
+            }
             resources.addAll(getJarResources());
+            if (logger.isDebugEnabled()) {
+                logger.debug("[findFiles] exits from 'jarFile'");
+            }
         } else if (scope.length == 0) {
             return new ArrayList<ResourceRef>();
         } else {
             resources = new LinkedList<ResourceRef>();
-            for (String namespace : scope) {
-                String packagePath = namespace.replace('.', '/');
+            for (String scopeEntry : scope) {
+                String packagePath = scopeEntry.replace('.', '/');
                 Resource[] packageResources = resourcePatternResolver.getResources(packagePath);
                 for (Resource pkgResource : packageResources) {
                     String uri = pkgResource.getURI().toString();
@@ -114,10 +128,20 @@ public class RoseScanner {
                     ResourceRef ref = ResourceRef.toResourceRef(folder);
                     if (!resources.contains(ref)) {
                         resources.add(ref);
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("[findFiles] found classes folders "
+                                    + "or rosed jar files by scope:" + ref);
+                        }
                     }
                 }
             }
         }
+        //
+        if (logger.isInfoEnabled()) {
+            logger.info("[findFiles] found " + resources.size() + " classes folders "
+                    + "or rosed jar files : " + resources);
+        }
+
         return resources;
     }
 
@@ -132,79 +156,76 @@ public class RoseScanner {
     public List<ResourceRef> getClassesFolderResources() throws IOException {
         if (classesFolderResources == null) {
             if (logger.isInfoEnabled()) {
-                logger.info("start to get classes folder resources");
+                logger.info("[classesFolder] start to found available classes folders ...");
             }
             List<ResourceRef> classesFolderResources = new ArrayList<ResourceRef>();
             Enumeration<URL> founds = resourcePatternResolver.getClassLoader().getResources("");
             while (founds.hasMoreElements()) {
                 URL urlObject = founds.nextElement();
-                String path = urlObject.getPath();
-                path = StringUtils.removeEnd(path, "/");
-                if (!path.endsWith("/classes") && !path.endsWith("/bin")) {
+                if (!"file".equals(urlObject.getProtocol())) {
                     if (logger.isDebugEnabled()) {
-                        logger.debug("skip classes folder (not ends with classes or bin): "
+                        logger.debug("[classesFolder] Ignored classes folder because "
+                                + "not a file protocol url: " + urlObject);
+                    }
+                    continue;
+                }
+                String path = urlObject.getPath();
+                Assert.isTrue(path.endsWith("/"));
+                if (!path.endsWith("/classes/") && !path.endsWith("/bin/")) {
+                    if (logger.isInfoEnabled()) {
+                        logger.info("[classesFolder] Ignored classes folder because "
+                                + "not ends with '/classes/' or '/bin/': " + urlObject);
+                    }
+                    continue;
+                }
+                File file;
+                try {
+                    file = new File(urlObject.toURI());
+                } catch (URISyntaxException e) {
+                    throw new IOException(e);
+                }
+                if (file.isFile()) {
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("[classesFolder] Ignored because not a directory: "
                                 + urlObject);
                     }
                     continue;
                 }
-                if ("file".equals(urlObject.getProtocol())) {
-                    File file;
-                    try {
-                        file = new File(urlObject.toURI());
-                    } catch (URISyntaxException e) {
-                        throw new IOException(e);
-                    }
-                    if (file.isFile()) {
-                        if (logger.isDebugEnabled()) {
-                            logger.debug("skip classes folder (not a directory): " + urlObject);
-                        }
-                        continue;
-                    }
-                    Resource resource = new FileSystemResource(file);
-                    String[] modifier = new String[] { "**" };
-                    Properties p = new Properties();
-                    Resource rosePropertiesResource = new UrlResource(urlObject.toString()
-                            + "/META-INF/rose.properties");
-                    if (rosePropertiesResource.exists()) {
-                        InputStream in = rosePropertiesResource.getInputStream();
-                        p.load(in);
-                        in.close();
-                        if (StringUtils.isNotBlank(p.getProperty("rose"))) {
-                            modifier = StringUtils.split(p.getProperty("rose"), " ,;");
-                        }
-                    }
-                    ResourceRef resourceRef = new ResourceRef(resource, modifier, p);
-                    if (classesFolderResources.contains(resourceRef)) {
-                        // 删除重复的地址
-                        if (logger.isDebugEnabled()) {
-                            logger.debug("remove replicated classes folder: " + resourceRef);
-                        }
-                    } else {
-                        classesFolderResources.add(resourceRef);
-                        if (logger.isDebugEnabled()) {
-                            logger.debug("add classes folder: " + resourceRef);
-                        }
+                Resource resource = new FileSystemResource(file);
+                ResourceRef resourceRef = ResourceRef.toResourceRef(resource);
+                if (classesFolderResources.contains(resourceRef)) {
+                    // 删除重复的地址
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("[classesFolder] remove replicated classes folder: "
+                                + resourceRef);
                     }
                 } else {
+                    classesFolderResources.add(resourceRef);
                     if (logger.isDebugEnabled()) {
-                        logger.debug("skip classes folder (not a file protocol url): " + urlObject);
+                        logger.debug("[classesFolder] add classes folder: " + resourceRef);
                     }
                 }
             }
             // 删除含有一个地址包含另外一个地址的
+            Collections.sort(classesFolderResources);
             List<ResourceRef> toRemove = new LinkedList<ResourceRef>();
             for (int i = 0; i < classesFolderResources.size(); i++) {
-                ResourceRef resourceInfo = classesFolderResources.get(i);
-                //                String path = resourceInfo.getResource().getFile().getAbsolutePath();
-                String path = resourceInfo.getResource().getURI().getPath();
+                ResourceRef ref = classesFolderResources.get(i);
+                String refURI = ref.getResource().getURI().toString();
                 for (int j = i + 1; j < classesFolderResources.size(); j++) {
-                    ResourceRef toCheck = classesFolderResources.get(j);
-                    String toCheckPath = toCheck.getResource().getURI().getPath();
-                    //                    String toCheckPath = toCheck.getResource().getFile().getAbsolutePath();
-                    if (path.startsWith(toCheckPath)) {
-                        toRemove.add(toCheck);
-                        if (logger.isDebugEnabled()) {
-                            logger.debug("remove nested classes folder: " + toCheck);
+                    ResourceRef refj = classesFolderResources.get(j);
+                    String refjURI = refj.getResource().getURI().toString();
+                    if (refURI.startsWith(refjURI)) {
+                        toRemove.add(refj);
+                        if (logger.isInfoEnabled()) {
+                            logger.info("[classesFolder] remove wrapper classes folder: " //
+                                    + refj);
+                        }
+                    } else if (refjURI.startsWith(refURI) && refURI.length() != refjURI.length()) {
+                        toRemove.add(ref);
+                        if (logger.isInfoEnabled()) {
+                            logger.info("[classesFolder] remove wrapper classes folder: " //
+                                    + ref);
                         }
                     }
                 }
@@ -213,9 +234,13 @@ public class RoseScanner {
             //
             this.classesFolderResources = new ArrayList<ResourceRef>(classesFolderResources);
             if (logger.isInfoEnabled()) {
-                ResourceRef[] ret = classesFolderResources
-                        .toArray(new ResourceRef[classesFolderResources.size()]);
-                logger.info("found classes resources: " + Arrays.toString(ret));
+                logger.info("[classesFolder] found " + classesFolderResources.size()
+                        + " classes folders: " + classesFolderResources);
+            }
+        } else {
+            if (logger.isInfoEnabled()) {
+                logger.info("[classesFolder] found cached " + classesFolderResources.size()
+                        + " classes folders: " + classesFolderResources);
             }
         }
         return Collections.unmodifiableList(classesFolderResources);
@@ -230,12 +255,15 @@ public class RoseScanner {
      */
     public List<ResourceRef> getJarResources() throws IOException {
         if (jarResources == null) {
+            if (logger.isInfoEnabled()) {
+                logger.info("[jarFile] start to found available jar files for rose to scanning...");
+            }
             List<ResourceRef> jarResources = new LinkedList<ResourceRef>();
             Resource[] metaInfResources = resourcePatternResolver
-                    .getResources("classpath*:/META-INF");
+                    .getResources("classpath*:/META-INF/");
             for (Resource metaInfResource : metaInfResources) {
                 URL urlObject = metaInfResource.getURL();
-                if ("jar".equals(urlObject.getProtocol())) {
+                if (ResourceUtils.isJarURL(urlObject)) {
                     try {
                         String path = URLDecoder.decode(urlObject.getPath(), "UTF-8"); // fix 20%
                         if (path.startsWith("file:")) {
@@ -246,18 +274,18 @@ public class RoseScanner {
                         Resource resource = new FileSystemResource(path);
                         if (jarResources.contains(resource)) {
                             if (logger.isDebugEnabled()) {
-                                logger.debug("skip replicated jar resource: " + path);// 在多个 linux环境 下发现有重复,fix it!
+                                logger.debug("[jarFile] skip replicated jar resource: " + path);// 在多个 linux环境 下发现有重复,fix it!
                             }
                         } else {
                             ResourceRef ref = ResourceRef.toResourceRef(resource);
                             if (ref.getModifiers() != null) {
                                 jarResources.add(ref);
                                 if (logger.isInfoEnabled()) {
-                                    logger.info("add jar resource: " + ref);
+                                    logger.info("[jarFile] add jar resource: " + ref);
                                 }
                             } else {
                                 if (logger.isDebugEnabled()) {
-                                    logger.debug("not rose jar resource: " + path);
+                                    logger.debug("[jarFile] not rose jar resource: " + path);
                                 }
                             }
                         }
@@ -266,14 +294,19 @@ public class RoseScanner {
                     }
                 } else {
                     if (logger.isDebugEnabled()) {
-                        logger.debug("not rose type(not a jar) " + urlObject);
+                        logger.debug("[jarFile] not rose type(not a jar) " + urlObject);
                     }
                 }
             }
             this.jarResources = jarResources;
             if (logger.isInfoEnabled()) {
-                ResourceRef[] ret = jarResources.toArray(new ResourceRef[jarResources.size()]);
-                logger.info("found rose jar resources: " + Arrays.toString(ret));
+                logger.info("[jarFile] found " + jarResources.size() + " jar files: "
+                        + jarResources);
+            }
+        } else {
+            if (logger.isInfoEnabled()) {
+                logger.info("[jarFile] found cached " + classesFolderResources.size()
+                        + " jar files: " + classesFolderResources);
             }
         }
         return Collections.unmodifiableList(jarResources);

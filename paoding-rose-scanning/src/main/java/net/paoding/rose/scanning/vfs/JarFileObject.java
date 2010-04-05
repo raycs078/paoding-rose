@@ -15,7 +15,6 @@
  */
 package net.paoding.rose.scanning.vfs;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,9 +25,6 @@ import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.util.ResourceUtils;
 
 /**
@@ -38,125 +34,90 @@ import org.springframework.util.ResourceUtils;
  */
 public class JarFileObject implements FileObject {
 
-    private static Log logger = LogFactory.getLog(JarFileObject.class);
+    // 文件解析管理器，可保证同样的url对应同一个fileObject对象
+    private final FileSystemManager fs;
 
-    private JarFileObject root;
+    // 该文件对象的url，如jar:file:/path/to/your/jarfile.jar!/net/paoding/
+    private final URL url;
 
-    private JarFile jarFile;
+    // 该文件对象的url，如jar:file:/path/to/your/jarfile.jar!/net/paoding/
+    private final String urlString;
 
-    private JarEntry entry;
+    // 文件名称对象，用来获取文件名称、计算相对地址等
+    private final FileName fileName;
 
-    private String path;
+    // 该文件所属的jar文件的根级FileObject对象，如jar:file:/path/to/your/jarfile.jar!/
+    private final JarFileObject root;
 
-    private String name;
+    // 该文件所属的jar文件的JarFile对象
+    private final JarFile jarFile;
 
-    private String jarFilePath;
+    // 该文件在JarFile中的JarEntry对象，如net/paoding， com/yourcampany/yourapp
+    // 如果是根地址，如xxx.jar!/，entry将为null
+    private final JarEntry entry;
 
-    public JarFileObject(JarFileObject parent, String childName) throws IOException {
-        this.jarFile = parent.jarFile;
-        this.root = parent.root;
-        this.path = parent.path + childName;
-        this.name = StringUtils.removeEnd(childName, "/");
-        this.path = this.path.replace("\\", "/");
-        this.jarFilePath = parent.jarFilePath;
-        entry = jarFile.getJarEntry(path);
-        if (entry == null) {
-            throw new FileNotFoundException(parent + childName);
-        }
-    }
-
-    public JarFileObject(String jarPath) throws IOException {
-        if (logger.isDebugEnabled()) {
-            logger.debug("represent jar: " + jarPath);
-        }
-        if (jarPath.endsWith("!")) {
-            jarPath = jarPath + "/";
-        }
-        int index = jarPath.indexOf("!");
-        if (index > 0) {
-            jarFilePath = jarPath.substring(0, index);
-            if (jarPath.endsWith("!/") || jarPath.endsWith("!")) {
-                this.path = "";
-            } else {
-                this.path = jarPath.substring(index + 2);
-            }
-            this.path = this.path.replace('\\', '/');
-        } else {
-            jarFilePath = jarPath;
-            this.path = "";
-            this.name = "";
-        }
-        jarFilePath = new File(jarFilePath).getPath().replace('\\', '/');
-        JarFileObject root = null;
-        if (StringUtils.isBlank(path)) {
-            this.jarFile = new JarFile(jarFilePath);
+    JarFileObject(FileSystemManager fs, URL url) throws FileNotFoundException, IOException {
+        this.fs = fs;
+        String urlString = url.toString();
+        String entryName = urlString.substring(urlString.indexOf(ResourceUtils.JAR_URL_SEPARATOR)
+                + ResourceUtils.JAR_URL_SEPARATOR.length());
+        if (entryName.length() == 0) {
             this.root = this;
-            this.entry = null;
+            int beginIndex = urlString.indexOf(ResourceUtils.FILE_URL_PREFIX)
+                    + ResourceUtils.FILE_URL_PREFIX.length();
+            int endIndex = urlString.indexOf(ResourceUtils.JAR_URL_SEPARATOR);
+            this.jarFile = new JarFile(urlString.substring(beginIndex, endIndex));
         } else {
-            root = new JarFileObject(jarFilePath);
-            this.root = root;
+            this.root = (JarFileObject) fs.resolveFile(urlString.substring(//
+                    0, urlString.indexOf(ResourceUtils.JAR_URL_SEPARATOR)
+                            + ResourceUtils.JAR_URL_SEPARATOR.length()));
             this.jarFile = root.jarFile;
-
-            String folderPath = null;
-            if (!path.endsWith("/")) {
-                folderPath = path + "/";
+        }
+        this.entry = jarFile.getJarEntry(entryName);
+        this.url = url;
+        this.urlString = urlString;
+        int indexSep = entryName.lastIndexOf('/');
+        if (indexSep == -1) {
+            this.fileName = new FileNameImpl(this, entryName);
+        } else {
+            if (entryName.endsWith("/")) {
+                int index = entryName.lastIndexOf('/', entryName.length() - 2);
+                this.fileName = new FileNameImpl(this, entryName.substring(index + 1, indexSep));
+            } else {
+                this.fileName = new FileNameImpl(this, entryName.substring(indexSep + 1));
             }
-            Enumeration<JarEntry> e = jarFile.entries();
-            while (e.hasMoreElements()) {
-                JarEntry entry = e.nextElement();
-                if (path.equals(entry.getName())
-                        || (folderPath != null && folderPath.equals(entry.getName()))) {
-                    this.entry = entry;
-                    break;
-                }
-            }
-            if (entry == null) {
-                throw new FileNotFoundException(jarPath);
-            }
-            if (entry.isDirectory() && !this.path.endsWith("/")) {
-                this.path = this.path + "/";
-            }
-            this.name = this.path.substring(this.path.lastIndexOf('/', this.path.length() - 2));
-            this.name = StringUtils.removeEnd(name, "/");
         }
     }
 
     @Override
     public FileObject getChild(String name) throws IOException {
-        JarEntry entry = jarFile.getJarEntry(this.path + name);
-        if (entry == null) {
-            return null;
-        }
-        return new JarFileObject(this, name);
+        return fs.resolveFile(urlString + name);
     }
 
     @Override
     public FileObject[] getChildren() throws IOException {
         List<FileObject> children = new LinkedList<FileObject>();
         Enumeration<JarEntry> e = jarFile.entries();
+        String entryName = root == this ? "" : entry.getName();
         while (e.hasMoreElements()) {
             JarEntry entry = e.nextElement();
-            if (entry.getName().startsWith(this.path)
-                    && entry.getName().length() > this.path.length()) {
-                int index = entry.getName().indexOf('/', this.path.length() + 1);
+            if (entry.getName().length() > entryName.length()
+                    && entry.getName().startsWith(entryName)) {
+                int index = entry.getName().indexOf('/', entryName.length() + 1);
+                // 儿子=文件或子目录
                 if (index == -1 || index == entry.getName().length() - 1) {
-                    children.add(new JarFileObject(this, entry.getName().substring(
-                            this.path.length())));
+                    children.add(fs.resolveFile(root.urlString + entry.getName()));
                 }
             }
         }
-        FileObject[] ret = children.toArray(new FileObject[0]);
-        if (logger.isDebugEnabled()) {
-            if (ret.length == 0) {
-                logger.debug("get empty children of " + this);
-            }
-        }
-        return ret;
+        return children.toArray(new FileObject[0]);
     }
 
     @Override
     public FileContent getContent() throws IOException {
-
+        if (getType() != FileType.FILE) {
+            throw new IOException("can not read");
+        }
         return new FileContent() {
 
             @Override
@@ -168,39 +129,30 @@ public class JarFileObject implements FileObject {
 
     @Override
     public FileName getName() throws IOException {
-        return new FileName() {
-
-            @Override
-            public FileObject getFileObject() {
-                return JarFileObject.this;
-            }
-
-            @Override
-            public String getBaseName() {
-                return name;
-            }
-
-            @Override
-            public String getRelativeName(FileName name) {
-                JarFileObject fjo = (JarFileObject) name.getFileObject();
-                if (!jarFilePath.equals(fjo.root.jarFilePath)) {
-                    throw new IllegalArgumentException();
-                }
-                String rootPath = path;
-                String thisPath = fjo.path;
-                if (!thisPath.startsWith(rootPath)) {
-                    throw new IllegalArgumentException();
-                }
-                return thisPath.substring(rootPath.length());
-            }
-        };
+        return fileName;
     }
 
     @Override
     public FileObject getParent() throws IOException {
-        if (entry == null) return null;
-        String parentPath = path.substring(0, path.lastIndexOf('/', path.length() - 2));
-        return new JarFileObject(jarFilePath + ResourceUtils.JAR_URL_SEPARATOR + parentPath);
+        if (entry == null) {
+            return null;
+        }
+        if (entry.getName().length() == 0) {
+            return null;
+        }
+        int lastSep = entry.getName().lastIndexOf('/');
+        if (lastSep == -1) {
+            return root;
+        }
+        String entryName = entry.getName();
+        String parentEntryName;
+        if (entry.isDirectory()) {
+            parentEntryName = entryName.substring(0, 1 + entryName.lastIndexOf('/', entryName
+                    .length() - 2));
+        } else {
+            parentEntryName = entryName.substring(0, 1 + lastSep);
+        }
+        return fs.resolveFile(root.urlString + parentEntryName);
     }
 
     @Override
@@ -210,27 +162,34 @@ public class JarFileObject implements FileObject {
 
     @Override
     public URL getURL() throws IOException {
-        String url = "jar:file:" + jarFilePath + "!/" + path;
-        return new URL(url);
+        return url;
+    }
+
+    @Override
+    public boolean exists() throws IOException {
+        return root == this || entry != null;
     }
 
     @Override
     public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
         if (!(obj instanceof JarFileObject)) {
             return false;
         }
         JarFileObject t = (JarFileObject) obj;
-        return this.jarFilePath.equals(t.jarFilePath) && this.path.equals(t.path);
+        return this.urlString.equals(t.urlString);
     }
 
     @Override
     public int hashCode() {
-        return jarFilePath.hashCode() * 13 + path.hashCode();
+        return urlString.hashCode() * 13;
     }
 
     @Override
     public String toString() {
-        return "jar:" + new File(jarFilePath).toURI() + "!/" + path;
+        return urlString;
     }
 
 }

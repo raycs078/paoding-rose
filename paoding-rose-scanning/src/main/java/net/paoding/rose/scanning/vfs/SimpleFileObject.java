@@ -16,12 +16,14 @@
 package net.paoding.rose.scanning.vfs;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+
+import org.springframework.util.ResourceUtils;
 
 /**
  * 
@@ -30,44 +32,51 @@ import java.net.URL;
  */
 public class SimpleFileObject implements FileObject {
 
-    private File file;
+    private final URL url;
 
-    public SimpleFileObject(String path) {
-        file = new File(path);
-    }
+    private final String urlString;
 
-    public SimpleFileObject(File file) {
+    private final File file;
+
+    private final FileName fileName;
+
+    private final FileSystemManager fs;
+
+    SimpleFileObject(FileSystemManager fs, URL url) throws FileNotFoundException,
+            MalformedURLException {
+        this.fs = fs;
+        File file = ResourceUtils.getFile(url);
+        String urlString = url.toString();
+        this.url = url;
         this.file = file;
+        this.urlString = urlString;
+        this.fileName = new FileNameImpl(this, file.getName());
     }
 
     @Override
-    public FileObject getChild(final String child) {
-        File[] files = file.listFiles(new FileFilter() {
-
-            @Override
-            public boolean accept(File pathname) {
-                if (pathname.getName().equals(child)) {
-                    return true;
-                }
-                return false;
-            }
-
-        });
-        return files.length == 0 ? null : new SimpleFileObject(files[0].getPath());
+    public FileObject getChild(final String child) throws IOException {
+        return fs.resolveFile(urlString + child);
     }
 
     @Override
-    public FileObject[] getChildren() {
+    public FileObject[] getChildren() throws MalformedURLException, IOException {
         File[] files = file.listFiles();
         FileObject[] children = new FileObject[files.length];
         for (int i = 0; i < children.length; i++) {
-            children[i] = new SimpleFileObject(files[i].getPath());
+            if (files[i].isDirectory()) {
+                children[i] = fs.resolveFile(urlString + files[i].getName() + "/");
+            } else {
+                children[i] = fs.resolveFile(urlString + files[i].getName());
+            }
         }
         return children;
     }
 
     @Override
-    public FileContent getContent() {
+    public FileContent getContent() throws IOException {
+        if (!file.canRead()) {
+            throw new IOException("can not read");
+        }
         return new FileContent() {
 
             @Override
@@ -79,39 +88,16 @@ public class SimpleFileObject implements FileObject {
 
     @Override
     public FileName getName() {
-        return new FileName() {
-
-            @Override
-            public FileObject getFileObject() {
-                return SimpleFileObject.this;
-            }
-
-            @Override
-            public String getBaseName() {
-                return file.getName();
-            }
-
-            @Override
-            public String getRelativeName(FileName name) {
-                SimpleFileObject relative = (SimpleFileObject) name.getFileObject();
-                String relativePath = relative.file.getAbsolutePath().replace("\\", "/");
-                String thisPath = file.getAbsolutePath().replace("\\", "/");
-                if (!relativePath.startsWith(thisPath)) {
-                    throw new IllegalArgumentException("[thisPath=" + thisPath + "] [relative="
-                            + relative + "]");
-                }
-                return relativePath.substring(thisPath.length());
-            }
-        };
+        return fileName;
     }
 
     @Override
-    public FileObject getParent() {
+    public FileObject getParent() throws MalformedURLException, IOException {
         File parent = file.getParentFile();
         if (parent == null) {
             return null;
         }
-        return new SimpleFileObject(parent);
+        return fs.resolveFile(parent.toURI().toURL());
     }
 
     @Override
@@ -126,11 +112,19 @@ public class SimpleFileObject implements FileObject {
 
     @Override
     public URL getURL() throws MalformedURLException {
-        return file.toURI().toURL();
+        return url;
+    }
+
+    @Override
+    public boolean exists() throws IOException {
+        return file.exists();
     }
 
     @Override
     public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
         if (!(obj instanceof SimpleFileObject)) {
             return false;
         }
@@ -140,12 +134,12 @@ public class SimpleFileObject implements FileObject {
 
     @Override
     public int hashCode() {
-        return file.hashCode();
+        return file.hashCode() * 13;
     }
 
     @Override
     public String toString() {
-        return file.toString();
+        return urlString;
     }
 
 }
