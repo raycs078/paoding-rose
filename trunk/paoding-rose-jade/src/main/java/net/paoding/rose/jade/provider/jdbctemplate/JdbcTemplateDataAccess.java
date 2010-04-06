@@ -74,7 +74,7 @@ public class JdbcTemplateDataAccess implements DataAccess {
         Object[] arrayParameters = null;
         SQLInterpreterResult ir = null;
         for (SQLInterpreter interpreter : interpreters) {
-            ir = interpreter.interpret(jdbcTemplate.getDataSource(), sql, modifier, parameters,
+            ir = interpreter.interpret(jdbcTemplate.getDataSource(), sqlString, modifier, parameters,
                     arrayParameters);
             if (ir != null) {
                 sqlString = ir.getSQL();
@@ -90,8 +90,8 @@ public class JdbcTemplateDataAccess implements DataAccess {
         Object[] arrayParameters = null;
         SQLInterpreterResult ir = null;
         for (SQLInterpreter interpreter : interpreters) {
-            ir = interpreter.interpret(jdbcTemplate.getDataSource(), sql, modifier, parameters,
-                    arrayParameters);
+            ir = interpreter.interpret(jdbcTemplate.getDataSource(), sqlString, modifier,
+                    parameters, arrayParameters);
             if (ir != null) {
                 sqlString = ir.getSQL();
                 arrayParameters = ir.getParameters();
@@ -169,7 +169,7 @@ public class JdbcTemplateDataAccess implements DataAccess {
             String sqlString = null;
             SQLInterpreterResult ir = null;
             for (SQLInterpreter interpreter : interpreters) {
-                ir = interpreter.interpret(jdbcTemplate.getDataSource(), sql, modifier,
+                ir = interpreter.interpret(jdbcTemplate.getDataSource(), sqlString, modifier,
                         parametersList.get(i), statemenetParameters);
                 if (ir != null) {
                     if (sqlString != null && !sqlString.equals(ir.getSQL())) {
