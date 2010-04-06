@@ -166,8 +166,8 @@ public class JadeDaoComponentProvider implements ResourceLoaderAware {
      * {@link Controller @Controller} stereotype annotations.
      */
     protected void registerDefaultFilters() {
-        addExcludeFilter(new InverseTypeFilter(new RegexPatternTypeFilter(Pattern.compile(
-                "DAO.class$", Pattern.CASE_INSENSITIVE))));
+        addExcludeFilter(new InverseTypeFilter(new RegexPatternTypeFilter(Pattern.compile("DAO$",
+                Pattern.CASE_INSENSITIVE))));
         addIncludeFilter(new AnnotationTypeFilter(DAO.class));
     }
 
@@ -178,6 +178,10 @@ public class JadeDaoComponentProvider implements ResourceLoaderAware {
      * @return a corresponding Set of autodetected bean definitions
      */
     public Set<BeanDefinition> findCandidateComponents(String uriPrefix) {
+        if (logger.isInfoEnabled()) {
+            logger.info("[jade/find] starting .... to find candidate components from '" + uriPrefix
+                    + "'");
+        }
         if (!uriPrefix.endsWith("/")) {
             uriPrefix = uriPrefix + "/";
         }
@@ -190,16 +194,15 @@ public class JadeDaoComponentProvider implements ResourceLoaderAware {
             for (int i = 0; i < resources.length; i++) {
                 Resource resource = resources[i];
                 if (traceEnabled) {
-                    logger.trace("Scanning " + resource);
+                    logger.trace("[jade/find] scanning " + resource);
                 }
                 // resourcePatternResolver.getResources出来的classPathResources，metadataReader对其进行getInputStream的时候为什么返回null呢？
                 // 不得不做一个exists判断
                 if (!resource.exists()) {
                     if (traceEnabled) {
-                        logger.trace("Ignored because not exists:" + resource);
+                        logger.trace("[jade/find] Ignored because not exists:" + resource);
                     }
-                }
-                else if (resource.isReadable()) {
+                } else if (resource.isReadable()) {
                     MetadataReader metadataReader = this.metadataReaderFactory
                             .getMetadataReader(resource);
                     if (isCandidateComponent(metadataReader)) {
@@ -209,28 +212,34 @@ public class JadeDaoComponentProvider implements ResourceLoaderAware {
                         sbd.setSource(resource);
                         if (isCandidateComponent(sbd)) {
                             if (debugEnabled) {
-                                logger.debug("Identified candidate component class: " + resource);
+                                logger.debug("[jade/find] Identified candidate component class: "
+                                        + resource);
                             }
                             candidates.add(sbd);
                         } else {
                             if (debugEnabled) {
-                                logger.debug("Ignored because not a interface top-level class: "
-                                        + resource);
+                                logger.debug("[jade/find] Ignored because not //"
+                                        + "a interface top-level class: " + resource);
                             }
                         }
                     } else {
                         if (traceEnabled) {
-                            logger.trace("Ignored because not matching any filter: " + resource);
+                            logger.trace("[jade/find] Ignored because not matching any filter: "
+                                    + resource);
                         }
                     }
                 } else {
                     if (traceEnabled) {
-                        logger.trace("Ignored because not readable: " + resource);
+                        logger.trace("[jade/find] Ignored because not readable: " + resource);
                     }
                 }
             }
         } catch (IOException ex) {
-            throw new BeanDefinitionStoreException("I/O failure during jade scanning", ex);
+            throw new BeanDefinitionStoreException("[jade/find] I/O failure during jade scanning",
+                    ex);
+        }
+        if (logger.isInfoEnabled()) {
+            logger.info("[jade/find] exits ");
         }
         return candidates;
     }
