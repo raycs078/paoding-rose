@@ -62,6 +62,9 @@ public class JadeDaoProcessor implements BeanFactoryPostProcessor, ApplicationCo
     @Override
     public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory)
             throws BeansException {
+        if (logger.isInfoEnabled()) {
+            logger.info("[jade] starting ...");
+        }
         final List<ResourceRef> resources;
         try {
             resources = RoseScanner.getInstance().getJarOrClassesFolderResources();
@@ -88,7 +91,7 @@ public class JadeDaoProcessor implements BeanFactoryPostProcessor, ApplicationCo
         }
 
         if (logger.isInfoEnabled()) {
-            logger.info("found " + urls.size() + " jade urls: " + urls);
+            logger.info("[jade] found " + urls.size() + " jade urls: " + urls);
         }
         if (urls.size() > 0) {
             JadeDaoComponentProvider provider = new JadeDaoComponentProvider(true);
@@ -107,14 +110,21 @@ public class JadeDaoProcessor implements BeanFactoryPostProcessor, ApplicationCo
             Set<String> daoClassNames = new HashSet<String>();
 
             for (String url : urls) {
+                if (logger.isInfoEnabled()) {
+                    logger.info("[jade] call 'jade/find'");
+                }
                 Set<BeanDefinition> dfs = provider.findCandidateComponents(url);
+                if (logger.isInfoEnabled()) {
+                    logger.info("[jade] found " + dfs.size()//
+                            + " beanDefinition from '" + url + "'");
+                }
                 for (BeanDefinition beanDefinition : dfs) {
                     String daoClassName = beanDefinition.getBeanClassName();
 
                     if (daoClassNames.contains(daoClassName)) {
                         if (logger.isDebugEnabled()) {
-                            logger.debug("ignored replicated jade dao class: " + daoClassName
-                                    + "  [" + url + "]");
+                            logger.debug("[jade] ignored replicated jade dao class: "
+                                    + daoClassName + "  [" + url + "]");
                         }
                         continue;
                     }
@@ -131,10 +141,13 @@ public class JadeDaoProcessor implements BeanFactoryPostProcessor, ApplicationCo
                     defaultBeanFactory.registerBeanDefinition(daoClassName, beanDefinition);
 
                     if (logger.isDebugEnabled()) {
-                        logger.debug("register jade dao bean: " + daoClassName);
+                        logger.debug("[jade] register jade dao bean: " + daoClassName);
                     }
                 }
             }
+        }
+        if (logger.isInfoEnabled()) {
+            logger.info("[jade] exits");
         }
     }
 
