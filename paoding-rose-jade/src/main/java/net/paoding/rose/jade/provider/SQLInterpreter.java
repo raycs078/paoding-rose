@@ -15,6 +15,8 @@ import org.springframework.core.annotation.Order;
  * @author 廖涵 [in355hz@gmail.com]
  * 
  */
+//按Spring语义规定，Order值越高该解释器越后执行
+@Order(0)
 public interface SQLInterpreter {
 
     /**
