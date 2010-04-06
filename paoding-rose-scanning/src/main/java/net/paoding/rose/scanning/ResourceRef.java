@@ -171,7 +171,7 @@ public class ResourceRef implements Comparable<ResourceRef> {
     }
 
     public String getInnerResourcePattern(String subPath) throws IOException {
-        Assert.isTrue(!subPath.startsWith("/"));
+        Assert.isTrue(!subPath.startsWith("/"), subPath);
         String rootPath = resource.getURI().getPath();
         if (getProtocol().equals("jar")) {
             subPath = "jar:file:" + rootPath + ResourceUtils.JAR_URL_SEPARATOR + subPath;
