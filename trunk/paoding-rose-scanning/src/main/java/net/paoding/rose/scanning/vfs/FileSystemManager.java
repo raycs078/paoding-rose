@@ -44,7 +44,7 @@ public class FileSystemManager {
             logger.trace("[fs] resolveFile ... by urlString '" + urlString + "'");
         }
         FileObject object = cached.get(urlString);
-        if (object == null && urlString.lastIndexOf('.') < 0 && !urlString.endsWith("/")) {
+        if (object == null && !urlString.endsWith("/")) {
             object = cached.get(urlString + "/");
         }
         if (object != null) {
@@ -58,7 +58,7 @@ public class FileSystemManager {
     }
 
     public synchronized FileObject resolveFile(URL url) throws IOException {
-        
+
         if (logger.isTraceEnabled()) {
             logger.trace("[fs] resolveFile ... by url '" + url + "'");
         }
@@ -66,7 +66,7 @@ public class FileSystemManager {
         FileObject object = cached.get(key);
         if (object == null) {
             if (ResourceUtils.isJarURL(url)) {
-                if (!key.endsWith("/") && url.getPath().lastIndexOf('.') < 0) {
+                if (!key.endsWith("/")) {
                     object = resolveFile(new URL(url + "/"));
                 }
                 if (object == null || !object.exists()) {
