@@ -54,8 +54,6 @@ public class ModuleResourceProviderImpl implements ModuleResourceProvider {
 
     private Log logger = LogFactory.getLog(ModuleResourceProviderImpl.class);
 
-    protected FileSystemManager fileSystem = new FileSystemManager();
-
     class Local {
 
         List<ModuleResource> moduleResourceList = new LinkedList<ModuleResource>();
@@ -65,6 +63,7 @@ public class ModuleResourceProviderImpl implements ModuleResourceProvider {
 
     @Override
     public List<ModuleResource> findModuleResources(LoadScope scope) throws IOException {
+
         Local local = new Local();
         String[] controllersScope = scope.getScope("controllers");
         if (logger.isInfoEnabled()) {
@@ -82,6 +81,8 @@ public class ModuleResourceProviderImpl implements ModuleResourceProvider {
             logger.info("[moduleResource] going to scan controllers"
                     + " from these folders or jar files:" + refers);
         }
+
+        FileSystemManager fileSystem = new FileSystemManager();
 
         for (ResourceRef refer : refers) {
             Resource resource = refer.getResource();
@@ -128,6 +129,8 @@ public class ModuleResourceProviderImpl implements ModuleResourceProvider {
             } catch (Exception e) {
                 logger.error("[moduleResource] error happend when scanning " + rootObject, e);
             }
+
+            fileSystem.clearCache();
         }
 
         afterScanning(local);
