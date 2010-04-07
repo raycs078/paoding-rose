@@ -20,6 +20,7 @@ public class FileObjectTest extends TestCase {
         URL urlDir = loader.getResource(pathDir);
         FileObject parent = fs.resolveFile(urlDir);
         assertTrue(parent.getURL().toString().endsWith("/"));
+        assertTrue(parent.getURL().getPath().endsWith("/"));
         FileObject childDir = parent.getChild("scanning");
         assertTrue(childDir.getURL().toString().endsWith("/"));
 
@@ -48,6 +49,7 @@ public class FileObjectTest extends TestCase {
 
         File dirFile = ResourceUtils.getFile(urlDir);
         assertTrue(urlDir.toString().endsWith("/"));
+        assertTrue(urlDir.getPath().endsWith("/"));
         assertFalse(dirFile.getPath().endsWith("/"));
         assertTrue(fileObjectDir.toString().endsWith("/"));
 
