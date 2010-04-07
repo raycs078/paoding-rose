@@ -18,9 +18,9 @@ package net.paoding.rose.scanning.vfs;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.collections.map.LRUMap;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -35,14 +35,16 @@ public class FileSystemManager {
 
     protected Log logger = LogFactory.getLog(FileSystemManager.class);
 
-    private Map<String, FileObject> cached = new HashMap<String, FileObject>();
+    @SuppressWarnings("unchecked")
+    private Map<String, FileObject> cached = new LRUMap(10000);
 
     public FileObject resolveFile(String urlString) throws IOException {
+
         if (logger.isTraceEnabled()) {
             logger.trace("[fs] resolveFile ... by urlString '" + urlString + "'");
         }
         FileObject object = cached.get(urlString);
-        if (object == null && !urlString.endsWith("/")) {
+        if (object == null && urlString.lastIndexOf('.') < 0 && !urlString.endsWith("/")) {
             object = cached.get(urlString + "/");
         }
         if (object != null) {
@@ -56,6 +58,7 @@ public class FileSystemManager {
     }
 
     public synchronized FileObject resolveFile(URL url) throws IOException {
+        
         if (logger.isTraceEnabled()) {
             logger.trace("[fs] resolveFile ... by url '" + url + "'");
         }
@@ -63,7 +66,7 @@ public class FileSystemManager {
         FileObject object = cached.get(key);
         if (object == null) {
             if (ResourceUtils.isJarURL(url)) {
-                if (!url.getPath().endsWith("/")) {
+                if (!key.endsWith("/") && url.getPath().lastIndexOf('.') < 0) {
                     object = resolveFile(new URL(url + "/"));
                 }
                 if (object == null || !object.exists()) {
@@ -88,9 +91,8 @@ public class FileSystemManager {
                     logger.trace("[fs] create simpleFileObject for '" + url + "'");
                 }
             }
-            cached.put(key, object);
-            if (!key.equals(object.getURL().toString())) {
-                cached.put(object.getURL().toString(), object);
+            if (object.exists()) {
+                cached.put(key, object);
             }
         } else {
             if (logger.isTraceEnabled()) {
@@ -100,7 +102,7 @@ public class FileSystemManager {
         return object;
     }
 
-    public void clearCache() {
+    public synchronized void clearCache() {
         cached.clear();
     }
 
