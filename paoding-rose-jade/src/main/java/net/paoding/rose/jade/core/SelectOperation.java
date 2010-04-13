@@ -122,10 +122,10 @@ public class SelectOperation implements JdbcOperation {
 
             } else if (sizeResult == 0) {
 
-                // 返回  0 (Primitive Type) 或者  null.
-                if (TypeUtils.isColumnType(returnType)) {
-                    throw new IncorrectResultSizeDataAccessException(modifier.toString(), 1,
-                            sizeResult);
+                // 基础类型的抛异常，其他的返回null
+                if (returnType.isPrimitive()) {
+                    throw new IncorrectResultSizeDataAccessException(//
+                            modifier.toString(), 1, sizeResult);
                 } else {
                     return null;
                 }
