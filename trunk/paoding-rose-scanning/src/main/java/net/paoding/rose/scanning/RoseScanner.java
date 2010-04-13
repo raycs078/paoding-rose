@@ -305,8 +305,8 @@ public class RoseScanner {
             }
         } else {
             if (logger.isInfoEnabled()) {
-                logger.info("[jarFile] found cached " + classesFolderResources.size()
-                        + " jar files: " + classesFolderResources);
+                logger.info("[jarFile] found cached " + jarResources.size()
+                        + " jar files: " + jarResources);
             }
         }
         return Collections.unmodifiableList(jarResources);
