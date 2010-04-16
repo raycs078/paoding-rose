@@ -153,7 +153,7 @@ public class ExprResolverImpl implements ExprResolver {
 
                 } else if ("$".equals(prefix)) {
 
-                    if (!mapVars.containsKey(name)) {
+                    if (!mapConsts.containsKey(name)) {
                         throw new IllegalArgumentException("Constant \'" + name
                                 + "\' not defined in DAO class");
                     }
