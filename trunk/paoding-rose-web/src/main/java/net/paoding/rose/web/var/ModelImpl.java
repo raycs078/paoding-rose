@@ -46,17 +46,18 @@ public class ModelImpl implements Model {
 
     public ModelImpl(Invocation inv) {
         this.invocation = inv;
-        mutex = this;
+        this.mutex = map;
     }
 
     public Map<String, Object> getAttributes() {
-        Map<String, Object> cloneAndFiltered = new HashMap<String, Object>(map.size() * 2);
+        final Map<String, Object> cloneAndFiltered = new HashMap<String, Object>(map.size() * 2);
         synchronized (mutex) {
-            Iterator<Map.Entry<String, Object>> iterator = map.entrySet().iterator();
+            final Iterator<Map.Entry<String, Object>> iterator = map.entrySet().iterator();
             while (iterator.hasNext()) {
-                Map.Entry<String, Object> entry = iterator.next();
-                if (entry.getKey() != null && !entry.getKey().startsWith("$$paoding-rose")) {
-                    cloneAndFiltered.put(entry.getKey(), entry.getValue());
+                final Map.Entry<String, Object> entry = iterator.next();
+                final String key = entry.getKey();
+                if (key != null && !key.startsWith("$$paoding-rose")) {
+                    cloneAndFiltered.put(key, entry.getValue());
                 }
             }
         }
@@ -109,9 +110,10 @@ public class ModelImpl implements Model {
     @Override
     public Model merge(Map<String, Object> attributes) {
         if (attributes != null) {
-            for (Map.Entry<String, Object> elem : attributes.entrySet()) {
-                if (!contains(elem.getKey())) {
-                    add(elem.getKey(), elem.getValue());
+            for (Map.Entry<String, Object> entry : attributes.entrySet()) {
+                final String key = entry.getKey();
+                if (!contains(key)) {
+                    add(key, entry.getValue());
                 }
             }
         }
