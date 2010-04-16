@@ -35,12 +35,13 @@ public class FileSystemManager {
 
     protected Log logger = LogFactory.getLog(FileSystemManager.class);
 
+    private boolean traceEnabled = logger.isTraceEnabled();
+
     @SuppressWarnings("unchecked")
     private Map<String, FileObject> cached = new LRUMap(10000);
 
     public FileObject resolveFile(String urlString) throws IOException {
-
-        if (logger.isTraceEnabled()) {
+        if (traceEnabled) {
             logger.trace("[fs] resolveFile ... by urlString '" + urlString + "'");
         }
         FileObject object = cached.get(urlString);
@@ -48,8 +49,8 @@ public class FileSystemManager {
             object = cached.get(urlString + "/");
         }
         if (object != null) {
-            if (logger.isDebugEnabled()) {
-                logger.debug("[fs] found cached file for '" + urlString + "'");
+            if (traceEnabled) {
+                logger.trace("[fs][s] found cached file for urlString '" + urlString + "'");
             }
             return object;
         }
@@ -58,46 +59,48 @@ public class FileSystemManager {
     }
 
     public synchronized FileObject resolveFile(URL url) throws IOException {
-
-        if (logger.isTraceEnabled()) {
+        if (traceEnabled) {
             logger.trace("[fs] resolveFile ... by url '" + url + "'");
         }
-        String key = url.toString();
-        FileObject object = cached.get(key);
-        if (object == null) {
-            if (ResourceUtils.isJarURL(url)) {
-                if (!key.endsWith("/")) {
-                    object = resolveFile(new URL(url + "/"));
-                }
-                if (object == null || !object.exists()) {
-                    object = new JarFileObject(this, url);
-                    if (logger.isTraceEnabled()) {
-                        logger.trace("[fs] create jarFileObject for '" + url + "'");
-                    }
-                }
-            } else {
-                File file = ResourceUtils.getFile(url);
-                if (file.isDirectory()) {
-                    if (!url.toString().endsWith("/")) {
-                        url = new URL(url + "/");
-                    }
-                } else if (file.isFile()) {
-                    if (url.toString().endsWith("/")) {
-                        url = new URL(StringUtils.removeEnd(url.toString(), "/"));
-                    }
-                }
-                object = new SimpleFileObject(this, url);
-                if (logger.isTraceEnabled()) {
-                    logger.trace("[fs] create simpleFileObject for '" + url + "'");
-                }
+        String urlString = url.toString();
+        FileObject object = cached.get(urlString);
+
+        if (object != null) {
+            if (traceEnabled) {
+                logger.trace("[fs] found cached file for url '" + urlString + "'");
             }
-            if (object.exists()) {
-                cached.put(key, object);
+            return object;
+        }
+        if (ResourceUtils.isJarURL(url)) {
+            if (!urlString.endsWith("/")) {
+                object = resolveFile(urlString + "/");
+            }
+            if (object == null || !object.exists()) {
+                object = new JarFileObject(this, url);
+                if (traceEnabled) {
+                    logger.trace("[fs] create jarFileObject for '" + urlString + "'");
+                }
             }
         } else {
-            if (logger.isTraceEnabled()) {
-                logger.trace("[fs] found cached file for '" + url + "'");
+            File file = ResourceUtils.getFile(url);
+            if (file.isDirectory()) {
+                if (!urlString.endsWith("/")) {
+                    urlString = urlString + "/";
+                    url = new URL(urlString);
+                }
+            } else if (file.isFile()) {
+                if (urlString.endsWith("/")) {
+                    urlString = StringUtils.removeEnd(urlString, "/");
+                    url = new URL(urlString);
+                }
             }
+            object = new SimpleFileObject(this, url);
+            if (traceEnabled) {
+                logger.trace("[fs] create simpleFileObject for '" + urlString + "'");
+            }
+        }
+        if (object.exists()) {
+            cached.put(urlString, object);
         }
         return object;
     }
