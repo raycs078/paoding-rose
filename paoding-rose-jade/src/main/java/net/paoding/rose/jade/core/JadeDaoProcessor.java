@@ -22,8 +22,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import net.paoding.rose.jade.cache.CacheProvider;
 import net.paoding.rose.jade.provider.DataAccess;
 import net.paoding.rose.jade.provider.DataAccessProvider;
+import net.paoding.rose.jade.provider.cache.CacheDataAccess;
 import net.paoding.rose.scanning.ResourceRef;
 import net.paoding.rose.scanning.RoseScanner;
 
@@ -31,6 +33,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.MutablePropertyValues;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
@@ -53,6 +56,9 @@ public class JadeDaoProcessor implements BeanFactoryPostProcessor, ApplicationCo
     protected static final Log logger = LogFactory.getLog(JadeDaoProcessor.class);
 
     private ApplicationContext applicationContext;
+
+    @Autowired(required = false)
+    private CacheProvider cacheProvider;
 
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
@@ -103,7 +109,11 @@ public class JadeDaoProcessor implements BeanFactoryPostProcessor, ApplicationCo
                 @Override
                 public DataAccess createDataAccess(Class<?> daoClass) {
                     DataAccess dataAccess = orignaldataAccessProvider.createDataAccess(daoClass);
-                    return new SQLThreadLocalWrapper(dataAccess);
+                    dataAccess = new SQLThreadLocalWrapper(dataAccess);
+                    if (cacheProvider != null) {
+                        dataAccess = new CacheDataAccess(dataAccess, cacheProvider);
+                    }
+                    return dataAccess;
                 }
             };
 
