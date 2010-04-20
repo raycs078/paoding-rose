@@ -29,12 +29,6 @@ public class ExqlContextImpl implements ExqlContext, SQLInterpreterResult {
     // 输出缓冲区
     protected final StringBuilder builder;
 
-    /**
-     * 构造上下文对象。
-     */
-    public ExqlContextImpl() {
-        builder = new StringBuilder();
-    }
 
     /**
      * 构造上下文对象。
@@ -71,7 +65,7 @@ public class ExqlContextImpl implements ExqlContext, SQLInterpreterResult {
             // "IN (:varlist)" --> "IN (?, ?, ...)"
             fillCollection((Collection<?>) obj);
 
-        } else if ((obj != null) && obj.getClass().isArray()) {
+        } else if ((obj != null) && obj.getClass().isArray() && obj.getClass() != byte[].class) {
 
             // 用数组构造  Collection 容器
             fillCollection(ExqlUtils.asCollection(obj));
@@ -160,7 +154,7 @@ public class ExqlContextImpl implements ExqlContext, SQLInterpreterResult {
     // 进行简单测试
     public static void main(String... args) throws Exception {
 
-        ExqlContext context = new ExqlContextImpl();
+        ExqlContext context = new ExqlContextImpl(1024);
 
         context.fillText("WHERE uid = ");
         context.fillValue(102);

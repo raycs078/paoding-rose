@@ -114,7 +114,7 @@ public class ExqlPatternImpl implements ExqlPattern {
                         + "#for(variant in :expr5.bytes) { AND c = :variant}" // NL
                         + " GROUP BY #!(:expr1) ASC");
 
-        ExqlContext context = new ExqlContextImpl();
+        ExqlContext context = new ExqlContextImpl(1024);
 
         HashMap<String, Object> map = new HashMap<String, Object>();
 

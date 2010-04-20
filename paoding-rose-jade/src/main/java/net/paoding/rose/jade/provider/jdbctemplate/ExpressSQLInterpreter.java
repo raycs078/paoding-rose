@@ -29,7 +29,7 @@ public class ExpressSQLInterpreter implements SQLInterpreter {
 
         // 转换语句中的表达式
         ExqlPattern pattern = ExqlPatternImpl.compile(sql);
-        ExqlContextImpl context = new ExqlContextImpl();
+        ExqlContextImpl context = new ExqlContextImpl(sql.length() + 32);
 
         try {
             pattern.execute(context, parametersAsMap, modifier.getDefinition().getConstants());
