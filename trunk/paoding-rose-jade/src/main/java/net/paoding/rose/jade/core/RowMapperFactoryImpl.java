@@ -116,7 +116,7 @@ public class RowMapperFactoryImpl implements RowMapperFactory {
             return getRowTypeFromCollectionType(modifier, returnClassType);
         } else if (Map.class == returnClassType) {
             return getRowTypeFromMapType(modifier, returnClassType);
-        } else if (returnClassType.isArray() && returnClassType.getComponentType() != byte[].class) {
+        } else if (returnClassType.isArray() && returnClassType != byte[].class) {
             // 数组类型, 支持多重数组
             return returnClassType.getComponentType();
         }
