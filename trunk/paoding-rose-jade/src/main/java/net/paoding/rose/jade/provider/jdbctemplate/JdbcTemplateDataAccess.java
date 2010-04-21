@@ -74,8 +74,8 @@ public class JdbcTemplateDataAccess implements DataAccess {
         Object[] arrayParameters = null;
         SQLInterpreterResult ir = null;
         for (SQLInterpreter interpreter : interpreters) {
-            ir = interpreter.interpret(jdbcTemplate.getDataSource(), sqlString, modifier, parameters,
-                    arrayParameters);
+            ir = interpreter.interpret(jdbcTemplate.getDataSource(), sqlString, modifier,
+                    parameters, arrayParameters);
             if (ir != null) {
                 sqlString = ir.getSQL();
                 arrayParameters = ir.getParameters();
@@ -169,16 +169,20 @@ public class JdbcTemplateDataAccess implements DataAccess {
             String sqlString = sql;
             SQLInterpreterResult ir = null;
             for (SQLInterpreter interpreter : interpreters) {
-                ir = interpreter.interpret(jdbcTemplate.getDataSource(), sqlString, modifier,
-                        parametersList.get(i), statemenetParameters);
+                ir = interpreter.interpret(jdbcTemplate.getDataSource(),
+                sql, modifier, parametersList.get(i),
+                        statemenetParameters);
                 if (ir != null) {
-                    if (sqlString != null && !sqlString.equals(ir.getSQL())) {
-                        throw new IllegalArgumentException("batchUpdate");
-                    }
+//                    if (sqlString != null && !sqlString.equals(ir.getSQL())) {
+//                        throw new IllegalArgumentException("batchUpdate");
+//                    }
                     sqlString = ir.getSQL();
                     statemenetParameters = ir.getParameters();
                 }
             }
+//            if (sqlString == null) {
+//                sqlString = sql;
+//            }
             List<Object[]> batchParameters = batches.get(sqlString);
             if (batchParameters == null) {
                 batchParameters = new ArrayList<Object[]>(parametersList.size());
