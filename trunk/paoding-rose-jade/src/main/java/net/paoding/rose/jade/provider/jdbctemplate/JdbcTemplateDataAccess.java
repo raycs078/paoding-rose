@@ -166,7 +166,7 @@ public class JdbcTemplateDataAccess implements DataAccess {
         Map<String, int[]> positions = new HashMap<String, int[]>();
         for (int i = 0; i < parametersList.size(); i++) {
             Object[] statemenetParameters = null;
-            String sqlString = null;
+            String sqlString = sql;
             SQLInterpreterResult ir = null;
             for (SQLInterpreter interpreter : interpreters) {
                 ir = interpreter.interpret(jdbcTemplate.getDataSource(), sqlString, modifier,
@@ -178,9 +178,6 @@ public class JdbcTemplateDataAccess implements DataAccess {
                     sqlString = ir.getSQL();
                     statemenetParameters = ir.getParameters();
                 }
-            }
-            if (sqlString == null) {
-                sqlString = sql;
             }
             List<Object[]> batchParameters = batches.get(sqlString);
             if (batchParameters == null) {
