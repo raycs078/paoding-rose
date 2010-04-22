@@ -30,7 +30,7 @@ import java.lang.annotation.Target;
  * 只要符合2个原则的类将被识别为Jade DAO：<br>
  * <ul>
  * <li>DAO必须是独立的接口类，即：不能是内部类接口；</li>
- * <li>DAO接口上标注了Dao类，或所继承的父接口标注了此注解(即{@link DAO}注解)；</li>
+ * <li>DAO接口上标注了DAO类，或所继承的父接口标注了此注解(即{@link DAO}注解)；</li>
  * </ul>
  * <p>
  * 

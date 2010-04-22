@@ -7,7 +7,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 使用：{#link UseMaster} 标注需要强制查询 master 数据库的 Dao 接口方法。
+ * 使用：{#link UseMaster} 标注需要强制查询 master 数据库的 DAO 接口方法。
  * 
  * @author han.liao
  */

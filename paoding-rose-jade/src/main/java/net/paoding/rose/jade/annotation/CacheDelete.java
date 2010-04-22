@@ -7,7 +7,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 使用：{#link CacheDelete} 标注需要在执行后清除缓存的 Dao 接口方法。
+ * 使用：{#link CacheDelete} 标注需要在执行后清除缓存的 DAO 接口方法。
  * 
  * @author han.liao
  */
