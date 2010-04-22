@@ -158,48 +158,54 @@ public class JdbcTemplateDataAccess implements DataAccess {
     }
 
     public int[] batchUpdate(String sql, Modifier modifier, List<Map<String, Object>> parametersList) {
+        int[] updated = new int[parametersList.size()];
+        for (int i = 0; i < updated.length; i++) {
+            updated[i] = update(sql, modifier, parametersList.get(i));
+        }
+        return updated;
+
+        /*
         if (parametersList.size() == 0) {
             return new int[0];
-        }
-
-        HashMap<String, List<Object[]>> batches = new HashMap<String, List<Object[]>>();
-        Map<String, int[]> positions = new HashMap<String, int[]>();
-        for (int i = 0; i < parametersList.size(); i++) {
-            Object[] statemenetParameters = null;
-            String sqlString = sql;
-            SQLInterpreterResult ir = null;
-            for (SQLInterpreter interpreter : interpreters) {
-                ir = interpreter.interpret(jdbcTemplate.getDataSource(),
-                sql, modifier, parametersList.get(i),
-                        statemenetParameters);
-                if (ir != null) {
-//                    if (sqlString != null && !sqlString.equals(ir.getSQL())) {
-//                        throw new IllegalArgumentException("batchUpdate");
-//                    }
-                    sqlString = ir.getSQL();
-                    statemenetParameters = ir.getParameters();
+        } 
+                  HashMap<String, List<Object[]>> batches = new HashMap<String, List<Object[]>>();
+                Map<String, int[]> positions = new HashMap<String, int[]>();
+                for (int i = 0; i < parametersList.size(); i++) {
+                    Object[] statemenetParameters = null;
+                    String sqlString = sql;
+                    SQLInterpreterResult ir = null;
+                    for (SQLInterpreter interpreter : interpreters) {
+                        ir = interpreter.interpret(jdbcTemplate.getDataSource(),
+                        sql, modifier, parametersList.get(i),
+                                statemenetParameters);
+                        if (ir != null) {
+        //                    if (sqlString != null && !sqlString.equals(ir.getSQL())) {
+        //                        throw new IllegalArgumentException("batchUpdate");
+        //                    }
+                            sqlString = ir.getSQL();
+                            statemenetParameters = ir.getParameters();
+                        }
+                    }
+        //            if (sqlString == null) {
+        //                sqlString = sql;
+        //            }
+                    List<Object[]> batchParameters = batches.get(sqlString);
+                    if (batchParameters == null) {
+                        batchParameters = new ArrayList<Object[]>(parametersList.size());
+                        batches.put(sqlString, batchParameters);
+                    }
+                    int[] subPositions = positions.get(sqlString);
+                    if (subPositions == null) {
+                        subPositions = new int[parametersList.size() + 1];
+                        positions.put(sqlString, subPositions);
+                    }
+                    subPositions[subPositions[parametersList.size()]] = i;
+                    subPositions[parametersList.size()] = subPositions[parametersList.size()] + 1;
+                    batchParameters.add(statemenetParameters);
                 }
-            }
-//            if (sqlString == null) {
-//                sqlString = sql;
-//            }
-            List<Object[]> batchParameters = batches.get(sqlString);
-            if (batchParameters == null) {
-                batchParameters = new ArrayList<Object[]>(parametersList.size());
-                batches.put(sqlString, batchParameters);
-            }
-            int[] subPositions = positions.get(sqlString);
-            if (subPositions == null) {
-                subPositions = new int[parametersList.size() + 1];
-                positions.put(sqlString, subPositions);
-            }
-            subPositions[subPositions[parametersList.size()]] = i;
-            subPositions[parametersList.size()] = subPositions[parametersList.size()] + 1;
-            batchParameters.add(statemenetParameters);
-        }
-        int[] updated = new int[parametersList.size()];
-        batchUpdateByJdbcTemplate(batches, updated, positions);
-        return updated;
+                int[] updated = new int[parametersList.size()];
+                batchUpdateByJdbcTemplate(batches, updated, positions);
+                return updated;*/
     }
 
     /**
