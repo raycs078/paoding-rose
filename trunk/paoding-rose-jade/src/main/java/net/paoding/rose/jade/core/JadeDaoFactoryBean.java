@@ -95,7 +95,7 @@ public class JadeDaoFactoryBean<T> implements FactoryBean, InitializingBean {
         DAO dao = daoClass.getAnnotation(DAO.class);
         if (dao == null) {
             throw new IllegalArgumentException(daoClass.getName() // NL
-                    + ": not @Dao annotated ");
+                    + ": not @DAO annotated ");
         }
 
         final Definition definition = new Definition(daoClass);
