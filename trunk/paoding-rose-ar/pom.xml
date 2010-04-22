@@ -70,8 +70,8 @@
 					<archive>
 						<manifestEntries>
 							<Implementation-Title>Paoding Rose Ar</Implementation-Title>
-							<Implementation-Version>0.9.5-20091018</Implementation-Version>
-							<Rose-Version>0.9.5-20091018</Rose-Version>
+							<Implementation-Version>0.9.7-20100422</Implementation-Version>
+							<Rose-Version>0.9.7-20100422</Rose-Version>
 						</manifestEntries>
 					</archive>
 				</configuration>

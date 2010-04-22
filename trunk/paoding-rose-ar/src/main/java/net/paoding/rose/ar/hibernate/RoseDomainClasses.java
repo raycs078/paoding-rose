@@ -22,19 +22,19 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.paoding.rose.scanner.ResourceRef;
-import net.paoding.rose.scanner.RoseScanner;
+import net.paoding.rose.scanning.ResourceRef;
+import net.paoding.rose.scanning.RoseScanner;
+import net.paoding.rose.scanning.vfs.FileName;
+import net.paoding.rose.scanning.vfs.FileObject;
+import net.paoding.rose.scanning.vfs.FileSystemManager;
+import net.paoding.rose.scanning.vfs.FileType;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.commons.vfs.FileName;
-import org.apache.commons.vfs.FileObject;
-import org.apache.commons.vfs.FileSystemException;
-import org.apache.commons.vfs.FileSystemManager;
-import org.apache.commons.vfs.FileType;
-import org.apache.commons.vfs.VFS;
 import org.springframework.core.io.Resource;
+import org.springframework.util.Assert;
+import org.springframework.util.ResourceUtils;
 
 /**
  * 
@@ -56,20 +56,30 @@ public class RoseDomainClasses {
             resources.addAll(roseScanner.getClassesFolderResources());
             resources.addAll(roseScanner.getJarResources());
             List<FileObject> rootObjects = new ArrayList<FileObject>();
-            FileSystemManager fsManager = VFS.getManager();
-            for (ResourceRef resourceInfo : resources) {
-                if (resourceInfo.hasModifier("domain")) {
-                    Resource resource = resourceInfo.getResource();
+            FileSystemManager fileSystem = new FileSystemManager();
+            for (ResourceRef resourceRef : resources) {
+                if (resourceRef.hasModifier("domain")) {
+                    Resource resource = resourceRef.getResource();
                     File resourceFile = resource.getFile();
-                    FileObject rootObject = null;
-                    if (resourceFile.isFile()) {
-                        String path = "jar:file:" + resourceFile.getAbsolutePath() + "!/";
-                        rootObject = fsManager.resolveFile(path);
-                    } else if (resourceFile.isDirectory()) {
-                        rootObject = fsManager.resolveFile(resourceFile.getAbsolutePath());
+                    String urlString;
+                    if ("jar".equals(resourceRef.getProtocol())) {
+                        urlString = ResourceUtils.URL_PROTOCOL_JAR + ":" + resourceFile.toURI()
+                                + ResourceUtils.JAR_URL_SEPARATOR;
+                    } else {
+                        urlString = resourceFile.toURI().toString();
                     }
-                    if (rootObject == null) {
+                    FileObject rootObject = fileSystem.resolveFile(urlString);
+                    //
+                    if (rootObject == null || !rootObject.exists()) {
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("[domainResource] Ignored because not exists: "
+                                    + urlString);
+                        }
                         continue;
+                    }
+                    if (logger.isInfoEnabled()) {
+                        logger.info("[domainResource] start to scan domainResource in file: "
+                                + rootObject);
                     }
                     rootObjects.add(rootObject);
                     try {
@@ -122,8 +132,7 @@ public class RoseDomainClasses {
         }
     }
 
-    protected void handleDomainResource(FileObject rootObject, FileObject resource)
-            throws FileSystemException {
+    protected void handleDomainResource(FileObject rootObject, FileObject resource) throws IOException {
         FileName fileName = resource.getName();
         String bn = fileName.getBaseName();
         if (bn.endsWith(".class") && bn.indexOf('$') == -1) {
@@ -131,9 +140,9 @@ public class RoseDomainClasses {
         }
     }
 
-    private void addDomainClass(FileObject rootObject, FileObject resource)
-            throws FileSystemException {
+    private void addDomainClass(FileObject rootObject, FileObject resource) throws IOException {
         String className = rootObject.getName().getRelativeName(resource.getName());
+        Assert.isTrue(!className.startsWith("/"));
         className = StringUtils.removeEnd(className, ".class");
         className = className.replace('/', '.');
         for (int i = domainClasses.size() - 1; i >= 0; i--) {
