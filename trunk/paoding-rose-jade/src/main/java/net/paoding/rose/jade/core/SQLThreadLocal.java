@@ -34,14 +34,14 @@ public class SQLThreadLocal {
         return locals.get();
     }
 
-    static SQLThreadLocal set(SQLType sqlType, String sql, Modifier modifier,
+    public static SQLThreadLocal set(SQLType sqlType, String sql, Modifier modifier,
             Map<String, ?> parameters) {
         SQLThreadLocal local = new SQLThreadLocal(sqlType, sql, modifier, parameters);
         locals.set(local);
         return local;
     }
 
-    static void remove() {
+    public static void remove() {
         locals.remove();
     }
 

@@ -26,6 +26,8 @@ import java.util.Map;
 
 import javax.sql.DataSource;
 
+import net.paoding.rose.jade.annotation.SQLType;
+import net.paoding.rose.jade.core.SQLThreadLocal;
 import net.paoding.rose.jade.provider.DataAccess;
 import net.paoding.rose.jade.provider.Modifier;
 import net.paoding.rose.jade.provider.SQLInterpreter;
@@ -160,7 +162,10 @@ public class JdbcTemplateDataAccess implements DataAccess {
     public int[] batchUpdate(String sql, Modifier modifier, List<Map<String, Object>> parametersList) {
         int[] updated = new int[parametersList.size()];
         for (int i = 0; i < updated.length; i++) {
-            updated[i] = update(sql, modifier, parametersList.get(i));
+            Map<String, Object> parameters = parametersList.get(i);
+            SQLThreadLocal.set(SQLType.WRITE, sql, modifier, parameters);
+            updated[i] = update(sql, modifier, parameters);
+            SQLThreadLocal.remove();
         }
         return updated;
 
