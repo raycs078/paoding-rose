@@ -1,4 +1,4 @@
-package net.paoding.rose.jade.datasource.slave;
+package net.paoding.rose.jade.datasource.instances;
 
 import java.io.PrintWriter;
 import java.sql.Connection;
@@ -15,7 +15,7 @@ import net.paoding.rose.jade.core.SQLThreadLocal;
 
 import org.springframework.util.Assert;
 
-public class MasterSlaveDataSource implements DataSource {
+public class MasterSlaverDataSource implements DataSource {
 
     private List<DataSource> masters = Collections.emptyList();
 
