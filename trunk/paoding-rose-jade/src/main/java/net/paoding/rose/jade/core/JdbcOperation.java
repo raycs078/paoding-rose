@@ -2,7 +2,6 @@ package net.paoding.rose.jade.core;
 
 import java.util.Map;
 
-import net.paoding.rose.jade.provider.DataAccess;
 import net.paoding.rose.jade.provider.Modifier;
 
 /**
@@ -13,6 +12,10 @@ import net.paoding.rose.jade.provider.Modifier;
  */
 public interface JdbcOperation {
 
+    /**
+     * 
+     * @return
+     */
     public Modifier getModifier();
 
     /**
@@ -20,5 +23,5 @@ public interface JdbcOperation {
      * 
      * @return
      */
-    public Object execute(DataAccess dataAccess, Map<String, Object> parameters);
+    public Object execute(Map<String, Object> parameters);
 }

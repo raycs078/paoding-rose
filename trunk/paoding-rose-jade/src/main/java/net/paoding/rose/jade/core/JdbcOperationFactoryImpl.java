@@ -19,6 +19,7 @@ import java.util.regex.Pattern;
 
 import net.paoding.rose.jade.annotation.SQL;
 import net.paoding.rose.jade.annotation.SQLType;
+import net.paoding.rose.jade.provider.DataAccess;
 import net.paoding.rose.jade.provider.Modifier;
 
 import org.springframework.jdbc.core.RowMapper;
@@ -36,7 +37,7 @@ public class JdbcOperationFactoryImpl implements JdbcOperationFactory {
     private RowMapperFactory rowMapperFactory = new RowMapperFactoryImpl();
 
     @Override
-    public JdbcOperation getJdbcOperation(Modifier modifier) {
+    public JdbcOperation getJdbcOperation(DataAccess dataAccess, Modifier modifier) {
 
         // 检查方法的  Annotation
         SQL sqlAnnotation = modifier.getAnnotation(SQL.class);
@@ -60,11 +61,11 @@ public class JdbcOperationFactoryImpl implements JdbcOperationFactory {
             // 获得  RowMapper
             RowMapper rowMapper = rowMapperFactory.getRowMapper(modifier);
             // SELECT 查询
-            return new SelectOperation(jdQL, modifier, rowMapper);
+            return new SelectOperation(dataAccess, jdQL, modifier, rowMapper);
 
         } else if (SQLType.WRITE == sqlType) {
             // INSERT / UPDATE / DELETE 查询
-            return new UpdateOperation(jdQL, modifier);
+            return new UpdateOperation(dataAccess, jdQL, modifier);
         }
 
         // 抛出检查异常

@@ -44,8 +44,10 @@ public class SelectOperation implements JdbcOperation {
 
     private final Modifier modifier;
 
-    public SelectOperation(String sql, Modifier modifier, RowMapper rowMapper) {
+    private final DataAccess dataAccess;
 
+    public SelectOperation(DataAccess dataAccess, String sql, Modifier modifier, RowMapper rowMapper) {
+        this.dataAccess = dataAccess;
         this.sql = sql;
         this.modifier = modifier;
         this.returnType = modifier.getReturnType();
@@ -58,7 +60,7 @@ public class SelectOperation implements JdbcOperation {
     }
 
     @Override
-    public Object execute(DataAccess dataAccess, Map<String, Object> parameters) {
+    public Object execute(Map<String, Object> parameters) {
         // 执行查询
         List<?> listResult = dataAccess.select(sql, modifier, parameters, rowMapper);
         final int sizeResult = listResult.size();
