@@ -123,7 +123,8 @@ public class JadeDaoFactoryBean<T> implements FactoryBean, InitializingBean {
                         JdbcOperation operation = jdbcOperations.get(method);
                         if (operation == null) {
                             Modifier modifier = new Modifier(definition, method);
-                            operation = jdbcOperationFactory.getJdbcOperation(modifier);
+                            DataAccess dataAccess = dataAccessProvider.createDataAccess(daoClass);
+                            operation = jdbcOperationFactory.getJdbcOperation(dataAccess, modifier);
                             jdbcOperations.putIfAbsent(method, operation);
                         }
                         //
@@ -144,8 +145,8 @@ public class JadeDaoFactoryBean<T> implements FactoryBean, InitializingBean {
                             }
                         }
                         //
-                        DataAccess dataAccess = dataAccessProvider.createDataAccess(daoClass);
-                        return operation.execute(dataAccess, parameters);
+
+                        return operation.execute(parameters);
                     }
                 });
     }

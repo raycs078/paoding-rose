@@ -1,5 +1,6 @@
 package net.paoding.rose.jade.core;
 
+import net.paoding.rose.jade.provider.DataAccess;
 import net.paoding.rose.jade.provider.Modifier;
 
 /**
@@ -14,5 +15,5 @@ public interface JdbcOperationFactory {
      * 
      * @return {@link JdbcOperation} 对象
      */
-    public JdbcOperation getJdbcOperation(Modifier modifier);
+    public JdbcOperation getJdbcOperation(DataAccess dataAccess, Modifier modifier);
 }

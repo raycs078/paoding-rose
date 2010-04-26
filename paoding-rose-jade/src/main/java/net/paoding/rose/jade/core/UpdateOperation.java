@@ -43,7 +43,10 @@ public class UpdateOperation implements JdbcOperation {
 
     private final Modifier modifier;
 
-    public UpdateOperation(String sql, Modifier modifier) {
+    private final DataAccess dataAccess;
+
+    public UpdateOperation(DataAccess dataAccess, String sql, Modifier modifier) {
+        this.dataAccess = dataAccess;
         this.sql = sql;
         this.modifier = modifier;
         this.returnType = modifier.getReturnType();
@@ -56,7 +59,7 @@ public class UpdateOperation implements JdbcOperation {
     }
 
     @Override
-    public Object execute(DataAccess dataAccess, Map<String, Object> parameters) {
+    public Object execute(Map<String, Object> parameters) {
         if (parameters.get(":1") instanceof List<?>) {
             Class<?> returnType = modifier.getReturnType();
             if (returnType != void.class && returnType != int[].class
