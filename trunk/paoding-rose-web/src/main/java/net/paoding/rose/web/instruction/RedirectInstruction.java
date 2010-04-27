@@ -16,16 +16,17 @@
 package net.paoding.rose.web.instruction;
 
 import java.io.IOException;
+import java.net.URLEncoder;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
+import net.paoding.rose.web.Invocation;
+import net.paoding.rose.web.RequestPath;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.util.Assert;
-
-import net.paoding.rose.web.Invocation;
-import net.paoding.rose.web.RequestPath;
 
 /**
  * 
@@ -44,7 +45,7 @@ public class RedirectInstruction extends AbstractInstruction {
         } else {
             Assert.isTrue(sc == HttpServletResponse.SC_MOVED_PERMANENTLY);
             inv.getResponse().setStatus(sc);
-            inv.getResponse().setHeader("Location", location);
+            inv.getResponse().setHeader("Location", URLEncoder.encode(location, "ISO-8859-1"));
         }
     }
 
