@@ -16,7 +16,6 @@
 package net.paoding.rose.web.instruction;
 
 import java.io.IOException;
-import java.net.URLEncoder;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
@@ -41,11 +40,11 @@ public class RedirectInstruction extends AbstractInstruction {
     public void doRender(Invocation inv) throws IOException {
         String location = resolvePlaceHolder(location(), inv);
         if (sc == null || sc == 302) {
-            inv.getResponse().sendRedirect(URLEncoder.encode(location, "ISO-8859-1"));
+            inv.getResponse().sendRedirect(location);
         } else {
             Assert.isTrue(sc == HttpServletResponse.SC_MOVED_PERMANENTLY);
             inv.getResponse().setStatus(sc);
-            inv.getResponse().setHeader("Location", URLEncoder.encode(location, "ISO-8859-1"));
+            inv.getResponse().setHeader("Location", location);
         }
     }
 
