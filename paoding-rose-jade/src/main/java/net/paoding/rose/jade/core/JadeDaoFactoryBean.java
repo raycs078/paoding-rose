@@ -15,24 +15,15 @@
  */
 package net.paoding.rose.jade.core;
 
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
-import net.paoding.rose.jade.annotation.DAO;
-import net.paoding.rose.jade.annotation.SQLParam;
 import net.paoding.rose.jade.provider.DataAccess;
 import net.paoding.rose.jade.provider.DataAccessProvider;
 import net.paoding.rose.jade.provider.Definition;
-import net.paoding.rose.jade.provider.Modifier;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
 /**
@@ -44,17 +35,12 @@ import org.springframework.util.ClassUtils;
  */
 public class JadeDaoFactoryBean<T> implements FactoryBean, InitializingBean {
 
-    private static final Log logger = LogFactory.getLog(JadeDaoFactoryBean.class);
-
-    private static JdbcOperationFactory jdbcOperationFactory = new JdbcOperationFactoryImpl();
-
-    private ConcurrentHashMap<Method, JdbcOperation> jdbcOperations = new ConcurrentHashMap<Method, JdbcOperation>();
-
-    private DataAccessProvider dataAccessProvider;
-
     private T dao;
 
     private Class<T> daoClass;
+
+    // 保存dataAccessProvider而非dataAccess是为了尽量延迟获取DataAccess实例
+    private DataAccessProvider dataAccessProvider;
 
     public void setDaoClass(Class<T> daoClass) {
         this.daoClass = daoClass;
@@ -65,8 +51,31 @@ public class JadeDaoFactoryBean<T> implements FactoryBean, InitializingBean {
     }
 
     @Override
+    public void afterPropertiesSet() throws Exception {
+        Assert.notNull(dataAccessProvider);
+        Assert.isTrue(daoClass.isInterface(), "not a interface class: " + daoClass.getName());
+    }
+
+    @Override
     public T getObject() {
+        if (dao == null) {
+            synchronized (this) {
+                if (dao == null) {
+                    dao = createDAO(daoClass);
+                }
+            }
+        }
+        Assert.notNull(dao);
         return dao;
+    }
+
+    @SuppressWarnings("unchecked")
+    protected T createDAO(Class<T> daoClass) {
+        Definition definition = new Definition(daoClass);
+        DataAccess dataAccess = dataAccessProvider.createDataAccess(daoClass);
+        JadeDaoInvocationHandler handler = new JadeDaoInvocationHandler(dataAccess, definition);
+        return (T) Proxy.newProxyInstance(ClassUtils.getDefaultClassLoader(),
+                new Class[] { daoClass }, handler);
     }
 
     @Override
@@ -79,75 +88,4 @@ public class JadeDaoFactoryBean<T> implements FactoryBean, InitializingBean {
         return true;
     }
 
-    @Override
-    public void afterPropertiesSet() {
-        this.dao = createDao(daoClass);
-    }
-
-    @SuppressWarnings("unchecked")
-    private T createDao(final Class<T> daoClass) {
-
-        if (!daoClass.isInterface()) {
-            throw new IllegalArgumentException(daoClass.getName()
-                    + ": daoClass should be a interface");
-        }
-
-        DAO dao = daoClass.getAnnotation(DAO.class);
-        if (dao == null) {
-            throw new IllegalArgumentException(daoClass.getName() // NL
-                    + ": not @DAO annotated ");
-        }
-
-        final Definition definition = new Definition(daoClass);
-        return (T) Proxy.newProxyInstance(ClassUtils.getDefaultClassLoader(),
-                new Class[] { daoClass }, new InvocationHandler() {
-
-                    @Override
-                    public String toString() {
-                        return daoClass.getName() + "@"
-                                + Integer.toHexString(System.identityHashCode(this));
-                    }
-
-                    @Override
-                    public Object invoke(Object proxy, Method method, Object[] args)
-                            throws Throwable {
-
-                        if (logger.isDebugEnabled()) {
-                            logger.debug("invoke: " + daoClass.getName() + "#" + method.getName());
-                        }
-
-                        if (Object.class == method.getDeclaringClass()) {
-                            return method.invoke(this, args);
-                        }
-
-                        JdbcOperation operation = jdbcOperations.get(method);
-                        if (operation == null) {
-                            Modifier modifier = new Modifier(definition, method);
-                            DataAccess dataAccess = dataAccessProvider.createDataAccess(daoClass);
-                            operation = jdbcOperationFactory.getJdbcOperation(dataAccess, modifier);
-                            jdbcOperations.putIfAbsent(method, operation);
-                        }
-                        //
-                        // 将参数放入  Map
-                        Map<String, Object> parameters;
-                        if (args == null || args.length == 0) {
-                            parameters = new HashMap<String, Object>(4);
-                        } else {
-                            parameters = new HashMap<String, Object>(args.length * 2 + 4);
-                            SQLParam[] sqlParams = operation.getModifier().getParameterAnnotations(
-                                    SQLParam.class);
-                            for (int i = 0; i < args.length; i++) {
-                                parameters.put(":" + (i + 1), args[i]);
-                                SQLParam sqlParam = sqlParams[i];
-                                if (sqlParam != null) {
-                                    parameters.put(sqlParam.value(), args[i]);
-                                }
-                            }
-                        }
-                        //
-
-                        return operation.execute(parameters);
-                    }
-                });
-    }
 }
