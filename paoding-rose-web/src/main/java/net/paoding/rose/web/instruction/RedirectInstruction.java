@@ -41,7 +41,7 @@ public class RedirectInstruction extends AbstractInstruction {
     public void doRender(Invocation inv) throws IOException {
         String location = resolvePlaceHolder(location(), inv);
         if (sc == null || sc == 302) {
-            inv.getResponse().sendRedirect(location);
+            inv.getResponse().sendRedirect(URLEncoder.encode(location, "ISO-8859-1"));
         } else {
             Assert.isTrue(sc == HttpServletResponse.SC_MOVED_PERMANENTLY);
             inv.getResponse().setStatus(sc);
