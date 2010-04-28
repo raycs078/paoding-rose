@@ -4,7 +4,6 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import net.paoding.rose.jade.annotation.SQLParam;
 import net.paoding.rose.jade.provider.DataAccess;
@@ -20,7 +19,7 @@ public class JadeDaoInvocationHandler implements InvocationHandler {
 
     private static JdbcOperationFactory jdbcOperationFactory = new JdbcOperationFactoryImpl();
 
-    private ConcurrentHashMap<Method, JdbcOperation> jdbcOperations = new ConcurrentHashMap<Method, JdbcOperation>();
+    private HashMap<Method, JdbcOperation> jdbcOperations = new HashMap<Method, JdbcOperation>();
 
     private final Definition definition;
 
@@ -44,9 +43,14 @@ public class JadeDaoInvocationHandler implements InvocationHandler {
 
         JdbcOperation operation = jdbcOperations.get(method);
         if (operation == null) {
-            Modifier modifier = new Modifier(definition, method);
-            operation = jdbcOperationFactory.getJdbcOperation(dataAccess, modifier);
-            jdbcOperations.putIfAbsent(method, operation);
+            synchronized (jdbcOperations) {
+                operation = jdbcOperations.get(method);
+                if (operation == null) {
+                    Modifier modifier = new Modifier(definition, method);
+                    operation = jdbcOperationFactory.getJdbcOperation(dataAccess, modifier);
+                    jdbcOperations.put(method, operation);
+                }
+            }
         }
         //
         // 将参数放入  Map
