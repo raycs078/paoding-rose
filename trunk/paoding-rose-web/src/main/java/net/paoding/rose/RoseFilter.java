@@ -18,6 +18,7 @@ package net.paoding.rose;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Enumeration;
 import java.util.List;
 
 import javax.servlet.FilterChain;
@@ -30,12 +31,11 @@ import javax.servlet.http.HttpServletResponse;
 import net.paoding.rose.scanner.ModuleResource;
 import net.paoding.rose.scanner.ModuleResourceProvider;
 import net.paoding.rose.scanner.ModuleResourceProviderImpl;
-import net.paoding.rose.scanner.RoseResources;
 import net.paoding.rose.scanning.LoadScope;
+import net.paoding.rose.scanning.context.RoseWebAppContext;
 import net.paoding.rose.util.Snippet;
 import net.paoding.rose.web.RequestPath;
 import net.paoding.rose.web.annotation.ReqMethod;
-import net.paoding.rose.web.impl.context.RoseContextLoader;
 import net.paoding.rose.web.impl.mapping.Mapping;
 import net.paoding.rose.web.impl.mapping.MappingImpl;
 import net.paoding.rose.web.impl.mapping.MappingNode;
@@ -59,7 +59,6 @@ import net.paoding.rose.web.instruction.InstructionExecutorImpl;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.core.SpringVersion;
-import org.springframework.core.io.Resource;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 import org.springframework.web.filter.GenericFilterBean;
@@ -149,8 +148,7 @@ import org.springframework.web.util.NestedServletException;
  */
 public class RoseFilter extends GenericFilterBean {
 
-    /** 默认的applicationContext地址 */
-    public static final String DEFAULT_CONTEXT_CONFIG_LOCATION = "/WEB-INF/applicationContext*.xml";
+    private static final String ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE = WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE;
 
     /** 使用的applicationContext地址 */
     private String contextConfigLocation;
@@ -256,6 +254,18 @@ public class RoseFilter extends GenericFilterBean {
                 logger.info("[init] call 'init/rootContext'");
             }
 
+            if (logger.isDebugEnabled()) {
+                StringBuilder sb = new StringBuilder();
+                @SuppressWarnings("unchecked")
+                Enumeration<String> iter = getFilterConfig().getInitParameterNames();
+                while (iter.hasMoreElements()) {
+                    String name = (String) iter.nextElement();
+                    sb.append(name).append("='").append(getFilterConfig().getInitParameter(name))
+                            .append("'\n");
+                }
+                logger.debug("[init] parameters: " + sb);
+            }
+
             WebApplicationContext rootContext = prepareRootApplicationContext();
 
             if (logger.isInfoEnabled()) {
@@ -353,52 +363,36 @@ public class RoseFilter extends GenericFilterBean {
         if (StringUtils.isBlank(contextConfigLocation)) {
             String webxmlContextConfigLocation = getServletContext().getInitParameter(
                     "contextConfigLocation");
-            if (!StringUtils.isBlank(webxmlContextConfigLocation)) {
-                contextConfigLocation = webxmlContextConfigLocation;
+            if (StringUtils.isBlank(webxmlContextConfigLocation)) {
+                contextConfigLocation = RoseWebAppContext.DEFAULT_CONFIG_LOCATION;
             } else {
-                contextConfigLocation = DEFAULT_CONTEXT_CONFIG_LOCATION;
+                contextConfigLocation = webxmlContextConfigLocation;
             }
         }
-        if (logger.isInfoEnabled()) {
-            logger.info("[init/rootContext] call 'applicationContext'");
-        }
-        List<Resource> applicationContextResources = RoseResources.findContextResources(load);
 
-        if (logger.isInfoEnabled()) {
-            logger.info("[init/rootContext] exits from 'applicationContext'");
-            logger.info("[init/rootContext] call 'messages'");
+        // 如果web.xml配置使用了spring装载root应用context或多个roseFilter ...... 不可以
+        if (getServletContext().getAttribute(ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE) != null) {
+            throw new IllegalStateException(
+                    "Cannot initialize context because there is already a root application context present - "
+                            + "check whether you have multiple ContextLoader* or RoseFilter definitions in your web.xml!");
         }
 
-        String[] messageBasenames = RoseResources.findMessageBasenames(load);
+        RoseWebAppContext rootContext = new RoseWebAppContext(getServletContext(), load, false);
+        rootContext.setConfigLocation(contextConfigLocation);
+        rootContext.setId("rose.root");
+        rootContext.refresh();
 
         if (logger.isInfoEnabled()) {
-            logger.info("[init/rootContext] exits from 'messages'");
-            logger.info("[init/rootContext] add default messages base name: '/WEB-INF/messages'");
-        }
-
-        messageBasenames = Arrays.copyOf(messageBasenames, messageBasenames.length + 1);
-        messageBasenames[messageBasenames.length - 1] = "/WEB-INF/messages";
-
-        if (logger.isInfoEnabled()) {
-            logger.info("[init/rootContext] call 'webctx.create'");
-        }
-
-        WebApplicationContext rootContext = RoseContextLoader.createWebApplicationContext(
-                getServletContext(), applicationContextResources, contextConfigLocation,
-                messageBasenames, "rose.root", "rose.root");
-
-        if (logger.isInfoEnabled()) {
-            logger.info("[init/rootContext] exits from 'webctx.create'");
+            logger.info("[init/rootContext] exits");
         }
 
         /* enable: WebApplicationContextUtils.getWebApplicationContext() */
-        getServletContext().setAttribute(
-                WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE, rootContext);
+        getServletContext().setAttribute(ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE, rootContext);
 
         if (logger.isInfoEnabled()) {
             logger.info("[init/rootContext] Published rose.root WebApplicationContext ["
                     + rootContext + "] as ServletContext attribute with name ["
-                    + WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE + "]");
+                    + ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE + "]");
         }
 
         return rootContext;
@@ -415,6 +409,7 @@ public class RoseFilter extends GenericFilterBean {
         if (logger.isInfoEnabled()) {
             logger.info("[init/module] using provider: " + provider);
             logger.info("[init/module] call 'moduleResource': to find all module resources.");
+            logger.info("[init/module] load " + load);
         }
         List<ModuleResource> moduleResources = provider.findModuleResources(load);
 

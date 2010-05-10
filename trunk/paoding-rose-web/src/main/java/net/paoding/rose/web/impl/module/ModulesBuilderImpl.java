@@ -37,7 +37,6 @@ import net.paoding.rose.web.annotation.Ignored;
 import net.paoding.rose.web.annotation.Interceptor;
 import net.paoding.rose.web.annotation.NotForSubModules;
 import net.paoding.rose.web.annotation.ReqMapping;
-import net.paoding.rose.web.impl.context.RoseContextLoader;
 import net.paoding.rose.web.paramresolver.ParamResolver;
 
 import org.apache.commons.lang.ArrayUtils;
@@ -76,46 +75,42 @@ public class ModulesBuilderImpl implements ModulesBuilder {
         Map<ModuleResource, Module> modulesAsMap = new HashMap<ModuleResource, Module>();
 
         // 
-        for (ModuleResource resource : moduleResources) {
-            final Module parentModule = (resource.getParent() == null) ? null//
-                    : modulesAsMap.get(resource.getParent());
+        for (ModuleResource moduleResource : moduleResources) {
+            final Module parentModule = (moduleResource.getParent() == null) ? null//
+                    : modulesAsMap.get(moduleResource.getParent());
             final WebApplicationContext parentContext = (parentModule == null) ? rootContext//
                     : parentModule.getApplicationContext();
             final String namespace = "context@controllers"
-                    + resource.getRelativePath().replace('/', '.');
+                    + moduleResource.getRelativePath().replace('/', '.');
 
             // 创建该module的spring context对象
             final ServletContext servletContext = parentContext == null ? null //
                     : parentContext.getServletContext();
-            final XmlWebApplicationContext moduleContext = RoseContextLoader
-                    .createWebApplicationContext(//
-                            servletContext, //
-                            parentContext,//
-                            /*contextUrls*/
-                            RoseContextLoader.toResources(resource.getContextResources()),//
-                            /*confLocations*/"",//
-                            resource.getMessageBasenames(),//
-                            /*id*/resource.getModuleUrl().toString(),//
-                            namespace//
+            final ModuleAppContext moduleContext = ModuleAppContext.createModuleContext(//
+                    parentContext,//
+                    moduleResource.getContextResources(),//
+                    moduleResource.getMessageBasenames(),//
+                    /*id*/moduleResource.getModuleUrl().toString(),//
+                    namespace//
                     );
 
             // 扫描找到的类...定义到applicationContext
-            registerBeanDefinitions(moduleContext, resource.getModuleClasses());
+            registerBeanDefinitions(moduleContext, moduleResource.getModuleClasses());
 
             // 创建module对象
             final ModuleImpl module = new ModuleImpl(//
                     parentModule, //
-                    resource.getModuleUrl(), //
-                    resource.getMappingPath(), //
-                    resource.getRelativePath(), //
+                    moduleResource.getModuleUrl(), //
+                    moduleResource.getMappingPath(), //
+                    moduleResource.getRelativePath(), //
                     moduleContext);
             //
-            modulesAsMap.put(resource, module);
+            modulesAsMap.put(moduleResource, module);
 
             // 设置到servletContext全局属性
             if (servletContext != null) {
                 String contextAttrKey = WebApplicationContext.class.getName() + "@"
-                        + resource.getModuleUrl();
+                        + moduleResource.getModuleUrl();
                 servletContext.setAttribute(contextAttrKey, moduleContext);
             }
 
