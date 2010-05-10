@@ -39,20 +39,20 @@ import org.springframework.jdbc.core.SingleColumnRowMapper;
  * 支持DAO方法返回类型：
  * <p>
  * <ul>
- * <li>int/Integer、long/Long等primitive&wrapper：期望返回单列，0行或1行</li>
+ * <li>int、long等primitive：期望返回单列、1行</li>
+ * <li>Integer、Long等包装类型的：期望返回单列、0行或1行</li>
  * <li>String、BigDecimal：期望返回单列，0行或1行</li>
  * <li>java.util.Date及其子类：期望返回单列，0行或1行</li>
- * <li>byte[]：期望返回单列，0行或1行</li>
+ * <li>byte[]：期望返回单行、单列；列类型可转化为byte[]类型(比如blob类型)</li>
  * <li>Blob、Clob：期望返回单，0行或1行</li>
- * <li><code>数组(String[]、User[]等)：期望返回单列，多行；</li>
+ * <li><code>数组(int[]、String[]等)：期望返回单列，多行；</li>
  * <li>数组(User[]等)：期望返回多列，多行；</li>
- * <li>集合(List<;Integer>、Set<String>等): 期望返回单列，多行；</li>
- * <li>集合(List<User>、Set<User>等): 期望返回单列，多行；</li>
- * <li>映射(Map<String, Date>): 期望返回2列，多行</li>
- * <li>映射(Map<String, User>): 期望返回多列，多行</li>
- * <li>映射(Map<String, String[]>): 期望返回多列，多行</li>
+ * <li>集合(List&lt;Integer&gt;、Set&lt;String&gt等): 期望返回单列，多行；</li>
+ * <li>集合(List&lt;User&gt;、Set&lt;User&gt等): 期望返回单列，多行；</li>
+ * <li>映射(Map&lt;String, Date&gt): 期望返回2列，多行</li>
+ * <li>映射(Map&lt;String, User&gt): 期望返回多列，多行</li>
+ * <li>映射(Map&lt;String, String[]&gt): 期望返回多列，多行</li>
  * <ul>
- * TODO: 将以上的尖括号变为HTML可识别
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  * @author 廖涵 [in355hz@gmail.com]
