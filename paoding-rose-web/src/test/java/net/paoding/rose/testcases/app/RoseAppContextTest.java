@@ -2,7 +2,7 @@ package net.paoding.rose.testcases.app;
 
 import junit.framework.Assert;
 import junit.framework.TestCase;
-import net.paoding.rose.app.RoseAppContext;
+import net.paoding.rose.scanning.context.RoseAppContext;
 import net.paoding.rose.testcases.controllers.autowire.AutowireBean;
 import net.paoding.rose.testcases.controllers.autowire.AutowireBean2;
 

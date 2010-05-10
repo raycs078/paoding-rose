@@ -6,7 +6,7 @@ import javax.servlet.ServletException;
 
 import net.paoding.rose.mock.controllers.DefController;
 import net.paoding.rose.testcases.AbstractControllerTest;
-import net.paoding.rose.web.impl.context.RoseXmlWebApplicationContext;
+import net.paoding.rose.web.impl.module.ModuleAppContext;
 
 import org.springframework.context.ApplicationContext;
 
@@ -35,6 +35,6 @@ public class OrderControllerTest extends AbstractControllerTest {
     public void testCtx() throws ServletException, IOException {
         Object obj = invoke("/autowire/order/ctx");
         assertTrue(ApplicationContext.class.isInstance(obj));
-        assertEquals("obj=" + obj, RoseXmlWebApplicationContext.class, obj.getClass());
+        assertEquals("obj=" + obj, ModuleAppContext.class, obj.getClass());
     }
 }
