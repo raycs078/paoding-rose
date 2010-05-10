@@ -17,6 +17,7 @@ package net.paoding.rose.scanning;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -84,5 +85,22 @@ public class LoadScope {
             String[] packages = StringUtils.split(componetConfValue, ", \t\n\r\0");//都好和\t之间有一个空格
             this.load.put(componetType, packages);
         }
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        for (Entry<String, String[]> componetConf : load.entrySet()) {
+            String componetType = componetConf.getKey();
+            String componetConfValue[] = componetConf.getValue();
+            sb.append(componetType).append("=");
+            for (String value : componetConfValue) {
+                sb.append(value).append(";");
+            }
+            if (componetConfValue.length > 0) {
+                sb.setLength(sb.length() - 1);
+            }
+        }
+        return super.toString();
     }
 }

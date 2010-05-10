@@ -218,6 +218,10 @@ public class ResourceRef implements Comparable<ResourceRef> {
 
     @Override
     public String toString() {
+        String[] modifiers = this.modifiers;
+        if (modifiers == null) {
+            modifiers = new String[0];
+        }
         try {
             return resource.getURL().getFile() + Arrays.toString(modifiers);
         } catch (IOException e) {
