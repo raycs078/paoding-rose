@@ -107,7 +107,8 @@ public class RoseScanner {
             resources = new LinkedList<ResourceRef>();
             for (String scopeEntry : scope) {
                 String packagePath = scopeEntry.replace('.', '/');
-                Resource[] packageResources = resourcePatternResolver.getResources(packagePath);
+                Resource[] packageResources = resourcePatternResolver.getResources("classpath*:"
+                        + packagePath);
                 for (Resource pkgResource : packageResources) {
                     String uri = pkgResource.getURI().toString();
                     uri = StringUtils.removeEnd(uri, "/");
@@ -305,8 +306,8 @@ public class RoseScanner {
             }
         } else {
             if (logger.isInfoEnabled()) {
-                logger.info("[jarFile] found cached " + jarResources.size()
-                        + " jar files: " + jarResources);
+                logger.info("[jarFile] found cached " + jarResources.size() + " jar files: "
+                        + jarResources);
             }
         }
         return Collections.unmodifiableList(jarResources);
