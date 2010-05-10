@@ -25,6 +25,7 @@ import java.util.Map;
 import net.paoding.rose.jade.provider.DataAccess;
 import net.paoding.rose.jade.provider.Modifier;
 
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.jdbc.core.RowMapper;
 
@@ -126,15 +127,18 @@ public class SelectOperation implements JdbcOperation {
 
                 // 基础类型的抛异常，其他的返回null
                 if (returnType.isPrimitive()) {
-                    throw new IncorrectResultSizeDataAccessException(//
-                            modifier.toString(), 1, sizeResult);
+                    String msg = "Incorrect result size: expected 1, actual " + sizeResult + ": "
+                            + modifier.toString();
+                    throw new EmptyResultDataAccessException(msg, 1);
                 } else {
                     return null;
                 }
 
             } else {
                 // IncorrectResultSizeDataAccessException
-                throw new IncorrectResultSizeDataAccessException(modifier.toString(), 1, sizeResult);
+                String msg = "Incorrect result size: expected 0 or 1, actual " + sizeResult + ": "
+                        + modifier.toString();
+                throw new IncorrectResultSizeDataAccessException(msg, 1, sizeResult);
             }
         }
     }
