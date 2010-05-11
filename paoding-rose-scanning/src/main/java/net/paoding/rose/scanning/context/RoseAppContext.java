@@ -91,4 +91,8 @@ public class RoseAppContext extends AbstractXmlApplicationContext {
         AnnotationConfigUtils.registerAnnotationConfigProcessors(registry);
     }
 
+    public RoseAppContext getApplicationContext() {
+        return this;
+    }
+
 }
