@@ -17,19 +17,20 @@ package net.paoding.rose.web;
 
 import java.lang.reflect.Method;
 
+import net.paoding.rose.web.impl.thread.AfterCompletion;
+
 /**
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
-public class ControllerInterceptorWrapper implements NamedControllerInterceptor,
-        ControllerInterceptor {
+public class InterceptorDelegate implements Ordered, Named, ControllerInterceptor, AfterCompletion {
 
     protected ControllerInterceptor interceptor;
 
     private String name;
 
-    public ControllerInterceptorWrapper(ControllerInterceptor interceptor) {
+    public InterceptorDelegate(ControllerInterceptor interceptor) {
         this.interceptor = interceptor;
     }
 
@@ -39,28 +40,31 @@ public class ControllerInterceptorWrapper implements NamedControllerInterceptor,
 
     @Override
     public String getName() {
-        if (interceptor instanceof NamedControllerInterceptor) {
-            name = ((NamedControllerInterceptor) interceptor).getName();
+        if (interceptor instanceof Named) {
+            name = ((Named) interceptor).getName();
         }
         return name;
     }
 
     @Override
     public void setName(String name) {
-        if (interceptor instanceof NamedControllerInterceptor) {
-            ((NamedControllerInterceptor) interceptor).setName(name);
-        }
         this.name = name;
+        if (interceptor instanceof Named) {
+            ((Named) interceptor).setName(name);
+        }
     }
-    
+
     @Override
     public int getPriority() {
-        return interceptor.getPriority();
+        if (interceptor instanceof Ordered) {
+            return ((Ordered) interceptor).getPriority();
+        }
+        return 0;
     }
-    
+
     @Override
     public boolean isForAction(Class<?> controllerClazz, Method actionMethod) {
-    	 return interceptor.isForAction(controllerClazz, actionMethod);
+        return interceptor.isForAction(controllerClazz, actionMethod);
     }
 
     @Override
@@ -69,18 +73,15 @@ public class ControllerInterceptorWrapper implements NamedControllerInterceptor,
     }
 
     @Override
-    public Object before(Invocation inv) throws Exception {
-        return interceptor.before(inv);
-    }
-
-    @Override
-    public Object after(Invocation inv, Object instruction) throws Exception {
-        return interceptor.after(inv, instruction);
+    public Object roundInvocation(Invocation inv, InvocationChain chain) throws Exception {
+        return interceptor.roundInvocation(inv, chain);
     }
 
     @Override
     public void afterCompletion(Invocation inv, Throwable ex) throws Exception {
-        interceptor.afterCompletion(inv, ex);
+        if (interceptor instanceof AfterCompletion) {
+            ((AfterCompletion) interceptor).afterCompletion(inv, ex);
+        }
     }
 
 }

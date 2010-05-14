@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.List;
 
 import net.paoding.rose.web.ControllerErrorHandler;
+import net.paoding.rose.web.InterceptorDelegate;
 import net.paoding.rose.web.ParamValidator;
 import net.paoding.rose.web.paramresolver.ParamResolver;
 
@@ -57,7 +58,7 @@ public class ModuleImpl implements Module {
     private List<ParamResolver> customerResolvers = new ArrayList<ParamResolver>();
 
     // 用于add方法加进来
-    private List<NestedControllerInterceptor> interceptors = new ArrayList<NestedControllerInterceptor>(
+    private List<InterceptorDelegate> interceptors = new ArrayList<InterceptorDelegate>(
             32);
 
     // 用于add方法加进来
@@ -141,7 +142,7 @@ public class ModuleImpl implements Module {
         return Collections.unmodifiableList(customerResolvers);
     }
 
-    public ModuleImpl addControllerInterceptor(NestedControllerInterceptor interceptor) {
+    public ModuleImpl addControllerInterceptor(InterceptorDelegate interceptor) {
         for (int i = 0; i < interceptors.size(); i++) {
             if (interceptor.getPriority() > interceptors.get(i).getPriority()) {
                 this.interceptors.add(i, interceptor);
@@ -153,7 +154,7 @@ public class ModuleImpl implements Module {
     }
 
     @Override
-    public List<NestedControllerInterceptor> getInterceptors() {
+    public List<InterceptorDelegate> getInterceptors() {
         return interceptors;
     }
 

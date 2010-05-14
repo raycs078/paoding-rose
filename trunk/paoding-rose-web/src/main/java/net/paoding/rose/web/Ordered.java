@@ -1,5 +1,5 @@
 /*
- * Copyright 2007-2009 the original author or authors.
+ * Copyright 2007-2010 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,20 +16,17 @@
 package net.paoding.rose.web;
 
 /**
+ * 如果拦截器实现了此接口，代表这个拦截器关注其在所有拦截器中的顺序。
  * 
- * @author 王志亮 [qieqie.wang@gmail.com]
+ * @author Administrator
  * 
  */
-public interface NamedControllerInterceptor extends ControllerInterceptor {
+public interface Ordered {
 
     /**
-     * 
-     */
-    public void setName(String name);
-
-    /**
+     * 返回一个数字，值大的具有最高优先拦截权
      * 
      * @return
      */
-    public String getName();
+    int getPriority();
 }

@@ -32,6 +32,9 @@ import net.paoding.rose.scanner.ModuleResource;
 import net.paoding.rose.util.SpringUtils;
 import net.paoding.rose.web.ControllerErrorHandler;
 import net.paoding.rose.web.ControllerInterceptor;
+import net.paoding.rose.web.InterceptorDelegate;
+import net.paoding.rose.web.OncePerRequestInterceptorDelegate;
+import net.paoding.rose.web.Ordered;
 import net.paoding.rose.web.ParamValidator;
 import net.paoding.rose.web.annotation.Ignored;
 import net.paoding.rose.web.annotation.Interceptor;
@@ -116,7 +119,7 @@ public class ModulesBuilderImpl implements ModulesBuilder {
 
             // 从Spring应用环境中找出本web模块要使用的ParamValidator，ParamResolver, ControllerInterceptor, ControllerErrorHandler
             List<ParamResolver> customerResolvers = findContextResolvers(moduleContext);
-            List<NestedControllerInterceptor> interceptors = findContextInterceptors(moduleContext);
+            List<InterceptorDelegate> interceptors = findContextInterceptors(moduleContext);
             List<ParamValidator> validators = findContextValidators(moduleContext);
             ControllerErrorHandler errorHandler = getContextErrorHandler(moduleContext);
 
@@ -130,7 +133,7 @@ public class ModulesBuilderImpl implements ModulesBuilder {
             }
 
             // 将拦截器设置到module中
-            for (NestedControllerInterceptor interceptor : interceptors) {
+            for (InterceptorDelegate interceptor : interceptors) {
                 module.addControllerInterceptor(interceptor);
             }
             if (logger.isDebugEnabled()) {
@@ -379,11 +382,11 @@ public class ModulesBuilderImpl implements ModulesBuilder {
         return resolvers;
     }
 
-    private List<NestedControllerInterceptor> findContextInterceptors(
+    private List<InterceptorDelegate> findContextInterceptors(
             XmlWebApplicationContext context) {
         String[] interceptorNames = SpringUtils.getBeanNames(context.getBeanFactory(),
                 ControllerInterceptor.class);
-        ArrayList<NestedControllerInterceptor> globalInterceptors = new ArrayList<NestedControllerInterceptor>(
+        ArrayList<InterceptorDelegate> globalInterceptors = new ArrayList<InterceptorDelegate>(
                 interceptorNames.length);
         for (String beanName : interceptorNames) {
             ControllerInterceptor interceptor = (ControllerInterceptor) context.getBean(beanName);
@@ -406,8 +409,7 @@ public class ModulesBuilderImpl implements ModulesBuilder {
                         + RoseConstants.INTERCEPTOR_SUFFIX + "': " + userClass.getName()));
                 continue;
             }
-            NestedControllerInterceptor.Builder builder = new NestedControllerInterceptor.Builder(
-                    interceptor);
+            InterceptorBuilder builder = new InterceptorBuilder(interceptor);
             Interceptor annotation = userClass.getAnnotation(Interceptor.class);
             if (annotation != null) {
                 builder.oncePerRequest(annotation.oncePerRequest());
@@ -422,10 +424,14 @@ public class ModulesBuilderImpl implements ModulesBuilder {
 
             builder.name(interceporName);
 
-            NestedControllerInterceptor wrapper = builder.build();
+            InterceptorDelegate wrapper = builder.build();
             globalInterceptors.add(wrapper);
             if (logger.isDebugEnabled()) {
-                logger.debug("recognized interceptor[priority=" + interceptor.getPriority() + "]: " // \r\n
+                int priority = 0;
+                if (interceptor instanceof Ordered) {
+                    priority = ((Ordered) interceptor).getPriority();
+                }
+                logger.debug("recognized interceptor[priority=" + priority + "]: " // \r\n
                         + wrapper.getName() + "=" + userClass.getName());
             }
         }
@@ -461,11 +467,39 @@ public class ModulesBuilderImpl implements ModulesBuilder {
         }
         return globalValidators;
     }
-    //
-    //    static String asShortPropertyName(String beanName, String suffixToRemove) {
-    //        beanName = org.springframework.util.StringUtils.unqualify(beanName);
-    //        beanName = org.springframework.util.StringUtils.uncapitalize(beanName);
-    //        return StringUtils.removeEnd(beanName, suffixToRemove);
-    //    }
 
+    public static class InterceptorBuilder {
+
+        private boolean oncePerRequest;
+
+        private String name;
+
+        private ControllerInterceptor interceptor;
+
+        public InterceptorBuilder(ControllerInterceptor interceptor) {
+            this.interceptor = interceptor;
+        }
+
+        public InterceptorBuilder name(String name) {
+            this.name = name;
+            return this;
+        }
+
+        public InterceptorBuilder oncePerRequest(boolean oncePerRequest) {
+            this.oncePerRequest = oncePerRequest;
+            return this;
+        }
+
+        public InterceptorDelegate build() {
+            ControllerInterceptor interceptor = this.interceptor;
+            if (oncePerRequest) {
+                interceptor = new OncePerRequestInterceptorDelegate(interceptor);
+            }
+            InterceptorDelegate wrapper = new InterceptorDelegate(interceptor);
+            if (StringUtils.isBlank(wrapper.getName())) {
+                wrapper.setName(name);
+            }
+            return wrapper;
+        }
+    }
 }

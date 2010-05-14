@@ -3,12 +3,18 @@ package net.paoding.rose.util;
 import java.util.Arrays;
 import java.util.List;
 
+import net.paoding.rose.RoseFilter;
+import net.paoding.rose.web.InterceptorDelegate;
 import net.paoding.rose.web.ParamValidator;
 import net.paoding.rose.web.impl.module.ControllerRef;
 import net.paoding.rose.web.impl.module.Module;
-import net.paoding.rose.web.impl.module.NestedControllerInterceptor;
 import net.paoding.rose.web.paramresolver.ParamResolver;
 
+/**
+ * 
+ * @see RoseFilter
+ * 
+ */
 public class Snippet {
 
     // 后续可以提取出来放到什么地方，是不是采用模板语言来定义?
@@ -47,7 +53,7 @@ public class Snippet {
                 sb.setLength(sb.length() - 2);
             }
             sb.append("];\n\tinterceptors=[");
-            for (NestedControllerInterceptor interceptor : module.getInterceptors()) {
+            for (InterceptorDelegate interceptor : module.getInterceptors()) {
                 sb.append(interceptor.getName()).append("(").append(interceptor.getPriority())
                         .append("), ");
             }
