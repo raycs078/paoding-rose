@@ -19,6 +19,7 @@ import java.net.URL;
 import java.util.List;
 
 import net.paoding.rose.web.ControllerErrorHandler;
+import net.paoding.rose.web.InterceptorDelegate;
 import net.paoding.rose.web.ParamValidator;
 import net.paoding.rose.web.impl.mapping.Mapping;
 import net.paoding.rose.web.paramresolver.ParamResolver;
@@ -104,7 +105,7 @@ public interface Module {
      * 
      * @return
      */
-    public List<NestedControllerInterceptor> getInterceptors();
+    public List<InterceptorDelegate> getInterceptors();
 
     /**
      * 本模块有效的控制器对象

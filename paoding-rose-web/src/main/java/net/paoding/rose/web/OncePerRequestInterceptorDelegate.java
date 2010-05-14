@@ -15,30 +15,33 @@
  */
 package net.paoding.rose.web;
 
+import java.util.Random;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
  * @author 王志亮 [qieqie.wang@gmail.com]
  */
-public class OncePerRequestInterceptorWrapper extends ControllerInterceptorWrapper {
+public class OncePerRequestInterceptorDelegate extends InterceptorDelegate {
 
-    private static Log logger = LogFactory.getLog(OncePerRequestInterceptorWrapper.class);
+    private static Log logger = LogFactory.getLog(OncePerRequestInterceptorDelegate.class);
 
-    private final String filtered;
+    private final String filteredKey;
 
-    public OncePerRequestInterceptorWrapper(ControllerInterceptor interceptor) {
+    public OncePerRequestInterceptorDelegate(ControllerInterceptor interceptor) {
         super(interceptor);
-        this.filtered = "$$paoding-rose.interceptor.oncePerRequest."
-                + getInterceptor().getClass().getName();
+        this.filteredKey = "$$paoding-rose.interceptor.oncePerRequest."
+                + getInterceptor().getClass().getName() + "-r"
+                + Integer.toHexString(new Random().nextInt());
     }
 
     @Override
-    public final Object before(Invocation inv) throws Exception {
+    public Object roundInvocation(Invocation inv, InvocationChain chain) throws Exception {
         Invocation temp = inv;
         boolean tobeIntercepted = false;
         while (true) {
-            tobeIntercepted = (temp.getAttribute(filtered) == null);
+            tobeIntercepted = (temp.getAttribute(filteredKey) == null);
             if (!tobeIntercepted) {
                 break;
             }
@@ -48,41 +51,26 @@ public class OncePerRequestInterceptorWrapper extends ControllerInterceptorWrapp
             }
         }
         if (tobeIntercepted) {
-            inv.setAttribute(filtered, true);
+            inv.setAttribute(filteredKey, true);
             if (logger.isDebugEnabled()) {
                 logger.debug("do oncePerRequest interceptor.before: " + getName());
             }
-            return interceptor.before(inv);
+            return super.roundInvocation(inv, chain);
         } else {
             if (logger.isDebugEnabled()) {
                 logger.debug("skip oncePerRequest interceptor.before: " + getName());
             }
-            return true;
+            return chain.doNext();
         }
-    }
-
-    @Override
-    public final Object after(Invocation inv, Object instruction) throws Exception {
-        if (inv.getAttribute(filtered) != null) {
-            if (logger.isDebugEnabled()) {
-                logger.debug("do oncePerRequest interceptor.after: " + getName());
-            }
-            return interceptor.after(inv, instruction);
-        } else {
-            if (logger.isDebugEnabled()) {
-                logger.debug("skip oncePerRequest interceptor.after: " + getName());
-            }
-        }
-        return instruction;
     }
 
     @Override
     public final void afterCompletion(Invocation inv, Throwable ex) throws Exception {
-        if (inv.getAttribute(filtered) != null) {
+        if (inv.getAttribute(filteredKey) != null) {
             if (logger.isDebugEnabled()) {
                 logger.debug("do oncePerRequest interceptor.afterCompletion: " + getName());
             }
-            interceptor.afterCompletion(inv, ex);
+            super.afterCompletion(inv, ex);
         } else {
             if (logger.isDebugEnabled()) {
                 logger.debug("skip oncePerRequest interceptor.afterCompletion: " + getName());

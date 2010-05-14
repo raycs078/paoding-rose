@@ -1,5 +1,5 @@
 /*
- * Copyright 2007-2010 the original author or authors.
+ * Copyright 2007-2009 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,25 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.paoding.rose.web.impl.thread;
-
-import net.paoding.rose.web.Invocation;
+package net.paoding.rose.web;
 
 /**
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
-public interface AfterCompletion {
+public interface Named  {
 
     /**
-     * 整个流程(包括页面render流程)结束时调用，不管是否发生过异常。如果发生了异常，则将传送一个非空的Throwable对象到该方法。
-     * <p>
-     * 只有之前调用before时返回true时才会调用到它的afterRender方法
      * 
-     * @param inv
-     * @param ex
-     * @throws Exception
      */
-    void afterCompletion(Invocation inv, Throwable ex) throws Exception;
+    public void setName(String name);
+
+    /**
+     * 
+     * @return
+     */
+    public String getName();
 }

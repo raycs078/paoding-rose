@@ -33,7 +33,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import net.paoding.rose.RoseVersion;
+import net.paoding.rose.web.InterceptorDelegate;
 import net.paoding.rose.web.Invocation;
+import net.paoding.rose.web.InvocationChain;
 import net.paoding.rose.web.ParamValidator;
 import net.paoding.rose.web.RequestPath;
 import net.paoding.rose.web.annotation.HttpFeatures;
@@ -44,7 +46,6 @@ import net.paoding.rose.web.annotation.ReqMethod;
 import net.paoding.rose.web.annotation.Return;
 import net.paoding.rose.web.impl.mapping.MatchResult;
 import net.paoding.rose.web.impl.module.Module;
-import net.paoding.rose.web.impl.module.NestedControllerInterceptor;
 import net.paoding.rose.web.impl.validation.ParameterBindingResult;
 import net.paoding.rose.web.paramresolver.MethodParameterResolver;
 import net.paoding.rose.web.paramresolver.ParamMetaData;
@@ -65,7 +66,7 @@ import org.springframework.validation.Errors;
  */
 public final class ActionEngine implements Engine {
 
-    private static Log logger = LogFactory.getLog(ActionEngine.class);
+    private final static Log logger = LogFactory.getLog(ActionEngine.class);
 
     private final Module module;
 
@@ -75,7 +76,7 @@ public final class ActionEngine implements Engine {
 
     private final Method method;
 
-    private final NestedControllerInterceptor[] interceptors;
+    private final InterceptorDelegate[] interceptors;
 
     private final ParamValidator[] validators;
 
@@ -90,18 +91,12 @@ public final class ActionEngine implements Engine {
         this.controllerClass = controllerClass;
         this.controller = controller;
         this.method = method;
-        interceptors = compileInterceptors();
-        methodParameterResolver = compileParamResolvers();
-        validators = compileValidators();
-        //        if (logger.isDebugEnabled()) {
-        //            logger.debug("action info: " + controllerClass.getName() //
-        //                    + "." + method.getName() + ":");
-        //            logger.debug("\t interceptors:" + Arrays.toString(interceptors));
-        //            logger.debug("\t validators:" + Arrays.toString(validators));
-        //        }
+        this.interceptors = compileInterceptors();
+        this.methodParameterResolver = compileParamResolvers();
+        this.validators = compileValidators();
     }
 
-    public NestedControllerInterceptor[] getRegisteredInterceptors() {
+    public InterceptorDelegate[] getRegisteredInterceptors() {
         return interceptors;
     }
 
@@ -148,11 +143,11 @@ public final class ActionEngine implements Engine {
         return registeredValidators;
     }
 
-    private NestedControllerInterceptor[] compileInterceptors() {
-        List<NestedControllerInterceptor> interceptors = module.getInterceptors();
-        List<NestedControllerInterceptor> registeredInterceptors = new ArrayList<NestedControllerInterceptor>(
+    private InterceptorDelegate[] compileInterceptors() {
+        List<InterceptorDelegate> interceptors = module.getInterceptors();
+        List<InterceptorDelegate> registeredInterceptors = new ArrayList<InterceptorDelegate>(
                 interceptors.size());
-        for (NestedControllerInterceptor interceptor : interceptors) {
+        for (InterceptorDelegate interceptor : interceptors) {
             // 确定本拦截器的名字
             String name = interceptor.getName();
             String nameForUser = name;
@@ -182,7 +177,7 @@ public final class ActionEngine implements Engine {
         }
         //
         return registeredInterceptors
-                .toArray(new NestedControllerInterceptor[registeredInterceptors.size()]);
+                .toArray(new InterceptorDelegate[registeredInterceptors.size()]);
     }
 
     @Override
@@ -267,7 +262,7 @@ public final class ActionEngine implements Engine {
         }
     }
 
-    public Object innerExecute(Rose rose, MatchResult mr) throws Throwable {
+    protected Object innerExecute(Rose rose, MatchResult mr) throws Throwable {
         Invocation inv = rose.getInvocation();
         inv.getRequestPath().setActionPath(mr.getValue());
         // applies http features before the resolvers
@@ -312,79 +307,64 @@ public final class ActionEngine implements Engine {
                     }
                     return instruction;
                 }
-                //                }
             }
         }
 
-        // 恢复instruction为null
-        instruction = null;
+        // intetceptors & controller
+        return new InvocationChainImpl(rose).doNext();
+    }
 
-        // invokes before-interceptors
-        boolean broken = false;
-        boolean[] bitSt = new boolean[interceptors.length];
-        for (int i = 0; i < interceptors.length; i++) {
-            final NestedControllerInterceptor interceptor = interceptors[i];
-            if (!interceptor.isForDispatcher(inv.getRequestPath().getDispatcher())) {
-                continue;
-            }
+    private class InvocationChainImpl implements InvocationChain {
 
-            // returned by before method
-            rose.addAfterCompletion(interceptor);
-            instruction = interceptor.before(inv);
-            bitSt[i] = true;
-            if (logger.isDebugEnabled()) {
-                logger.debug("interceptor[" + interceptor.getName() + "] do before and return '"
-                        + instruction + "'");
-            }
+        private final boolean debugEnabled = logger.isDebugEnabled();
 
-            if (instruction != null && !Boolean.TRUE.equals(instruction)) {
-                if (instruction == inv) {
-                    throw new IllegalArgumentException("Don't return an inv as an instruction: "
-                            + interceptor.getInterceptor().getClass().getName());
+        private int index = -1;
+
+        private final Rose rose;
+
+        private Object instruction;
+
+        public InvocationChainImpl(Rose rose) {
+            this.rose = rose;
+        }
+
+        @Override
+        public Object doNext() throws Exception {
+            if (++index < interceptors.length) { // ++index 用于将-1转化为0
+                InterceptorDelegate interceptor = interceptors[index];
+                //
+                rose.addAfterCompletion(interceptor);
+                Object instruction = interceptor.roundInvocation(rose.getInvocation(), this);
+                //
+                if (debugEnabled) {
+                    logger.debug("interceptor[" + interceptor.getName() + "] do round and return '"
+                            + instruction + "'");
                 }
-                // the inv is broken
 
-                // if false, don't render anything
-                if (Boolean.FALSE.equals(instruction)) {
-                    instruction = null;
+                // 拦截器返回null的，要恢复为原instruction
+                // 这个功能非常有用!!
+                if (instruction != null) {
+                    this.instruction = instruction;
                 }
-                broken = true;
-                break; // just break, don't return
-            }
-        }
+                return this.instruction;
+            } else if (index == interceptors.length) {
+                this.instruction = method.invoke(controller, rose.getInvocation()
+                        .getMethodParameters());
 
-        if (!broken) {
-            // invoke
-            instruction = method.invoke(controller, methodParameters);
-
-            // @Return
-            if (instruction == null) {
-                Return returnAnnotation = method.getAnnotation(Return.class);
-                if (returnAnnotation != null) {
-                    instruction = returnAnnotation.value();
+                // @Return
+                if (this.instruction == null) {
+                    Return returnAnnotation = method.getAnnotation(Return.class);
+                    if (returnAnnotation != null) {
+                        this.instruction = returnAnnotation.value();
+                    }
                 }
+                return this.instruction;
             }
+            throw new IndexOutOfBoundsException(
+                    "don't call twice 'chain.doNext()' in one intercpetor; index=" + index
+                            + "; interceptors.length=" + interceptors.length);
         }
 
-        Object orginInstruction = instruction;
-
-        // after the inv
-        for (int i = bitSt.length - 1; i >= 0; i--) {
-            if (!bitSt[i]) {
-                continue;
-            }
-            instruction = interceptors[i].after(inv, instruction);
-            if (logger.isDebugEnabled()) {
-                logger.debug("invoke interceptor.after: [" + interceptors[i].getName()
-                        + "] and return '" + instruction + "'");
-            }
-            // 拦截器返回null的，要恢复为原instruction
-            // 这个功能非常有用!!
-            if (instruction == null) {
-                instruction = orginInstruction;
-            }
-        }
-        return instruction;
     }
 
     private Exception createException(Rose rose, Throwable exception) {

@@ -13,25 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.paoding.rose.web.impl.thread;
-
-import net.paoding.rose.web.Invocation;
+package net.paoding.rose.web;
 
 /**
+ * 开发者用于实现拦截器时，将控制流程交给下一个拦截器或最终的控制器方法
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
- * 
  */
-public interface AfterCompletion {
+public interface InvocationChain {
 
     /**
-     * 整个流程(包括页面render流程)结束时调用，不管是否发生过异常。如果发生了异常，则将传送一个非空的Throwable对象到该方法。
-     * <p>
-     * 只有之前调用before时返回true时才会调用到它的afterRender方法
+     * 将控制流程交给下一个拦截器，并获取下一个拦截器或最终的控制器方法返回的指示
      * 
-     * @param inv
-     * @param ex
+     * @return
      * @throws Exception
      */
-    void afterCompletion(Invocation inv, Throwable ex) throws Exception;
+    Object doNext() throws Exception;
 }
