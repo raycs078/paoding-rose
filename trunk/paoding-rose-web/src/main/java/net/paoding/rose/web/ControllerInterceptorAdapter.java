@@ -22,6 +22,10 @@ import java.util.BitSet;
 import java.util.Collections;
 import java.util.List;
 
+import net.paoding.rose.web.advancedinterceptor.ActionSelector;
+import net.paoding.rose.web.advancedinterceptor.DispatcherSelector;
+import net.paoding.rose.web.advancedinterceptor.Named;
+import net.paoding.rose.web.advancedinterceptor.Ordered;
 import net.paoding.rose.web.impl.thread.AfterCompletion;
 import net.paoding.rose.web.instruction.Instruction;
 
@@ -31,8 +35,8 @@ import org.apache.commons.logging.LogFactory;
 /**
  * @author 王志亮 [qieqie.wang@gmail.com]
  */
-public class ControllerInterceptorAdapter implements Named, Ordered,
-        ControllerInterceptor, AfterCompletion {
+public class ControllerInterceptorAdapter implements Named, Ordered, ControllerInterceptor,
+        AfterCompletion, ActionSelector, DispatcherSelector {
 
     protected Log logger = LogFactory.getLog(getClass());
 
