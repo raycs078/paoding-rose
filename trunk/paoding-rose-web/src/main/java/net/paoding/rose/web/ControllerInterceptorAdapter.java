@@ -104,9 +104,7 @@ public class ControllerInterceptorAdapter implements Named, Ordered, ControllerI
         instruction = round(inv, chain);
 
         // after
-        instruction = this.after(inv, instruction);
-        //
-        return instruction;
+        return after(inv, instruction);
     }
 
     /**
@@ -203,23 +201,23 @@ public class ControllerInterceptorAdapter implements Named, Ordered, ControllerI
             BitSet scopeSet = getAnnotationScope(requiredAnnotation);
             if (scopeSet.get(AnnotationScope.METHOD.ordinal())) {
                 if (actionMethod.isAnnotationPresent(requiredAnnotation)) {
-                    return true;
+                    return checkAnnotation(actionMethod.getAnnotation(requiredAnnotation));
                 }
             }
             if (scopeSet.get(AnnotationScope.CLASS.ordinal())) {
                 if (controllerClazz.isAnnotationPresent(requiredAnnotation)) {
-                    return true;
+                    return checkAnnotation(actionMethod.getAnnotation(requiredAnnotation));
                 }
             }
             if (scopeSet.get(AnnotationScope.ANNOTATION.ordinal())) {
                 for (Annotation annotation : actionMethod.getAnnotations()) {
                     if (annotation.annotationType().isAnnotationPresent(requiredAnnotation)) {
-                        return true;
+                        return checkAnnotation(actionMethod.getAnnotation(requiredAnnotation));
                     }
                 }
                 for (Annotation annotation : controllerClazz.getAnnotations()) {
                     if (annotation.annotationType().isAnnotationPresent(requiredAnnotation)) {
-                        return true;
+                        return checkAnnotation(actionMethod.getAnnotation(requiredAnnotation));
                     }
                 }
             }
@@ -278,28 +276,43 @@ public class ControllerInterceptorAdapter implements Named, Ordered, ControllerI
             BitSet scopeSet = getAnnotationScope(denyAnnotation);
             if (scopeSet.get(AnnotationScope.METHOD.ordinal())) {
                 if (actionMethod.isAnnotationPresent(denyAnnotation)) {
-                    return true;
+                    return checkAnnotation(actionMethod.getAnnotation(denyAnnotation));
                 }
             }
             if (scopeSet.get(AnnotationScope.CLASS.ordinal())) {
                 if (controllerClazz.isAnnotationPresent(denyAnnotation)) {
-                    return true;
+                    return checkAnnotation(actionMethod.getAnnotation(denyAnnotation));
                 }
             }
             if (scopeSet.get(AnnotationScope.ANNOTATION.ordinal())) {
                 for (Annotation annotation : actionMethod.getAnnotations()) {
                     if (annotation.annotationType().isAnnotationPresent(denyAnnotation)) {
-                        return true;
+                        return checkAnnotation(actionMethod.getAnnotation(denyAnnotation));
                     }
                 }
                 for (Annotation annotation : controllerClazz.getAnnotations()) {
                     if (annotation.annotationType().isAnnotationPresent(denyAnnotation)) {
-                        return true;
+                        return checkAnnotation(actionMethod.getAnnotation(denyAnnotation));
                     }
                 }
             }
         }
         return false;
+    }
+
+    /**
+     * 根据此方法的返回结果，{@link #checkRequiredAnnotations(Class, Method)}/
+     * {@link #checkDenyAnnotations(Class, Method)}
+     * 在判断到该annotation时，返回true/false；<br>
+     * 
+     * 
+     * 
+     * 
+     * @param annotation
+     * @return
+     */
+    protected boolean checkAnnotation(Annotation annotation) {
+        return true;
     }
 
     protected List<Class<? extends Annotation>> getRequiredAnnotationClasses() {
