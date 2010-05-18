@@ -304,16 +304,8 @@ public class ControllerInterceptorAdapter implements Named, Ordered, ControllerI
 
     protected List<Class<? extends Annotation>> getRequiredAnnotationClasses() {
         Class<? extends Annotation> clazz = getRequiredAnnotationClass();
-        if (clazz == null) {
-            clazz = getAnnotationClass();
-            if (clazz != null) {
-                throw new IllegalStateException(
-                        "please change method name from getAnnotationClass to getRequiredAnnotationClass ["
-                                + this.getClass().getName() + "]");
-            }
-        }
         if (clazz != null) {
-            List<Class<? extends Annotation>> list = new ArrayList<Class<? extends Annotation>>();
+            List<Class<? extends Annotation>> list = new ArrayList<Class<? extends Annotation>>(2);
             list.add(clazz);
             return list;
         }
@@ -321,16 +313,6 @@ public class ControllerInterceptorAdapter implements Named, Ordered, ControllerI
     }
 
     protected Class<? extends Annotation> getRequiredAnnotationClass() {
-        return null;
-    }
-
-    /**
-     * 请改实现方法： {@link #getRequiredAnnotationClass()}
-     * 
-     * @return
-     */
-    @Deprecated
-    protected Class<? extends Annotation> getAnnotationClass() {
         return null;
     }
 
