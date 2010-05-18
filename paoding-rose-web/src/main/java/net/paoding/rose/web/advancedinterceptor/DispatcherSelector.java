@@ -13,20 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.paoding.rose.web;
+package net.paoding.rose.web.advancedinterceptor;
+
+import net.paoding.rose.web.Dispatcher;
 
 /**
- * 如果拦截器实现了此接口，代表这个拦截器关注其在所有拦截器中的顺序。
  * 
- * @author Administrator
+ * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
-public interface Ordered {
+public interface DispatcherSelector {
 
     /**
-     * 返回一个数字，值大的具有最高优先拦截权
+     * 当所分配请求是所给的类型时(普通请求、FORWARD请求、INCLUDE请求)，是否执行此拦截器？
      * 
      * @return
      */
-    int getPriority();
+    boolean isForDispatcher(Dispatcher dispatcher);
+
 }

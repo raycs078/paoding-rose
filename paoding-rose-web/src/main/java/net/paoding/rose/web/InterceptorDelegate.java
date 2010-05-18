@@ -17,6 +17,10 @@ package net.paoding.rose.web;
 
 import java.lang.reflect.Method;
 
+import net.paoding.rose.web.advancedinterceptor.ActionSelector;
+import net.paoding.rose.web.advancedinterceptor.DispatcherSelector;
+import net.paoding.rose.web.advancedinterceptor.Named;
+import net.paoding.rose.web.advancedinterceptor.Ordered;
 import net.paoding.rose.web.impl.thread.AfterCompletion;
 
 /**
@@ -24,14 +28,22 @@ import net.paoding.rose.web.impl.thread.AfterCompletion;
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
-public class InterceptorDelegate implements Ordered, Named, ControllerInterceptor, AfterCompletion {
+public class InterceptorDelegate implements Ordered, Named, ControllerInterceptor, AfterCompletion,
+        ActionSelector, DispatcherSelector {
 
     protected ControllerInterceptor interceptor;
 
     private String name;
 
+    // afterCompletion以及dispatcherSelector判断是每个请求都需要的，所以这里做变量缓存
+    private boolean isAfterCompletion;
+
+    private boolean isDispatcherSelector;
+
     public InterceptorDelegate(ControllerInterceptor interceptor) {
         this.interceptor = interceptor;
+        this.isAfterCompletion = interceptor instanceof AfterCompletion;
+        this.isDispatcherSelector = interceptor instanceof DispatcherSelector;
     }
 
     public ControllerInterceptor getInterceptor() {
@@ -64,12 +76,18 @@ public class InterceptorDelegate implements Ordered, Named, ControllerIntercepto
 
     @Override
     public boolean isForAction(Class<?> controllerClazz, Method actionMethod) {
-        return interceptor.isForAction(controllerClazz, actionMethod);
+        if (interceptor instanceof Ordered) {
+            return ((ActionSelector) interceptor).isForAction(controllerClazz, actionMethod);
+        }
+        return true;
     }
 
     @Override
     public boolean isForDispatcher(Dispatcher dispatcher) {
-        return interceptor.isForDispatcher(dispatcher);
+        if (isDispatcherSelector) {
+            return ((DispatcherSelector) interceptor).isForDispatcher(dispatcher);
+        }
+        return true;
     }
 
     @Override
@@ -79,7 +97,7 @@ public class InterceptorDelegate implements Ordered, Named, ControllerIntercepto
 
     @Override
     public void afterCompletion(Invocation inv, Throwable ex) throws Exception {
-        if (interceptor instanceof AfterCompletion) {
+        if (isAfterCompletion) {
             ((AfterCompletion) interceptor).afterCompletion(inv, ex);
         }
     }

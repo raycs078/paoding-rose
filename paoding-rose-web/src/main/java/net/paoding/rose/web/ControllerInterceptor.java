@@ -15,8 +15,7 @@
  */
 package net.paoding.rose.web;
 
-import java.lang.reflect.Method;
-
+import net.paoding.rose.web.advancedinterceptor.Ordered;
 import net.paoding.rose.web.annotation.Intercepted;
 
 /**
@@ -42,24 +41,6 @@ import net.paoding.rose.web.annotation.Intercepted;
  * @see ControllerInterceptorAdapter
  */
 public interface ControllerInterceptor {
-
-    /**
-     * 作为候选拦截器，这个拦截器是否应拦截所指的控制器及其方法？
-     * 
-     * @param controllerClazz
-     * @param actionMethod
-     * @return
-     */
-    boolean isForAction(Class<?> controllerClazz, Method actionMethod);
-
-    /**
-     * 当所分配请求是所给的类型时(普通请求、FORWARD请求、INCLUDE请求)，是否执行此拦截器？
-     * 
-     * @return
-     */
-    boolean isForDispatcher(Dispatcher dispatcher);
-
-    //-----------------------------------------------------------------------------
 
     /**
      * 
