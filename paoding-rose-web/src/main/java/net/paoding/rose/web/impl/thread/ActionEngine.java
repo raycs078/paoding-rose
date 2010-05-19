@@ -148,9 +148,6 @@ public final class ActionEngine implements Engine {
         List<InterceptorDelegate> registeredInterceptors = new ArrayList<InterceptorDelegate>(
                 interceptors.size());
         for (InterceptorDelegate interceptor : interceptors) {
-            // 确定本拦截器的名字
-            String name = interceptor.getName();
-            String nameForUser = name;
             // 获取@Intercepted注解 (@Intercepted注解配置于控制器或其方法中，决定一个拦截器是否应该拦截之。没有配置按“需要”处理)
             Intercepted intercepted = method.getAnnotation(Intercepted.class);
             if (intercepted == null) {
@@ -161,12 +158,12 @@ public final class ActionEngine implements Engine {
             if (intercepted != null) {
                 // 3.1 先排除deny禁止的
                 if (ArrayUtils.contains(intercepted.deny(), "*")
-                        || ArrayUtils.contains(intercepted.deny(), nameForUser)) {
+                        || ArrayUtils.contains(intercepted.deny(), interceptor.getName())) {
                     continue;
                 }
                 // 3.2 确认最大的allow允许
                 else if (!ArrayUtils.contains(intercepted.allow(), "*")
-                        && !ArrayUtils.contains(intercepted.allow(), nameForUser)) {
+                        && !ArrayUtils.contains(intercepted.allow(), interceptor.getName())) {
                     continue;
                 }
             }
@@ -203,54 +200,55 @@ public final class ActionEngine implements Engine {
     public int isAccepted(HttpServletRequest request) {
         Assert.isTrue(request != null);
         IfParamExists ifParamExists = method.getAnnotation(IfParamExists.class);
-        if (ifParamExists != null) {
-            String value = ifParamExists.value();
-            // create&form
-            String[] terms = StringUtils.split(value, "&");
-            Assert.isTrue(terms.length == 1);
-            int index = terms[0].indexOf('=');
-            if (index == -1) {
-                String paramValue = request.getParameter(terms[0]);
+        if (ifParamExists == null) {
+            return 1;
+        }
+        String value = ifParamExists.value();
+        // create&form
+        String[] terms = StringUtils.split(value, "&");
+        Assert.isTrue(terms.length == 1);
+        int index = terms[0].indexOf('=');
+        if (index == -1) {
+            String paramValue = request.getParameter(terms[0]);
+            return StringUtils.isNotBlank(paramValue) ? 10 : -1;
+        } else {
+            String paramName = terms[0].substring(0, index).trim();
+            String expected = terms[0].substring(index + 1).trim();
+            String paramValue = request.getParameter(paramName);
+            if (StringUtils.isBlank(expected)) {
+                // xxx=等价于xxx的
                 return StringUtils.isNotBlank(paramValue) ? 10 : -1;
-            } else {
-                String paramName = terms[0].substring(0, index).trim();
-                String expected = terms[0].substring(index + 1).trim();
-                String paramValue = request.getParameter(paramName);
-                if (StringUtils.isBlank(expected)) {
-                    // xxx=等价于xxx的
-                    return StringUtils.isNotBlank(paramValue) ? 11 : -1;
-                } else if (expected.startsWith(":")) {
-                    Pattern pattern = patterns.get(expected);
-                    if (paramValue == null) {
-                        return -1;
-                    }
-                    String regex = expected.substring(1);
-                    if (pattern == null) {
-                        try {
-                            pattern = Pattern.compile(regex);
-                            synchronized (this) {// patterns为非同步map
-                                if (patterns.size() == 0) {
-                                    HashMap<String, Pattern> _patterns = new HashMap<String, Pattern>();
-                                    _patterns.put(expected, pattern);
-                                    this.patterns = _patterns;
-                                } else if (!patterns.containsKey(regex)) {
-                                    this.patterns.put(expected, pattern);
-                                }
-                            }
-                        } catch (PatternSyntaxException e) {
-                            logger.error(//
-                                    "@IfParamExists pattern error, controller="
-                                            + controllerClass.getName() + ", method="
-                                            + method.getName(), e);
-                        }
-                    }
-                    return pattern != null && pattern.matcher(paramValue).matches() ? 12 : -1;
-                } else {
-                    return expected.equals(paramValue) ? 13 : -1;
+            } else if (expected.startsWith(":")) {
+                Pattern pattern = patterns.get(expected);
+                if (paramValue == null) {
+                    return -1;
                 }
+                String regex = expected.substring(1);
+                if (pattern == null) {
+                    try {
+                        pattern = Pattern.compile(regex);
+                        synchronized (this) {// patterns为非同步map
+                            if (patterns.size() == 0) {
+                                HashMap<String, Pattern> _patterns = new HashMap<String, Pattern>();
+                                _patterns.put(expected, pattern);
+                                this.patterns = _patterns;
+                            } else if (!patterns.containsKey(regex)) {
+                                this.patterns.put(expected, pattern);
+                            }
+                        }
+                    } catch (PatternSyntaxException e) {
+                        logger.error(//
+                                "@IfParamExists pattern error, controller="
+                                        + controllerClass.getName() + ", method="
+                                        + method.getName(), e);
+                    }
+                }
+                return pattern != null && pattern.matcher(paramValue).matches() ? 12 : -1;
+            } else {
+                // 13优先于正则表达式的12
+                return expected.equals(paramValue) ? 13 : -1;
             }
         }
-        return 1;
     }
 
     @Override

@@ -40,6 +40,14 @@ public class InterceptorDelegate implements Ordered, Named, ControllerIntercepto
 
     private boolean isDispatcherSelector;
 
+    public static ControllerInterceptor getMostInnerInterceptor(ControllerInterceptor interceptor) {
+        ControllerInterceptor temp = interceptor;
+        while (temp instanceof InterceptorDelegate) {
+            temp = ((InterceptorDelegate) temp).getInterceptor();
+        }
+        return temp;
+    }
+
     public InterceptorDelegate(ControllerInterceptor interceptor) {
         this.interceptor = interceptor;
         this.isAfterCompletion = interceptor instanceof AfterCompletion;
