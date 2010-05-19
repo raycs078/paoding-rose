@@ -215,17 +215,17 @@ public final class ActionEngine implements Engine {
             String paramName = terms[0].substring(0, index).trim();
             String expected = terms[0].substring(index + 1).trim();
             String paramValue = request.getParameter(paramName);
-            if (StringUtils.isBlank(expected)) {
+            if (StringUtils.isEmpty(expected)) {
                 // xxx=等价于xxx的
                 return StringUtils.isNotBlank(paramValue) ? 10 : -1;
             } else if (expected.startsWith(":")) {
-                Pattern pattern = patterns.get(expected);
                 if (paramValue == null) {
                     return -1;
                 }
-                String regex = expected.substring(1);
+                Pattern pattern = patterns.get(expected);
                 if (pattern == null) {
                     try {
+                        String regex = expected.substring(1);
                         pattern = Pattern.compile(regex);
                         synchronized (this) {// patterns为非同步map
                             if (patterns.size() == 0) {
@@ -237,10 +237,8 @@ public final class ActionEngine implements Engine {
                             }
                         }
                     } catch (PatternSyntaxException e) {
-                        logger.error(//
-                                "@IfParamExists pattern error, controller="
-                                        + controllerClass.getName() + ", method="
-                                        + method.getName(), e);
+                        logger.error("@IfParamExists pattern error, " + controllerClass.getName()
+                                + "#" + method.getName(), e);
                     }
                 }
                 return pattern != null && pattern.matcher(paramValue).matches() ? 12 : -1;
