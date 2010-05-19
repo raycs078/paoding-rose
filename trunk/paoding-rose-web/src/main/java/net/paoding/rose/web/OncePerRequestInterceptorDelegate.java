@@ -31,34 +31,33 @@ public class OncePerRequestInterceptorDelegate extends InterceptorDelegate {
 
     public OncePerRequestInterceptorDelegate(ControllerInterceptor interceptor) {
         super(interceptor);
-        this.filteredKey = "$$paoding-rose.interceptor.oncePerRequest."
-                + getInterceptor().getClass().getName() + "-r"
+        this.filteredKey = "$$paoding-rose.interceptor.oncePerRequest." + "." + getName() + "-r"
                 + Integer.toHexString(new Random().nextInt());
     }
 
     @Override
     public Object roundInvocation(Invocation inv, InvocationChain chain) throws Exception {
-        Invocation temp = inv;
-        boolean tobeIntercepted = false;
+        Invocation tempInv = inv;
+        boolean tobeIntercepted; // true代表该执行拦截器，false代表不执行该拦截器而把流程交给下一个拦截器
         while (true) {
-            tobeIntercepted = (temp.getAttribute(filteredKey) == null);
+            tobeIntercepted = (tempInv.getAttribute(filteredKey) == null);
             if (!tobeIntercepted) {
                 break;
             }
-            temp = temp.getPreInvocation();
-            if (temp == null) {
+            tempInv = tempInv.getPreInvocation();
+            if (tempInv == null) {
                 break;
             }
         }
         if (tobeIntercepted) {
-            inv.setAttribute(filteredKey, true);
+            inv.setAttribute(filteredKey, Boolean.TRUE);
             if (logger.isDebugEnabled()) {
-                logger.debug("do oncePerRequest interceptor.before: " + getName());
+                logger.debug("do oncePerRequest interceptor.roundInvocation: " + getName());
             }
             return super.roundInvocation(inv, chain);
         } else {
             if (logger.isDebugEnabled()) {
-                logger.debug("skip oncePerRequest interceptor.before: " + getName());
+                logger.debug("skip oncePerRequest interceptor.roundInvocation: " + getName());
             }
             return chain.doNext();
         }
