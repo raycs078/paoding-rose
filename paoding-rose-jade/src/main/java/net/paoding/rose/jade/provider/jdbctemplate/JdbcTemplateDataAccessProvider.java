@@ -27,6 +27,7 @@ import net.paoding.rose.jade.datasource.SpringDataSourceFactory;
 import net.paoding.rose.jade.provider.AbstractDataAccessProvider;
 import net.paoding.rose.jade.provider.DataAccess;
 import net.paoding.rose.jade.provider.SQLInterpreter;
+import net.paoding.rose.jade.provider.jdbctemplate.plugin.DBMonitorPluginDef;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
@@ -68,6 +69,9 @@ public class JdbcTemplateDataAccessProvider extends AbstractDataAccessProvider i
         JdbcTemplateDataAccess dataAccess = createEmptyJdbcTemplateDataAccess();
         dataAccess.setDataSource(dataSource);
         dataAccess.setInterpreters(findSQLInterpreters());
+        synchronized(DBMonitorPluginDef.plugin){
+        	dataAccess.setDBMonitorPlugin(DBMonitorPluginDef.plugin);
+        }
         return dataAccess;
     }
 
