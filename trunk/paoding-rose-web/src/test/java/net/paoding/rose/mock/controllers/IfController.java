@@ -41,4 +41,28 @@ public class IfController {
         return "c2";
     }
 
+    @Get
+    @IfParamExists("a=a&b=b")
+    public String ab1() {
+        return "ab1";
+    }
+
+    @Get
+    @IfParamExists("a=:[0-9]+&b=:[0-9]+")
+    public String ab2() {
+        return "ab2";
+    }
+    
+    @Get
+    @IfParamExists("a=:.*&b=:.*")
+    public String ab3() {
+        return "ab3";
+    }
+    
+    @Get
+    @IfParamExists("a=a&b=b&c=c")
+    public String abc1() {
+        return "abc1";
+    }
+    
 }
