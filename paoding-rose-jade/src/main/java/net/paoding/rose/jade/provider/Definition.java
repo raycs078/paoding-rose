@@ -45,8 +45,7 @@ public class Definition {
     public Map<String, ?> getConstants() {
         return constants;
     }
-    
-    
+
     public Class<?> getDAOClazz() {
         return clazz;
     }

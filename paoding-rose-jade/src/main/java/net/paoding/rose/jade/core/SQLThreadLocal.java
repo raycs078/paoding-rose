@@ -53,8 +53,7 @@ public class SQLThreadLocal {
 
     private Map<String, ?> parameters;
 
-    private SQLThreadLocal(SQLType sqlType, String sql, Modifier modifier,
-            Map<String, ?> parameters) {
+    private SQLThreadLocal(SQLType sqlType, String sql, Modifier modifier, Map<String, ?> parameters) {
         this.sqlType = sqlType;
         this.sql = sql;
         this.modifier = modifier;

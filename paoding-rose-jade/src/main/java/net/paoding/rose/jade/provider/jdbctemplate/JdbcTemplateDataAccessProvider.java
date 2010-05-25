@@ -69,8 +69,8 @@ public class JdbcTemplateDataAccessProvider extends AbstractDataAccessProvider i
         JdbcTemplateDataAccess dataAccess = createEmptyJdbcTemplateDataAccess();
         dataAccess.setDataSource(dataSource);
         dataAccess.setInterpreters(findSQLInterpreters());
-        synchronized(DBMonitorPluginDef.plugin){
-        	dataAccess.setDBMonitorPlugin(DBMonitorPluginDef.plugin);
+        synchronized (DBMonitorPluginDef.plugin) {
+            dataAccess.setDBMonitorPlugin(DBMonitorPluginDef.plugin);
         }
         return dataAccess;
     }

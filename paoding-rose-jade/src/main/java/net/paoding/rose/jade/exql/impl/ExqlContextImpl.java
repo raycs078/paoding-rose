@@ -29,7 +29,6 @@ public class ExqlContextImpl implements ExqlContext, SQLInterpreterResult {
     // 输出缓冲区
     protected final StringBuilder builder;
 
-
     /**
      * 构造上下文对象。
      * 
