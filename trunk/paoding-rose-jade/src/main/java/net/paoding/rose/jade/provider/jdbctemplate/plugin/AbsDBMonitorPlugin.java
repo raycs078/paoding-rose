@@ -13,45 +13,44 @@ import net.paoding.rose.jade.provider.jdbctemplate.plugin.model.DataModel;
 
 public abstract class AbsDBMonitorPlugin implements IDBMonitorPlugin {
 
-	private ThreadLocal<DataModel> data = new ThreadLocal<DataModel>();
+    private ThreadLocal<DataModel> data = new ThreadLocal<DataModel>();
 
-	@Override
-	public void initData(DataSource dataSource, String sqlString,
-			Modifier modifier, Map<String, Object> parameters) {
-		this.data.set(new DataModel());
-		start();
-		init(dataSource, sqlString, modifier, parameters);
-	}
+    @Override
+    public void initData(DataSource dataSource, String sqlString, Modifier modifier,
+            Map<String, Object> parameters) {
+        this.data.set(new DataModel());
+        start();
+        init(dataSource, sqlString, modifier, parameters);
+    }
 
-	@Override
-	public void listen() {
-		Assert.isTrue(null != data.get());
-		data.get().setCostTime(
-				System.currentTimeMillis() - data.get().getCostTime());
-		listenDB();
-		data.remove();
-	}
+    @Override
+    public void listen() {
+        Assert.isTrue(null != data.get());
+        data.get().setCostTime(System.currentTimeMillis() - data.get().getCostTime());
+        listenDB();
+        data.remove();
+    }
 
-	private void start() {
-		DataModel d = data.get();
+    private void start() {
+        DataModel d = data.get();
 
-		d.setStartTime(System.currentTimeMillis());
-		d.setCostTime(System.currentTimeMillis());
-		try {
-			d.setClientIp(InetAddress.getLocalHost().getHostAddress());
-		} catch (UnknownHostException e) {
-			d.setClientIp("");
-			e.printStackTrace();
-		}
-	}
+        d.setStartTime(System.currentTimeMillis());
+        d.setCostTime(System.currentTimeMillis());
+        try {
+            d.setClientIp(InetAddress.getLocalHost().getHostAddress());
+        } catch (UnknownHostException e) {
+            d.setClientIp("");
+            e.printStackTrace();
+        }
+    }
 
-	final protected DataModel getDataModel() {
-		Assert.isTrue(null != data.get());
-		return this.data.get();
-	}
+    final protected DataModel getDataModel() {
+        Assert.isTrue(null != data.get());
+        return this.data.get();
+    }
 
-	protected abstract void init(DataSource dataSource, String sqlString,
-			Modifier modifier, Map<String, Object> parameters);
+    protected abstract void init(DataSource dataSource, String sqlString, Modifier modifier,
+            Map<String, Object> parameters);
 
-	protected abstract void listenDB();
+    protected abstract void listenDB();
 }

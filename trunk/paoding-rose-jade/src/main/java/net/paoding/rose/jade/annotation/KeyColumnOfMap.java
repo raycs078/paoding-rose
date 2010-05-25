@@ -9,7 +9,8 @@ import java.lang.annotation.Target;
 /**
  * Jade支持DAO方法返回Map形式的，默认情况下Jade选取第一列作为Map的key。
  * <p>
- * 我们推荐您在写返回map的SQL时，把key放到第一列，但是如果真不想这样做，你可以通过本注解，即{@link KeyColumnOfMap}进行指定。
+ * 我们推荐您在写返回map的SQL时，把key放到第一列，但是如果真不想这样做，你可以通过本注解，即{@link KeyColumnOfMap}
+ * 进行指定。
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  * @author 廖涵 [in355hz@gmail.com]

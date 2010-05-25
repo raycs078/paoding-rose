@@ -23,7 +23,7 @@ import org.springframework.jdbc.BadSqlGrammarException;
 public class ExpressSQLInterpreter implements SQLInterpreter {
 
     @Override
-    // 转换   JDQL 语句为正常的  SQL 语句
+    // 转换 JDQL 语句为正常的 SQL 语句
     public SQLInterpreterResult interpret(DataSource dataSource, String sql, Modifier modifier,
             Map<String, Object> parametersAsMap, Object[] parametersAsArray) {
 
