@@ -23,7 +23,6 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -203,10 +202,8 @@ public final class ActionEngine implements Engine {
      * 用来抽象isAccepted过滤的判断逻辑
      * @author Li Weibo (weibo.leo@gmail.com)
      */
-    private static class AcceptedChecker {
-    	public int check(HttpServletRequest request) {
-    		return 0;
-    	}
+    private static interface AcceptedChecker {
+    	public int check(HttpServletRequest request);
     }
     
     /**
@@ -225,7 +222,7 @@ public final class ActionEngine implements Engine {
     	String value = ifParamExists.value();
         
     	//可以写多个判断条件，以这样的形式: type&subtype=value&anothername=value2
-    	String[] terms = value.split("&");
+    	String[] terms = StringUtils.split(value, "&");
         Assert.isTrue(terms.length >= 1);	//这个应该永远成立
         
         //按'&'分割后，每一个term就是一个检查条件
@@ -312,63 +309,6 @@ public final class ActionEngine implements Engine {
     		total += c;
     	}
     	return total;
-    }
-    
-    /**
-     * @param request
-     * @return
-     * @deprecated 原来的isAccepted逻辑，被新逻辑替换掉了
-     */
-    public int isAccepted0(HttpServletRequest request) {
-        Assert.isTrue(request != null);
-        IfParamExists ifParamExists = method.getAnnotation(IfParamExists.class);
-        if (ifParamExists == null) {
-            return 1;
-        }
-        String value = ifParamExists.value();
-        // create&form
-        String[] terms = StringUtils.split(value, "&");
-        Assert.isTrue(terms.length == 1);
-        int index = terms[0].indexOf('=');
-        if (index == -1) {
-            String paramValue = request.getParameter(terms[0]);
-            return StringUtils.isNotBlank(paramValue) ? 10 : -1;
-        } else {
-            String paramName = terms[0].substring(0, index).trim();
-            String expected = terms[0].substring(index + 1).trim();
-            String paramValue = request.getParameter(paramName);
-            if (StringUtils.isEmpty(expected)) {
-                // xxx=等价于xxx的
-                return StringUtils.isNotBlank(paramValue) ? 10 : -1;
-            } else if (expected.startsWith(":")) {
-                if (paramValue == null) {
-                    return -1;
-                }
-                Pattern pattern = patterns.get(expected);
-                if (pattern == null) {
-                    try {
-                        String regex = expected.substring(1);
-                        pattern = Pattern.compile(regex);
-                        synchronized (this) {// patterns为非同步map
-                            if (patterns.size() == 0) {
-                                HashMap<String, Pattern> _patterns = new HashMap<String, Pattern>();
-                                _patterns.put(expected, pattern);
-                                this.patterns = _patterns;
-                            } else if (!patterns.containsKey(regex)) {
-                                this.patterns.put(expected, pattern);
-                            }
-                        }
-                    } catch (PatternSyntaxException e) {
-                        logger.error("@IfParamExists pattern error, " + controllerClass.getName()
-                                + "#" + method.getName(), e);
-                    }
-                }
-                return pattern != null && pattern.matcher(paramValue).matches() ? 12 : -1;
-            } else {
-                // 13优先于正则表达式的12
-                return expected.equals(paramValue) ? 13 : -1;
-            }
-        }
     }
 
     @Override
