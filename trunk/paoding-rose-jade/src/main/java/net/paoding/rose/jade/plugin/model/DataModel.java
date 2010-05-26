@@ -1,4 +1,4 @@
-package net.paoding.rose.jade.provider.jdbctemplate.plugin.model;
+package net.paoding.rose.jade.plugin.model;
 
 import java.io.Serializable;
 
@@ -10,7 +10,7 @@ public class DataModel implements Serializable {
     private long startTime;
 
     /** 消耗时间 */
-    private long costTime;
+    private int costTime;
 
     /** 数据源 */
     private String dataSource;
@@ -42,7 +42,7 @@ public class DataModel implements Serializable {
         return costTime;
     }
 
-    public void setCostTime(long costTime) {
+    public void setCostTime(int costTime) {
         this.costTime = costTime;
     }
 

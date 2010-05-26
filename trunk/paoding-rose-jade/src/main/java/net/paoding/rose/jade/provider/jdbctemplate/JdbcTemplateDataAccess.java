@@ -26,12 +26,12 @@ import javax.sql.DataSource;
 
 import net.paoding.rose.jade.annotation.SQLType;
 import net.paoding.rose.jade.core.SQLThreadLocal;
+import net.paoding.rose.jade.plugin.EmptyJadePlugin;
+import net.paoding.rose.jade.plugin.IJadePlugin;
 import net.paoding.rose.jade.provider.DataAccess;
 import net.paoding.rose.jade.provider.Modifier;
 import net.paoding.rose.jade.provider.SQLInterpreter;
 import net.paoding.rose.jade.provider.SQLInterpreterResult;
-import net.paoding.rose.jade.provider.jdbctemplate.plugin.EmptyDBMonitorPlugin;
-import net.paoding.rose.jade.provider.jdbctemplate.plugin.IDBMonitorPlugin;
 
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -52,7 +52,7 @@ public class JdbcTemplateDataAccess implements DataAccess {
 
     private SQLInterpreter[] interpreters = new SQLInterpreter[0];
 
-    private IDBMonitorPlugin plugin = new EmptyDBMonitorPlugin();
+    private IJadePlugin plugin = new EmptyJadePlugin();
 
     private JdbcTemplate jdbcTemplate = new JdbcTemplate();
 
@@ -71,7 +71,7 @@ public class JdbcTemplateDataAccess implements DataAccess {
         this.interpreters = interpreters;
     }
 
-    public void setDBMonitorPlugin(IDBMonitorPlugin plugin) {
+    public void setDBMonitorPlugin(IJadePlugin plugin) {
         this.plugin = plugin;
     }
 
@@ -89,9 +89,9 @@ public class JdbcTemplateDataAccess implements DataAccess {
                 arrayParameters = ir.getParameters();
             }
         }
-        plugin.initData(jdbcTemplate.getDataSource(), sqlString, modifier, parameters);
+        plugin.start(jdbcTemplate.getDataSource(), sqlString, modifier, parameters);
         List<?> rt = selectByJdbcTemplate(sqlString, arrayParameters, rowMapper);
-        plugin.listen();
+        plugin.end();
         return rt;
     }
 
@@ -108,9 +108,9 @@ public class JdbcTemplateDataAccess implements DataAccess {
                 arrayParameters = ir.getParameters();
             }
         }
-        plugin.initData(jdbcTemplate.getDataSource(), sqlString, modifier, parameters);
+        plugin.start(jdbcTemplate.getDataSource(), sqlString, modifier, parameters);
         int rt = updateByJdbcTemplate(sqlString, arrayParameters);
-        plugin.listen();
+        plugin.end();
         return rt;
     }
 
@@ -127,9 +127,9 @@ public class JdbcTemplateDataAccess implements DataAccess {
                 arrayParameters = ir.getParameters();
             }
         }
-        plugin.initData(jdbcTemplate.getDataSource(), sqlString, modifier, parameters);
+        plugin.start(jdbcTemplate.getDataSource(), sqlString, modifier, parameters);
         Number rt = insertReturnIdByJdbcTemplate(sqlString, arrayParameters);
-        plugin.listen();
+        plugin.end();
         return rt;
     }
 
