@@ -33,7 +33,7 @@ public interface MatchResult {
      * 
      * @return
      */
-    public Mapping getMapping();
+    public MappingNode getMappingNode();
 
     /**
      * 返回匹配结果字符串

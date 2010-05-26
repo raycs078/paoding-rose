@@ -172,7 +172,7 @@ public class MappingImpl implements Mapping {
         while (value.length() > 0 && value.charAt(value.length() - 1) == '/') {
             value = value.substring(0, value.length() - 1);
         }
-        MatchResultImpl mr = new MatchResultImpl(this, value);
+        MatchResultImpl mr = new MatchResultImpl(this.mappingNode, value);
         if (paramNames.length != 0) {
             for (int i = 0; i < this.paramNames.length; i++) {
                 mr.putParameter(paramNames[i], regexMatchResult.group(i + 1));

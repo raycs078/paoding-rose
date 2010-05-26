@@ -107,16 +107,19 @@ public class Rose implements EngineChain {
     }
 
     private boolean innerStart() throws Throwable {
-        ArrayList<MatchResult> matchResults = mappingTree.match(originalHttpRequest, this.path);
-        // 完成一次成功匹配需要走完树的4个结点
-        if (matchResults.size() != 4) {
+        final ArrayList<MatchResult> matchResults = mappingTree.match(originalHttpRequest, this.path);
+        MatchResult result = matchResults.get(matchResults.size() - 1);
+
+        // 完成一次成功匹配需要走到树的叶子结点
+        if (!result.getMappingNode().isLeaf()) {
             if (logger.isDebugEnabled()) {
                 logger.debug("[" + this.path + "] matchResults.size=" + matchResults.size());
             }
             return false;
         }
-        MatchResult mr = matchResults.get(matchResults.size() - 1);
-        if (mr.getEngine() == null) {
+        
+        // but 405 ?
+        if (result.getEngine() == null) {
             /* 405 Method Not Allowed
              * The method specified in the Request-Line is not allowed for the
              * resource identified by the Request-URI. The response MUST include an
@@ -125,7 +128,7 @@ public class Rose implements EngineChain {
              */
             StringBuilder allow = new StringBuilder();
             final String gap = ", ";
-            for (ReqMethod method : mr.getAllowedMethods()) {
+            for (ReqMethod method : result.getAllowedMethods()) {
                 allow.append(method.toString()).append(gap);
             }
             if (allow.length() > 0) {
@@ -133,69 +136,71 @@ public class Rose implements EngineChain {
             }
             originalHttpResponse.addHeader("Allow", allow.toString());
             originalHttpResponse.sendError(405, this.path.getUri());
-        } else {
-            //
-            this.matchResults = matchResults;
-            Map<String, String> mrParameters = null;
-            for (int i = 0; i < this.matchResults.size(); i++) {
-                MatchResult tmr = this.matchResults.get(i);
-                if (tmr.getParameterCount() > 0) {
-                    if (mrParameters == null) {
-                        mrParameters = new HashMap<String, String>(6);
-                    }
-                    for (String name : tmr.getParameterNames()) {
-                        mrParameters.put(name, tmr.getParameter(name));
-                    }
-                }
-            }
-            HttpServletRequest httpRequest = originalHttpRequest;
-            if (mrParameters != null && mrParameters.size() > 0) {
-                httpRequest = new ParameteredUriRequest(originalHttpRequest, mrParameters);
-            }
+            return true;
+        }
 
-            // originalThreadRequest可能为null，特别是在portal框架下
-            HttpServletRequest originalThreadRequest = InvocationUtils.getCurrentThreadRequest();
-            //
-            Invocation preInvocation = null;
-            if (path.getDispatcher() != Dispatcher.REQUEST) {
-                preInvocation = InvocationUtils.getInvocation(originalHttpRequest);
+        // ok, got it
+        this.matchResults = matchResults;
+       
+        Map<String, String> mrParameters = null;
+        for (int i = 0; i < matchResults.size(); i++) {
+            MatchResult tmr = matchResults.get(i);
+            if (tmr.getParameterCount() > 0) {
+                if (mrParameters == null) {
+                    mrParameters = new HashMap<String, String>(6);
+                }
+                for (String name : tmr.getParameterNames()) {
+                    mrParameters.put(name, tmr.getParameter(name));
+                }
             }
-            // invocation 对象 代表一次Rose调用
-            InvocationBean inv = new InvocationBean(httpRequest, originalHttpResponse, path);
-            inv.setRose(this);
-            inv.setPreInvocation(preInvocation);
-            //
-            InvocationUtils.bindRequestToCurrentThread(httpRequest);
-            InvocationUtils.bindInvocationToRequest(inv, httpRequest);
+        }
+        HttpServletRequest httpRequest = originalHttpRequest;
+        if (mrParameters != null && mrParameters.size() > 0) {
+            httpRequest = new ParameteredUriRequest(originalHttpRequest, mrParameters);
+        }
 
-            // invoke the engine chain
-            this.inv = inv;
-            Throwable error = null;
-            try {
-                Object instuction = ((EngineChain) this).doNext();
-                if (":continue".equals(instuction)) {
-                    return false;
+        // originalThreadRequest可能为null，特别是在portal框架下
+        HttpServletRequest originalThreadRequest = InvocationUtils.getCurrentThreadRequest();
+        //
+        Invocation preInvocation = null;
+        if (path.getDispatcher() != Dispatcher.REQUEST) {
+            preInvocation = InvocationUtils.getInvocation(originalHttpRequest);
+        }
+        // invocation 对象 代表一次Rose调用
+        InvocationBean inv = new InvocationBean(httpRequest, originalHttpResponse, path);
+        inv.setRose(this);
+        inv.setPreInvocation(preInvocation);
+        //
+        InvocationUtils.bindRequestToCurrentThread(httpRequest);
+        InvocationUtils.bindInvocationToRequest(inv, httpRequest);
+
+        // invoke the engine chain
+        this.inv = inv;
+        Throwable error = null;
+        try {
+            Object instuction = ((EngineChain) this).doNext();
+            if (":continue".equals(instuction)) {
+                return false;
+            }
+        } catch (Throwable local) {
+            error = local;
+            throw local;
+        } finally {
+            for (AfterCompletion task : afterCompletions) {
+                try {
+                    task.afterCompletion(inv, error);
+                } catch (Exception e) {
+                    logger.error("", e);
                 }
-            } catch (Throwable local) {
-                error = local;
-                throw local;
-            } finally {
-                for (AfterCompletion task : afterCompletions) {
-                    try {
-                        task.afterCompletion(inv, error);
-                    } catch (Exception e) {
-                        logger.error("", e);
-                    }
-                }
-                if (originalThreadRequest != null) {
-                    InvocationUtils.bindRequestToCurrentThread(originalThreadRequest);
-                } else {
-                    InvocationUtils.unindRequestFromCurrentThread();
-                }
-                // 更新绑定的invocation，只对于那些forward后request.setAttibute影响了前者的有效。(include的不用处理了，已经做了snapshot了)
-                if (preInvocation != null) {
-                    InvocationUtils.bindInvocationToRequest(preInvocation, httpRequest);
-                }
+            }
+            if (originalThreadRequest != null) {
+                InvocationUtils.bindRequestToCurrentThread(originalThreadRequest);
+            } else {
+                InvocationUtils.unindRequestFromCurrentThread();
+            }
+            // 更新绑定的invocation，只对于那些forward后request.setAttibute影响了前者的有效。(include的不用处理了，已经做了snapshot了)
+            if (preInvocation != null) {
+                InvocationUtils.bindInvocationToRequest(preInvocation, httpRequest);
             }
         }
 
