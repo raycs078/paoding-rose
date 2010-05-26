@@ -47,7 +47,7 @@ public class MappingNode implements Comparable<MappingNode>, Iterable<MappingNod
     private MappingNode parent;
 
     /** 父engine group */
-    private EngineGroup parentEngines;
+    private EngineGroup parentEngineGroup;
 
     /** 最左子结点 */
     private MappingNode leftMostChild;
@@ -91,7 +91,7 @@ public class MappingNode implements Comparable<MappingNode>, Iterable<MappingNod
         this.setParent(parent);
         if (parent != null) {
             Assert.notNull(parentEngines);
-            this.parentEngines = parentEngines;
+            this.parentEngineGroup = parentEngines;
         }
     }
 
@@ -125,10 +125,6 @@ public class MappingNode implements Comparable<MappingNode>, Iterable<MappingNod
 
     public MappingNode getParent() {
         return parent;
-    }
-
-    public EngineGroup getParentResource() {
-        return parentEngines;
     }
 
     public MappingNode getSibling() {
@@ -203,7 +199,7 @@ public class MappingNode implements Comparable<MappingNode>, Iterable<MappingNod
         while (child != null) {
             final Mapping toCopy = child.getMapping();
             final MappingNode newNode = new MappingNode();
-            newNode.parentEngines = child.parentEngines;
+            newNode.parentEngineGroup = child.parentEngineGroup;
             newNode.engineGroups = Arrays.copyOf(child.engineGroups, child.engineGroups.length);
             Mapping copiedMapping = new Mapping() {
 
@@ -339,13 +335,13 @@ public class MappingNode implements Comparable<MappingNode>, Iterable<MappingNod
         // 用来储存并返回的匹配结果集合
         final ArrayList<MatchResult> matchResults = new ArrayList<MatchResult>(4);
 
+        final boolean debugEnabled = logger.isDebugEnabled();
+
         // 当前判断结点
         MappingNode curNode = this;
 
         // 给当前判断结点判断的path
         String remaining = requestPath.getRosePath();
-
-        final boolean debugEnabled = logger.isDebugEnabled();
 
         // 开始匹配，直至成功或失败
         while (true) {
@@ -399,7 +395,8 @@ public class MappingNode implements Comparable<MappingNode>, Iterable<MappingNod
             } else {
                 Assert.isTrue(curNode.getEngineGroups().length > 0);
                 if (curNode.isLeaf()) {
-                    throw new Error("leaf nodes should not have more than one engineGroup.");
+                    throw new AssertionError(
+                            "leaf nodes should not have more than one engineGroup.");
                 }
             }
 
@@ -409,13 +406,13 @@ public class MappingNode implements Comparable<MappingNode>, Iterable<MappingNod
             if (matchResults.size() > 0) {
                 MatchResult parentResult = matchResults.get(matchResults.size() - 1);
                 if (parentResult.getEngine() == null) {
-
-                    EngineGroup parentGroup = curNode.getParentResource();
                     // 
-                    Engine parentEngine = getEngine(parentGroup, request, requestPath);
+                    Engine parentEngine = getEngine(curNode.parentEngineGroup, request, requestPath);
+
                     // 只有最后的结点才有资格在engineGroup非空的情况下拒绝服务
                     if (parentEngine == null) {
-                        throw new Error("non-leaf nodes shall not deny request by http method.");
+                        throw new AssertionError(
+                                "non-leaf nodes shall not deny request by http method.");
                     }
                     parentResult.setEngine(parentEngine);
                 }
