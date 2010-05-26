@@ -24,10 +24,12 @@ import javax.sql.DataSource;
 
 import net.paoding.rose.jade.datasource.DataSourceFactory;
 import net.paoding.rose.jade.datasource.SpringDataSourceFactory;
+import net.paoding.rose.jade.plugin.DBMonitorPluginDef;
+import net.paoding.rose.jade.plugin.IJadePlugin;
+import net.paoding.rose.jade.plugin.JadePluginWrapper;
 import net.paoding.rose.jade.provider.AbstractDataAccessProvider;
 import net.paoding.rose.jade.provider.DataAccess;
 import net.paoding.rose.jade.provider.SQLInterpreter;
-import net.paoding.rose.jade.provider.jdbctemplate.plugin.DBMonitorPluginDef;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
@@ -69,10 +71,20 @@ public class JdbcTemplateDataAccessProvider extends AbstractDataAccessProvider i
         JdbcTemplateDataAccess dataAccess = createEmptyJdbcTemplateDataAccess();
         dataAccess.setDataSource(dataSource);
         dataAccess.setInterpreters(findSQLInterpreters());
-        synchronized (DBMonitorPluginDef.plugin) {
-            dataAccess.setDBMonitorPlugin(DBMonitorPluginDef.plugin);
-        }
+        dataAccess.setDBMonitorPlugin(findPlugin());
         return dataAccess;
+    }
+
+    /**
+     * TODO findPlugin<br>
+     *
+     * @return
+     *
+     * @author tai.wang@opi-corp.com May 26, 2010 - 4:30:09 PM
+     */
+    private IJadePlugin findPlugin() {
+        IJadePlugin[] ps = { DBMonitorPluginDef.plugin };
+        return new JadePluginWrapper(ps);
     }
 
     protected JdbcTemplateDataAccess createEmptyJdbcTemplateDataAccess() {
