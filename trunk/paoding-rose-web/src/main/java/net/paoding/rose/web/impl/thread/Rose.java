@@ -45,23 +45,25 @@ public class Rose implements EngineChain {
 
     protected static final Log logger = LogFactory.getLog(Rose.class);
 
-    private List<Module> modules;
+    private final List<Module> modules;
+
+    private final MappingNode mappingTree;
+
+    private final RequestPath path;
+
+    private final HttpServletRequest originalHttpRequest;
+
+    private final HttpServletResponse originalHttpResponse;
+
+    private boolean started;
+
+    private List<MatchResult> matchResults;
 
     private InvocationBean inv;
 
-    private ArrayList<MatchResult> matchResults;
+    private int nextIndexOfChain;
 
-    private MappingNode mappingTree;
-
-    private int nextIndexOfChain = 0;
-
-    private LinkedList<AfterCompletion> afterCompletions = new LinkedList<AfterCompletion>();
-
-    private RequestPath path;
-
-    private HttpServletRequest originalHttpRequest;
-
-    private HttpServletResponse originalHttpResponse;
+    private final LinkedList<AfterCompletion> afterCompletions = new LinkedList<AfterCompletion>();
 
     public Rose(List<Module> modules, MappingNode mappingTree, HttpServletRequest httpRequest,
             HttpServletResponse httpResponse, RequestPath requestPath) {
@@ -96,9 +98,16 @@ public class Rose implements EngineChain {
      * @throws Throwable
      */
     public boolean start() throws Throwable {
+        if (this.started) {
+            throw new IllegalStateException("don't start again");
+        }
+        this.started = true;
         return innerStart();
     }
 
+    /**
+     * @throws IndexOutOfBoundsException
+     */
     @Override
     public Object doNext() throws Throwable {
         MatchResult matchResult = matchResults.get(nextIndexOfChain++);
@@ -107,8 +116,9 @@ public class Rose implements EngineChain {
     }
 
     private boolean innerStart() throws Throwable {
-        final ArrayList<MatchResult> matchResults = mappingTree.match(originalHttpRequest, this.path);
-        MatchResult result = matchResults.get(matchResults.size() - 1);
+        final ArrayList<MatchResult> matchResults = mappingTree.match(originalHttpRequest,
+                this.path);
+        final MatchResult result = matchResults.get(matchResults.size() - 1);
 
         // 完成一次成功匹配需要走到树的叶子结点
         if (!result.getMappingNode().isLeaf()) {
@@ -117,7 +127,7 @@ public class Rose implements EngineChain {
             }
             return false;
         }
-        
+
         // but 405 ?
         if (result.getEngine() == null) {
             /* 405 Method Not Allowed
@@ -136,12 +146,14 @@ public class Rose implements EngineChain {
             }
             originalHttpResponse.addHeader("Allow", allow.toString());
             originalHttpResponse.sendError(405, this.path.getUri());
+            
+            // true: don't forward to next filter or servlet
             return true;
         }
 
         // ok, got it
         this.matchResults = matchResults;
-       
+
         Map<String, String> mrParameters = null;
         for (int i = 0; i < matchResults.size(); i++) {
             MatchResult tmr = matchResults.get(i);
@@ -189,7 +201,7 @@ public class Rose implements EngineChain {
             for (AfterCompletion task : afterCompletions) {
                 try {
                     task.afterCompletion(inv, error);
-                } catch (Exception e) {
+                } catch (Throwable e) {
                     logger.error("", e);
                 }
             }
