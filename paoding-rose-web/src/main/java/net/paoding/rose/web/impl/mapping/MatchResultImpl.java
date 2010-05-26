@@ -35,7 +35,7 @@ class MatchResultImpl implements MatchResult {
     /** 结果字符串 */
     private String value;
 
-    private Mapping mapping;
+    private MappingNode mappingNode;
 
     /** 从结果字符串中得到的资源参数值(如果该资源使用了使用了参数化的映射地址) */
     private Map<String, String> parameters;
@@ -52,14 +52,14 @@ class MatchResultImpl implements MatchResult {
      * 
      * @param value 匹配结果字符串
      */
-    public MatchResultImpl(Mapping mapping, String value) {
-        this.mapping = mapping;
+    public MatchResultImpl(MappingNode mappingNode, String value) {
+        this.mappingNode = mappingNode;
         this.value = value;
     }
 
     @Override
-    public Mapping getMapping() {
-        return mapping;
+    public MappingNode getMappingNode() {
+        return mappingNode;
     }
 
     @Override
