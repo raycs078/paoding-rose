@@ -24,7 +24,6 @@ import javax.sql.DataSource;
 
 import net.paoding.rose.jade.datasource.DataSourceFactory;
 import net.paoding.rose.jade.datasource.SpringDataSourceFactory;
-import net.paoding.rose.jade.plugin.DBMonitorPluginDef;
 import net.paoding.rose.jade.plugin.IJadePlugin;
 import net.paoding.rose.jade.plugin.JadePluginWrapper;
 import net.paoding.rose.jade.provider.AbstractDataAccessProvider;
@@ -77,13 +76,20 @@ public class JdbcTemplateDataAccessProvider extends AbstractDataAccessProvider i
 
     /**
      * TODO findPlugin<br>
-     *
+     * 
      * @return
-     *
+     * 
      * @author tai.wang@opi-corp.com May 26, 2010 - 4:30:09 PM
      */
     private IJadePlugin findPlugin() {
-        IJadePlugin[] ps = { DBMonitorPluginDef.plugin };
+        IJadePlugin[] ps;
+        try {
+            Collection<?> jc = this.applicationContext.getBeansOfType(IJadePlugin.class).values();
+            ps = jc.toArray(new IJadePlugin[0]);
+        } catch (BeansException e) {
+            e.printStackTrace();
+            ps = new IJadePlugin[0];
+        }
         return new JadePluginWrapper(ps);
     }
 
