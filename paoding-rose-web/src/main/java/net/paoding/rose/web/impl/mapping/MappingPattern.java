@@ -31,5 +31,5 @@ public interface MappingPattern {
      * @param path
      * @return
      */
-    java.util.regex.MatchResult match(String path);
+    java.util.regex.MatchResult match(CharSequence path);
 }

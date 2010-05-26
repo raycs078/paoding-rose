@@ -53,11 +53,7 @@ public class MappingController {
                 for (WebResource resource : node.getResources()) {
                     sb.append("<resource path=\"").append(node.getPath()).append("\">");
                     for (ReqMethod method : resource.getAllowedMethods()) {
-                        Engine[] engines = resource.getEngines(method);
-                        if (engines == null) {
-                            continue;
-                        }
-                        for (Engine engine : engines) {
+                        for (Engine engine : resource.getEngines(method)) {
                             ActionEngine action = (ActionEngine) engine;
                             Method m = action.getMethod();
                             Class<?> cc = action.getControllerClass();

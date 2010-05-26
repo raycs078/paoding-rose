@@ -19,6 +19,8 @@ import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import net.paoding.rose.util.RoseStringUtil;
+
 /**
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
@@ -35,7 +37,7 @@ public enum MatchMode {
                     final Pattern pattern = Pattern.compile("^" + conf + "($|/)");
 
                     @Override
-                    public java.util.regex.MatchResult match(String path) {
+                    public java.util.regex.MatchResult match(CharSequence path) {
                         Matcher matcher = pattern.matcher(path);
                         return matcher.find() ? matcher : null;
                     }
@@ -52,8 +54,8 @@ public enum MatchMode {
                     private final SimpleMatchResult simpleMatchResult = new SimpleMatchResult(conf);
 
                     @Override
-                    public java.util.regex.MatchResult match(String path) {
-                        boolean matched = path.startsWith(conf);
+                    public java.util.regex.MatchResult match(CharSequence path) {
+                        boolean matched = RoseStringUtil.startsWith(path, conf);
                         if (!matched
                                 || (path.length() > conf.length() && path.charAt(conf.length()) != '/')) {
                             return null;
@@ -80,7 +82,7 @@ public enum MatchMode {
                     final Pattern pattern = Pattern.compile("^" + conf + "/?$");
 
                     @Override
-                    public java.util.regex.MatchResult match(String path) {
+                    public java.util.regex.MatchResult match(CharSequence path) {
                         Matcher matcher = pattern.matcher(path);
                         return matcher.find() ? matcher : null;
                     }
@@ -96,10 +98,10 @@ public enum MatchMode {
                     private final SimpleMatchResult simpleMatchResult = new SimpleMatchResult(conf);
 
                     @Override
-                    public java.util.regex.MatchResult match(String inputPath) {
+                    public java.util.regex.MatchResult match(CharSequence inputPath) {
                         if (inputPath.length() > conf.length()) {
                             if (inputPath.length() == conf.length() + 1) {
-                                boolean matched = inputPath.startsWith(conf);
+                                boolean matched = RoseStringUtil.startsWith(inputPath, conf);
                                 if (!matched || inputPath.charAt(conf.length()) != '/') {
                                     return null;
                                 }

@@ -439,7 +439,7 @@ public final class InvocationBean implements Invocation {
     public String getResourceId() {
         StringBuilder sb = new StringBuilder(getRequest().getContextPath());
         for (MatchResult mr : rose.getMatchResults()) {
-            sb.append(mr.getResource().getName());
+            sb.append(mr.getResource().getSimpleName());
         }
         return sb.toString();
     }

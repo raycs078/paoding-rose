@@ -25,6 +25,7 @@ import net.paoding.rose.web.impl.thread.Engine;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.util.Assert;
 
 /**
  * 
@@ -39,30 +40,39 @@ public class WebResourceImpl implements WebResource {
     /** ARRAY_SIZE 代表用于存放 Engine 的数组的大小 */
     private static final int ARRAY_SIZE = ReqMethod.ALL.parse().length + 1;
 
-    private String name = "unNamed";
+    private static final Engine[] emptyEngines = new Engine[0];
+
+    // 资源相对于上级的资源的名称
+    private final String simpleName;
+
+    /**
+     * 该资源支持的操作逻辑，如果不支持某种操作对应位置的元素为长度为0的engines数组
+     * <p>
+     * 处理指定http method的逻辑存放于该本数组的指定的、唯一位置，即 {@link ReqMethod#ordinal()}
+     * 
+     */
+    private final Engine[][] engines;
 
     private transient String toStringCache;
 
     private transient List<ReqMethod> allowedMethodsCache;
 
+    //-----------------------------------
+
     /**
-     * 该资源支持的操作逻辑，如果不支持某种操作对应位置的元素为null
-     * <p>
-     * 没种操作逻辑存放于该数组的唯一位置，即 {@link ReqMethod#ordinal()} 值所指向的位置
+     * @param simpleName 资源相对于上级的资源的名称
      */
-    private Engine[][] allEngines = new Engine[ARRAY_SIZE][];
+    public WebResourceImpl(String simpleName) {
+        Assert.notNull(simpleName);
+        this.simpleName = simpleName;
 
-    public WebResourceImpl(String name) {
-        setName(name);
+        Engine[][] engines = new Engine[ARRAY_SIZE][];
+        Arrays.fill(engines, emptyEngines);
+        this.engines = engines;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-        clearCache();
+    public String getSimpleName() {
+        return simpleName;
     }
 
     /**
@@ -75,36 +85,35 @@ public class WebResourceImpl implements WebResource {
     public void addEngine(ReqMethod method, Engine engine) {
         ReqMethod[] methods = method.parse();
         for (ReqMethod md : methods) {
-            Engine[] methodEngines = allEngines[md.ordinal()];
-            if (methodEngines == null) {
+            Engine[] methodEngines = engines[md.ordinal()];
+            if (methodEngines.length == 0) {
                 methodEngines = new Engine[] { engine };
             } else {
                 methodEngines = Arrays.copyOf(methodEngines, methodEngines.length + 1);
                 methodEngines[methodEngines.length - 1] = engine;
                 Arrays.sort(methodEngines);
             }
-            allEngines[md.ordinal()] = methodEngines;
-            clearCache();
+            engines[md.ordinal()] = methodEngines;
         }
+        clearCache();
     }
 
     /**
-     * 返回处理这个资源的处理逻辑，如果该资源不支持该操作方法返回null。
+     * 返回处理这个资源的处理逻辑，如果该资源不支持该操作方法返回长度为0的数组。
      * 
      * @param method 除 {@link ReqMethod#ALL} 外的其他 {@link ReqMethod}
-     *        实例，如果method为null，将返回null
+     *        实例；可以为null
      * @return
      */
     @Override
     public Engine[] getEngines(ReqMethod method) {
+        if (method == null) {
+            return emptyEngines;
+        }
         if (method == ReqMethod.ALL) {
             throw new IllegalArgumentException("method");
         }
-        if (method == null) {
-            return null;
-        }
-        Engine[] methodEngines = allEngines[method.ordinal()];
-        return methodEngines;
+        return engines[method.ordinal()];
     }
 
     /**
@@ -114,10 +123,10 @@ public class WebResourceImpl implements WebResource {
      * @return
      */
     public boolean isMethodAllowed(ReqMethod method) {
-        return method != null && allEngines[method.ordinal()] != null;
+        return method != null && engines[method.ordinal()].length > 0;
     }
 
-    protected void clearCache() {
+    private void clearCache() {
         allowedMethodsCache = null;
         toStringCache = null;
     }
@@ -126,8 +135,8 @@ public class WebResourceImpl implements WebResource {
         if (allowedMethodsCache == null) {
             List<ReqMethod> allowedMethods = new ArrayList<ReqMethod>();
             for (ReqMethod method : ReqMethod.ALL.parse()) {
-                Engine[] engines = this.allEngines[method.ordinal()];
-                if (engines != null && engines.length > 0) {
+                Engine[] methodEngines = this.engines[method.ordinal()];
+                if (methodEngines.length > 0) {
                     allowedMethods.add(method);
                 }
             }
@@ -141,16 +150,18 @@ public class WebResourceImpl implements WebResource {
      */
     public void destroy() {
         RuntimeException error = null;
-        for (Engine[] methodEngines : allEngines) {
-            if (methodEngines == null) {
-                continue;
-            }
+        for (Engine[] methodEngines : engines) {
             for (Engine engine : methodEngines) {
                 try {
                     engine.destroy();
-                } catch (RuntimeException e) {
+                } catch (Throwable e) {
                     logger.error("", e);
-                    error = e;
+                    if (RuntimeException.class.isInstance(e)) {
+                        error = (RuntimeException) e;
+                    } else {
+                        error = new RuntimeException("", e);
+                    }
+
                 }
             }
         }
@@ -163,7 +174,7 @@ public class WebResourceImpl implements WebResource {
     public String toString() {
         if (this.toStringCache == null) {
             StringBuilder sb = new StringBuilder();
-            sb.append(getName()).append(" [");
+            sb.append(getSimpleName()).append(" [");
             int oriLen = sb.length();
             for (ReqMethod method : getAllowedMethods()) {
                 sb.append(method.toString()).append(", ");

@@ -144,10 +144,8 @@ public class TreeBuilder {
                         if (tempNode != null) {
                             Engine[] defActionEngines = tempNode.getResources()[0]
                                     .getEngines(reqMethod);
-                            if (defActionEngines != null) {
-                                for (Engine engine : defActionEngines) {
-                                    defResource.addEngine(reqMethod, engine);
-                                }
+                            for (Engine engine : defActionEngines) {
+                                defResource.addEngine(reqMethod, engine);
                             }
                             break;
                         }
