@@ -22,9 +22,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -80,10 +78,8 @@ public final class ActionEngine implements Engine {
     private final ParamValidator[] validators;
 
     private final AcceptedChecker[] acceptedCheckers;
-    
-    private final MethodParameterResolver methodParameterResolver;
 
-    private Map<String, Pattern> patterns = Collections.emptyMap();
+    private final MethodParameterResolver methodParameterResolver;
 
     private transient String toStringCache;
 
@@ -200,115 +196,123 @@ public final class ActionEngine implements Engine {
 
     /**
      * 用来抽象isAccepted过滤的判断逻辑
+     * 
      * @author Li Weibo (weibo.leo@gmail.com)
      */
     private static interface AcceptedChecker {
-    	public int check(HttpServletRequest request);
+
+        public int check(HttpServletRequest request);
     }
-    
+
     /**
      * 初始化的时候来决定所有的判断条件，并抽象为AcceptedChecker数组
-     * @return 
+     * 
+     * @return
      */
     private AcceptedChecker[] compileAcceptedCheckers() {
-    	
-    	IfParamExists ifParamExists = method.getAnnotation(IfParamExists.class);
-    	//没标注IfParamExists或者标注了IfParamExists("")都认为不作检查
-    	if (ifParamExists == null || ifParamExists.value().trim().length() == 0) {
-            return new AcceptedChecker[]{};
+
+        IfParamExists ifParamExists = method.getAnnotation(IfParamExists.class);
+        //没标注IfParamExists或者标注了IfParamExists("")都认为不作检查
+        if (ifParamExists == null || ifParamExists.value().trim().length() == 0) {
+            return new AcceptedChecker[] {};
         }
 
-    	List<AcceptedChecker> checkers = new ArrayList<AcceptedChecker>();	//所有判断条件的列表
-    	String value = ifParamExists.value();
-        
-    	//可以写多个判断条件，以这样的形式: type&subtype=value&anothername=value2
-    	String[] terms = StringUtils.split(value, "&");
-        Assert.isTrue(terms.length >= 1);	//这个应该永远成立
-        
+        List<AcceptedChecker> checkers = new ArrayList<AcceptedChecker>(); //所有判断条件的列表
+        String value = ifParamExists.value();
+
+        //可以写多个判断条件，以这样的形式: type&subtype=value&anothername=value2
+        String[] terms = StringUtils.split(value, "&");
+        Assert.isTrue(terms.length >= 1); //这个应该永远成立
+
         //按'&'分割后，每一个term就是一个检查条件
         for (final String term : terms) {
-        	final int index = term.indexOf('=');	//找'='
-        	if (index == -1) {	//没有=说明只有参数名，此时term就是参数名
-        		checkers.add(new AcceptedChecker() {
-        			final String paramName = term.trim();
-        			public int check(HttpServletRequest request) {
-        				String paramValue = request.getParameter(paramName);
-        				if (StringUtils.isNotBlank(paramValue)) {	//规则中没有约束参数值，所以只要存在就ok
-                			return 10;
-                		} else {
-                			return -1;
-                		}
-        	    	}
-        		});
-        	} else {	//term中有'='
-        		
-        		final String paramName = term.substring(0, index).trim();	//参数名
-                final String expected = term.substring(index + 1).trim();	//期望的参数值
-                
+            final int index = term.indexOf('='); //找'='
+            if (index == -1) { //没有=说明只有参数名，此时term就是参数名
+                checkers.add(new AcceptedChecker() {
+
+                    final String paramName = term.trim();
+
+                    public int check(HttpServletRequest request) {
+                        String paramValue = request.getParameter(paramName);
+                        if (StringUtils.isNotBlank(paramValue)) { //规则中没有约束参数值，所以只要存在就ok
+                            return 10;
+                        } else {
+                            return -1;
+                        }
+                    }
+                });
+            } else { //term中有'='
+
+                final String paramName = term.substring(0, index).trim(); //参数名
+                final String expected = term.substring(index + 1).trim(); //期望的参数值
+
                 //xxx=等价于xxx的
                 if (expected.length() == 0) {
-                	checkers.add(new AcceptedChecker() {
-            			public int check(HttpServletRequest request) {
-            				String paramValue = request.getParameter(paramName);
-            				if (StringUtils.isNotBlank(paramValue)) {
-                    			return 10;
-                    		} else {
-                    			return -1;
-                    		}
-            	    	}
-            		});
-                } else if (expected.startsWith(":")) {	//expected是正则表达式
-                	Pattern tmpPattern = null;
-                	try {
-                		tmpPattern = Pattern.compile(expected.substring(1));
-					} catch (PatternSyntaxException e) {
+                    checkers.add(new AcceptedChecker() {
+
+                        public int check(HttpServletRequest request) {
+                            String paramValue = request.getParameter(paramName);
+                            if (StringUtils.isNotBlank(paramValue)) {
+                                return 10;
+                            } else {
+                                return -1;
+                            }
+                        }
+                    });
+                } else if (expected.startsWith(":")) { //expected是正则表达式
+                    Pattern tmpPattern = null;
+                    try {
+                        tmpPattern = Pattern.compile(expected.substring(1));
+                    } catch (PatternSyntaxException e) {
                         logger.error("@IfParamExists pattern error, " + controllerClass.getName()
                                 + "#" + method.getName(), e);
                     }
-					final Pattern pattern = tmpPattern;	//转成final的
-                	checkers.add(new AcceptedChecker() {
-                		public int check(HttpServletRequest request) {
-            				String paramValue = request.getParameter(paramName);
-            				if (paramValue == null) {	//参数值不能存在就不能通过
+                    final Pattern pattern = tmpPattern; //转成final的
+                    checkers.add(new AcceptedChecker() {
+
+                        public int check(HttpServletRequest request) {
+                            String paramValue = request.getParameter(paramName);
+                            if (paramValue == null) { //参数值不能存在就不能通过
                                 return -1;
                             }
-            				if (pattern != null && pattern.matcher(paramValue).matches()) {
-                            	return 12;
+                            if (pattern != null && pattern.matcher(paramValue).matches()) {
+                                return 12;
                             } else {
-                            	return -1;
+                                return -1;
                             }
-            	    	}
-            		});
-                } else {	//expected不为""且不是正则表达式
-                	checkers.add(new AcceptedChecker() {
-                		public int check(HttpServletRequest request) {
-            				String paramValue = request.getParameter(paramName);
-            				// 13优先于正则表达式的12
+                        }
+                    });
+                } else { //expected不为""且不是正则表达式
+                    checkers.add(new AcceptedChecker() {
+
+                        public int check(HttpServletRequest request) {
+                            String paramValue = request.getParameter(paramName);
+                            // 13优先于正则表达式的12
                             return expected.equals(paramValue) ? 13 : -1;
-            	    	}
-            		});
+                        }
+                    });
                 }
-        	}
+            }
         }
-        return checkers.toArray(new AcceptedChecker[]{});
+        return checkers.toArray(new AcceptedChecker[] {});
     }
-    
+
     @Override
     public int isAccepted(HttpServletRequest request) {
-    	if (acceptedCheckers.length == 0) {	//没有约束条件，返回1
-    		return 1;
-    	}
-    	int total = 0;
-    	for (AcceptedChecker checker : acceptedCheckers) {
-    		int c = checker.check(request);
-    		if (c == -1) {	//-1表示此约束条件未通过
-    			return -1;
-    		}
-    		//FIXME 目前采用各个检查条件权值相加的办法来决定最终权值，
-    		//在权值相等的情况下，可能会有选举问题，需要更好的策略来取代
-    		total += c;
-    	}
-    	return total;
+        if (acceptedCheckers.length == 0) { //没有约束条件，返回1
+            return 1;
+        }
+        int total = 0;
+        for (AcceptedChecker checker : acceptedCheckers) {
+            int c = checker.check(request);
+            if (c == -1) { //-1表示此约束条件未通过
+                return -1;
+            }
+            //FIXME 目前采用各个检查条件权值相加的办法来决定最终权值，
+            //在权值相等的情况下，可能会有选举问题，需要更好的策略来取代
+            total += c;
+        }
+        return total;
     }
 
     @Override

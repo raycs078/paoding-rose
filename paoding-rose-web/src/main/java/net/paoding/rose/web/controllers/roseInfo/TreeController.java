@@ -22,7 +22,7 @@ import net.paoding.rose.web.annotation.ReqMapping;
 import net.paoding.rose.web.annotation.ReqMethod;
 import net.paoding.rose.web.annotation.rest.Get;
 import net.paoding.rose.web.impl.mapping.MappingNode;
-import net.paoding.rose.web.impl.mapping.WebResource;
+import net.paoding.rose.web.impl.mapping.EngineGroup;
 import net.paoding.rose.web.impl.thread.ActionEngine;
 import net.paoding.rose.web.impl.thread.Engine;
 import net.paoding.rose.web.impl.thread.Rose;
@@ -51,11 +51,11 @@ public class TreeController {
         MappingNode child = parent.getLeftMostChild();
         while (child != null) {
             sb.append("<node path=\"").append(child.getPath()).append(
-                    "\" resourceCount=\"" + child.getResources().length + "\">");
+                    "\" engineGroupCount=\"" + child.getEngineGroups().length + "\">");
             if (child.getDeep() == 3) {
-                for (WebResource resource : child.getResources()) {
-                    for (ReqMethod method : resource.getAllowedMethods()) {
-                        for (Engine engine : resource.getEngines(method)) {
+                for (EngineGroup engineGroup : child.getEngineGroups()) {
+                    for (ReqMethod method : engineGroup.getAllowedMethods()) {
+                        for (Engine engine : engineGroup.getEngines(method)) {
                             ActionEngine action = (ActionEngine) engine;
                             Method m = action.getMethod();
                             Class<?> cc = action.getControllerClass();

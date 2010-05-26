@@ -39,13 +39,15 @@ public interface MatchResult {
      * 
      * @return
      */
-    public WebResource getResource();
+    public EngineGroup getResource();
+
+    public Mapping getMapping();
 
     /**
      * 
-     * @param resource
+     * @param engineGroup
      */
-    public void setResource(WebResource resource);
+    public void setResource(EngineGroup engineGroup);
 
     public Engine getEngine();
 

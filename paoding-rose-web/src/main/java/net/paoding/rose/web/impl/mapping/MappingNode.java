@@ -31,7 +31,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.util.Assert;
 
 /**
- * {@link MappingNode}代表匹配树的一个结点，树的结点能够包含一个或多个被称为资源的 {@link WebResource} 对象
+ * {@link MappingNode}代表匹配树的一个结点，树的结点能够包含一个或多个被称为资源的 {@link EngineGroup} 对象
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
@@ -46,8 +46,8 @@ public class MappingNode implements Comparable<MappingNode>, Iterable<MappingNod
     /** 父结点 */
     private MappingNode parent;
 
-    /** 父亲资源 */
-    private WebResource parentResource;
+    /** 父engine group */
+    private EngineGroup parentEngines;
 
     /** 最左子结点 */
     private MappingNode leftMostChild;
@@ -58,9 +58,9 @@ public class MappingNode implements Comparable<MappingNode>, Iterable<MappingNod
     /** 后序遍历的后继结点 */
     private MappingNode successor;
 
-    private static final WebResource[] EMPTY = new WebResource[0];
+    private static final EngineGroup[] EMPTY = new EngineGroup[0];
 
-    private WebResource[] resources = EMPTY;
+    private EngineGroup[] engineGroups = EMPTY;
 
     private transient String pathCache;
 
@@ -83,15 +83,15 @@ public class MappingNode implements Comparable<MappingNode>, Iterable<MappingNod
      * @param mapping
      * @param parent
      */
-    public MappingNode(Mapping mapping, MappingNode parent, WebResource parentResource) {
+    public MappingNode(Mapping mapping, MappingNode parent, EngineGroup parentEngines) {
         if (mapping == null) {
             throw new NullPointerException("mapping");
         }
         this.setMapping(mapping);
         this.setParent(parent);
         if (parent != null) {
-            Assert.isTrue(parentResource != null);
-            this.parentResource = parentResource;
+            Assert.notNull(parentEngines);
+            this.parentEngines = parentEngines;
         }
     }
 
@@ -127,8 +127,8 @@ public class MappingNode implements Comparable<MappingNode>, Iterable<MappingNod
         return parent;
     }
 
-    public WebResource getParentResource() {
-        return parentResource;
+    public EngineGroup getParentResource() {
+        return parentEngines;
     }
 
     public MappingNode getSibling() {
@@ -171,21 +171,21 @@ public class MappingNode implements Comparable<MappingNode>, Iterable<MappingNod
         };
     }
 
-    public WebResource[] getResources() {
-        return resources;
+    public EngineGroup[] getEngineGroups() {
+        return engineGroups;
     }
 
-    public void setResources(WebResource[] resources) {
-        this.resources = resources;
+    public void setEngineGroups(EngineGroup[] engineGroups) {
+        this.engineGroups = engineGroups;
     }
 
-    public void addResource(WebResource resource) {
-        Assert.isTrue(resource != null);
-        if (resources.length == 0) {
-            resources = new WebResource[] { resource };
+    public void addEngineGroup(EngineGroup engineGroup) {
+        Assert.isTrue(engineGroup != null);
+        if (engineGroups.length == 0) {
+            engineGroups = new EngineGroup[] { engineGroup };
         } else {
-            resources = Arrays.copyOf(resources, resources.length + 1);
-            resources[resources.length - 1] = resource;
+            engineGroups = Arrays.copyOf(engineGroups, engineGroups.length + 1);
+            engineGroups[engineGroups.length - 1] = engineGroup;
         }
     }
 
@@ -199,8 +199,8 @@ public class MappingNode implements Comparable<MappingNode>, Iterable<MappingNod
         while (child != null) {
             final Mapping toCopy = child.getMapping();
             final MappingNode newNode = new MappingNode();
-            newNode.parentResource = child.parentResource;
-            newNode.resources = Arrays.copyOf(child.resources, child.resources.length);
+            newNode.parentEngines = child.parentEngines;
+            newNode.engineGroups = Arrays.copyOf(child.engineGroups, child.engineGroups.length);
             Mapping copiedMapping = new Mapping() {
 
                 @Override
@@ -370,13 +370,13 @@ public class MappingNode implements Comparable<MappingNode>, Iterable<MappingNod
 
             // @label BIND_ENGINE_IMMEDIATELY
 
-            if (curNode.getResources().length == 1) {
-                // 处理当前请求的resource对象: 因为同一个path可能有多个resource可以提供服务，所以即使result非null，resource也可能为null
-                WebResource resource = curNode.getResources()[0];
-                result.setResource(resource);
+            if (curNode.getEngineGroups().length == 1) {
+                // 处理当前请求的engineGroup对象: 因为同一个path可能有多个engineGroup可以提供服务，所以即使result非null，engineGroup也可能为null
+                EngineGroup engineGroup = curNode.getEngineGroups()[0];
+                result.setResource(engineGroup);
 
-                // 处理当前请求的engine对象: 一个resource可以处理不同请求方法，GET和POST可能是由不同的engine来处理的
-                Engine engine = getEngine(resource, request, requestPath);
+                // 处理当前请求的engine对象: 一个engineGroup可以处理不同请求方法，GET和POST可能是由不同的engine来处理的
+                Engine engine = getEngine(engineGroup, request, requestPath);
 
                 // 既然当前就能知道engine是谁？那就直接设置给 result； 如果还不能知道，等等即可
                 // @see BIND_PARENT_ENGINE
@@ -391,22 +391,22 @@ public class MappingNode implements Comparable<MappingNode>, Iterable<MappingNod
                 }
             } else {
                 if (curNode.leftMostChild == null) {
-                    throw new Error("leaf nodes should not have more than one resource.");
+                    throw new Error("leaf nodes should not have more than one engineGroup.");
                 }
             }
 
             // @label BIND_PARENT_ENGINE
 
-            // 上级匹配结果对象当时无法知道应该由哪个resource处理? 现在可以知道了!
+            // 上级匹配结果对象当时无法知道应该由哪个engineGroup处理? 现在可以知道了!
             if (matchResults.size() > 0) {
                 MatchResult parentResult = matchResults.get(matchResults.size() - 1);
                 if (parentResult.getResource() == null) {
 
-                    WebResource parentResource = curNode.getParentResource();
+                    EngineGroup parentResource = curNode.getParentResource();
                     parentResult.setResource(parentResource);
                     // 
                     Engine parentEngine = getEngine(parentResource, request, requestPath);
-                    // 只有最后的结点才有资格在resource非空的情况下拒绝服务
+                    // 只有最后的结点才有资格在engineGroup非空的情况下拒绝服务
                     if (parentEngine == null) {
                         throw new Error("non-leaf nodes shall not deny request by http method.");
                     }
@@ -430,13 +430,13 @@ public class MappingNode implements Comparable<MappingNode>, Iterable<MappingNod
         }
     }
 
-    private Engine getEngine(WebResource resource, HttpServletRequest request,
+    private Engine getEngine(EngineGroup engineGroup, HttpServletRequest request,
             RequestPath requestPath) {
 
         Engine selectedEngine = null;
         int score = 0;
 
-        for (Engine engine : resource.getEngines(requestPath.getMethod())) {
+        for (Engine engine : engineGroup.getEngines(requestPath.getMethod())) {
             int candidate = engine.isAccepted(request);
             if (candidate > score) {
                 selectedEngine = engine;
