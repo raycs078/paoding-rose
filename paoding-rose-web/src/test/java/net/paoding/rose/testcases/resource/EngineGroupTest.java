@@ -126,7 +126,7 @@ public class EngineGroupTest extends TestCase {
         assertEquals(msg, 0, engineGroup.getEngines(ReqMethod.DELETE).length);
         assertEquals(msg, 0, engineGroup.getEngines(ReqMethod.OPTIONS).length);
 
-        assertEquals("testGetPost [GET, POST]", engineGroup.toString());
+        assertEquals("[GET, POST]", engineGroup.toString());
     }
 
     public void testNotOverrideByAll() {
@@ -143,7 +143,6 @@ public class EngineGroupTest extends TestCase {
         assertSame(defEngine, engineGroup.getEngines(ReqMethod.PUT)[0]);
         assertSame(defEngine, engineGroup.getEngines(ReqMethod.DELETE)[0]);
 
-        assertEquals("testNotOverrideByAll [GET, POST, DELETE, PUT, HEAD, OPTIONS, TRACE]",
-                engineGroup.toString());
+        assertEquals("[GET, POST, DELETE, PUT, HEAD, OPTIONS, TRACE]", engineGroup.toString());
     }
 }
