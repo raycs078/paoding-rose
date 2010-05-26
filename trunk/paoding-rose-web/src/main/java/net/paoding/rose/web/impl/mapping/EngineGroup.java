@@ -68,4 +68,10 @@ public interface EngineGroup {
      * 销毁旗下的engines
      */
     public void destroy();
+
+    /**
+     * 
+     * @return
+     */
+    public String toString();
 }

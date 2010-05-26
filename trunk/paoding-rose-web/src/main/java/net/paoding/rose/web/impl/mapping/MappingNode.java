@@ -135,6 +135,10 @@ public class MappingNode implements Comparable<MappingNode>, Iterable<MappingNod
         return sibling;
     }
 
+    public final boolean isLeaf() {
+        return leftMostChild == null;
+    }
+
     /**
      * 后序遍历
      */
@@ -373,7 +377,10 @@ public class MappingNode implements Comparable<MappingNode>, Iterable<MappingNod
             if (curNode.getEngineGroups().length == 1) {
                 // 处理当前请求的engineGroup对象: 因为同一个path可能有多个engineGroup可以提供服务，所以即使result非null，engineGroup也可能为null
                 EngineGroup engineGroup = curNode.getEngineGroups()[0];
-                result.setResource(engineGroup);
+                // leaf结点才有设置allowedMethods的必要
+                if (curNode.isLeaf()) {
+                    result.setAllowedMethods(engineGroup.getAllowedMethods());
+                }
 
                 // 处理当前请求的engine对象: 一个engineGroup可以处理不同请求方法，GET和POST可能是由不同的engine来处理的
                 Engine engine = getEngine(engineGroup, request, requestPath);
@@ -385,12 +392,13 @@ public class MappingNode implements Comparable<MappingNode>, Iterable<MappingNod
                     result.setEngine(engine);
                 } else {
                     // 只有最后的结点（即方法结点）才有资格返回405
-                    if (curNode.leftMostChild != null) {
+                    if (!curNode.isLeaf()) {
                         throw new Error("non-leaf nodes shall not deny request by http method.");
                     }
                 }
             } else {
-                if (curNode.leftMostChild == null) {
+                Assert.isTrue(curNode.getEngineGroups().length > 0);
+                if (curNode.isLeaf()) {
                     throw new Error("leaf nodes should not have more than one engineGroup.");
                 }
             }
@@ -400,12 +408,11 @@ public class MappingNode implements Comparable<MappingNode>, Iterable<MappingNod
             // 上级匹配结果对象当时无法知道应该由哪个engineGroup处理? 现在可以知道了!
             if (matchResults.size() > 0) {
                 MatchResult parentResult = matchResults.get(matchResults.size() - 1);
-                if (parentResult.getResource() == null) {
+                if (parentResult.getEngine() == null) {
 
-                    EngineGroup parentResource = curNode.getParentResource();
-                    parentResult.setResource(parentResource);
+                    EngineGroup parentGroup = curNode.getParentResource();
                     // 
-                    Engine parentEngine = getEngine(parentResource, request, requestPath);
+                    Engine parentEngine = getEngine(parentGroup, request, requestPath);
                     // 只有最后的结点才有资格在engineGroup非空的情况下拒绝服务
                     if (parentEngine == null) {
                         throw new Error("non-leaf nodes shall not deny request by http method.");
@@ -418,7 +425,7 @@ public class MappingNode implements Comparable<MappingNode>, Iterable<MappingNod
             matchResults.add(result);
             remaining = remaining.substring(result.getValue().length());
 
-            if (curNode.leftMostChild != null) {
+            if (!curNode.isLeaf()) {
                 curNode = curNode.leftMostChild;
             } else {
                 if (debugEnabled) {

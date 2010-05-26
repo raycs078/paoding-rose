@@ -15,12 +15,14 @@
  */
 package net.paoding.rose.web.impl.mapping;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
+import net.paoding.rose.web.annotation.ReqMethod;
 import net.paoding.rose.web.impl.thread.Engine;
 
 /**
@@ -33,15 +35,17 @@ class MatchResultImpl implements MatchResult {
     /** 结果字符串 */
     private String value;
 
-    /** 所匹配的资源 */
-    private EngineGroup engineGroup;
-
-    private Engine engine;
+    private Mapping mapping;
 
     /** 从结果字符串中得到的资源参数值(如果该资源使用了使用了参数化的映射地址) */
     private Map<String, String> parameters;
 
-    private Mapping mapping;
+    private Engine engine;
+
+    private final static List<ReqMethod> allMethods = Collections.unmodifiableList(Arrays
+            .asList(ReqMethod.ALL.parse()));
+
+    private List<ReqMethod> allowedMethods = allMethods;
 
     /**
      * 创建新的匹配结果对象
@@ -58,31 +62,17 @@ class MatchResultImpl implements MatchResult {
         return mapping;
     }
 
+    @Override
     public String getValue() {
         return value;
     }
 
-    public EngineGroup getResource() {
-        return engineGroup;
-    }
-
-    public Engine getEngine() {
-        return engine;
-    }
-
     @Override
-    public void setEngine(Engine engine) {
-        this.engine = engine;
-    }
-
-    public void setResource(EngineGroup engineGroup) {
-        this.engineGroup = engineGroup;
-    }
-
     public int getParameterCount() {
         return parameters == null ? 0 : parameters.size();
     }
 
+    @Override
     public Collection<String> getParameterNames() {
         List<String> empty = Collections.emptyList();
         return parameters == null ? empty : parameters.keySet();
@@ -99,7 +89,28 @@ class MatchResultImpl implements MatchResult {
         parameters.put(name, value);
     }
 
+    @Override
     public String getParameter(String name) {
         return parameters == null ? null : parameters.get(name);
+    }
+
+    @Override
+    public Engine getEngine() {
+        return engine;
+    }
+
+    @Override
+    public void setEngine(Engine engine) {
+        this.engine = engine;
+    }
+
+    @Override
+    public List<ReqMethod> getAllowedMethods() {
+        return allowedMethods;
+    }
+
+    @Override
+    public void setAllowedMethods(List<ReqMethod> allowed) {
+        this.allowedMethods = allowed;
     }
 }

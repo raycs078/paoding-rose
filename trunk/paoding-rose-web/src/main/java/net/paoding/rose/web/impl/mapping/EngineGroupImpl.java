@@ -158,7 +158,7 @@ public class EngineGroupImpl implements EngineGroup {
     public String toString() {
         if (this.toStringCache == null) {
             StringBuilder sb = new StringBuilder();
-            sb.append(" [");
+            sb.append("[");
             int oriLen = sb.length();
             for (ReqMethod method : getAllowedMethods()) {
                 sb.append(method.toString()).append(", ");
