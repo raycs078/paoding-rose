@@ -39,15 +39,15 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.util.Assert;
 
 /**
- * {@link WebEngine}从{@link RoseFilter}接收web请求，并按照Rose规则进行处理.
+ * {@link RootEngine}从{@link RoseFilter}接收web请求，并按照Rose规则进行处理.
  * <p>
- * {@link WebEngine}会判断该web请求是否是本{@link WebEngine}
+ * {@link RootEngine}会判断该web请求是否是本{@link RootEngine}
  * 应该处理的，如果是进行后续的委派和处理，如果不是则{@link #match(InvocationBean)}返回false给上层.
  * <p>
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  */
-public class WebEngine implements Engine {
+public class RootEngine implements Engine {
 
     // ------------------------------------------------------------
 
@@ -59,7 +59,7 @@ public class WebEngine implements Engine {
     // ------------------------------------------------------------
 
     /**
-     * 构造能够将请求正确转发到所给modules的 {@link WebEngine}对象.
+     * 构造能够将请求正确转发到所给modules的 {@link RootEngine}对象.
      * <p>
      * 此构造子将调用 {@link #initMappings(List)}进行初始化，需要时，子类可以覆盖提供新的实现
      * 
@@ -67,7 +67,7 @@ public class WebEngine implements Engine {
      * @throws Exception
      * @throws NullPointerException 如果所传入的模块集合为null时
      */
-    public WebEngine(InstructionExecutor instructionExecutor) {
+    public RootEngine(InstructionExecutor instructionExecutor) {
         if (instructionExecutor != null) {
             this.instructionExecutor = instructionExecutor;
         }
@@ -87,7 +87,7 @@ public class WebEngine implements Engine {
     }
 
     /**
-     * {@link WebEngine} 接口.调用此方法判断并处理请求.如果本引擎能够找到该请求相应的控制器方法处理，则启动整个调用过程，
+     * {@link RootEngine} 接口.调用此方法判断并处理请求.如果本引擎能够找到该请求相应的控制器方法处理，则启动整个调用过程，
      * 并最终渲染页面到客户端;
      * 
      * @param request
