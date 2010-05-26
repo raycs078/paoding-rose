@@ -121,10 +121,10 @@ public class WebResourceTest extends TestCase {
         assertSame(getEngine, resource.getEngines(ReqMethod.GET)[0]);
         assertSame(postEngine, resource.getEngines(ReqMethod.POST)[0]);
 
-        String msg = "not allowed method should return none engine";
-        assertNull(msg, resource.getEngines(ReqMethod.PUT));
-        assertNull(msg, resource.getEngines(ReqMethod.DELETE));
-        assertNull(msg, resource.getEngines(ReqMethod.OPTIONS));
+        String msg = "not allowed method should return engines with length is zero";
+        assertEquals(msg, 0, resource.getEngines(ReqMethod.PUT).length);
+        assertEquals(msg, 0, resource.getEngines(ReqMethod.DELETE).length);
+        assertEquals(msg, 0, resource.getEngines(ReqMethod.OPTIONS).length);
 
         assertEquals("testGetPost [GET, POST]", resource.toString());
     }

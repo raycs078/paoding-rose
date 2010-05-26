@@ -219,7 +219,7 @@ public class MappingNode implements Comparable<MappingNode>, Iterable<MappingNod
                 }
 
                 @Override
-                public MatchResult match(String path) {
+                public MatchResult match(CharSequence path) {
                     return toCopy.match(path);
                 }
 
@@ -331,103 +331,116 @@ public class MappingNode implements Comparable<MappingNode>, Iterable<MappingNod
     }
 
     public ArrayList<MatchResult> match(HttpServletRequest request, RequestPath requestPath) {
-        String rosePath = requestPath.getRosePath();
-        String path = rosePath;
-        ArrayList<MatchResult> matchResults = new ArrayList<MatchResult>(4);
 
-        MappingNode cur = this;
-        MatchResult mrIngoresRequestMethod = null;
+        // 用来储存并返回的匹配结果集合
+        final ArrayList<MatchResult> matchResults = new ArrayList<MatchResult>(4);
+
+        // 当前判断结点
+        MappingNode curNode = this;
+
+        // 给当前判断结点判断的path
+        String remaining = requestPath.getRosePath();
+
+        final boolean debugEnabled = logger.isDebugEnabled();
+
+        // 开始匹配，直至成功或失败
         while (true) {
-            MatchResult mr = cur.getMapping().match(path);
-            // @IfParamExists
-            if (mr != null && mr.getResource() != null) {
-                bindEngine(request, requestPath, mr);
-                if (mr.getEngine() == null) {
-                    mr = null;
-                }
-            }
-            if (mr != null) {
-                // 设置上一级的resource [因上级node如果包含了多个resource当时留空]
-                if (matchResults.size() > 0) {
-                    MatchResult prev = matchResults.get(matchResults.size() - 1);
-                    if (prev.getResource() == null) {
-                        prev.setResource(cur.getParentResource());
-                        bindEngine(request, requestPath, prev);
-                        Assert.isTrue(prev.getEngine() != null);
-                    }
-                }
-                if (cur.leftMostChild == null) {
-                    mrIngoresRequestMethod = mr;
-                }
-                if (logger.isDebugEnabled()) {
-                    logger.debug("matching [" + (matchResults.size() + 1) + "] '" + path
-                            + "'; resource=" + mr.getResource());
-                }
-            }
-            if (mr == null
-                    || (mr.getResource() != null && !mr.getResource().isMethodAllowed(
-                            requestPath.getMethod()))) {
-                if (cur.sibling != null) {
-                    cur = cur.sibling;
+
+            // 当前结点的匹配结果result: 如果能够匹配path成功，一定会返回一个非空的result
+            // 一旦result非空，这个请求只能在这个结点中处理了，不可能再由其它结点处理，
+            // 即，如果因为某些原因本结点无法处理此请求，可以直接得出结论：这个请求不能被处理了
+            final MatchResult result = curNode.getMapping().match(remaining);
+
+            // 当前结点打不赢 
+            if (result == null) {
+                // 兄弟，你上!
+                if (curNode.sibling != null) {
+                    curNode = curNode.sibling;
+                    continue;
                 } else {
-                    while (true) {
-                        MatchResult last = matchResults.size() == 0 ? null : matchResults
-                                .get(matchResults.size() - 1);
-                        if (last != null) {
-                            if (last.getValue().length() > 0) {
-                                path = last.getValue() + path;
-                            }
-                        }
-                        if (matchResults.size() > 0) {
-                            matchResults.remove(matchResults.size() - 1);
-                            logger.debug("backward");
-                        }
-                        cur = cur.parent;
-                        if (cur == null) {
-                            if (logger.isDebugEnabled()) {
-                                logger.debug("not matched: " + rosePath);
-                            }
-                            if (mrIngoresRequestMethod != null) {
-                                matchResults.add(mrIngoresRequestMethod);
-                            }
-                            return matchResults;
-                        } else {
-                            if (cur.sibling != null) {
-                                cur = cur.sibling;
-                                break;
-                            }
-                        }
-                    }
-                }
-            } else {
-                matchResults.add(mr);
-                logger.debug("forward");
-                path = path.substring(mr.getValue().length());
-                if (cur.leftMostChild != null) {
-                    cur = cur.leftMostChild;
-                } else {
-                    if (logger.isDebugEnabled()) {
-                        // FIXME: mr.getResource可能为null，需要做什么特别标注没？
-                        logger.debug("matched '" + rosePath + "': target=" + mr.getResource());
-                    }
+                    // 都牺牲了? 
                     return matchResults;
                 }
             }
+
+            if (debugEnabled) {
+                logger.debug("[matching]-" //
+                        + (matchResults.size() + 1) + " -> " + result.getValue());
+            }
+
+            // @label BIND_ENGINE_IMMEDIATELY
+
+            if (curNode.getResources().length == 1) {
+                // 处理当前请求的resource对象: 因为同一个path可能有多个resource可以提供服务，所以即使result非null，resource也可能为null
+                WebResource resource = curNode.getResources()[0];
+                result.setResource(resource);
+
+                // 处理当前请求的engine对象: 一个resource可以处理不同请求方法，GET和POST可能是由不同的engine来处理的
+                Engine engine = getEngine(resource, request, requestPath);
+
+                // 既然当前就能知道engine是谁？那就直接设置给 result； 如果还不能知道，等等即可
+                // @see BIND_PARENT_ENGINE
+
+                if (engine != null) {
+                    result.setEngine(engine);
+                } else {
+                    // 只有最后的结点（即方法结点）才有资格返回405
+                    if (curNode.leftMostChild != null) {
+                        throw new Error("non-leaf nodes shall not deny request by http method.");
+                    }
+                }
+            } else {
+                if (curNode.leftMostChild == null) {
+                    throw new Error("leaf nodes should not have more than one resource.");
+                }
+            }
+
+            // @label BIND_PARENT_ENGINE
+
+            // 上级匹配结果对象当时无法知道应该由哪个resource处理? 现在可以知道了!
+            if (matchResults.size() > 0) {
+                MatchResult parentResult = matchResults.get(matchResults.size() - 1);
+                if (parentResult.getResource() == null) {
+
+                    WebResource parentResource = curNode.getParentResource();
+                    parentResult.setResource(parentResource);
+                    // 
+                    Engine parentEngine = getEngine(parentResource, request, requestPath);
+                    // 只有最后的结点才有资格在resource非空的情况下拒绝服务
+                    if (parentEngine == null) {
+                        throw new Error("non-leaf nodes shall not deny request by http method.");
+                    }
+                    parentResult.setEngine(parentEngine);
+                }
+            }
+
+            // add to results for return
+            matchResults.add(result);
+            remaining = remaining.substring(result.getValue().length());
+
+            if (curNode.leftMostChild != null) {
+                curNode = curNode.leftMostChild;
+            } else {
+                if (debugEnabled) {
+                    logger.debug("[matching]- matched: path='" + requestPath.getRosePath() + "'");
+                }
+                return matchResults;
+            }
+
         }
     }
 
-    private boolean bindEngine(HttpServletRequest request, RequestPath requestPath, MatchResult mr) {
-        Engine[] engines = mr.getResource().getEngines(requestPath.getMethod());
-        if (engines == null) {
-            return false;
-        }
-        int accepted = 0;
-        Engine selected = null;
-        for (Engine engine : engines) {
+    private Engine getEngine(WebResource resource, HttpServletRequest request,
+            RequestPath requestPath) {
+
+        Engine selectedEngine = null;
+        int score = 0;
+
+        for (Engine engine : resource.getEngines(requestPath.getMethod())) {
             int candidate = engine.isAccepted(request);
-            if (candidate > accepted) {
-                selected = engine;
-                accepted = candidate;
+            if (candidate > score) {
+                selectedEngine = engine;
+                score = candidate;
             } else if (candidate <= 0) {
                 if (logger.isDebugEnabled()) {
                     logger.debug("[" + requestPath.getRosePath()
@@ -435,15 +448,13 @@ public class MappingNode implements Comparable<MappingNode>, Iterable<MappingNod
                 }
             }
         }
-        if (selected != null) {
+        if (score > 0) {
             if (logger.isDebugEnabled()) {
                 logger.debug("[" + requestPath.getRosePath() + "] it's accepted by engine: "
-                        + selected);
+                        + selectedEngine);
             }
-            mr.setEngine(selected);
-            return true;
         }
-        return false;
+        return selectedEngine;
     }
 
     @Override

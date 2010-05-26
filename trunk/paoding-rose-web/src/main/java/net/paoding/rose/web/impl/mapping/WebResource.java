@@ -28,25 +28,29 @@ import net.paoding.rose.web.impl.thread.Engine;
  */
 public interface WebResource {
 
-    public String getName();
+    /**
+     * 资源相对于上级的资源的名称，实际实现时，采用所表示结点的映射串(mappingPath)作为其值
+     * 
+     * @return
+     */
+    public String getSimpleName();
 
     /**
-     * 添加该资源的某种操作，如果所给的 method 是 {@link ReqMethod#ALL}
-     * ，则不覆盖之前设置操作，只影响那些还没有设置的操作。
+     * 注册该资源对指定请求方法的处理逻辑，可以对某一个具体的请求方法注册多个处理逻辑。
+     * <p>
+     * 一个请求方法有多个处理逻辑时，最终只有逻辑是真正执行的。不同的请求，根据其URI、参数等不同，真正执行的逻辑可能不一样。
      * 
-     * @param method
+     * @param method 可以使用 {@link ReqMethod#ALL}
      * @param engine
      */
     public void addEngine(ReqMethod method, Engine engine);
 
-    //    /**
-    //     * 返回处理这个资源的处理逻辑，如果该资源不支持该操作方法返回null。
-    //     * 
-    //     * @param method 除 {@link ReqMethod#ALL} 外的其他 {@link ReqMethod} 实例
-    //     * @return
-    //     */
-    //    public Engine getEngine(ReqMethod method);
-
+    /**
+     * 返回某种请求方法的处理逻辑
+     * 
+     * @param method
+     * @return 如果没有注册处理逻辑，返回一个长度为0的数组
+     */
     public Engine[] getEngines(ReqMethod method);
 
     /**
