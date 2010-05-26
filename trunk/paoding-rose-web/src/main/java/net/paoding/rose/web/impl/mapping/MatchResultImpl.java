@@ -34,28 +34,36 @@ class MatchResultImpl implements MatchResult {
     private String value;
 
     /** 所匹配的资源 */
-    private WebResource resource;
+    private EngineGroup engineGroup;
 
     private Engine engine;
 
     /** 从结果字符串中得到的资源参数值(如果该资源使用了使用了参数化的映射地址) */
     private Map<String, String> parameters;
 
+    private Mapping mapping;
+
     /**
      * 创建新的匹配结果对象
      * 
      * @param value 匹配结果字符串
      */
-    public MatchResultImpl(String value) {
+    public MatchResultImpl(Mapping mapping, String value) {
+        this.mapping = mapping;
         this.value = value;
+    }
+
+    @Override
+    public Mapping getMapping() {
+        return mapping;
     }
 
     public String getValue() {
         return value;
     }
 
-    public WebResource getResource() {
-        return resource;
+    public EngineGroup getResource() {
+        return engineGroup;
     }
 
     public Engine getEngine() {
@@ -67,8 +75,8 @@ class MatchResultImpl implements MatchResult {
         this.engine = engine;
     }
 
-    public void setResource(WebResource resource) {
-        this.resource = resource;
+    public void setResource(EngineGroup engineGroup) {
+        this.engineGroup = engineGroup;
     }
 
     public int getParameterCount() {

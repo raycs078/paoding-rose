@@ -39,8 +39,6 @@ import org.apache.commons.logging.LogFactory;
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
-
-// FIXME: 不要使用ModuleBuilder,而直接使用new ModuleImpl()实现?
 public class TreeBuilder {
 
     protected static final Log logger = LogFactory.getLog(TreeBuilder.class);
@@ -63,10 +61,10 @@ public class TreeBuilder {
 
     private void module(final MappingNode rootNode, Module module) {
         Mapping moduleMapping = new MappingImpl(module.getMappingPath(), MatchMode.STARTS_WITH);
-        WebResource moduleResource = new WebResourceImpl(moduleMapping.getPath());
+        EngineGroup moduleEngines = new EngineGroupImpl();
         MappingNode moduleNode = rootNode.getChild(moduleMapping);
         if (moduleNode == null) {
-            moduleNode = new MappingNode(moduleMapping, rootNode, rootNode.getResources()[0]);
+            moduleNode = new MappingNode(moduleMapping, rootNode, rootNode.getEngineGroups()[0]);
         } else {
             moduleMapping = moduleNode.getMapping();
             if (logger.isDebugEnabled()) {
@@ -74,13 +72,13 @@ public class TreeBuilder {
                         + " vs " + moduleNode.getMapping().getPath());
             }
         }
-        moduleNode.addResource(moduleResource);
-        moduleResource.addEngine(ReqMethod.ALL, new ModuleEngine(module));
+        moduleNode.addEngineGroup(moduleEngines);
+        moduleEngines.addEngine(ReqMethod.ALL, new ModuleEngine(module));
 
         // controllers
         List<ControllerRef> controllers = module.getControllers();
         for (ControllerRef controller : controllers) {
-            controller(module, moduleNode, moduleResource, controller);
+            controller(module, moduleNode, moduleEngines, controller);
         }
 
         // defaults
@@ -94,8 +92,8 @@ public class TreeBuilder {
                 MappingImpl tempMapping = new MappingImpl(candidate, MatchMode.STARTS_WITH);
                 defTargetNode = moduleNode.getChild(tempMapping);
                 if (defTargetNode != null) {
-                    defNode = new MappingNode(defMapping, moduleNode, moduleResource);
-                    defNode.setResources(defTargetNode.getResources());
+                    defNode = new MappingNode(defMapping, moduleNode, moduleEngines);
+                    defNode.setEngineGroups(defTargetNode.getEngineGroups());
                     List<ReqMethod> filters = new ArrayList<ReqMethod>(1);
                     filters.add(reqMethod);
                     defTargetNode.copyChildrenTo(defNode, filters);
@@ -105,12 +103,12 @@ public class TreeBuilder {
         }
     }
 
-    private void controller(Module module, MappingNode moduleNode, WebResource moduleResource,
+    private void controller(Module module, MappingNode moduleNode, EngineGroup moduleResource,
             ControllerRef controller) {
         for (String mappingPath : controller.getMappingPaths()) {
             Mapping controllerMapping = new MappingImpl(mappingPath, MatchMode.STARTS_WITH);
             MappingNode controllerNode = moduleNode.getChild(controllerMapping);
-            WebResource controllerResource = new WebResourceImpl(controllerMapping.getPath());
+            EngineGroup controllerEngines = new EngineGroupImpl();
             if (controllerNode == null) {
                 controllerNode = new MappingNode(controllerMapping, moduleNode, moduleResource);
             } else {
@@ -120,18 +118,18 @@ public class TreeBuilder {
                             + controllerNode.getMapping().getPath());
                 }
             }
-            controllerNode.addResource(controllerResource);
+            controllerNode.addEngineGroup(controllerEngines);
             Engine controllerEngine = new ControllerEngine(module, mappingPath, controller);
-            controllerResource.addEngine(ReqMethod.ALL, controllerEngine);
+            controllerEngines.addEngine(ReqMethod.ALL, controllerEngine);
 
             // actions
             MethodRef[] actions = controller.getActions();
             for (MethodRef action : actions) {
-                action(module, controller, action, controllerNode, controllerResource);
+                action(module, controller, action, controllerNode, controllerEngines);
             }
 
             // defaults
-            WebResource defResource = new WebResourceImpl("");
+            EngineGroup defResource = new EngineGroupImpl();
             MappingImpl defMapping = new MappingImpl("", MatchMode.EQUALS);
             MappingNode defTargetNode = controllerNode.getChild(defMapping);
             MappingNode defNode = defTargetNode;
@@ -142,7 +140,7 @@ public class TreeBuilder {
                         MappingImpl tempMapping = new MappingImpl(candidate, MatchMode.EQUALS, null);
                         MappingNode tempNode = controllerNode.getChild(tempMapping);
                         if (tempNode != null) {
-                            Engine[] defActionEngines = tempNode.getResources()[0]
+                            Engine[] defActionEngines = tempNode.getEngineGroups()[0]
                                     .getEngines(reqMethod);
                             for (Engine engine : defActionEngines) {
                                 defResource.addEngine(reqMethod, engine);
@@ -153,8 +151,8 @@ public class TreeBuilder {
                 }
             }
             if (defNode == null && defResource.getAllowedMethods().size() > 0) {
-                defNode = new MappingNode(defMapping, controllerNode, controllerResource);
-                defNode.addResource(defResource);
+                defNode = new MappingNode(defMapping, controllerNode, controllerEngines);
+                defNode.addEngineGroup(defResource);
             }
         }
     }
@@ -174,7 +172,7 @@ public class TreeBuilder {
     }
 
     private void action(Module module, ControllerRef controller, MethodRef action,
-            MappingNode controllerNode, WebResource controllerResource) {
+            MappingNode controllerNode, EngineGroup controllerEngines) {
         Mapping mapping;
         Map<String, Set<ReqMethod>> mappings = action.getMappings();
         if (mappings.size() == 0) {
@@ -185,20 +183,20 @@ public class TreeBuilder {
         for (String mappingPath : mappings.keySet()) {
             mapping = new MappingImpl(mappingPath, MatchMode.EQUALS);
             MappingNode actionNode = controllerNode.getChild(mapping);
-            WebResource resource = new WebResourceImpl(mapping.getPath());
+            EngineGroup actionEngines = new EngineGroupImpl();
             if (actionNode == null) {
-                actionNode = new MappingNode(mapping, controllerNode, controllerResource);
-                actionNode.addResource(resource);
+                actionNode = new MappingNode(mapping, controllerNode, controllerEngines);
+                actionNode.addEngineGroup(actionEngines);
             } else {
                 mapping = actionNode.getMapping();
-                resource = actionNode.getResources()[0];
+                actionEngines = actionNode.getEngineGroups()[0];
             }
             Set<ReqMethod> methods = mappings.get(mappingPath);
             if (methods.size() > 0) {
                 Engine actionEngine = new ActionEngine(module, controller.getControllerClass(),
                         controller.getControllerObject(), action.getMethod());
                 for (ReqMethod reqMethod : methods) {
-                    resource.addEngine(reqMethod, actionEngine);
+                    actionEngines.addEngine(reqMethod, actionEngine);
                 }
             }
         }

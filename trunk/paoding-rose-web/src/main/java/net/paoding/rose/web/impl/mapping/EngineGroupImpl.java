@@ -25,7 +25,6 @@ import net.paoding.rose.web.impl.thread.Engine;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.util.Assert;
 
 /**
  * 
@@ -33,17 +32,14 @@ import org.springframework.util.Assert;
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
-public class WebResourceImpl implements WebResource {
+public class EngineGroupImpl implements EngineGroup {
 
-    private static final Log logger = LogFactory.getLog(WebResource.class);
+    private static final Log logger = LogFactory.getLog(EngineGroup.class);
 
     /** ARRAY_SIZE 代表用于存放 Engine 的数组的大小 */
     private static final int ARRAY_SIZE = ReqMethod.ALL.parse().length + 1;
 
     private static final Engine[] emptyEngines = new Engine[0];
-
-    // 资源相对于上级的资源的名称
-    private final String simpleName;
 
     /**
      * 该资源支持的操作逻辑，如果不支持某种操作对应位置的元素为长度为0的engines数组
@@ -62,17 +58,10 @@ public class WebResourceImpl implements WebResource {
     /**
      * @param simpleName 资源相对于上级的资源的名称
      */
-    public WebResourceImpl(String simpleName) {
-        Assert.notNull(simpleName);
-        this.simpleName = simpleName;
-
+    public EngineGroupImpl() {
         Engine[][] engines = new Engine[ARRAY_SIZE][];
         Arrays.fill(engines, emptyEngines);
         this.engines = engines;
-    }
-
-    public String getSimpleName() {
-        return simpleName;
     }
 
     /**
@@ -126,11 +115,6 @@ public class WebResourceImpl implements WebResource {
         return method != null && engines[method.ordinal()].length > 0;
     }
 
-    private void clearCache() {
-        allowedMethodsCache = null;
-        toStringCache = null;
-    }
-
     public List<ReqMethod> getAllowedMethods() {
         if (allowedMethodsCache == null) {
             List<ReqMethod> allowedMethods = new ArrayList<ReqMethod>();
@@ -174,7 +158,7 @@ public class WebResourceImpl implements WebResource {
     public String toString() {
         if (this.toStringCache == null) {
             StringBuilder sb = new StringBuilder();
-            sb.append(getSimpleName()).append(" [");
+            sb.append(" [");
             int oriLen = sb.length();
             for (ReqMethod method : getAllowedMethods()) {
                 sb.append(method.toString()).append(", ");
@@ -187,6 +171,11 @@ public class WebResourceImpl implements WebResource {
             this.toStringCache = sb.toString();
         }
         return this.toStringCache;
+    }
+
+    private void clearCache() {
+        allowedMethodsCache = null;
+        toStringCache = null;
     }
 
 }
