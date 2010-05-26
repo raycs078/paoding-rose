@@ -52,7 +52,7 @@ import net.paoding.rose.web.impl.module.Module;
 import net.paoding.rose.web.impl.module.ModulesBuilder;
 import net.paoding.rose.web.impl.module.ModulesBuilderImpl;
 import net.paoding.rose.web.impl.thread.Rose;
-import net.paoding.rose.web.impl.thread.WebEngine;
+import net.paoding.rose.web.impl.thread.RootEngine;
 import net.paoding.rose.web.instruction.InstructionExecutor;
 import net.paoding.rose.web.instruction.InstructionExecutorImpl;
 
@@ -435,7 +435,7 @@ public class RoseFilter extends GenericFilterBean {
     }
 
     private MappingNode prepareMappingTree(List<Module> modules) {
-        WebEngine rootEngine = new WebEngine(instructionExecutor);
+        RootEngine rootEngine = new RootEngine(instructionExecutor);
         EngineGroup rootEngineGroup = new EngineGroupImpl();
         rootEngineGroup.addEngine(ReqMethod.ALL, rootEngine);
         Mapping rootMapping = new MappingImpl("", MatchMode.STARTS_WITH);

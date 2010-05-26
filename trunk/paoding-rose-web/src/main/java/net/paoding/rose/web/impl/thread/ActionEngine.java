@@ -509,12 +509,10 @@ public final class ActionEngine implements Engine {
                 }
             }
             toStringCache = ""//
-                    //                    + this.controllerClass.getName() //
                     + showSimpleName(method.getReturnType(), appPackageName)
                     + " "
                     + method.getName() //
-                    + "(" + methodParamNames + ")" //
-            ;
+                    + "(" + methodParamNames + ")";
         }
         return toStringCache;
     }

@@ -364,8 +364,8 @@ public class MappingNode implements Comparable<MappingNode>, Iterable<MappingNod
             }
 
             if (debugEnabled) {
-                logger.debug("[matching]-" //
-                        + (matchResults.size() + 1) + " -> " + result.getValue());
+                logger.debug("['" + requestPath.getRosePath() + "'] matched(" //
+                        + (matchResults.size() + 1) + "): '" + result.getValue() + "'");
             }
 
             // @label BIND_ENGINE_IMMEDIATELY
@@ -386,6 +386,10 @@ public class MappingNode implements Comparable<MappingNode>, Iterable<MappingNod
 
                 if (engine != null) {
                     result.setEngine(engine);
+                    if (debugEnabled) {
+                        logger.debug("bind to " + engine.getClass().getSimpleName() + ": '"
+                                + engine + "'");
+                    }
                 } else {
                     // 只有最后的结点（即方法结点）才有资格返回405
                     if (!curNode.isLeaf()) {
@@ -425,9 +429,6 @@ public class MappingNode implements Comparable<MappingNode>, Iterable<MappingNod
             if (!curNode.isLeaf()) {
                 curNode = curNode.leftMostChild;
             } else {
-                if (debugEnabled) {
-                    logger.debug("[matching]- matched: path='" + requestPath.getRosePath() + "'");
-                }
                 return matchResults;
             }
 
@@ -447,15 +448,9 @@ public class MappingNode implements Comparable<MappingNode>, Iterable<MappingNod
                 score = candidate;
             } else if (candidate <= 0) {
                 if (logger.isDebugEnabled()) {
-                    logger.debug("[" + requestPath.getRosePath()
-                            + "] it's not accepted by engine: " + engine);
+                    logger.debug("['" + requestPath.getRosePath()
+                            + "'] it's not accepted by engine: " + engine);
                 }
-            }
-        }
-        if (score > 0) {
-            if (logger.isDebugEnabled()) {
-                logger.debug("[" + requestPath.getRosePath() + "] it's accepted by engine: "
-                        + selectedEngine);
             }
         }
         return selectedEngine;
