@@ -34,10 +34,6 @@ public class EngineGroupTest extends TestCase {
 
     private Engine getEngine = new Engine() {
 
-        public int compareTo(Engine o) {
-            return 0;
-        }
-
         @Override
         public int isAccepted(HttpServletRequest rose) {
             return 1;
@@ -61,9 +57,6 @@ public class EngineGroupTest extends TestCase {
 
     private Engine postEngine = new Engine() {
 
-        public int compareTo(Engine o) {
-            return 0;
-        }
 
         @Override
         public int isAccepted(HttpServletRequest rose) {
@@ -88,9 +81,6 @@ public class EngineGroupTest extends TestCase {
 
     private Engine defEngine = new Engine() {
 
-        public int compareTo(Engine o) {
-            return 1;
-        }
 
         @Override
         public int isAccepted(HttpServletRequest rose) {
@@ -137,8 +127,8 @@ public class EngineGroupTest extends TestCase {
 
         assertSame(getEngine, engineGroup.getEngines(ReqMethod.GET)[0]);
         assertSame(defEngine, engineGroup.getEngines(ReqMethod.GET)[1]);
-        assertSame(postEngine, engineGroup.getEngines(ReqMethod.POST)[0]);
-        assertSame(defEngine, engineGroup.getEngines(ReqMethod.POST)[1]);
+        assertSame(defEngine, engineGroup.getEngines(ReqMethod.POST)[0]);
+        assertSame(postEngine, engineGroup.getEngines(ReqMethod.POST)[1]);
 
         assertSame(defEngine, engineGroup.getEngines(ReqMethod.PUT)[0]);
         assertSame(defEngine, engineGroup.getEngines(ReqMethod.DELETE)[0]);

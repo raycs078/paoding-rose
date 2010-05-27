@@ -4,12 +4,12 @@
 	<groupId>net.paoding</groupId>
 	<artifactId>paoding-rose</artifactId>
 	<packaging>jar</packaging>
-	<version>0.9-SNAPSHOT</version>
+	<version>1.0-SNAPSHOT</version>
 	<name>paoding-rose</name>
 	<url>http://repos.d.xiaonei.com</url>
 
 	<properties>
-		<Implementation-Version>0.9.7.20100526</Implementation-Version>
+		<Implementation-Version>1.0.0.20100527</Implementation-Version>
 	</properties>
 
 	<dependencies>

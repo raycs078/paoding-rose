@@ -1,10 +1,10 @@
 package net.paoding.rose.mock.controllers;
 
 import net.paoding.rose.web.annotation.IfParamExists;
-import net.paoding.rose.web.annotation.ReqMapping;
+import net.paoding.rose.web.annotation.Path;
 import net.paoding.rose.web.annotation.rest.Get;
 
-@ReqMapping(path = "if")
+@Path("if")
 public class IfController {
 
     @Get

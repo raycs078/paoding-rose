@@ -5,12 +5,12 @@ import java.util.Locale;
 import net.paoding.rose.web.InvocationLocal;
 import net.paoding.rose.web.annotation.DefValue;
 import net.paoding.rose.web.annotation.Param;
-import net.paoding.rose.web.annotation.ReqMapping;
+import net.paoding.rose.web.annotation.Path;
 import net.paoding.rose.web.annotation.rest.Get;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
-@ReqMapping(path = "")
+@Path("")
 public class MsgController {
 
     @Autowired

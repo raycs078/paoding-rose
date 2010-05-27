@@ -15,23 +15,35 @@
  */
 package net.paoding.rose.web.annotation;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 /**
- * 用于辅助设置一个控制器action方法映射，声明只有指定的http请求方法才由 {@link ReqMapping}作标注的action方法处理
+ * 用于辅助设置一个控制器action方法映射，声明只有指定的http请求方法才由 {@link Path}作标注的action方法处理
  * 
- * @see ReqMapping
+ * @see Path
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
 public enum ReqMethod {
 
+    // enums
     GET, POST, DELETE, PUT, HEAD, OPTIONS, TRACE, ALL;
 
-    public ReqMethod[] parse() {
+    public List<ReqMethod> parse() {
         if (this == ALL) {
-            return new ReqMethod[] { GET, POST, DELETE, PUT, HEAD, OPTIONS, TRACE };
+            ReqMethod[] reqMethods = ReqMethod.values();
+            List<ReqMethod> list = new ArrayList<ReqMethod>(Arrays.asList(reqMethods));
+            list.remove(ReqMethod.ALL);
+            return list;
         } else {
-            return new ReqMethod[] { this };
+            return Arrays.asList(new ReqMethod[] { this });
         }
+    }
+
+    public static void main(String[] args) {
+        System.out.println(ReqMethod.ALL.parse());
     }
 
     public static ReqMethod parse(String method) {

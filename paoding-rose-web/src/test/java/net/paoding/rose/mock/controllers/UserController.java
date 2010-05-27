@@ -2,7 +2,7 @@ package net.paoding.rose.mock.controllers;
 
 import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.annotation.Param;
-import net.paoding.rose.web.annotation.ReqMapping;
+import net.paoding.rose.web.annotation.rest.Get;
 
 public class UserController {
 
@@ -10,7 +10,7 @@ public class UserController {
         return "index";
     }
 
-    @ReqMapping(path = "{id}")
+    @Get("{id}")
     public int show(@Param("id") Integer id, Invocation inv) {
         if (!id.toString().equals(inv.getParameter("id"))) {
             throw new IllegalStateException("inv.getParameter should return params in uri");
@@ -21,7 +21,7 @@ public class UserController {
         return id;
     }
 
-    @ReqMapping(path = "{id}/account")
+    @Get("{id}/account")
     public String account(@Param("id") Integer id) {
         return "account_" + id;
     }

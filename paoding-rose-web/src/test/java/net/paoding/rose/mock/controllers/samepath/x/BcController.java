@@ -1,9 +1,9 @@
 package net.paoding.rose.mock.controllers.samepath.x;
 
-import net.paoding.rose.web.annotation.ReqMapping;
+import net.paoding.rose.web.annotation.Path;
 import net.paoding.rose.web.annotation.rest.Get;
 
-@ReqMapping(path = "")
+@Path("")
 public class BcController {
 
     @Get("ab{b:*}")

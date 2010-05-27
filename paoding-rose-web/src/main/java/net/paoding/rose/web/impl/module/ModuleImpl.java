@@ -124,11 +124,8 @@ public class ModuleImpl implements Module {
 
     public ModuleImpl addController(String[] mappingPaths, Class<?> controllerClass,
             String controllerName, Object controllerObject) {
-        ControllerRef controller = new ControllerRef();
-        controller.setControllerClass(controllerClass);
-        controller.setControllerObject(controllerObject);
-        controller.setControllerName(controllerName);
-        controller.setMappingPaths(mappingPaths);
+        ControllerRef controller = new ControllerRef(mappingPaths, controllerName,
+                controllerObject, controllerClass);
         this.controllers.add(controller);
         return this;
     }

@@ -18,7 +18,7 @@ package net.paoding.rose.web.controllers.roseInfo;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import net.paoding.rose.web.annotation.ReqMapping;
+import net.paoding.rose.web.annotation.Path;
 import net.paoding.rose.web.annotation.rest.Get;
 
 /**
@@ -26,7 +26,7 @@ import net.paoding.rose.web.annotation.rest.Get;
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
-@ReqMapping(path = "")
+@Path("")
 public class IndexController implements BaseController {
 
 

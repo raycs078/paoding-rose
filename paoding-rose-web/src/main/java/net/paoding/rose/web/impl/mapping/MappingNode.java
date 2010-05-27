@@ -46,6 +46,9 @@ public class MappingNode implements Comparable<MappingNode>, Iterable<MappingNod
     /** 父结点 */
     private MappingNode parent;
 
+    /***/
+    private boolean isFileType;
+
     /** 父engine group */
     private EngineGroup parentEngineGroup;
 
@@ -66,16 +69,16 @@ public class MappingNode implements Comparable<MappingNode>, Iterable<MappingNod
 
     private int deep;
 
+    private MappingNode() {
+
+    }
+
     /**
      * 
      * @param mapping
      */
     public MappingNode(Mapping mapping) {
         this(mapping, null, null);
-    }
-
-    private MappingNode() {
-
     }
 
     /**
@@ -133,6 +136,14 @@ public class MappingNode implements Comparable<MappingNode>, Iterable<MappingNod
 
     public final boolean isLeaf() {
         return leftMostChild == null;
+    }
+
+    public void setFileType(boolean isFileType) {
+        this.isFileType = isFileType;
+    }
+
+    public boolean isFileType() {
+        return isFileType;
     }
 
     /**

@@ -15,7 +15,6 @@
  */
 package net.paoding.rose.web.impl.mapping;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Hashtable;
@@ -42,8 +41,8 @@ class MatchResultImpl implements MatchResult {
 
     private Engine engine;
 
-    private final static List<ReqMethod> allMethods = Collections.unmodifiableList(Arrays
-            .asList(ReqMethod.ALL.parse()));
+    private final static List<ReqMethod> allMethods = Collections.unmodifiableList(ReqMethod.ALL
+            .parse());
 
     private List<ReqMethod> allowedMethods = allMethods;
 
