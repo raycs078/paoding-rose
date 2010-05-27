@@ -9,7 +9,7 @@
 	<url>http://repos.d.xiaonei.com</url>
 
 	<properties>
-		<Implementation-Version>0.9.7.20100526</Implementation-Version>
+		<Implementation-Version>0.9.7-20100518</Implementation-Version>
 	</properties>
 
 	<dependencies>

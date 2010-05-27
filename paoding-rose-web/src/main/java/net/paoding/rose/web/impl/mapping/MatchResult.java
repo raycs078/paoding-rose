@@ -16,9 +16,7 @@
 package net.paoding.rose.web.impl.mapping;
 
 import java.util.Collection;
-import java.util.List;
 
-import net.paoding.rose.web.annotation.ReqMethod;
 import net.paoding.rose.web.impl.thread.Engine;
 
 /**
@@ -30,17 +28,28 @@ import net.paoding.rose.web.impl.thread.Engine;
 public interface MatchResult {
 
     /**
-     * 
-     * @return
-     */
-    public MappingNode getMappingNode();
-
-    /**
      * 返回匹配结果字符串
      * 
      * @return
      */
     public String getValue();
+
+    /**
+     * 返回匹配的资源
+     * 
+     * @return
+     */
+    public WebResource getResource();
+
+    /**
+     * 
+     * @param resource
+     */
+    public void setResource(WebResource resource);
+
+    public Engine getEngine();
+
+    public void setEngine(Engine engine);
 
     /**
      * 从结果字符串中得到的资源参数个数
@@ -63,30 +72,5 @@ public interface MatchResult {
      * @return
      */
     public String getParameter(String name);
-
-    /**
-     * 返回本对象支持的请求方法
-     * 
-     * @return
-     */
-    public List<ReqMethod> getAllowedMethods();
-
-    /**
-     * 
-     * @param allowed
-     */
-    public void setAllowedMethods(List<ReqMethod> allowed);
-
-    /**
-     * 
-     * @return
-     */
-    public Engine getEngine();
-
-    /**
-     * 
-     * @param engine
-     */
-    public void setEngine(Engine engine);
 
 }

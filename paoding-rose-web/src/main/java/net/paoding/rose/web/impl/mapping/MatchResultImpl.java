@@ -15,14 +15,12 @@
  */
 package net.paoding.rose.web.impl.mapping;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
-import net.paoding.rose.web.annotation.ReqMethod;
 import net.paoding.rose.web.impl.thread.Engine;
 
 /**
@@ -35,44 +33,50 @@ class MatchResultImpl implements MatchResult {
     /** 结果字符串 */
     private String value;
 
-    private MappingNode mappingNode;
-
-    /** 从结果字符串中得到的资源参数值(如果该资源使用了使用了参数化的映射地址) */
-    private Map<String, String> parameters;
+    /** 所匹配的资源 */
+    private WebResource resource;
 
     private Engine engine;
 
-    private final static List<ReqMethod> allMethods = Collections.unmodifiableList(Arrays
-            .asList(ReqMethod.ALL.parse()));
-
-    private List<ReqMethod> allowedMethods = allMethods;
+    /** 从结果字符串中得到的资源参数值(如果该资源使用了使用了参数化的映射地址) */
+    private Map<String, String> parameters;
 
     /**
      * 创建新的匹配结果对象
      * 
      * @param value 匹配结果字符串
+     * @param resource 匹配的目标资源; 若为null代表不确定
      */
-    public MatchResultImpl(MappingNode mappingNode, String value) {
-        this.mappingNode = mappingNode;
+    public MatchResultImpl(String value, WebResource resource) {
         this.value = value;
+        this.resource = resource;
     }
 
-    @Override
-    public MappingNode getMappingNode() {
-        return mappingNode;
-    }
-
-    @Override
     public String getValue() {
         return value;
     }
 
+    public WebResource getResource() {
+        return resource;
+    }
+
+    public Engine getEngine() {
+        return engine;
+    }
+
     @Override
+    public void setEngine(Engine engine) {
+        this.engine = engine;
+    }
+
+    public void setResource(WebResource resource) {
+        this.resource = resource;
+    }
+
     public int getParameterCount() {
         return parameters == null ? 0 : parameters.size();
     }
 
-    @Override
     public Collection<String> getParameterNames() {
         List<String> empty = Collections.emptyList();
         return parameters == null ? empty : parameters.keySet();
@@ -89,28 +93,7 @@ class MatchResultImpl implements MatchResult {
         parameters.put(name, value);
     }
 
-    @Override
     public String getParameter(String name) {
         return parameters == null ? null : parameters.get(name);
-    }
-
-    @Override
-    public Engine getEngine() {
-        return engine;
-    }
-
-    @Override
-    public void setEngine(Engine engine) {
-        this.engine = engine;
-    }
-
-    @Override
-    public List<ReqMethod> getAllowedMethods() {
-        return allowedMethods;
-    }
-
-    @Override
-    public void setAllowedMethods(List<ReqMethod> allowed) {
-        this.allowedMethods = allowed;
     }
 }

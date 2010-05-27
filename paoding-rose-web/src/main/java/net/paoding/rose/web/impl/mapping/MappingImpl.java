@@ -52,7 +52,7 @@ import org.apache.commons.lang.math.NumberUtils;
  */
 public class MappingImpl implements Mapping {
 
-    //    private static final Log logger = LogFactory.getLog(MappingImpl.class);
+//    private static final Log logger = LogFactory.getLog(MappingImpl.class);
 
     /** 为定义正则表达式参数所使用的规则 */
     private static final String DEFAULT_REGEX = "([^/]+)";
@@ -163,7 +163,7 @@ public class MappingImpl implements Mapping {
     }
 
     @Override
-    public MatchResult match(CharSequence path) {
+    public MatchResult match(String path) {
         java.util.regex.MatchResult regexMatchResult = mappingPattern.match(path);
         if (regexMatchResult == null) {
             return null;
@@ -172,7 +172,13 @@ public class MappingImpl implements Mapping {
         while (value.length() > 0 && value.charAt(value.length() - 1) == '/') {
             value = value.substring(0, value.length() - 1);
         }
-        MatchResultImpl mr = new MatchResultImpl(this.mappingNode, value);
+        MatchResultImpl mr;
+        if (mappingNode != null) {
+            WebResource[] resources = mappingNode.getResources();
+            mr = new MatchResultImpl(value, resources.length == 1 ? resources[0] : null);
+        } else {
+            mr = new MatchResultImpl(value, null);
+        }
         if (paramNames.length != 0) {
             for (int i = 0; i < this.paramNames.length; i++) {
                 mr.putParameter(paramNames[i], regexMatchResult.group(i + 1));
@@ -311,11 +317,11 @@ public class MappingImpl implements Mapping {
             constants.add(path);
         }
         this.constants = constants.toArray(new String[constants.size()]);
-        //        if (logger.isDebugEnabled()) {
-        //            logger.debug("mapping: path=" + this.path + "; pattern=" + this.mappingPattern
-        //                    + "; params=" + Arrays.toString(this.paramNames) + "; constants="
-        //                    + Arrays.toString(this.constants));
-        //        }
+//        if (logger.isDebugEnabled()) {
+//            logger.debug("mapping: path=" + this.path + "; pattern=" + this.mappingPattern
+//                    + "; params=" + Arrays.toString(this.paramNames) + "; constants="
+//                    + Arrays.toString(this.constants));
+//        }
     }
 
     @Override

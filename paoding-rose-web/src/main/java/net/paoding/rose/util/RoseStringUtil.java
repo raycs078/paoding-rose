@@ -23,22 +23,4 @@ public class RoseStringUtil {
         }
         return mappingPath;
     }
-
-    public static boolean startsWith(CharSequence input, String prefix) {
-        if (input.length() < prefix.length()) {
-            return false;
-        }
-        if (input.getClass() == String.class) {
-            return ((String) input).startsWith(prefix);
-        }
-        int len = prefix.length();
-        for (int i = 0; i < len; i++) {
-            char pi = input.charAt(i);
-            char ci = prefix.charAt(i);
-            if (pi != ci) {
-                return false;
-            }
-        }
-        return true;
-    }
 }

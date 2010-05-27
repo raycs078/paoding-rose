@@ -41,8 +41,8 @@ import net.paoding.rose.web.impl.mapping.MappingImpl;
 import net.paoding.rose.web.impl.mapping.MappingNode;
 import net.paoding.rose.web.impl.mapping.MatchMode;
 import net.paoding.rose.web.impl.mapping.TreeBuilder;
-import net.paoding.rose.web.impl.mapping.EngineGroup;
-import net.paoding.rose.web.impl.mapping.EngineGroupImpl;
+import net.paoding.rose.web.impl.mapping.WebResource;
+import net.paoding.rose.web.impl.mapping.WebResourceImpl;
 import net.paoding.rose.web.impl.mapping.ignored.IgnoredPath;
 import net.paoding.rose.web.impl.mapping.ignored.IgnoredPathEnds;
 import net.paoding.rose.web.impl.mapping.ignored.IgnoredPathEquals;
@@ -52,7 +52,7 @@ import net.paoding.rose.web.impl.module.Module;
 import net.paoding.rose.web.impl.module.ModulesBuilder;
 import net.paoding.rose.web.impl.module.ModulesBuilderImpl;
 import net.paoding.rose.web.impl.thread.Rose;
-import net.paoding.rose.web.impl.thread.RootEngine;
+import net.paoding.rose.web.impl.thread.WebEngine;
 import net.paoding.rose.web.instruction.InstructionExecutor;
 import net.paoding.rose.web.instruction.InstructionExecutorImpl;
 
@@ -435,12 +435,12 @@ public class RoseFilter extends GenericFilterBean {
     }
 
     private MappingNode prepareMappingTree(List<Module> modules) {
-        RootEngine rootEngine = new RootEngine(instructionExecutor);
-        EngineGroup rootEngineGroup = new EngineGroupImpl();
-        rootEngineGroup.addEngine(ReqMethod.ALL, rootEngine);
+        WebEngine rootEngine = new WebEngine(instructionExecutor);
+        WebResource rootResource = new WebResourceImpl("");
+        rootResource.addEngine(ReqMethod.ALL, rootEngine);
         Mapping rootMapping = new MappingImpl("", MatchMode.STARTS_WITH);
         MappingNode mappingTree = new MappingNode(rootMapping);
-        mappingTree.addEngineGroup(rootEngineGroup);
+        mappingTree.addResource(rootResource);
         new TreeBuilder().create(mappingTree, modules);
         return mappingTree;
     }
@@ -475,9 +475,9 @@ public class RoseFilter extends GenericFilterBean {
             }
         }
         for (MappingNode cur : mappingTree) {
-            for (EngineGroup engineGroup : cur.getEngineGroups()) {
+            for (WebResource resource : cur.getResources()) {
                 try {
-                    engineGroup.destroy();
+                    resource.destroy();
                 } catch (Exception e) {
                     logger.error("", e);
                     getServletContext().log("", e);

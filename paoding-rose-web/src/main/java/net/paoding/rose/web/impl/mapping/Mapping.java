@@ -64,7 +64,7 @@ public interface Mapping extends Comparable<Mapping> {
      * @param path
      * @return
      */
-    public MatchResult match(CharSequence path);
+    public MatchResult match(String path);
 
     /**
      * 返回该映射的地址定义以及匹配规则(比如正则表达式)

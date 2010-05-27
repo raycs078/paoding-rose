@@ -32,36 +32,37 @@ import org.apache.commons.logging.LogFactory;
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
-public class EngineGroupImpl implements EngineGroup {
+public class WebResourceImpl implements WebResource {
 
-    private static final Log logger = LogFactory.getLog(EngineGroup.class);
+    private static final Log logger = LogFactory.getLog(WebResource.class);
 
     /** ARRAY_SIZE 代表用于存放 Engine 的数组的大小 */
     private static final int ARRAY_SIZE = ReqMethod.ALL.parse().length + 1;
 
-    private static final Engine[] emptyEngines = new Engine[0];
-
-    /**
-     * 该资源支持的操作逻辑，如果不支持某种操作对应位置的元素为长度为0的engines数组
-     * <p>
-     * 处理指定http method的逻辑存放于该本数组的指定的、唯一位置，即 {@link ReqMethod#ordinal()}
-     * 
-     */
-    private final Engine[][] engines;
+    private String name = "unNamed";
 
     private transient String toStringCache;
 
     private transient List<ReqMethod> allowedMethodsCache;
 
-    //-----------------------------------
-
     /**
-     * @param simpleName 资源相对于上级的资源的名称
+     * 该资源支持的操作逻辑，如果不支持某种操作对应位置的元素为null
+     * <p>
+     * 没种操作逻辑存放于该数组的唯一位置，即 {@link ReqMethod#ordinal()} 值所指向的位置
      */
-    public EngineGroupImpl() {
-        Engine[][] engines = new Engine[ARRAY_SIZE][];
-        Arrays.fill(engines, emptyEngines);
-        this.engines = engines;
+    private Engine[][] allEngines = new Engine[ARRAY_SIZE][];
+
+    public WebResourceImpl(String name) {
+        setName(name);
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+        clearCache();
     }
 
     /**
@@ -74,35 +75,36 @@ public class EngineGroupImpl implements EngineGroup {
     public void addEngine(ReqMethod method, Engine engine) {
         ReqMethod[] methods = method.parse();
         for (ReqMethod md : methods) {
-            Engine[] methodEngines = engines[md.ordinal()];
-            if (methodEngines.length == 0) {
+            Engine[] methodEngines = allEngines[md.ordinal()];
+            if (methodEngines == null) {
                 methodEngines = new Engine[] { engine };
             } else {
                 methodEngines = Arrays.copyOf(methodEngines, methodEngines.length + 1);
                 methodEngines[methodEngines.length - 1] = engine;
                 Arrays.sort(methodEngines);
             }
-            engines[md.ordinal()] = methodEngines;
+            allEngines[md.ordinal()] = methodEngines;
+            clearCache();
         }
-        clearCache();
     }
 
     /**
-     * 返回处理这个资源的处理逻辑，如果该资源不支持该操作方法返回长度为0的数组。
+     * 返回处理这个资源的处理逻辑，如果该资源不支持该操作方法返回null。
      * 
      * @param method 除 {@link ReqMethod#ALL} 外的其他 {@link ReqMethod}
-     *        实例；可以为null
+     *        实例，如果method为null，将返回null
      * @return
      */
     @Override
     public Engine[] getEngines(ReqMethod method) {
-        if (method == null) {
-            return emptyEngines;
-        }
         if (method == ReqMethod.ALL) {
             throw new IllegalArgumentException("method");
         }
-        return engines[method.ordinal()];
+        if (method == null) {
+            return null;
+        }
+        Engine[] methodEngines = allEngines[method.ordinal()];
+        return methodEngines;
     }
 
     /**
@@ -112,15 +114,20 @@ public class EngineGroupImpl implements EngineGroup {
      * @return
      */
     public boolean isMethodAllowed(ReqMethod method) {
-        return method != null && engines[method.ordinal()].length > 0;
+        return method != null && allEngines[method.ordinal()] != null;
+    }
+
+    protected void clearCache() {
+        allowedMethodsCache = null;
+        toStringCache = null;
     }
 
     public List<ReqMethod> getAllowedMethods() {
         if (allowedMethodsCache == null) {
             List<ReqMethod> allowedMethods = new ArrayList<ReqMethod>();
             for (ReqMethod method : ReqMethod.ALL.parse()) {
-                Engine[] methodEngines = this.engines[method.ordinal()];
-                if (methodEngines.length > 0) {
+                Engine[] engines = this.allEngines[method.ordinal()];
+                if (engines != null && engines.length > 0) {
                     allowedMethods.add(method);
                 }
             }
@@ -134,18 +141,16 @@ public class EngineGroupImpl implements EngineGroup {
      */
     public void destroy() {
         RuntimeException error = null;
-        for (Engine[] methodEngines : engines) {
+        for (Engine[] methodEngines : allEngines) {
+            if (methodEngines == null) {
+                continue;
+            }
             for (Engine engine : methodEngines) {
                 try {
                     engine.destroy();
-                } catch (Throwable e) {
+                } catch (RuntimeException e) {
                     logger.error("", e);
-                    if (RuntimeException.class.isInstance(e)) {
-                        error = (RuntimeException) e;
-                    } else {
-                        error = new RuntimeException("", e);
-                    }
-
+                    error = e;
                 }
             }
         }
@@ -158,7 +163,7 @@ public class EngineGroupImpl implements EngineGroup {
     public String toString() {
         if (this.toStringCache == null) {
             StringBuilder sb = new StringBuilder();
-            sb.append("[");
+            sb.append(getName()).append(" [");
             int oriLen = sb.length();
             for (ReqMethod method : getAllowedMethods()) {
                 sb.append(method.toString()).append(", ");
@@ -171,11 +176,6 @@ public class EngineGroupImpl implements EngineGroup {
             this.toStringCache = sb.toString();
         }
         return this.toStringCache;
-    }
-
-    private void clearCache() {
-        allowedMethodsCache = null;
-        toStringCache = null;
     }
 
 }
