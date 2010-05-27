@@ -1,13 +1,14 @@
 package net.paoding.rose.mock.controllers.for_interceptors_test;
 
 import net.paoding.rose.web.annotation.Intercepted;
-import net.paoding.rose.web.annotation.ReqMapping;
+import net.paoding.rose.web.annotation.Path;
+import net.paoding.rose.web.annotation.rest.Get;
 
 @Intercepted(allow = "hack")
-@ReqMapping(path = "hack")
+@Path("hack")
 public class HackController {
 
-	@ReqMapping(path = { "", "index" })
+    @Get({ "", "index" })
 	public Object index() {
 		return "hack-index";
 	}

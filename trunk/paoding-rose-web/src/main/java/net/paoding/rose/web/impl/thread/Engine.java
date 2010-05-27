@@ -33,13 +33,7 @@ import net.paoding.rose.web.impl.mapping.MatchResult;
  * @see Mapping
  * @author 王志亮 [qieqie.wang@gmail.com]
  */
-public interface Engine extends Comparable<Engine> {
-
-    /**
-     * 同一资源地址、请求方法下的排序
-     */
-    @Override
-    public int compareTo(Engine o);
+public interface Engine {
 
     /**
      * 除了地址匹配之外，哪些因素可能拒绝或同意由这个engine来处理？

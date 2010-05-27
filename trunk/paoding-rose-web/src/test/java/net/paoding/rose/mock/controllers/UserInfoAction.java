@@ -1,11 +1,11 @@
 package net.paoding.rose.mock.controllers;
 
 import net.paoding.rose.web.annotation.Param;
-import net.paoding.rose.web.annotation.ReqMapping;
+import net.paoding.rose.web.annotation.rest.Get;
 
 public class UserInfoAction {
 
-    @ReqMapping(path = "hello/{id:[0-9]+}")
+    @Get("hello/{id:[0-9]+}")
     public int hello(@Param("id") Integer id) {
         return id;
     }

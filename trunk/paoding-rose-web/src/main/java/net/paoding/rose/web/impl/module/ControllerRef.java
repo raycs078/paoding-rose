@@ -26,7 +26,6 @@ import java.util.Map;
 
 import net.paoding.rose.web.annotation.AsSuperController;
 import net.paoding.rose.web.annotation.Ignored;
-import net.paoding.rose.web.annotation.ReqMapping;
 import net.paoding.rose.web.annotation.ReqMethod;
 import net.paoding.rose.web.annotation.rest.Delete;
 import net.paoding.rose.web.annotation.rest.Get;
@@ -38,6 +37,7 @@ import net.paoding.rose.web.annotation.rest.Trace;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.util.ClassUtils;
 
 /**
  * 
@@ -57,8 +57,7 @@ public class ControllerRef {
 
     private Object controllerObject;
 
-    public ControllerRef() {
-    }
+    List<MethodRef> actions;
 
     public ControllerRef(String[] mappingPaths, String controllerName, Object controllerObject,
             Class<?> controllerClass) {
@@ -75,53 +74,37 @@ public class ControllerRef {
         return actions.toArray(new MethodRef[0]);
     }
 
-    List<MethodRef> actions;
-
     private void init() {
-        actions = new LinkedList<MethodRef>();
+        List<MethodRef> actions = new LinkedList<MethodRef>();
         Class<?> clz = controllerClass;
         //
         List<Method> pastMethods = new LinkedList<Method>();
         while (true) {
             Method[] declaredMethods = clz.getDeclaredMethods();
             for (Method method : declaredMethods) {
-                if (isMethodIgnored(pastMethods, method, controllerClass)) {
+                if (quicklyPass(pastMethods, method, controllerClass)) {
                     continue;
                 }
 
                 Map<ReqMethod, String[]> shotcutMappings = collectsShotcutMappings(method);
-                String methodPath = "/" + method.getName();
-
-                ReqMapping reqMappingAnnotation = method.getAnnotation(ReqMapping.class);
-                ReqMethod[] methods = new ReqMethod[0];
-                String[] mappingPaths = new String[0];
-                if (reqMappingAnnotation != null) {
-                    methods = reqMappingAnnotation.methods();
-                    mappingPaths = reqMappingAnnotation.path();
-                    // 如果mappingPaths.length==0，表示没有任何path可以映射到这个action了
-                    for (int i = 0; i < mappingPaths.length; i++) {
-                        if (ReqMapping.DEFAULT_PATH.equals(mappingPaths[i])) {
-                            mappingPaths[i] = methodPath;
-                        } else if (mappingPaths[i].length() > 0 && mappingPaths[i].charAt(0) != '/') {
-                            mappingPaths[i] = '/' + mappingPaths[i];
-                        } else if (mappingPaths[i].equals("/")) {
-                            mappingPaths[i] = "";
+                if (shotcutMappings.size() == 0) {
+                    if (ignoresCommonMethod(method)) {
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("ignores common methods of controller "
+                                    + controllerClass.getName() + "." + method.getName());
                         }
+                    } else {
+                        shotcutMappings = new HashMap<ReqMethod, String[]>();
+                        shotcutMappings.put(ReqMethod.ALL, new String[] { method.getName() });
                     }
-                } else if (shotcutMappings.size() == 0) {
-                    methods = new ReqMethod[] { ReqMethod.GET, ReqMethod.POST };
-                    mappingPaths = new String[] { methodPath };
                 }
-                if (mappingPaths.length > 0 || methods.length > 0 || shotcutMappings.size() > 0) {
+                if (shotcutMappings.size() > 0) {
                     MethodRef methodRef = new MethodRef();
-
                     for (Map.Entry<ReqMethod, String[]> entry : shotcutMappings.entrySet()) {
-                        methodRef.setReqMapping(entry.getValue(),
-                                new ReqMethod[] { entry.getKey() });
+                        methodRef.addMapping(entry.getKey(), entry.getValue());
                     }
-                    methodRef.setReqMapping(mappingPaths, methods);
                     methodRef.setMethod(method);
-                    this.actions.add(methodRef);
+                    actions.add(methodRef);
                 }
             }
             for (int i = 0; i < declaredMethods.length; i++) {
@@ -132,11 +115,7 @@ public class ControllerRef {
                 break;
             }
         }
-        if (actions.size() == 0) {
-            MethodRef denyAction = new MethodRef();
-            denyAction.setReqMapping(new String[] { "" }, new ReqMethod[0]);
-            this.actions.add(denyAction);
-        }
+        this.actions = actions;
     }
 
     private Map<ReqMethod, String[]> collectsShotcutMappings(Method method) {
@@ -162,22 +141,14 @@ public class ControllerRef {
         return restMethods;
     }
 
-    private boolean isMethodIgnored(List<Method> pastMethods, Method method,
-            Class<?> controllerClass) {
+    private boolean quicklyPass(List<Method> pastMethods, Method method, Class<?> controllerClass) {
         // public, not static, not abstract, @Ignored
         if (!Modifier.isPublic(method.getModifiers()) || Modifier.isAbstract(method.getModifiers())
                 || Modifier.isStatic(method.getModifiers())
                 || method.isAnnotationPresent(Ignored.class)) {
             if (logger.isDebugEnabled()) {
-                logger.debug("ignores methods of controller " + controllerClass.getName() + "."
+                logger.debug("ignores method of controller " + controllerClass.getName() + "."
                         + method.getName() + "  [@ignored?not public?abstract?static?]");
-            }
-            return true;
-        }
-        if (ignoresCommonMethod(method)) {
-            if (logger.isDebugEnabled()) {
-                logger.debug("ignores common methods of controller " + controllerClass.getName()
-                        + "." + method.getName());
             }
             return true;
         }
@@ -193,20 +164,17 @@ public class ControllerRef {
     }
 
     private boolean ignoresCommonMethod(Method method) {
-        String name = method.getName();
-        if (name.equals("toString") || name.equals("hashCode") || name.equals("equals")
-                || name.equals("wait") || name.equals("getClass") || name.equals("clone")
-                || name.equals("notify") || name.equals("notifyAll") || name.equals("finalize")) {
-            if (null == method.getAnnotation(ReqMapping.class)
-                    && null == method.getAnnotation(Get.class)) {
-                return true;
-            }
+        // 来自 Object 的方法
+        if (ClassUtils.hasMethod(Object.class, method.getName(), method.getParameterTypes())) {
+            return true;
         }
+
+        // 以下可能是一些java bean的方法，这些不需要
+        String name = method.getName();
         if (name.startsWith("get") && name.length() > 3
                 && Character.isUpperCase(name.charAt("get".length()))
                 && method.getParameterTypes().length == 0 && method.getReturnType() != void.class) {
-            if (null == method.getAnnotation(ReqMapping.class)
-                    && null == method.getAnnotation(Get.class)) {
+            if (null == method.getAnnotation(Get.class)) {
                 return true;
             }
         }
@@ -215,16 +183,14 @@ public class ControllerRef {
                 && Character.isUpperCase(name.charAt("is".length()))
                 && method.getParameterTypes().length == 0
                 && (method.getReturnType() == boolean.class || method.getReturnType() == Boolean.class)) {
-            if (null == method.getAnnotation(ReqMapping.class)
-                    && null == method.getAnnotation(Get.class)) {
+            if (null == method.getAnnotation(Get.class)) {
                 return true;
             }
         }
         if (name.startsWith("set") && name.length() > 3
                 && Character.isUpperCase(name.charAt("set".length()))
                 && method.getParameterTypes().length == 1 && method.getReturnType() == void.class) {
-            if (null == method.getAnnotation(ReqMapping.class)
-                    && null == method.getAnnotation(Post.class)) {
+            if (null == method.getAnnotation(Post.class)) {
                 return true;
             }
         }

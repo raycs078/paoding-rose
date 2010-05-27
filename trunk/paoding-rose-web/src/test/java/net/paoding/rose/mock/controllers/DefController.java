@@ -1,9 +1,10 @@
 package net.paoding.rose.mock.controllers;
 
 import net.paoding.rose.web.annotation.Param;
-import net.paoding.rose.web.annotation.ReqMapping;
+import net.paoding.rose.web.annotation.Path;
+import net.paoding.rose.web.annotation.rest.Get;
 
-@ReqMapping(path = { "", "def" })
+@Path({ "", "def" })
 public class DefController {
 
     public String index() {
@@ -14,7 +15,7 @@ public class DefController {
         return "method";
     }
 
-    @ReqMapping(path = "param_{id}")
+    @Get("param_{id}")
     public String param(@Param("id") String id) {
         return "param_" + id;
     }

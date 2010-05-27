@@ -120,8 +120,8 @@ public class Rose implements EngineChain {
                 this.path);
         final MatchResult result = matchResults.get(matchResults.size() - 1);
 
-        // 完成一次成功匹配需要走到树的叶子结点
-        if (!result.getMappingNode().isLeaf()) {
+        // 完成一次成功匹配需要走到树的叶子结点，并且是方法级别的结点
+        if (!result.getMappingNode().isFileType()) {
             if (logger.isDebugEnabled()) {
                 logger.debug("[" + this.path + "] matchResults.size=" + matchResults.size());
             }
@@ -129,6 +129,7 @@ public class Rose implements EngineChain {
         }
 
         // but 405 ?
+        // TODO: 有些result.getEngine为null的，但不一定是405，比如@IfParamExists的，是为404
         if (result.getEngine() == null) {
             /* 405 Method Not Allowed
              * The method specified in the Request-Line is not allowed for the

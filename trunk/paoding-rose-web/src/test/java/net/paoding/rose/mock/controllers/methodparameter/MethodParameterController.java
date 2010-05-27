@@ -1,9 +1,9 @@
 package net.paoding.rose.mock.controllers.methodparameter;
 
 import net.paoding.rose.web.annotation.Param;
-import net.paoding.rose.web.annotation.ReqMapping;
+import net.paoding.rose.web.annotation.Path;
 
-@ReqMapping(path = "$controller.id/$controller.bool")
+@Path("$controller.id/$controller.bool")
 public class MethodParameterController {
 
     public void innt(@Param("controller.id") int cid) {

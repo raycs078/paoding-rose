@@ -152,6 +152,7 @@ public class TreeBuilder {
             }
             if (defNode == null && defResource.getAllowedMethods().size() > 0) {
                 defNode = new MappingNode(defMapping, controllerNode, controllerEngines);
+                defNode.setFileType(true);
                 defNode.addEngineGroup(defResource);
             }
         }
@@ -186,6 +187,7 @@ public class TreeBuilder {
             EngineGroup actionEngines = new EngineGroupImpl();
             if (actionNode == null) {
                 actionNode = new MappingNode(mapping, controllerNode, controllerEngines);
+                actionNode.setFileType(true);
                 actionNode.addEngineGroup(actionEngines);
             } else {
                 mapping = actionNode.getMapping();

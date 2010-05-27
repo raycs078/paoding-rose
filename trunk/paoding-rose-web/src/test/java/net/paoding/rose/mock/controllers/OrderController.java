@@ -1,10 +1,10 @@
 package net.paoding.rose.mock.controllers;
 
 import net.paoding.rose.web.annotation.Param;
-import net.paoding.rose.web.annotation.ReqMapping;
+import net.paoding.rose.web.annotation.Path;
 import net.paoding.rose.web.annotation.rest.Get;
 
-@ReqMapping(path = "{user.id}/order")
+@Path("{user.id}/order")
 public class OrderController {
 
     public String list(@Param("user.id") Long userId) {

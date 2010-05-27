@@ -12,5 +12,10 @@ public class TreeTest extends AbstractControllerTest {
         request.setMethod("GET");
         assertEquals(7, invoke("/tree/count"));
     }
+    
+    public void testGet2() throws ServletException, IOException {
+        request.setMethod("GET");
+        System.out.println(invoke("/rose-info/tree"));
+    }
 
 }

@@ -42,20 +42,17 @@ public class MethodRef {
         this.method = method;
     }
 
-    public void setReqMapping(String[] mappingPaths, ReqMethod[] reqMethods) {
+    public void addMapping(ReqMethod reqMethod, String[] mappingPaths) {
         for (String mappingPath : mappingPaths) {
             Set<ReqMethod> mapping = mappings.get(mappingPath);
             if (mapping == null) {
                 mapping = new HashSet<ReqMethod>();
                 mappings.put(mappingPath, mapping);
             }
-            for (ReqMethod reqMethod : reqMethods) {
-                mapping.add(reqMethod);
-            }
+            mapping.add(reqMethod);
         }
     }
-    
-    
+
     public Map<String, Set<ReqMethod>> getMappings() {
         return mappings;
     }

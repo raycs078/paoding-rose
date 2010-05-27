@@ -39,7 +39,7 @@ import net.paoding.rose.web.advancedinterceptor.Ordered;
 import net.paoding.rose.web.annotation.Ignored;
 import net.paoding.rose.web.annotation.Interceptor;
 import net.paoding.rose.web.annotation.NotForSubModules;
-import net.paoding.rose.web.annotation.ReqMapping;
+import net.paoding.rose.web.annotation.Path;
 import net.paoding.rose.web.paramresolver.ParamResolver;
 
 import org.apache.commons.lang.ArrayUtils;
@@ -196,8 +196,8 @@ public class ModulesBuilderImpl implements ModulesBuilder {
         if (controllerSuffix == null) {
             if (beanDefinition.hasBeanClass()) {
                 Class<?> beanClass = beanDefinition.getBeanClass();
-                if (beanClass.isAnnotationPresent(ReqMapping.class)) {
-                    throw new IllegalArgumentException("@" + ReqMapping.class.getSimpleName()
+                if (beanClass.isAnnotationPresent(Path.class)) {
+                    throw new IllegalArgumentException("@" + Path.class.getSimpleName()
                             + " is only allowed in Resource/Controller, "
                             + "is it a Resource/Controller? wrong spelling? : " + beanClassName);
                 }
@@ -223,14 +223,14 @@ public class ModulesBuilderImpl implements ModulesBuilder {
         final Class<?> clazz = beanDefinition.getBeanClass();
         final String controllerName = StringUtils.removeEnd(ClassUtils
                 .getShortNameAsProperty(clazz), controllerSuffix);
-        ReqMapping reqMappingAnnotation = clazz.getAnnotation(ReqMapping.class);
+        Path reqMappingAnnotation = clazz.getAnnotation(Path.class);
         if (reqMappingAnnotation != null) {
-            controllerPaths = reqMappingAnnotation.path();
+            controllerPaths = reqMappingAnnotation.value();
         }
         if (controllerPaths != null) {
             // 如果controllerPaths.length==0，表示没有任何path可以映射到这个controller了
             for (int i = 0; i < controllerPaths.length; i++) {
-                if (ReqMapping.DEFAULT_PATH.equals(controllerPaths[i])) {
+                if ("#".equals(controllerPaths[i])) {
                     controllerPaths[i] = "/" + controllerName;
                 } else if (controllerPaths[i].length() > 0 && controllerPaths[i].charAt(0) != '/') {
                     controllerPaths[i] = '/' + controllerPaths[i];
@@ -382,8 +382,7 @@ public class ModulesBuilderImpl implements ModulesBuilder {
         return resolvers;
     }
 
-    private List<InterceptorDelegate> findContextInterceptors(
-            XmlWebApplicationContext context) {
+    private List<InterceptorDelegate> findContextInterceptors(XmlWebApplicationContext context) {
         String[] interceptorNames = SpringUtils.getBeanNames(context.getBeanFactory(),
                 ControllerInterceptor.class);
         ArrayList<InterceptorDelegate> globalInterceptors = new ArrayList<InterceptorDelegate>(

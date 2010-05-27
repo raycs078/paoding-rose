@@ -1,11 +1,11 @@
 package net.paoding.rose.mock.controllers.tree;
 
-import net.paoding.rose.web.annotation.ReqMapping;
+import net.paoding.rose.web.annotation.Path;
 import net.paoding.rose.web.annotation.rest.Get;
 import net.paoding.rose.web.impl.mapping.MappingNode;
 import net.paoding.rose.web.impl.thread.Rose;
 
-@ReqMapping(path = "")
+@Path("")
 public class TreeController {
 
     @Get("count")

@@ -18,7 +18,7 @@ package net.paoding.rose.web.controllers.roseInfo;
 import java.lang.reflect.Method;
 
 import net.paoding.rose.web.annotation.HttpFeatures;
-import net.paoding.rose.web.annotation.ReqMapping;
+import net.paoding.rose.web.annotation.Path;
 import net.paoding.rose.web.annotation.ReqMethod;
 import net.paoding.rose.web.annotation.rest.Get;
 import net.paoding.rose.web.impl.mapping.MappingNode;
@@ -32,7 +32,7 @@ import net.paoding.rose.web.impl.thread.Rose;
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
-@ReqMapping(path = { "tree.xml", "tree" })
+@Path({ "tree.xml", "tree" })
 public class TreeController {
 
     @Get

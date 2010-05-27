@@ -37,7 +37,7 @@ public class EngineGroupImpl implements EngineGroup {
     private static final Log logger = LogFactory.getLog(EngineGroup.class);
 
     /** ARRAY_SIZE 代表用于存放 Engine 的数组的大小 */
-    private static final int ARRAY_SIZE = ReqMethod.ALL.parse().length + 1;
+    private static final int ARRAY_SIZE = ReqMethod.ALL.parse().size();
 
     private static final Engine[] emptyEngines = new Engine[0];
 
@@ -65,22 +65,19 @@ public class EngineGroupImpl implements EngineGroup {
     }
 
     /**
-     * 添加该资源的某种操作，如果所给的 method 是 {@link ReqMethod#ALL}
-     * ，则不覆盖之前设置操作，只影响那些还没有设置的操作。
+     * 添加一个 {@link Engine} ；如果所给的 method 是 {@link ReqMethod#ALL}，则优先级最低。
      * 
      * @param method
      * @param engine
      */
     public void addEngine(ReqMethod method, Engine engine) {
-        ReqMethod[] methods = method.parse();
-        for (ReqMethod md : methods) {
+        for (ReqMethod md : method.parse()) {
             Engine[] methodEngines = engines[md.ordinal()];
             if (methodEngines.length == 0) {
                 methodEngines = new Engine[] { engine };
             } else {
                 methodEngines = Arrays.copyOf(methodEngines, methodEngines.length + 1);
                 methodEngines[methodEngines.length - 1] = engine;
-                Arrays.sort(methodEngines);
             }
             engines[md.ordinal()] = methodEngines;
         }

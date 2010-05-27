@@ -31,7 +31,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.AbstractApplicationContext;
-import org.springframework.util.Assert;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.multipart.MultipartException;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
@@ -91,12 +90,6 @@ public class ModuleEngine implements Engine {
      */
     public Module getModule() {
         return module;
-    }
-
-    @Override
-    public int compareTo(Engine o) {
-        Assert.isTrue(o.getClass() == this.getClass());
-        return 0;
     }
 
     @Override

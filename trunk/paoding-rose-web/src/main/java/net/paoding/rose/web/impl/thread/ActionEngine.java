@@ -38,8 +38,6 @@ import net.paoding.rose.web.RequestPath;
 import net.paoding.rose.web.annotation.HttpFeatures;
 import net.paoding.rose.web.annotation.IfParamExists;
 import net.paoding.rose.web.annotation.Intercepted;
-import net.paoding.rose.web.annotation.ReqMapping;
-import net.paoding.rose.web.annotation.ReqMethod;
 import net.paoding.rose.web.annotation.Return;
 import net.paoding.rose.web.impl.mapping.MatchResult;
 import net.paoding.rose.web.impl.module.Module;
@@ -175,25 +173,6 @@ public final class ActionEngine implements Engine {
                 .toArray(new InterceptorDelegate[registeredInterceptors.size()]);
     }
 
-    @Override
-    public int compareTo(Engine o) {
-        Assert.isTrue(o.getClass() == this.getClass());
-        // 还有All放最后!
-        ReqMapping rm1 = method.getAnnotation(ReqMapping.class);
-        ReqMapping rm2 = ((ActionEngine) o).method.getAnnotation(ReqMapping.class);
-        boolean ca1 = rm1 == null ? false : ArrayUtils.contains(rm1.methods(), ReqMethod.ALL);
-        boolean ca2 = rm2 == null ? false : ArrayUtils.contains(rm2.methods(), ReqMethod.ALL);
-        if (ca1 != ca2) {
-            return ca1 ? 1 : -1;
-        }
-        // 还有@IfParamExists放前面，都含有的按方法名来区分
-        IfParamExists if1 = method.getAnnotation(IfParamExists.class);
-        IfParamExists if2 = ((ActionEngine) o).method.getAnnotation(IfParamExists.class);
-        boolean e1 = (if1 != null);
-        boolean e2 = (if2 != null);
-        return (e1 == e2) ? 0 : (e1 ? -1 : 1);
-    }
-
     /**
      * 用来抽象isAccepted过滤的判断逻辑
      * 
@@ -232,8 +211,12 @@ public final class ActionEngine implements Engine {
 
                     final String paramName = term.trim();
 
+                    @Override
                     public int check(HttpServletRequest request) {
+                        
+                        // TODO: request.getParameter将导致request的queryString立即被解析，将使@HttpFeature失效
                         String paramValue = request.getParameter(paramName);
+                        
                         if (StringUtils.isNotBlank(paramValue)) { //规则中没有约束参数值，所以只要存在就ok
                             return 10;
                         } else {
@@ -250,6 +233,7 @@ public final class ActionEngine implements Engine {
                 if (expected.length() == 0) {
                     checkers.add(new AcceptedChecker() {
 
+                        @Override
                         public int check(HttpServletRequest request) {
                             String paramValue = request.getParameter(paramName);
                             if (StringUtils.isNotBlank(paramValue)) {
@@ -270,6 +254,7 @@ public final class ActionEngine implements Engine {
                     final Pattern pattern = tmpPattern; //转成final的
                     checkers.add(new AcceptedChecker() {
 
+                        @Override
                         public int check(HttpServletRequest request) {
                             String paramValue = request.getParameter(paramName);
                             if (paramValue == null) { //参数值不能存在就不能通过
@@ -285,6 +270,7 @@ public final class ActionEngine implements Engine {
                 } else { //expected不为""且不是正则表达式
                     checkers.add(new AcceptedChecker() {
 
+                        @Override
                         public int check(HttpServletRequest request) {
                             String paramValue = request.getParameter(paramName);
                             // 13优先于正则表达式的12

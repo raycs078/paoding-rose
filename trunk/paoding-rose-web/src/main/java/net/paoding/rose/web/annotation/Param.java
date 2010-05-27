@@ -24,7 +24,7 @@ import java.lang.annotation.Target;
 import net.paoding.rose.web.var.Model;
 
 /**
- * 将{@link Param}标注在控制器方法的参数上，可以获得在{@link ReqMapping}
+ * 将{@link Param}标注在控制器方法的参数上，可以获得在{@link Path}
  * 中的占位符的参数，或者request的请求参数。
  * <p>
  * 如果{@link Param}标注的是bean，则表示这个bean放到model中应该使用配置的名称。

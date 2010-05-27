@@ -26,7 +26,6 @@ import net.paoding.rose.web.impl.module.Module;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.util.Assert;
 
 /**
  * @author 王志亮 [qieqie.wang@gmail.com]
@@ -81,12 +80,6 @@ public class ControllerEngine implements Engine {
 
     public boolean isProxiedController() {
         return proxiedController;
-    }
-
-    @Override
-    public int compareTo(Engine o) {
-        Assert.isTrue(o.getClass() == this.getClass());
-        return 0;
     }
 
     @Override
