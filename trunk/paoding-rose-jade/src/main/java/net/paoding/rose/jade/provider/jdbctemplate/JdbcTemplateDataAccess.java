@@ -89,7 +89,7 @@ public class JdbcTemplateDataAccess implements DataAccess {
                 arrayParameters = ir.getParameters();
             }
         }
-        plugin.start(jdbcTemplate.getDataSource(), sqlString, modifier, parameters);
+        plugin.start(jdbcTemplate.getDataSource(), sqlString, modifier, arrayParameters);
         List<?> rt = selectByJdbcTemplate(sqlString, arrayParameters, rowMapper);
         plugin.end();
         return rt;
@@ -108,7 +108,7 @@ public class JdbcTemplateDataAccess implements DataAccess {
                 arrayParameters = ir.getParameters();
             }
         }
-        plugin.start(jdbcTemplate.getDataSource(), sqlString, modifier, parameters);
+        plugin.start(jdbcTemplate.getDataSource(), sqlString, modifier, arrayParameters);
         int rt = updateByJdbcTemplate(sqlString, arrayParameters);
         plugin.end();
         return rt;
@@ -127,7 +127,7 @@ public class JdbcTemplateDataAccess implements DataAccess {
                 arrayParameters = ir.getParameters();
             }
         }
-        plugin.start(jdbcTemplate.getDataSource(), sqlString, modifier, parameters);
+        plugin.start(jdbcTemplate.getDataSource(), sqlString, modifier, arrayParameters);
         Number rt = insertReturnIdByJdbcTemplate(sqlString, arrayParameters);
         plugin.end();
         return rt;
