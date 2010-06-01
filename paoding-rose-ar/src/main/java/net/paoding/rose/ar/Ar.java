@@ -39,6 +39,7 @@ import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.DetachedCriteria;
+import org.hibernate.criterion.Projections;
 import org.hibernate.proxy.HibernateProxy;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
@@ -382,6 +383,11 @@ public class Ar {
     @SuppressWarnings("unchecked")
     public static <T> List<T> find(DetachedCriteria criteria, int firstResult, int maxResults) {
         return Ar.getHibernateTemplate().findByCriteria(criteria, firstResult, maxResults);
+    }
+
+    public static int count(DetachedCriteria criteria) {
+        criteria.setProjection(Projections.rowCount());
+        return ((Number) Ar.one(criteria)).intValue();
     }
 
     @SuppressWarnings("unchecked")

@@ -22,6 +22,11 @@ import javax.servlet.http.HttpServletRequest;
 import net.paoding.rose.web.ControllerInterceptor;
 import net.paoding.rose.web.Dispatcher;
 import net.paoding.rose.web.Invocation;
+import net.paoding.rose.web.InvocationChain;
+import net.paoding.rose.web.advancedinterceptor.ActionSelector;
+import net.paoding.rose.web.advancedinterceptor.DispatcherSelector;
+import net.paoding.rose.web.advancedinterceptor.Ordered;
+import net.paoding.rose.web.impl.thread.AfterCompletion;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
@@ -33,8 +38,8 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 /**
  * @author zhiliang.wang [qieqie.wang@paoding.net]
  */
-public class OpenSessionInViewInterceptor extends HibernateAccessor implements
-        ControllerInterceptor {
+public class OpenSessionInViewInterceptor extends HibernateAccessor implements Ordered,
+        ControllerInterceptor, AfterCompletion, ActionSelector, DispatcherSelector {
 
     private int priority;
 
@@ -106,7 +111,7 @@ public class OpenSessionInViewInterceptor extends HibernateAccessor implements
     }
 
     @Override
-    public Object before(Invocation invocation) throws Exception {
+    public Object roundInvocation(Invocation invocation, InvocationChain chain) throws Exception {
         if ((isSingleSession() && TransactionSynchronizationManager
                 .hasResource(getSessionFactory()))
                 || SessionFactoryUtils.isDeferredCloseActive(getSessionFactory())) {
@@ -132,11 +137,9 @@ public class OpenSessionInViewInterceptor extends HibernateAccessor implements
                 SessionFactoryUtils.initDeferredClose(getSessionFactory());
             }
         }
-        return true;
-    }
 
-    @Override
-    public Object after(Invocation invocation, Object instruction) throws Exception {
+        Object instruction = chain.doNext();
+
         if (isSingleSession()) {
             // Only potentially flush in single session mode.
             SessionHolder sessionHolder = (SessionHolder) TransactionSynchronizationManager
@@ -149,6 +152,7 @@ public class OpenSessionInViewInterceptor extends HibernateAccessor implements
             }
         }
         return instruction;
+
     }
 
     @Override
