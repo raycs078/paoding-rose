@@ -75,7 +75,7 @@ public class JdbcTemplateDataAccessProvider extends AbstractDataAccessProvider i
     }
 
     /**
-     * TODO findPlugin<br>
+     * findPlugin<br>
      * 
      * @return
      * 
@@ -87,7 +87,6 @@ public class JdbcTemplateDataAccessProvider extends AbstractDataAccessProvider i
             Collection<?> jc = this.applicationContext.getBeansOfType(IJadePlugin.class).values();
             ps = jc.toArray(new IJadePlugin[0]);
         } catch (BeansException e) {
-            e.printStackTrace();
             ps = new IJadePlugin[0];
         }
         return new JadePluginWrapper(ps);

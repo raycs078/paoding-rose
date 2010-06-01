@@ -23,6 +23,9 @@ import javax.sql.DataSource;
 import net.paoding.rose.jade.plugin.model.DataModel;
 import net.paoding.rose.jade.provider.Modifier;
 
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
+
 /**
  * AbsJadePlugin <br>
  * 
@@ -30,23 +33,20 @@ import net.paoding.rose.jade.provider.Modifier;
  */
 public abstract class AbsJadePlugin implements IJadePlugin {
 
-    private ThreadLocal<DataModel> data = new ThreadLocal<DataModel>();
+    private static String HOST_ADDRESS = getHost();
 
-    @Override
-    public void start(DataSource dataSource, String sqlString, Modifier modifier,
-            Object[] arrayParameters) {
-        this.data.set(new DataModel());
-        DataModel d = data.get();
+    protected static Logger log = LogManager.getLogger(AbsJadePlugin.class);
 
-        d.setStartTime(System.currentTimeMillis());
+    private static String getHost() {
         try {
-            d.setClientIp(InetAddress.getLocalHost().getHostAddress());
+            return InetAddress.getLocalHost().getHostAddress();
         } catch (UnknownHostException e) {
-            d.setClientIp("");
-            e.printStackTrace();
+            log.error("", e);
+            return "";
         }
-        startPlugin(d, dataSource, sqlString, modifier, arrayParameters);
     }
+
+    private ThreadLocal<DataModel> data = new ThreadLocal<DataModel>();
 
     @Override
     public void end() {
@@ -60,6 +60,26 @@ public abstract class AbsJadePlugin implements IJadePlugin {
             data.remove();
         }
     }
+
+    @Override
+    public void start(DataSource dataSource, String sqlString, Modifier modifier,
+            Object[] arrayParameters) {
+        this.data.set(new DataModel());
+        DataModel d = data.get();
+
+        d.setStartTime(System.currentTimeMillis());
+        d.setClientIp(HOST_ADDRESS);
+        startPlugin(d, dataSource, sqlString, modifier, arrayParameters);
+    }
+
+    /**
+     * endPlugin<br>
+     * 
+     * 
+     * @author tai.wang@opi-corp.com May 26, 2010 - 3:56:45 PM
+     * @param dataModel
+     */
+    protected abstract void endPlugin(DataModel dataModel);
 
     final protected DataModel getDataModel() {
         if (null == data.get()) {
@@ -81,13 +101,4 @@ public abstract class AbsJadePlugin implements IJadePlugin {
      */
     protected abstract void startPlugin(DataModel data, DataSource dataSource, String sqlString,
             Modifier modifier, Object[] arrayParameters);
-
-    /**
-     * endPlugin<br>
-     * 
-     * 
-     * @author tai.wang@opi-corp.com May 26, 2010 - 3:56:45 PM
-     * @param dataModel
-     */
-    protected abstract void endPlugin(DataModel dataModel);
 }
