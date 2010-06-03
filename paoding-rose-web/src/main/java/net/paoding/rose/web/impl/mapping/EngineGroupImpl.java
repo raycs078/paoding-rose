@@ -22,6 +22,7 @@ import java.util.List;
 
 import net.paoding.rose.web.annotation.ReqMethod;
 import net.paoding.rose.web.impl.thread.Engine;
+import net.paoding.rose.web.impl.thread.LinkedEngine;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -39,7 +40,7 @@ public class EngineGroupImpl implements EngineGroup {
     /** ARRAY_SIZE 代表用于存放 Engine 的数组的大小 */
     private static final int ARRAY_SIZE = ReqMethod.ALL.parse().size();
 
-    private static final Engine[] emptyEngines = new Engine[0];
+    private static final LinkedEngine[] emptyEngines = new LinkedEngine[0];
 
     /**
      * 该资源支持的操作逻辑，如果不支持某种操作对应位置的元素为长度为0的engines数组
@@ -47,7 +48,9 @@ public class EngineGroupImpl implements EngineGroup {
      * 处理指定http method的逻辑存放于该本数组的指定的、唯一位置，即 {@link ReqMethod#ordinal()}
      * 
      */
-    private final Engine[][] engines;
+    private final LinkedEngine[][] engines;
+
+    private int engineCount;
 
     private transient String toStringCache;
 
@@ -59,7 +62,7 @@ public class EngineGroupImpl implements EngineGroup {
      * @param simpleName 资源相对于上级的资源的名称
      */
     public EngineGroupImpl() {
-        Engine[][] engines = new Engine[ARRAY_SIZE][];
+        LinkedEngine[][] engines = new LinkedEngine[ARRAY_SIZE][];
         Arrays.fill(engines, emptyEngines);
         this.engines = engines;
     }
@@ -70,18 +73,24 @@ public class EngineGroupImpl implements EngineGroup {
      * @param method
      * @param engine
      */
-    public void addEngine(ReqMethod method, Engine engine) {
+    public void addEngine(ReqMethod method, LinkedEngine engine) {
         for (ReqMethod md : method.parse()) {
-            Engine[] methodEngines = engines[md.ordinal()];
+            LinkedEngine[] methodEngines = engines[md.ordinal()];
             if (methodEngines.length == 0) {
-                methodEngines = new Engine[] { engine };
+                methodEngines = new LinkedEngine[] { engine };
             } else {
                 methodEngines = Arrays.copyOf(methodEngines, methodEngines.length + 1);
                 methodEngines[methodEngines.length - 1] = engine;
             }
             engines[md.ordinal()] = methodEngines;
+            engineCount++;
         }
         clearCache();
+    }
+
+    @Override
+    public int size() {
+        return engineCount;
     }
 
     /**
@@ -92,7 +101,7 @@ public class EngineGroupImpl implements EngineGroup {
      * @return
      */
     @Override
-    public Engine[] getEngines(ReqMethod method) {
+    public LinkedEngine[] getEngines(ReqMethod method) {
         if (method == null) {
             return emptyEngines;
         }
@@ -126,28 +135,24 @@ public class EngineGroupImpl implements EngineGroup {
         return allowedMethodsCache;
     }
 
+    private boolean destroyed = false;
+
     /**
      * 销毁该资源
      */
     public void destroy() {
-        RuntimeException error = null;
+        if (!destroyed) {
+            return;
+        }
+        destroyed = true;
         for (Engine[] methodEngines : engines) {
             for (Engine engine : methodEngines) {
                 try {
                     engine.destroy();
                 } catch (Throwable e) {
                     logger.error("", e);
-                    if (RuntimeException.class.isInstance(e)) {
-                        error = (RuntimeException) e;
-                    } else {
-                        error = new RuntimeException("", e);
-                    }
-
                 }
             }
-        }
-        if (error != null) {
-            throw error;
         }
     }
 

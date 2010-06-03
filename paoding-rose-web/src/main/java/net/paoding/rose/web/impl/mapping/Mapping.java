@@ -31,12 +31,11 @@ package net.paoding.rose.web.impl.mapping;
 public interface Mapping extends Comparable<Mapping> {
 
     /**
-     * 返回规范化后的的地址定义,如: <br>
-     * /blog/$userId-$blogId/list，/application/$appName
+     * 
      * 
      * @return
      */
-    public String getPath();
+    public String getDefinition();
 
     /**
      * 

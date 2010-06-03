@@ -82,6 +82,12 @@ public final class InvocationBean implements Invocation {
 
     private Module viewModule;
 
+    private ActionEngine actionEngine;
+
+    private ControllerEngine controllerEngine;
+
+    private ModuleEngine moduleEngine;
+
     public InvocationBean(HttpServletRequest request, HttpServletResponse response,
             RequestPath requestPath) {
         setRequest(request);
@@ -139,22 +145,36 @@ public final class InvocationBean implements Invocation {
         return getActionEngine().getMethod();
     }
 
-    private ModuleEngine getModuleEngine() {
-        List<MatchResult> mrs = rose.getMatchResults();
-        MatchResult mr = mrs.get(1);
-        return (ModuleEngine) mr.getEngine();
+    public ModuleEngine getModuleEngine() {
+        if (moduleEngine != null) {
+            return moduleEngine;
+        }
+        return moduleEngine = getEngine(ModuleEngine.class);
     }
 
-    private ControllerEngine getControllerEngine() {
-        List<MatchResult> mrs = rose.getMatchResults();
-        MatchResult mr = mrs.get(2);
-        return (ControllerEngine) mr.getEngine();
+    public ControllerEngine getControllerEngine() {
+        if (controllerEngine != null) {
+            return controllerEngine;
+        }
+        return controllerEngine = getEngine(ControllerEngine.class);
     }
 
-    private ActionEngine getActionEngine() {
-        List<MatchResult> mrs = rose.getMatchResults();
-        MatchResult mr = mrs.get(3);
-        return (ActionEngine) mr.getEngine();
+    public ActionEngine getActionEngine() {
+        if (actionEngine != null) {
+            return actionEngine;
+        }
+        return actionEngine = getEngine(ActionEngine.class);
+    }
+
+    private <T extends Engine> T getEngine(Class<? extends Engine> engineClass) {
+        for (LinkedEngine engine : rose.getEngines()) {
+            if (engine.getTarget().getClass() == engineClass) {
+                @SuppressWarnings("unchecked")
+                T t = (T) engine.getTarget();
+                return t;
+            }
+        }
+        throw new Error("cannot found " + engineClass.getName());
     }
 
     @Override
@@ -437,9 +457,12 @@ public final class InvocationBean implements Invocation {
 
     @Override
     public String getResourceId() {
-        List<MatchResult> matchResults = rose.getMatchResults();
-        MatchResult result = matchResults.get(matchResults.size() - 1);
-        return getRequest().getContextPath() + result.getMappingNode().getPath();
+        StringBuilder sb = new StringBuilder(255);
+        sb.append(getRequest().getContextPath());
+        for (MatchResult matchResult : rose.getMatchResults()) {
+            sb.append(matchResult.getMappingNode().getMappingPath());
+        }
+        return sb.toString();
     }
 
     @Override

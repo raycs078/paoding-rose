@@ -4,8 +4,17 @@ import java.io.IOException;
 
 import javax.servlet.ServletException;
 
+import net.paoding.rose.mock.controllers.samepath.s1.AController;
 import net.paoding.rose.testcases.AbstractControllerTest;
 
+/**
+ * @see AController
+ * @see DController
+ * @see BController
+ * @see CController
+ * @author 王志亮 [qieqie.wang@gmail.com]
+ * 
+ */
 public class SamePathControllerTest extends AbstractControllerTest {
 
     public void testSA() throws ServletException, IOException {

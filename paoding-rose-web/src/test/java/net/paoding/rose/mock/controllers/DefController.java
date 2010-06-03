@@ -7,6 +7,7 @@ import net.paoding.rose.web.annotation.rest.Get;
 @Path({ "", "def" })
 public class DefController {
 
+    @Get
     public String index() {
         return "index";
     }

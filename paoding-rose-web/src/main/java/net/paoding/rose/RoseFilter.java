@@ -33,16 +33,13 @@ import net.paoding.rose.scanner.ModuleResourceProvider;
 import net.paoding.rose.scanner.ModuleResourceProviderImpl;
 import net.paoding.rose.scanning.LoadScope;
 import net.paoding.rose.scanning.context.RoseWebAppContext;
-import net.paoding.rose.util.Snippet;
+import net.paoding.rose.util.PrinteHelper;
 import net.paoding.rose.web.RequestPath;
 import net.paoding.rose.web.annotation.ReqMethod;
+import net.paoding.rose.web.impl.mapping.ConstantMapping;
 import net.paoding.rose.web.impl.mapping.Mapping;
-import net.paoding.rose.web.impl.mapping.MappingImpl;
 import net.paoding.rose.web.impl.mapping.MappingNode;
-import net.paoding.rose.web.impl.mapping.MatchMode;
 import net.paoding.rose.web.impl.mapping.TreeBuilder;
-import net.paoding.rose.web.impl.mapping.EngineGroup;
-import net.paoding.rose.web.impl.mapping.EngineGroupImpl;
 import net.paoding.rose.web.impl.mapping.ignored.IgnoredPath;
 import net.paoding.rose.web.impl.mapping.ignored.IgnoredPathEnds;
 import net.paoding.rose.web.impl.mapping.ignored.IgnoredPathEquals;
@@ -51,8 +48,9 @@ import net.paoding.rose.web.impl.mapping.ignored.IgnoredPathStarts;
 import net.paoding.rose.web.impl.module.Module;
 import net.paoding.rose.web.impl.module.ModulesBuilder;
 import net.paoding.rose.web.impl.module.ModulesBuilderImpl;
-import net.paoding.rose.web.impl.thread.Rose;
+import net.paoding.rose.web.impl.thread.LinkedEngine;
 import net.paoding.rose.web.impl.thread.RootEngine;
+import net.paoding.rose.web.impl.thread.Rose;
 import net.paoding.rose.web.instruction.InstructionExecutor;
 import net.paoding.rose.web.instruction.InstructionExecutorImpl;
 
@@ -435,13 +433,15 @@ public class RoseFilter extends GenericFilterBean {
     }
 
     private MappingNode prepareMappingTree(List<Module> modules) {
-        RootEngine rootEngine = new RootEngine(instructionExecutor);
-        EngineGroup rootEngineGroup = new EngineGroupImpl();
-        rootEngineGroup.addEngine(ReqMethod.ALL, rootEngine);
-        Mapping rootMapping = new MappingImpl("", MatchMode.STARTS_WITH);
+        Mapping rootMapping = new ConstantMapping("");
         MappingNode mappingTree = new MappingNode(rootMapping);
-        mappingTree.addEngineGroup(rootEngineGroup);
-        new TreeBuilder().create(mappingTree, modules);
+        LinkedEngine rootEngine = new LinkedEngine(null, new RootEngine(instructionExecutor),
+                mappingTree);
+        mappingTree.getMiddleEngines().addEngine(ReqMethod.ALL, rootEngine);
+
+        TreeBuilder treeBuilder = new TreeBuilder();
+        treeBuilder.create(mappingTree, modules);
+
         return mappingTree;
     }
 
@@ -474,15 +474,12 @@ public class RoseFilter extends GenericFilterBean {
                 getServletContext().log("", e);
             }
         }
-        for (MappingNode cur : mappingTree) {
-            for (EngineGroup engineGroup : cur.getEngineGroups()) {
-                try {
-                    engineGroup.destroy();
-                } catch (Exception e) {
-                    logger.error("", e);
-                    getServletContext().log("", e);
-                }
-            }
+
+        try {
+            mappingTree.destroy();
+        } catch (Throwable e) {
+            logger.error("", e);
+            getServletContext().log("", e);
         }
         super.destroy();
     }
@@ -516,8 +513,10 @@ public class RoseFilter extends GenericFilterBean {
 
     private void printRoseInfos() {
         if (logger.isDebugEnabled()) {
-            logger.debug(Snippet.dumpModules(modules));
+            logger.debug(PrinteHelper.dumpModules(modules));
+            logger.debug("mapping tree:\n" + PrinteHelper.list(mappingTree));
         }
+
         String msg = String.format("[init] rose initialized, %s modules loaded! (version=%s)",
                 modules.size(), RoseVersion.getVersion());
         logger.info(msg);

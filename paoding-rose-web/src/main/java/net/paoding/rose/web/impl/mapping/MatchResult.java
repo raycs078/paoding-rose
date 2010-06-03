@@ -1,5 +1,5 @@
 /*
- * Copyright 2007-2009 the original author or authors.
+ * Copyright 2007-2010 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,6 @@
 package net.paoding.rose.web.impl.mapping;
 
 import java.util.Collection;
-import java.util.List;
-
-import net.paoding.rose.web.annotation.ReqMethod;
-import net.paoding.rose.web.impl.thread.Engine;
 
 /**
  * 控制器的action path参数映射结果,从这个结果中可以知道一个地址映射给哪个资源、资源的参数值是什么
@@ -63,30 +59,5 @@ public interface MatchResult {
      * @return
      */
     public String getParameter(String name);
-
-    /**
-     * 返回本对象支持的请求方法
-     * 
-     * @return
-     */
-    public List<ReqMethod> getAllowedMethods();
-
-    /**
-     * 
-     * @param allowed
-     */
-    public void setAllowedMethods(List<ReqMethod> allowed);
-
-    /**
-     * 
-     * @return
-     */
-    public Engine getEngine();
-
-    /**
-     * 
-     * @param engine
-     */
-    public void setEngine(Engine engine);
 
 }

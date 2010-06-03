@@ -19,8 +19,6 @@ import java.lang.reflect.Proxy;
 
 import javax.servlet.http.HttpServletRequest;
 
-import net.paoding.rose.web.Invocation;
-import net.paoding.rose.web.impl.mapping.MatchResult;
 import net.paoding.rose.web.impl.module.ControllerRef;
 import net.paoding.rose.web.impl.module.Module;
 
@@ -36,8 +34,6 @@ public class ControllerEngine implements Engine {
 
     private final Module module;
 
-    private final String controllerPath;
-
     private final Object controller;
 
     private final boolean proxiedController;
@@ -46,9 +42,8 @@ public class ControllerEngine implements Engine {
 
     private final String viewPrefix;
 
-    public ControllerEngine(Module module, String controllerPath, ControllerRef controllerRef) {
+    public ControllerEngine(Module module, ControllerRef controllerRef) {
         this.module = module;
-        this.controllerPath = controllerPath;
         this.controller = controllerRef.getControllerObject();
         this.controllerClass = controllerRef.getControllerClass();
         this.viewPrefix = controllerRef.getControllerName() + "-";
@@ -64,10 +59,6 @@ public class ControllerEngine implements Engine {
 
     public String getViewPrefix() {
         return viewPrefix;
-    }
-
-    public String getControllerPath() {
-        return controllerPath;
     }
 
     public Object getController() {
@@ -88,9 +79,7 @@ public class ControllerEngine implements Engine {
     }
 
     @Override
-    public Object execute(Rose rose, MatchResult mr) throws Throwable {
-        Invocation inv = rose.getInvocation();
-        inv.getRequestPath().setControllerPath(mr.getValue());
+    public Object execute(Rose rose) throws Throwable {
         return rose.doNext();
     }
 

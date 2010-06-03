@@ -4,8 +4,14 @@ import java.io.IOException;
 
 import javax.servlet.ServletException;
 
+import net.paoding.rose.mock.controllers.msg.MsgController;
 import net.paoding.rose.testcases.AbstractControllerTest;
 
+/**
+ * @see MsgController
+ * @author 王志亮 [qieqie.wang@gmail.com]
+ * 
+ */
 public class MsgControllerTest extends AbstractControllerTest {
 
     public void testDefaultHello() throws ServletException, IOException {

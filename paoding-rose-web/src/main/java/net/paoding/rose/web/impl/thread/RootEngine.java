@@ -1,5 +1,5 @@
 /*
- * Copyright 2007-2009 the original author or authors.
+ * Copyright 2007-2010 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,6 @@ import javax.servlet.http.HttpServletRequest;
 import net.paoding.rose.RoseFilter;
 import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.RequestPath;
-import net.paoding.rose.web.impl.mapping.MatchResult;
 import net.paoding.rose.web.instruction.InstructionExecutor;
 import net.paoding.rose.web.instruction.InstructionExecutorImpl;
 import net.paoding.rose.web.var.FlashImpl;
@@ -90,7 +89,7 @@ public class RootEngine implements Engine {
      */
 
     @Override
-    public Object execute(Rose rose, MatchResult mr) throws Throwable {
+    public Object execute(Rose rose) throws Throwable {
 
         InvocationBean inv = rose.getInvocation();
         ServletRequest request = inv.getRequest();

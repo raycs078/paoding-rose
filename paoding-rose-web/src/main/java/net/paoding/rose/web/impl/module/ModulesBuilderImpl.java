@@ -239,7 +239,14 @@ public class ModulesBuilderImpl implements ModulesBuilder {
                 }
             }
         } else {
-            controllerPaths = new String[] { "/" + controllerName };
+            // TODO: 这个代码是为了使从0.9到1.0比较顺畅而做的判断，201007之后可以考虑删除掉
+            if (controllerName.equals("index") || controllerName.equals("home")
+                    || controllerName.equals("welcome")) {
+                // 这个异常的意思是让大家在IndexController/HomeController/WelcomeController上明确标注@Path("")
+                throw new IllegalArgumentException("please add @Path(\"\") to " + clazz.getName());
+            } else {
+                controllerPaths = new String[] { "/" + controllerName };
+            }
         }
         // 这个Controller是否已经在Context中配置了?
         // 如果使用Context配置，就不需要在这里实例化

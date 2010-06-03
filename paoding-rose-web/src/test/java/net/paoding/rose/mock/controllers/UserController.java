@@ -3,11 +3,18 @@ package net.paoding.rose.mock.controllers;
 import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.annotation.Param;
 import net.paoding.rose.web.annotation.rest.Get;
+import net.paoding.rose.web.annotation.rest.Post;
 
 public class UserController {
 
+    @Get( { "", "index" })
     public String index() {
         return "index";
+    }
+
+    @Get("alias$1")
+    public String alias(String name) {
+        return name == null ? "ALIAS_FAIL" : name;
     }
 
     @Get("{id}")
@@ -26,6 +33,7 @@ public class UserController {
         return "account_" + id;
     }
 
+    @Post
     public String post() {
         return "POST";
     }

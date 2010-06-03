@@ -21,7 +21,6 @@ package net.paoding.rose.web.impl.thread;
 import javax.servlet.http.HttpServletRequest;
 
 import net.paoding.rose.web.impl.mapping.Mapping;
-import net.paoding.rose.web.impl.mapping.MatchResult;
 
 /**
  * 一个 {@link Engine} 封装了对某种符合要求的请求的某种处理。Rose 对一次WEB请求的处理最终落实为对一些列的
@@ -51,7 +50,7 @@ public interface Engine {
      * @param mr
      * @throws Throwable
      */
-    public Object execute(Rose rose, MatchResult mr) throws Throwable;
+    public Object execute(Rose rose) throws Throwable;
 
     /**
      * 销毁该引擎，在系统关闭或其他情况时
