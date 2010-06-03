@@ -12,6 +12,7 @@ public class UserController {
         return "index";
     }
 
+    // 没有/结尾，则aliasxyz和aliasxyz/豆浆调用同一个方法
     @Get("alias$1")
     public String alias(String name) {
         return name == null ? "ALIAS_FAIL" : name;
@@ -26,6 +27,30 @@ public class UserController {
             throw new IllegalStateException("request.getParameter should return params in uri");
         }
         return id;
+    }
+
+    // 有/结尾，则/12345/将调用show2而非show
+    @Get("{id}/")
+    public int show2(@Param("id") Integer id, Invocation inv) {
+        if (!id.toString().equals(inv.getParameter("id"))) {
+            throw new IllegalStateException("inv.getParameter should return params in uri");
+        }
+        if (!String.valueOf(id).equals(inv.getRequest().getParameter("id"))) {
+            throw new IllegalStateException("request.getParameter should return params in uri");
+        }
+        return id * 2;
+    }
+
+    // 假设设置了{id}/404/而没有设置{id}/404，则访问/12345/404将404
+    @Get("{id}/404/")
+    public int show404(@Param("id") Integer id, Invocation inv) {
+        if (!id.toString().equals(inv.getParameter("id"))) {
+            throw new IllegalStateException("inv.getParameter should return params in uri");
+        }
+        if (!String.valueOf(id).equals(inv.getRequest().getParameter("id"))) {
+            throw new IllegalStateException("request.getParameter should return params in uri");
+        }
+        return id * 2;
     }
 
     @Get("{id}/account")

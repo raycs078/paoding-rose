@@ -138,16 +138,41 @@ public class MappingNode implements Comparable<MappingNode> {
         // 给当前判断结点判断的path
         String remaining = requestPath.getRosePath();
 
+        // mark代表一个已经匹配了/结尾的路径了，但是还想去看看有没有更能处理/结尾的，在去看看之前做一个记号，万一不成功要退回来。
+        int mark = -1;
+
+        // 最后一次匹配结果
+        MatchResult last = null;
+
         // 开始匹配，直至成功或失败
         while (true) {
             //
-            if ((remaining.length() == 0 || remaining.equals("/")) && curNode != this) {
+            if (remaining.length() == 0 && curNode != this) {
+                if (mark >= 0 && last.getMappingNode().getLeafEngines().size() == 0) {
+                    // block a
+                    while (mark < matchResults.size()) {
+                        matchResults.remove(matchResults.size() - 1);
+                    }
+                }
                 if (debugEnabled) {
                     logger.debug("['" + requestPath.getRosePath() + "'] matched over.");
                 }
                 return matchResults;
             }
+            if (remaining.equals("/")) {
+                mark = matchResults.size();
+            }
             if (curNode == null) {
+                if (mark >= 0) {
+                    // block b=block a
+                    while (mark < matchResults.size()) {
+                        matchResults.remove(matchResults.size() - 1);
+                    }
+                    if (debugEnabled) {
+                        logger.debug("['" + requestPath.getRosePath() + "'] matched over.");
+                    }
+                    return matchResults;
+                }
                 if (debugEnabled) {
                     logger.debug("['" + requestPath.getRosePath() + "'] not matched");
                 }
@@ -156,10 +181,10 @@ public class MappingNode implements Comparable<MappingNode> {
             // 当前结点的匹配结果result: 如果能够匹配path成功，一定会返回一个非空的result
             // 一旦result非空，这个请求只能在这个结点中处理了，不可能再由其它结点处理，
             // 即，如果因为某些原因本结点无法处理此请求，可以直接得出结论：这个请求不能被处理了
-            final MatchResult result = curNode.getMapping().match(remaining);
+            last = curNode.getMapping().match(remaining);
 
             // 当前结点打不赢 
-            if (result == null) {
+            if (last == null) {
                 // 兄弟，你上!
                 curNode = curNode.sibling;
                 continue;
@@ -167,12 +192,12 @@ public class MappingNode implements Comparable<MappingNode> {
 
             if (debugEnabled) {
                 logger.debug("['" + requestPath.getRosePath() + "'] matched(" //
-                        + (matchResults.size() + 1) + "): '" + result.getValue() + "'");
+                        + (matchResults.size() + 1) + "): '" + last.getValue() + "'");
             }
 
             // add to results for return
-            matchResults.add(result);
-            int len = result.getValue().length();
+            matchResults.add(last);
+            int len = last.getValue().length();
             if (len == 0 && curNode != this) {
                 throw new IllegalArgumentException("empty got by mapping " + curNode.getMapping());
             }
