@@ -1,5 +1,5 @@
 /*
- * Copyright 2007-2009 the original author or authors.
+ * Copyright 2007-2010 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,6 @@ import net.paoding.rose.util.SpringUtils;
 import net.paoding.rose.web.ControllerErrorHandler;
 import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.annotation.NotForSubModules;
-import net.paoding.rose.web.impl.mapping.MatchResult;
 import net.paoding.rose.web.impl.module.Module;
 
 import org.apache.commons.logging.Log;
@@ -98,9 +97,8 @@ public class ModuleEngine implements Engine {
     }
 
     @Override
-    public Object execute(Rose rose, MatchResult mr) throws Throwable {
+    public Object execute(Rose rose) throws Throwable {
         Invocation inv = rose.getInvocation();
-        inv.getRequestPath().setModulePath(mr.getValue());
 
         // 按照Spring规范，设置当前的applicationContext对象到request对象中,用于messageSource/国际化等功能
         inv.getRequest().setAttribute(RoseConstants.WEB_APPLICATION_CONTEXT_ATTRIBUTE,
@@ -111,7 +109,7 @@ public class ModuleEngine implements Engine {
             if (isMultiPartRequest = checkMultipart(inv)) {
                 inv.setAttribute("$$paoding-rose.isMultiPartRequest", Boolean.TRUE);
             }
-            return innerInvoke(rose, mr);
+            return innerInvoke(rose);
         } finally {
             if (isMultiPartRequest) {
                 cleanupMultipart(inv);
@@ -119,7 +117,7 @@ public class ModuleEngine implements Engine {
         }
     }
 
-    private Object innerInvoke(Rose rose, MatchResult mr) throws Throwable {
+    private Object innerInvoke(Rose rose) throws Throwable {
         try {
             return rose.doNext();
         } catch (Throwable invException) {

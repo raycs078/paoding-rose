@@ -35,6 +35,7 @@ import net.paoding.rose.web.annotation.rest.Post;
 import net.paoding.rose.web.annotation.rest.Put;
 import net.paoding.rose.web.annotation.rest.Trace;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.util.ClassUtils;
@@ -91,11 +92,26 @@ public class ControllerRef {
                     if (ignoresCommonMethod(method)) {
                         if (logger.isDebugEnabled()) {
                             logger.debug("ignores common methods of controller "
-                                    + controllerClass.getName() + "." + method.getName());
+                                    + controllerClass.getName() + "#" + method.getName());
                         }
                     } else {
+                        // TODO: 这个代码是为了使从0.9到1.0比较顺畅而做的判断，201007之后可以考虑删除掉
+                        if ("get".equals(method.getName()) || "index".equals(method.getName())) {
+                            // 这个异常的意思是让大家在get/index上明确标注@Get，请注意@Get的意思
+                            throw new IllegalArgumentException("please add @Get to "
+                                    + controllerClass.getName() + "#" + method.getName());
+                        }
+                        if ("post".equals(method.getName()) || "delete".equals(method.getName())
+                                || "put".equals(method.getName())) {
+                            // 这个异常的意思是让大家在post/delete/put上明确标注@Get/@Delete/@Put，请注意@Get的意思
+                            throw new IllegalArgumentException("please add @"
+                                    + StringUtils.capitalize(method.getName()) + " to "
+                                    + controllerClass.getName() + "#" + method.getName());
+                        }
                         shotcutMappings = new HashMap<ReqMethod, String[]>();
-                        shotcutMappings.put(ReqMethod.ALL, new String[] { method.getName() });
+                        shotcutMappings.put(ReqMethod.GET, new String[] { "/" + method.getName() });
+                        shotcutMappings
+                                .put(ReqMethod.POST, new String[] { "/" + method.getName() });
                     }
                 }
                 if (shotcutMappings.size() > 0) {
@@ -137,6 +153,14 @@ public class ControllerRef {
             } else if (annotation instanceof Trace) {
                 restMethods.put(ReqMethod.TRACE, ((Trace) annotation).value());
             } else {}
+        }
+        for (String[] paths : restMethods.values()) {
+            for (int i = 0; i < paths.length; i++) {
+                String path = paths[i];
+                if (path.length() > 0 && path.charAt(0) != '/') {
+                    paths[i] = "/" + path;
+                }
+            }
         }
         return restMethods;
     }

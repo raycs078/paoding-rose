@@ -19,10 +19,10 @@ import javax.servlet.http.HttpServletRequest;
 
 import junit.framework.TestCase;
 import net.paoding.rose.web.annotation.ReqMethod;
-import net.paoding.rose.web.impl.mapping.MatchResult;
 import net.paoding.rose.web.impl.mapping.EngineGroup;
 import net.paoding.rose.web.impl.mapping.EngineGroupImpl;
 import net.paoding.rose.web.impl.thread.Engine;
+import net.paoding.rose.web.impl.thread.LinkedEngine;
 import net.paoding.rose.web.impl.thread.Rose;
 
 /**
@@ -40,7 +40,7 @@ public class EngineGroupTest extends TestCase {
         }
 
         @Override
-        public Object execute(Rose rose, MatchResult mr) throws Throwable {
+        public Object execute(Rose rose) throws Throwable {
             return null;
         }
 
@@ -57,14 +57,13 @@ public class EngineGroupTest extends TestCase {
 
     private Engine postEngine = new Engine() {
 
-
         @Override
         public int isAccepted(HttpServletRequest rose) {
             return 1;
         }
 
         @Override
-        public Object execute(Rose rose, MatchResult mr) throws Throwable {
+        public Object execute(Rose rose) throws Throwable {
             return null;
         }
 
@@ -81,14 +80,13 @@ public class EngineGroupTest extends TestCase {
 
     private Engine defEngine = new Engine() {
 
-
         @Override
         public int isAccepted(HttpServletRequest rose) {
             return 1;
         }
 
         @Override
-        public Object execute(Rose rose, MatchResult mr) throws Throwable {
+        public Object execute(Rose rose) throws Throwable {
             return null;
         }
 
@@ -105,11 +103,11 @@ public class EngineGroupTest extends TestCase {
 
     public void testGetPost() {
         EngineGroup engineGroup = new EngineGroupImpl();
-        engineGroup.addEngine(ReqMethod.GET, getEngine);
-        engineGroup.addEngine(ReqMethod.POST, postEngine);
+        engineGroup.addEngine(ReqMethod.GET, new LinkedEngine(null, getEngine, null));
+        engineGroup.addEngine(ReqMethod.POST, new LinkedEngine(null, postEngine, null));
 
-        assertSame(getEngine, engineGroup.getEngines(ReqMethod.GET)[0]);
-        assertSame(postEngine, engineGroup.getEngines(ReqMethod.POST)[0]);
+        assertSame(getEngine, engineGroup.getEngines(ReqMethod.GET)[0].getTarget());
+        assertSame(postEngine, engineGroup.getEngines(ReqMethod.POST)[0].getTarget());
 
         String msg = "not allowed method should return engines with length is zero";
         assertEquals(msg, 0, engineGroup.getEngines(ReqMethod.PUT).length);
@@ -121,17 +119,17 @@ public class EngineGroupTest extends TestCase {
 
     public void testNotOverrideByAll() {
         EngineGroup engineGroup = new EngineGroupImpl();
-        engineGroup.addEngine(ReqMethod.GET, getEngine);
-        engineGroup.addEngine(ReqMethod.ALL, defEngine);
-        engineGroup.addEngine(ReqMethod.POST, postEngine);
+        engineGroup.addEngine(ReqMethod.GET, new LinkedEngine(null, getEngine, null));
+        engineGroup.addEngine(ReqMethod.ALL, new LinkedEngine(null, defEngine, null));
+        engineGroup.addEngine(ReqMethod.POST, new LinkedEngine(null, postEngine, null));
 
-        assertSame(getEngine, engineGroup.getEngines(ReqMethod.GET)[0]);
-        assertSame(defEngine, engineGroup.getEngines(ReqMethod.GET)[1]);
-        assertSame(defEngine, engineGroup.getEngines(ReqMethod.POST)[0]);
-        assertSame(postEngine, engineGroup.getEngines(ReqMethod.POST)[1]);
+        assertSame(getEngine, engineGroup.getEngines(ReqMethod.GET)[0].getTarget());
+        assertSame(defEngine, engineGroup.getEngines(ReqMethod.GET)[1].getTarget());
+        assertSame(defEngine, engineGroup.getEngines(ReqMethod.POST)[0].getTarget());
+        assertSame(postEngine, engineGroup.getEngines(ReqMethod.POST)[1].getTarget());
 
-        assertSame(defEngine, engineGroup.getEngines(ReqMethod.PUT)[0]);
-        assertSame(defEngine, engineGroup.getEngines(ReqMethod.DELETE)[0]);
+        assertSame(defEngine, engineGroup.getEngines(ReqMethod.PUT)[0].getTarget());
+        assertSame(defEngine, engineGroup.getEngines(ReqMethod.DELETE)[0].getTarget());
 
         assertEquals("[GET, POST, DELETE, PUT, HEAD, OPTIONS, TRACE]", engineGroup.toString());
     }

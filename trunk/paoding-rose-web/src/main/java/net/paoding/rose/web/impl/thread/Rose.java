@@ -29,12 +29,14 @@ import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.InvocationUtils;
 import net.paoding.rose.web.RequestPath;
 import net.paoding.rose.web.annotation.ReqMethod;
+import net.paoding.rose.web.impl.mapping.EngineGroup;
 import net.paoding.rose.web.impl.mapping.MappingNode;
 import net.paoding.rose.web.impl.mapping.MatchResult;
 import net.paoding.rose.web.impl.module.Module;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.util.Assert;
 
 /**
  * 
@@ -57,11 +59,13 @@ public class Rose implements EngineChain {
 
     private boolean started;
 
+    private List<LinkedEngine> engines = new ArrayList<LinkedEngine>(6);
+
     private List<MatchResult> matchResults;
 
     private InvocationBean inv;
 
-    private int nextIndexOfChain;
+    private int curIndexOfChain;
 
     private final LinkedList<AfterCompletion> afterCompletions = new LinkedList<AfterCompletion>();
 
@@ -86,8 +90,8 @@ public class Rose implements EngineChain {
         return modules;
     }
 
-    public List<MatchResult> getMatchResults() {
-        return matchResults;
+    public List<LinkedEngine> getEngines() {
+        return engines;
     }
 
     /**
@@ -105,71 +109,123 @@ public class Rose implements EngineChain {
         return innerStart();
     }
 
+    public List<MatchResult> getMatchResults() {
+        return matchResults;
+    }
+
     /**
      * @throws IndexOutOfBoundsException
      */
     @Override
     public Object doNext() throws Throwable {
-        MatchResult matchResult = matchResults.get(nextIndexOfChain++);
-        Engine engine = matchResult.getEngine();
-        return engine.execute(this, matchResult);
+        return engines.get(--curIndexOfChain).execute(this);
     }
 
     private boolean innerStart() throws Throwable {
-        final ArrayList<MatchResult> matchResults = mappingTree.match(originalHttpRequest,
-                this.path);
-        final MatchResult result = matchResults.get(matchResults.size() - 1);
-
-        // 完成一次成功匹配需要走到树的叶子结点，并且是方法级别的结点
-        if (!result.getMappingNode().isFileType()) {
+        final List<MatchResult> matchResults = mappingTree.match(originalHttpRequest, this.path);
+        if (matchResults == null) {
+            // not rose uri
             if (logger.isDebugEnabled()) {
-                logger.debug("[" + this.path + "] matchResults.size=" + matchResults.size());
+                logger.debug("not rose uri");
             }
             return false;
         }
 
-        // but 405 ?
-        // TODO: 有些result.getEngine为null的，但不一定是405，比如@IfParamExists的，是为404
-        if (result.getEngine() == null) {
-            /* 405 Method Not Allowed
-             * The method specified in the Request-Line is not allowed for the
-             * resource identified by the Request-URI. The response MUST include an
-             * Allow header containing a list of valid methods for the requested
-             * resource.
-             */
-            StringBuilder allow = new StringBuilder();
-            final String gap = ", ";
-            for (ReqMethod method : result.getAllowedMethods()) {
-                allow.append(method.toString()).append(gap);
+        final MatchResult lastMatched = matchResults.get(matchResults.size() - 1);
+        final EngineGroup leafEngineGroup = lastMatched.getMappingNode().getLeafEngines();
+        final LinkedEngine leafEngine = select(leafEngineGroup.getEngines(path.getMethod()));
+        if (leafEngine == null) {
+            if (leafEngineGroup.size() == 0) {
+                // not rose uri
+                if (logger.isDebugEnabled()) {
+                    logger.debug("not rose uri, not exits leaf engines for it ");
+                }
+                return false;
+
+            } else {
+                // 405 Method Not Allowed
+                /* 
+                 * The method specified in the Request-Line is not allowed for the
+                 * resource identified by the Request-URI. The response MUST include an
+                 * Allow header containing a list of valid methods for the requested
+                 * resource.
+                 */
+                StringBuilder allow = new StringBuilder();
+                final String gap = ", ";
+
+                for (ReqMethod method : leafEngineGroup.getAllowedMethods()) {
+                    allow.append(method.toString()).append(gap);
+                }
+                if (allow.length() > 0) {
+                    allow.setLength(allow.length() - gap.length());
+                }
+                originalHttpResponse.addHeader("Allow", allow.toString());
+                originalHttpResponse.sendError(405, this.path.getUri());
+
+                // true: don't forward to next filter or servlet
+                return true;
             }
-            if (allow.length() > 0) {
-                allow.setLength(allow.length() - gap.length());
-            }
-            originalHttpResponse.addHeader("Allow", allow.toString());
-            originalHttpResponse.sendError(405, this.path.getUri());
-            
-            // true: don't forward to next filter or servlet
-            return true;
+
         }
 
-        // ok, got it
+        // 完成一次成功匹配需要走到树的叶子结点，并且是方法级别的结点
+        // bind engines
+        LinkedEngine tempEngine = leafEngine;
+        MappingNode moduleNode = null;
+        MappingNode controllerNode = null;
+        while (tempEngine != null) {
+            engines.add(tempEngine);
+            Class<? extends Engine> target = tempEngine.getTarget().getClass();
+            if (target == ModuleEngine.class) {
+                moduleNode = tempEngine.getNode();
+            } else if (target == ControllerEngine.class) {
+                controllerNode = tempEngine.getNode();
+            }
+            tempEngine = tempEngine.getParent();
+        }
+        // set module/controller/action path to RequsetPath object
+        StringBuilder sb = new StringBuilder(path.getUri().length());
+        MatchResult moduleMatchResult = null;
+        MatchResult controllerMatchResult = null;
+        for (int i = 0; i < matchResults.size(); i++) {
+            MatchResult matchResult = matchResults.get(i);
+            sb.append(matchResult.getValue());
+            if (matchResult.getMappingNode() == moduleNode) {
+                moduleMatchResult = matchResult;
+                path.setModulePath(sb.toString()); // modulePath
+                Assert.notNull(engines.get(2));
+                sb.setLength(0);
+            }
+            if (matchResult.getMappingNode() == controllerNode) {
+                controllerMatchResult = matchResult;
+                path.setControllerPath(sb.toString()); // controllerPath
+                Assert.notNull(engines.get(1));
+                sb.setLength(0);
+            }
+        }
+        path.setActionPath(sb.toString()); // actionPath
+        Assert.notNull(moduleMatchResult);
+        Assert.notNull(controllerMatchResult);
         this.matchResults = matchResults;
 
-        Map<String, String> mrParameters = null;
-        for (int i = 0; i < matchResults.size(); i++) {
-            MatchResult tmr = matchResults.get(i);
-            if (tmr.getParameterCount() > 0) {
-                if (mrParameters == null) {
-                    mrParameters = new HashMap<String, String>(6);
+        this.curIndexOfChain = engines.size();
+
+        Map<String, String> uriParameters = null;
+        for (int i = matchResults.size() - 1; i >= 0; i--) {
+            MatchResult matchResult = matchResults.get(i);
+            if (matchResult.getParameterCount() > 0) {
+                if (uriParameters == null) {
+                    uriParameters = new HashMap<String, String>(6);
                 }
-                for (String name : tmr.getParameterNames()) {
-                    mrParameters.put(name, tmr.getParameter(name));
+                for (String name : matchResult.getParameterNames()) {
+                    uriParameters.put(name, matchResult.getParameter(name));
                 }
             }
         }
+
         HttpServletRequest httpRequest = originalHttpRequest;
-        if (mrParameters != null && mrParameters.size() > 0) {
-            httpRequest = new ParameteredUriRequest(originalHttpRequest, mrParameters);
+        if (uriParameters != null && uriParameters.size() > 0) {
+            httpRequest = new ParameteredUriRequest(originalHttpRequest, uriParameters);
         }
 
         // originalThreadRequest可能为null，特别是在portal框架下
@@ -218,6 +274,20 @@ public class Rose implements EngineChain {
         }
 
         return true;
+    }
+
+    private LinkedEngine select(LinkedEngine[] engines) {
+        LinkedEngine selectedEngine = null;
+        int score = 0;
+
+        for (LinkedEngine engine : engines) {
+            int candidate = engine.isAccepted(this.originalHttpRequest);
+            if (candidate > score) {
+                selectedEngine = engine;
+                score = candidate;
+            }
+        }
+        return selectedEngine;
     }
 
     @Override

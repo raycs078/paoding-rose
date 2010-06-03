@@ -19,6 +19,7 @@ import java.util.List;
 
 import net.paoding.rose.web.annotation.ReqMethod;
 import net.paoding.rose.web.impl.thread.Engine;
+import net.paoding.rose.web.impl.thread.LinkedEngine;
 
 /**
  * {@link EngineGroup} 代表一个 {@link Engine} 集合，一个 {@link Mapping} 可能含一个
@@ -39,7 +40,13 @@ public interface EngineGroup {
      * @param method 可以使用 {@link ReqMethod#ALL}
      * @param engine
      */
-    public void addEngine(ReqMethod method, Engine engine);
+    public void addEngine(ReqMethod method, LinkedEngine engine);
+
+    /**
+     * 
+     * @return
+     */
+    public int size();
 
     /**
      * 返回某种请求方法的处理逻辑
@@ -47,7 +54,7 @@ public interface EngineGroup {
      * @param method
      * @return 如果没有注册处理逻辑，返回一个长度为0的数组
      */
-    public Engine[] getEngines(ReqMethod method);
+    public LinkedEngine[] getEngines(ReqMethod method);
 
     /**
      * 是否支持此请求方法?

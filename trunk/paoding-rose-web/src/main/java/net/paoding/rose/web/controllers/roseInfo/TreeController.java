@@ -21,10 +21,10 @@ import net.paoding.rose.web.annotation.HttpFeatures;
 import net.paoding.rose.web.annotation.Path;
 import net.paoding.rose.web.annotation.ReqMethod;
 import net.paoding.rose.web.annotation.rest.Get;
-import net.paoding.rose.web.impl.mapping.MappingNode;
 import net.paoding.rose.web.impl.mapping.EngineGroup;
+import net.paoding.rose.web.impl.mapping.MappingNode;
 import net.paoding.rose.web.impl.thread.ActionEngine;
-import net.paoding.rose.web.impl.thread.Engine;
+import net.paoding.rose.web.impl.thread.LinkedEngine;
 import net.paoding.rose.web.impl.thread.Rose;
 
 /**
@@ -32,7 +32,7 @@ import net.paoding.rose.web.impl.thread.Rose;
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
-@Path({ "tree.xml", "tree" })
+@Path( { "tree.xml", "tree" })
 public class TreeController {
 
     @Get
@@ -42,36 +42,36 @@ public class TreeController {
         StringBuilder sb = new StringBuilder(2048);
         sb.append("@<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
         sb.append("<rose-web>");
-        println(root, sb);
+        println(root, "", sb);
         sb.append("</rose-web>");
         return sb.toString();
     }
 
-    private void println(MappingNode parent, StringBuilder sb) {
-        MappingNode child = parent.getLeftMostChild();
-        while (child != null) {
-            sb.append("<node path=\"").append(child.getPath()).append(
-                    "\" engineGroupCount=\"" + child.getEngineGroups().length + "\">");
-            if (child.getDeep() == 3) {
-                for (EngineGroup engineGroup : child.getEngineGroups()) {
-                    for (ReqMethod method : engineGroup.getAllowedMethods()) {
-                        for (Engine engine : engineGroup.getEngines(method)) {
-                            ActionEngine action = (ActionEngine) engine;
-                            Method m = action.getMethod();
-                            Class<?> cc = action.getControllerClass();
-                            String rm = method.toString();
-                            sb.append("<allowed ");
-                            sb.append(rm + "=\"" + cc.getSimpleName() + " ." + m.getName() + "\" ");
-                            sb.append("package=\"" + m.getDeclaringClass().getPackage().getName()
-                                    + "\" ");
-                            sb.append(" />");
-                        }
-                    }
+    private void println(final MappingNode node, String prefix, StringBuilder sb) {
+
+        sb.append("<node path=\"").append(prefix + node.getMappingPath()).append("\">");
+        //
+        EngineGroup leaf = node.getLeafEngines();
+        if (leaf.size() > 0) {
+            for (ReqMethod method : leaf.getAllowedMethods()) {
+                for (LinkedEngine engine : leaf.getEngines(method)) {
+                    ActionEngine action = (ActionEngine) engine.getTarget();
+                    Method m = action.getMethod();
+                    Class<?> cc = action.getControllerClass();
+                    String rm = method.toString();
+                    sb.append("<allowed ");
+                    sb.append(rm + "=\"" + cc.getSimpleName() + "#" + m.getName() + "\" ");
+                    sb.append("package=\"" + m.getDeclaringClass().getPackage().getName() + "\" ");
+                    sb.append(" />");
                 }
             }
-            println(child, sb);
-            child = child.getSibling();
-            sb.append("</node>");
         }
+
+        MappingNode child = node.getLeftMostChild();
+        while (child != null) {
+            println(child, prefix + node.getMappingPath(), sb);
+            child = child.getSibling();
+        }
+        sb.append("</node>");
     }
 }

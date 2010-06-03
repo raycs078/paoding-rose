@@ -4,8 +4,14 @@ import java.io.IOException;
 
 import javax.servlet.ServletException;
 
+import net.paoding.rose.mock.controllers.errorhandler.MainController;
 import net.paoding.rose.testcases.AbstractControllerTest;
 
+/**
+ * @see MainController
+ * @author 王志亮 [qieqie.wang@gmail.com]
+ *
+ */
 public class ErrorHanlderTest extends AbstractControllerTest {
 
     public void testIndex() throws ServletException, IOException {

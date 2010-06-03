@@ -39,7 +39,6 @@ import net.paoding.rose.web.annotation.HttpFeatures;
 import net.paoding.rose.web.annotation.IfParamExists;
 import net.paoding.rose.web.annotation.Intercepted;
 import net.paoding.rose.web.annotation.Return;
-import net.paoding.rose.web.impl.mapping.MatchResult;
 import net.paoding.rose.web.impl.module.Module;
 import net.paoding.rose.web.impl.validation.ParameterBindingResult;
 import net.paoding.rose.web.paramresolver.MethodParameterResolver;
@@ -213,10 +212,10 @@ public final class ActionEngine implements Engine {
 
                     @Override
                     public int check(HttpServletRequest request) {
-                        
+
                         // TODO: request.getParameter将导致request的queryString立即被解析，将使@HttpFeature失效
                         String paramValue = request.getParameter(paramName);
-                        
+
                         if (StringUtils.isNotBlank(paramValue)) { //规则中没有约束参数值，所以只要存在就ok
                             return 10;
                         } else {
@@ -302,17 +301,16 @@ public final class ActionEngine implements Engine {
     }
 
     @Override
-    public Object execute(Rose rose, MatchResult mr) throws Throwable {
+    public Object execute(Rose rose) throws Throwable {
         try {
-            return innerExecute(rose, mr);
+            return innerExecute(rose);
         } catch (Throwable local) {
             throw createException(rose, local);
         }
     }
 
-    protected Object innerExecute(Rose rose, MatchResult mr) throws Throwable {
+    protected Object innerExecute(Rose rose) throws Throwable {
         Invocation inv = rose.getInvocation();
-        inv.getRequestPath().setActionPath(mr.getValue());
         // applies http features before the resolvers
         applyHttpFeatures(inv);
 

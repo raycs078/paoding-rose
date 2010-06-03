@@ -21,15 +21,12 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
-import net.paoding.rose.web.annotation.ReqMethod;
-import net.paoding.rose.web.impl.thread.Engine;
-
 /**
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
-class MatchResultImpl implements MatchResult {
+public class MatchResultImpl implements MatchResult {
 
     /** 结果字符串 */
     private String value;
@@ -38,13 +35,6 @@ class MatchResultImpl implements MatchResult {
 
     /** 从结果字符串中得到的资源参数值(如果该资源使用了使用了参数化的映射地址) */
     private Map<String, String> parameters;
-
-    private Engine engine;
-
-    private final static List<ReqMethod> allMethods = Collections.unmodifiableList(ReqMethod.ALL
-            .parse());
-
-    private List<ReqMethod> allowedMethods = allMethods;
 
     /**
      * 创建新的匹配结果对象
@@ -94,22 +84,14 @@ class MatchResultImpl implements MatchResult {
     }
 
     @Override
-    public Engine getEngine() {
-        return engine;
-    }
-
-    @Override
-    public void setEngine(Engine engine) {
-        this.engine = engine;
-    }
-
-    @Override
-    public List<ReqMethod> getAllowedMethods() {
-        return allowedMethods;
-    }
-
-    @Override
-    public void setAllowedMethods(List<ReqMethod> allowed) {
-        this.allowedMethods = allowed;
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        if (parameters != null && parameters.size() > 0) {
+            for (Map.Entry<String, String> entry : parameters.entrySet()) {
+                sb.append(entry.getKey()).append("=").append(entry.getValue()).append("&");
+            }
+            sb.setLength(sb.length() - 1);
+        }
+        return getValue() + ((sb.length() == 0) ? "" : "[" + sb.toString() + "]");
     }
 }
