@@ -12,8 +12,16 @@ public class UserControllerTest extends AbstractControllerTest {
         assertEquals("123", invoke("/user/alias123"));
     }
 
+    public void testAlias1() throws ServletException, IOException {
+        assertEquals("123", invoke("/user/alias123/"));
+    }
+
     public void testAlias2() throws ServletException, IOException {
         assertEquals("xyz", invoke("/user/aliasxyz"));
+    }
+
+    public void testAlias3() throws ServletException, IOException {
+        assertEquals("xyz", invoke("/user/aliasxyz/"));
     }
 
     public void testGetREST() throws ServletException, IOException {
@@ -30,6 +38,14 @@ public class UserControllerTest extends AbstractControllerTest {
 
     public void testShow() throws ServletException, IOException {
         assertEquals(1234567, invoke("/user/1234567"));
+    }
+
+    public void testShow2() throws ServletException, IOException {
+        assertEquals(1234567 * 2, invoke("/user/1234567/"));
+    }
+
+    public void testShow404() throws ServletException, IOException {
+        assertNull(invoke("/user/1234567/404"));
     }
 
     public void testAccount() throws ServletException, IOException {
