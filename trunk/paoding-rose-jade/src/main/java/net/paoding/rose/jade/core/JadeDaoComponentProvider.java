@@ -63,7 +63,7 @@ import org.springframework.util.Assert;
  */
 public class JadeDaoComponentProvider implements ResourceLoaderAware {
 
-    protected static final String DEFAULT_RESOURCE_PATTERN = "**/*.class";
+    protected static final String DEFAULT_RESOURCE_PATTERN = "**/*DAO.class";
 
     protected final Log logger = LogFactory.getLog(getClass());
 
@@ -157,20 +157,6 @@ public class JadeDaoComponentProvider implements ResourceLoaderAware {
     }
 
     /**
-     * Register the default filter for {@link Component @Component}. This
-     * will implicitly register all annotations that have the
-     * {@link Component @Component} meta-annotation including the
-     * {@link Repository @Repository}, {@link Service @Service}, and
-     * {@link Controller @Controller} stereotype annotations.
-     */
-    protected void registerDefaultFilters() {
-        // 这个excludeFilter有bug，不起用，改用直接DAO endWiths判断
-        //        addExcludeFilter(new InverseTypeFilter(new RegexPatternTypeFilter(Pattern.compile(
-        //                "DAO$", Pattern.CASE_INSENSITIVE))));
-        addIncludeFilter(new AnnotationTypeFilter(DAO.class));
-    }
-
-    /**
      * Scan the class path for candidate components.
      * 
      * @param basePackage the package to check for annotated classes
@@ -202,14 +188,6 @@ public class JadeDaoComponentProvider implements ResourceLoaderAware {
                         logger.debug("Ignored because not exists:" + resource);
                     }
                 } else if (resource.isReadable()) {
-                    String fileName = resource.getFilename();
-                    if (!fileName.endsWith("Dao.class") && !fileName.endsWith("DAO.class")) {
-                        if (traceEnabled) {
-                            logger.trace("Ignored because not ends with DAO/Dao:" + resource);
-                        }
-                        continue;
-                    }
-
                     MetadataReader metadataReader = this.metadataReaderFactory
                             .getMetadataReader(resource);
                     if (isCandidateComponent(metadataReader)) {
@@ -243,6 +221,17 @@ public class JadeDaoComponentProvider implements ResourceLoaderAware {
             throw new BeanDefinitionStoreException("I/O failure during jade scanning", ex);
         }
         return candidates;
+    }
+
+    /**
+     * Register the default filter for {@link Component @Component}. This
+     * will implicitly register all annotations that have the
+     * {@link Component @Component} meta-annotation including the
+     * {@link Repository @Repository}, {@link Service @Service}, and
+     * {@link Controller @Controller} stereotype annotations.
+     */
+    protected void registerDefaultFilters() {
+        addIncludeFilter(new AnnotationTypeFilter(DAO.class));
     }
 
     /**
