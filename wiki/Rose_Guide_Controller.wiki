@@ -30,9 +30,9 @@ public class UserController {
 
  * 自定义映射规则：@Path("user-xxx") 可修改UserXxxController的映射规则变为：/user-xxx --> UserXxxController；使用自定义映射后，原默认的映射规则不再存在
 
- * 可使用[Rose_Guide_ReqMapping 正则表达式]定义映射规则： path = {{{"user-$id:[0-9]+"}}}
+ * 可使用[Rose_Guide_ReqMapping 正则表达式]定义映射规则： @Path({{{"user-{id:[0-9]+"}}}})
 
- * 可写path = {"xxx", "yyy"}实现多个地址都映射到该控制器 
+ * 可写@Path({"xxx", "yyy"})实现多个地址都映射到该控制器 
 
 =控制器域成员(Field)=
  * 控制器是以单例的形式存在的，对于request-scope的信息，不能使用field记录
