@@ -111,10 +111,10 @@ http://127.0.0.1/user/map?map:1=paoding&map:2=rose <br>
 }}}
 = 6、表单提交 =
 
-POST http://127.0.0.1/user/1?name=rose
+POST http://127.0.0.1/user?id=1&name=rose
 
 {{{
-    @Post("{id}")
+    @Post
     public String post(User user) {
          return "@" + user.getId() + "=" + user.getName();
     }
@@ -123,10 +123,10 @@ POST http://127.0.0.1/user/1?name=rose
 = 7、设置内嵌对象的属性值 =
 
 
-POST http://127.0.0.1/user/1?name=rose&level.id=3
+POST http://127.0.0.1/user?id=1&name=rose&level.id=3
 
 {{{
-    @Post("{id}")
+    @Post
     public String post(User user) {
          return "@" + user.getId() + "; level.id=" + user.getLevel().getId();
     }
