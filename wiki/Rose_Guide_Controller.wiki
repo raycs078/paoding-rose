@@ -116,9 +116,9 @@ public Object show(@Param("id") int id) throws Exception {
 =action方法映射规则=
  * 默认映射规则： /list --> public [返回类型] *list*(参数列表) 异常声明 方法体
 
- * 自定义映射规则：@Path("query") 可修改方法映射规则变为：/query --> 到所在的方法，原默认的映射规则不再存在；此时方法名不再参与映射规则判断中
+ * 自定义映射规则：@Get("query")或@Post("query") 可修改方法映射规则变为：/query --> 到所在的方法，原默认的映射规则不再存在；此时方法名不再参与映射规则判断中
 
- * 可使用[Rose_Guide_ReqMapping 正则表达式]定义映射规则： @Get{{{"user/$id:[0-9]+"}}}等
+ * 可使用[Rose_Guide_ReqMapping 正则表达式]定义映射规则： @Get({{{"user/{id:[0-9]+"}}}})等
 
  * 可写@Get({"xxx", "yyy"})实现多个地址都映射到该方法 
 
@@ -150,7 +150,7 @@ public Object show(@Param("id") int id) throws Exception {
 =action方法参数说明表=
 ||*内置参数*||            || || 
 ||          || Invocation inv|| Rose封装与本次调用环境相关的对象，以下的内置参数都可以通过inv的方法获取到 ||
-||          || Model model     || 同 inv.getModel()； 将对象add到model中，可在页面中使用类似$user.id的表达式||
+||          || Model model     || 同 inv.getModel()； 将对象add到model中，可在页面中使用类似"{user.id}"的表达式||
 ||          || ServletContext  || 同 inv.getServletContext()；当前ServletContext对象||
 ||          || ServletRequest|| 当前请求对象||
 ||          || HttpServletRequest || 当前请求对象||
