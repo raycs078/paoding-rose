@@ -73,10 +73,10 @@ public class UserController {
 http://127.0.0.1/u/test
 
 {{{
-import net.paoding.rose.web.annotation.ReqMapping;
+import net.paoding.rose.web.annotation.Path;
 
-// 在控制器上标注@ReqMapping设置path="u"，自定义映射规则(默认是/user，现改为/u)
-@ReqMapping(path = "u")
+// 在控制器上标注@Path设置"u"，自定义映射规则(默认是/user，现改为/u)
+@Path("u")
 public class UserController {
     public String test() {
         return "@" + new java.util.Date();
