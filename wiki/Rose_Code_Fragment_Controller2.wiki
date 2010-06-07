@@ -7,7 +7,7 @@ http://127.0.0.1/user/list-by-group?groupId=123
 
 {{{
 public class UserController {
-    @ReqMapping(path = "list-by-group")
+    @Get("list-by-group")
     public String listByGroup(@Param("groupId") String groupId) {
         return "@${groupId}";
     }
@@ -18,7 +18,7 @@ http://127.0.0.1/user/list-by-group-abc
 
 {{{
 public class UserController {
-    @ReqMapping(path = "list-by-group-$groupId")
+    @Get("list-by-group-$groupId")
     public String listByGroup2(@Param("groupId") int groupId) {
         return "@string-${groupId}";
     }
@@ -29,7 +29,7 @@ http://127.0.0.1/user/list-by-group-123
 
 {{{
 public class UserController {
-    @ReqMapping(path = "list-by-group-$groupId:\\d+")
+    @Get("list-by-group-$groupId:\\d+")
     public String listByGroup3(@Param("groupId") String groupId) {
         return "@int-${groupId}";
     }
@@ -67,7 +67,7 @@ http://127.0.0.1/user/param2?name=rose
 http://127.0.0.1/user/param3/rose
 
 {{{
-    @ReqMapping(path = "param3/$name")
+    @Get("param3/$name")
     public String param3(Invocation inv, @Param("name") String name) {
         // request.getParameter()也能获取@ReqMapping中定义的参数
         return "@method.name=" + name + "; request.param.name=" + inv.getRequest().getParameter("name");
