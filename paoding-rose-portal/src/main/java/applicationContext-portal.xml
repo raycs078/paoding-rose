@@ -10,7 +10,7 @@ http://www.springframework.org/schema/context
 http://www.springframework.org/schema/context/spring-context-2.5.xsd
 http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-2.5.xsd
 http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.5.xsd"
-	default-autowire="byName" default-lazy-init="false">
+	default-lazy-init="true">
 
 	<!-- 两个Resolver以及一个Interceptor是Portal框架插入到Rose的接口实现 -->
 
@@ -32,7 +32,11 @@ http://www.springframework.org/schema/aop http://www.springframework.org/schema/
 	<bean id="portalBeanPostProcessor"
 		class="net.paoding.rose.web.portal.impl.PortalBeanPostProcessor" />
 
-	<bean id="portalFactory" class="net.paoding.rose.web.portal.impl.PortalFactoryImpl">
+	<bean id="portalFactory" class="net.paoding.rose.web.portal.impl.PortalFactoryDelegate">
+		<property name="portalFactoryName" value="laziedPortalFactoryTaget" />
+	</bean>
+
+	<bean id="laziedPortalFactoryTaget" class="net.paoding.rose.web.portal.impl.PortalFactoryImpl">
 		<property name="executorService" ref="portalExecutorService" />
 		<property name="portalListener" ref="portalListeners" />
 	</bean>
