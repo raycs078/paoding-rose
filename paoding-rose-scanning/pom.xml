@@ -9,7 +9,7 @@
 	<url>http://maven.apache.org</url>
 	
 	<properties>
-		<Implementation-Version>0.9.7-20100510</Implementation-Version>
+		<Implementation-Version>1.0-20100604</Implementation-Version>
 	</properties>
 	
 	<dependencies>
@@ -116,7 +116,7 @@
 				<configuration>
 					<archive>
 						<manifestEntries>
-							<Implementation-Title>rose-scanning</Implementation-Title>
+							<Implementation-Title>paoding-rose-scanning</Implementation-Title>
 							<Implementation-Version>${Implementation-Version}</Implementation-Version>
 						</manifestEntries>
 					</archive>
