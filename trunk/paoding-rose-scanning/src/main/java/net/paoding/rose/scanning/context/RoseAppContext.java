@@ -20,6 +20,8 @@ import java.io.IOException;
 import net.paoding.rose.scanning.LoadScope;
 import net.paoding.rose.scanning.context.core.RoseResources;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactoryUtils;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
@@ -38,6 +40,8 @@ import org.springframework.core.io.Resource;
  */
 public class RoseAppContext extends AbstractXmlApplicationContext {
 
+    private Log logger = LogFactory.getLog(getClass());
+
     private String[] scopeValues;
 
     public RoseAppContext() {
@@ -50,6 +54,7 @@ public class RoseAppContext extends AbstractXmlApplicationContext {
 
     public RoseAppContext(LoadScope scope, boolean refresh) {
         this.scopeValues = scope.getScope("applicatonContext");
+        logger.info("create a RoseAppContext, with scope='" + scope + "'");
         if (refresh) {
             refresh();
         }
