@@ -1,0 +1,142 @@
+<wiki:toc max_depth="3" />
+==创建控制器==
+
+1个是Portal主控，另外2个是窗口控制器
+1) 在controllers或子目录下创建Portal控制器：PortalController，创建处理方法，并声明Portal参数
+PortalController.java
+    package com.xiaonei.xxx.controllers;
+ 
+    import net.paoding.rose.web.annotation.ReqMapping;
+    import net.paoding.rose.web.annotation.rest.Get;
+    import net.paoding.rose.web.portal.Portal;
+ 
+    public class PortalController {
+ 
+        @Get
+        public String home(Portal portal) throws Exception {
+            portal.addWindow("weather", "/windows/weather");
+            portal.addWindow("todo", "/windows/todo");
+            return "portal-home";
+        }
+    }
+2) 在controllers.windows下创建可被/windows/weather，/windows/todo访问的控制器以及方法
+WeatherController.java
+    package com.xiaonei.xxx.controllers.windows;
+ 
+    import net.paoding.rose.web.Invocation;
+    import net.paoding.rose.web.annotation.rest.Get;
+ 
+    public class WeatherController {
+ 
+        @Get
+        public String xxx(Invocation inv) {
+            return "@今天天气真好，花儿都开料!";
+        }
+    }
+TodoController.java
+    package com.xiaonei.xxx.controllers.windows;
+ 
+    import net.paoding.rose.web.Invocation;
+    import net.paoding.rose.web.annotation.rest.Get;
+ 
+    public class TodoController {
+        private int count;
+ 
+        @Get
+        public String xxx(Invocation inv, Window window) {
+            List<String> list = new ArrayList<String>();
+            list.add("吃饭");
+            list.add("睡觉");
+            list.add(String.valueOf(count++));
+            inv.addModel("todolist", list);
+            return "todo";
+        }
+    }
+==portal页面==
+
+webapp/views下创建PortalController需要的portal-home.vm
+（没限制只能是vm，亦可使用jsp）
+<html>
+	<head>
+	<link href="/static/portal.css" rel="stylesheet" type="text/css" media="all" />
+	<title>Portal</title>
+	</head>
+ 
+	<body>
+	<h2>Portal</h2>
+ 
+	<div class="window">
+	<div class="title">天气</div>
+	<div class="content">$weather</div>
+	</div>
+ 
+ 
+	<div class="window">
+	<div class="title">待做</div>
+	<div class="content">$todo</div>
+	</div>
+ 
+	</body>
+</html>
+==window页面==
+
+webapp/views/windows创建TodoController需要的页面
+todo.vm
+	<ul>
+	#foreach($item in $todolist)
+	<li>$item</li>
+	#end
+	</ul>
+==css文件==
+
+在webapp/static下
+portal.css
+	.window {
+	  width: 300px;
+	  height: 200px;
+	  border: solid black 1px;
+	  margin-left: 15px;
+	  float: left;
+	  background-color: white;
+	}
+	.window .title {
+	  background-color: black;
+	  color:white;
+	  margin: 2px;
+	  padding-top: 2px;
+	  padding-left: 2px;
+	  height: 26px;
+	}
+	.window .content {
+	  height: 100%
+	  padding-top: 2px;
+	  padding: 2px 2px 0px 2px;
+	}
+==并发数配置==
+
+在web.xml的<web-app>下配置并发参数值：
+	<context-param>
+		<param-name>portalExecutorCorePoolSize</param-name>
+		<param-value>200</param-value>
+	</context-param>
+如果没有配置以上参数，默认portalExecutorCorePoolSize取1，相当于除了http主线程外只有另外1个执行线程，
+这对程序的正确性没有任何影响，只是并发能力下降了，整个portal的执行时间也会变长。
+==高级话题==
+
+1) 可以在PortalController.home方法上设置@PortalSetting(timeout = 100)表示最多等待各个窗口100ms(包括window的页面渲染耗费时间)
+
+2) 可以通过引入xiaonei-commons-interceptors的@Throughput(maxConcurrent = 20)放置在window的xxx方法上，控制最多并发数
+
+3) 可在web.xml配置全局参数设置poral执行器的线程池参数：portalExecutorCorePoolSize、portalExecutorMaxPoolSize、portalExecutorKeepAliveSeconds
+
+参数意义分别参考java.util.concurrent.ThreadPoolExecutor的corePoolSize、maximumPoolSize、keepAliveTime说明
+
+4) 在portal-home页面中的$weather实际是一个net.paoding.rose.web.portal.Window对象，因此可通过$weather.success 判断window的执行是否完成并且是200的，通过$weather.statusCode等了解具体的执行情况。详细请参考net.paoding.rose.web.portal.Window类属性列表。
+
+5) 可在window的控制器TodoController.xxx方法中声明Window window对象，通过window.setTilte(title)或window.set(name, value)相关属性，并在portal-home.vm使用$todo.title
+在todo.vm中，则除了使用todo的名字使用$todo.title，也可以通过$window.title来使用。每个$window在不同的窗口的页面代表自己的Window对象，不会“乱串”
+==启动服务器==
+
+运行该webapp，访问http://localhost/portal 显示如下
+
+[http://docs.google.com/leaf?id=0B-lvv1cBclzEN2EyOGE2MDktYzIwNy00NmU4LWI5MmEtNDExYmMwMTRkYjlk&hl=en&type=.png]
