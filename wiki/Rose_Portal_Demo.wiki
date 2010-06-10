@@ -161,4 +161,4 @@ portal.css
 
 运行该webapp，访问http://localhost/portal 显示如下
 
-[http://docs.google.com/leaf?id=0B-lvv1cBclzEN2EyOGE2MDktYzIwNy00NmU4LWI5MmEtNDExYmMwMTRkYjlk&hl=en&type=.png]
+[http://fmn.xnimg.cn/fmn038/20100610/1040/p_large_DZax_127c0000077e2d14.jpg]
