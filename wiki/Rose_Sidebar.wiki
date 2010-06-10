@@ -37,6 +37,7 @@
   # [Rose_Guide_Message_Source 国际化使用规范]
   # [Rose_Guide_Binding 参数绑定规范]
   # [Rose_Guide_Validation 参数的服务端验证]
+  # [Rose_Portal_Demo Portal示例]
   # [Rose_Guide_Portal Portal开发规范]
 
  * 【扩展】
