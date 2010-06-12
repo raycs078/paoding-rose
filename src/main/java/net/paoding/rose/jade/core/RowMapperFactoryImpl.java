@@ -16,6 +16,7 @@
 package net.paoding.rose.jade.core;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -30,7 +31,6 @@ import net.paoding.rose.jade.provider.Modifier;
 import org.apache.commons.lang.ClassUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.ColumnMapRowMapper;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.SingleColumnRowMapper;
@@ -60,6 +60,8 @@ import org.springframework.jdbc.core.SingleColumnRowMapper;
 public class RowMapperFactoryImpl implements RowMapperFactory {
 
     private static Log logger = LogFactory.getLog(RowMapperFactory.class);
+
+    private Map<Class<?>, RowMapper> beanPropertyRowMappers = new HashMap<Class<?>, RowMapper>();
 
     @Override
     public RowMapper getRowMapper(Modifier modifier) {
@@ -94,7 +96,11 @@ public class RowMapperFactoryImpl implements RowMapperFactory {
             } else if (rowType == Set.class) {
                 rowMapper = new SetRowMapper(modifier);
             } else {
-                rowMapper = new BeanPropertyRowMapper(rowType);
+                rowMapper = beanPropertyRowMappers.get(rowType);
+                if (rowMapper == null) {
+                    rowMapper = new BeanPropertyRowMapper(rowType); // jade's BeanPropertyRowMapper here
+                    beanPropertyRowMappers.put(rowType, rowMapper);
+                }
             }
             // 如果DAO方法最终返回的是Map，rowMapper要返回Map.Entry对象
             if (returnClassType == Map.class) {
