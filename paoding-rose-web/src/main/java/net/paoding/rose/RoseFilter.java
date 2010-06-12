@@ -118,15 +118,11 @@ import org.springframework.web.util.NestedServletException;
  * <p>
  * 
  * <strong>匹配树</strong>: <br>
- * 匹配树是一个多叉树，最根节点代表整个Rose应用，第二级代表Rose应用下的所有模块，第三级是每个模块下的处理类
- * (控制器)，第四级代表每个控制器下的操作的方法
- * 。这个匹配树的每个节点都定义了自己的匹配地址、匹配目标以及”执行逻辑“。值得注意的是，对于每个匹配节点而言它的下级节点是有序的
- * ，这个顺序可以保证请求地址被正确地匹配给所期望的控制器方法处理。
+ * TODO
  * <p>
  * 
  * <strong>匹配过程</strong>: <br>
- * Rose以请求的地址作为处理输入(不包含Query串，即问号后的字符串)。如果这个匹配树存在某个树的路径和请求匹配成功,
- * 表示这个请求应由Rose处理。在算法上，采用的是基于左儿子有兄弟的可回溯的匹配过程。
+ * TODO
  * <P>
  * 
  * <strong>参数解析</strong>: <br>
@@ -314,7 +310,12 @@ public class RoseFilter extends GenericFilterBean {
 
         // 打开DEBUG级别信息能看到所有进入RoseFilter的请求
         if (logger.isDebugEnabled()) {
-            logger.debug(httpRequest.getMethod() + " " + httpRequest.getRequestURL());
+            StringBuffer sb = httpRequest.getRequestURL();
+            String query = httpRequest.getQueryString();
+            if (query != null && query.length() > 0) {
+                sb.append("?").append(query);
+            }
+            logger.debug(httpRequest.getMethod() + " " + sb.toString());
         }
 
         // 创建RequestPath对象，用于记录对地址解析的结果
