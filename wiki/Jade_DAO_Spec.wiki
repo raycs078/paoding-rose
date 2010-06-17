@@ -171,18 +171,11 @@ DAO 方法可以声明返回一个 Bean 或者 Bean 的数组或集合，以下�
 public List<User> find(int offset, int maxSize);
 }}}
 
-{|border="1" cellspacing="0" 
-||
-|列||	Bean
-||
-|id	||	public void setId(Xxx id)
-||
-|first_name||		public void setFirstName(Xxx firstName)
-||
-|flag_2	||	public void setFlag2(Xxx flag2)
-||
-|three_words_column||		public void setThreeWordsColumn(Xxx threeWordColumn)
-|}
+||*列*||*Bean* ||
+||id	            ||	public void setId(Xxx id)||
+||first_name||	public void setFirstName(Xxx firstName)||
+||flag_2 ||public void setFlag2(Xxx flag2) ||
+||three_words_column ||	public void setThreeWordsColumn(Xxx threeWordColumn)||
 
 总结如下：<br>
 	Jade会找相应的set方法，将值设置给Bean对象；<br>
