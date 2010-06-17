@@ -43,3 +43,6 @@
  * 【扩展】
   # [Rose_Guide_Param_Resolver 方法参数解析器]
   # [Rose_Guide_Application_Context Spring配置文件]
+
+===Jade===
+  # [Jade_DAO_Spec Jade DAO规范]
