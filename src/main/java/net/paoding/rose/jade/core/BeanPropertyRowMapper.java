@@ -87,7 +87,7 @@ public class BeanPropertyRowMapper implements RowMapper {
     private final boolean checkProperties;
 
     /** Set of bean properties we provide mapping for */
-    private Set<String> mappedProperties;
+    private Set<String> mappedProperties = new HashSet<String>();
 
     /**
      * Create a new BeanPropertyRowMapper, accepting unpopulated properties
