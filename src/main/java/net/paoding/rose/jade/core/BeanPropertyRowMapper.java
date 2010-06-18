@@ -87,7 +87,7 @@ public class BeanPropertyRowMapper implements RowMapper {
     private final boolean checkProperties;
 
     /** Set of bean properties we provide mapping for */
-    private Set<String> mappedProperties = new HashSet<String>();
+    private Set<String> mappedProperties;
 
     /**
      * Create a new BeanPropertyRowMapper, accepting unpopulated properties
@@ -111,10 +111,15 @@ public class BeanPropertyRowMapper implements RowMapper {
     protected void initialize() {
         this.mappedFields = new HashMap<String, PropertyDescriptor>();
         PropertyDescriptor[] pds = BeanUtils.getPropertyDescriptors(mappedClass);
+        if (checkProperties) {
+            mappedProperties = new HashSet<String>();
+        }
         for (int i = 0; i < pds.length; i++) {
             PropertyDescriptor pd = pds[i];
             if (pd.getWriteMethod() != null) {
-                this.mappedProperties.add(pd.getName());
+                if (checkProperties) {
+                    this.mappedProperties.add(pd.getName());
+                }
                 this.mappedFields.put(pd.getName().toLowerCase(), pd);
                 for (String underscoredName : underscoreName(pd.getName())) {
                     if (!pd.getName().toLowerCase().equals(underscoredName)) {
