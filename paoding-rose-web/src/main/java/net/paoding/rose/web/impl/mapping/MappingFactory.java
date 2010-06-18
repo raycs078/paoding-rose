@@ -45,7 +45,7 @@ public class MappingFactory {
         int paramBegin = -1;
         int paramNameEnd = -1;
         int constantBegin = -1;
-        boolean inScope = false;
+        boolean inScope = false; // true表示要把{}视为普通括号，而非param声明
         for (int i = 0; i < chars.length; i++) {
             switch (chars[i]) {
                 case '$':
@@ -118,6 +118,7 @@ public class MappingFactory {
                         mappings.add(createRegexMapping(path, paramBegin, paramNameEnd, i));
                         paramBegin = -1;
                         constantBegin = i;
+                        paramNameEnd = -1;
                         break;
                     }
 
