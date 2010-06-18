@@ -55,6 +55,7 @@ import net.paoding.rose.web.instruction.InstructionExecutor;
 import net.paoding.rose.web.instruction.InstructionExecutorImpl;
 
 import org.apache.commons.lang.StringUtils;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.core.SpringVersion;
 import org.springframework.web.context.WebApplicationContext;
@@ -241,6 +242,7 @@ public class RoseFilter extends GenericFilterBean {
     /**
      * 实现 {@link GenericFilterBean#initFilterBean()}，对 Rose 进行初始化
      */
+
     @Override
     protected final void initFilterBean() throws ServletException {
         try {
@@ -287,7 +289,7 @@ public class RoseFilter extends GenericFilterBean {
             printRoseInfos();
 
             //
-        } catch (final Exception e) {
+        } catch (final Throwable e) {
             StringBuilder sb = new StringBuilder(1024);
             sb.append("[Rose-").append(RoseVersion.getVersion());
             sb.append("@Spring-").append(SpringVersion.getVersion()).append("]:");
@@ -354,9 +356,31 @@ public class RoseFilter extends GenericFilterBean {
      * @throws IOException
      */
     private WebApplicationContext prepareRootApplicationContext() throws IOException {
+
         if (logger.isInfoEnabled()) {
             logger.info("[init/rootContext] starting ...");
         }
+
+        ApplicationContext oldRootContext = (ApplicationContext) getServletContext().getAttribute(
+                ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE);
+
+        // 如果web.xml配置使用了spring装载root应用context ...... 不可以
+        // roseFilter可能因为启动失败，在请求的时候容器还会尝试重新启动，此时rootContext可能已经存在，不要简单地抛出异常
+        // 同时这样留出了使用Listener作为init rose context的扩展机会
+        if (oldRootContext != null) {
+            if (oldRootContext.getClass() != RoseWebAppContext.class) {
+                throw new IllegalStateException(
+                        "Cannot initialize context because there is already a root application context present - "
+                                + "check whether you have multiple ContextLoader* definitions in your web.xml!");
+            }
+            if (logger.isInfoEnabled()) {
+                logger.info("[init/rootContext] the root context exists:" + oldRootContext);
+            }
+            return (RoseWebAppContext) oldRootContext;
+        }
+
+        RoseWebAppContext rootContext = new RoseWebAppContext(getServletContext(), load, false);
+
         String contextConfigLocation = this.contextConfigLocation;
         // 确认所使用的applicationContext配置
         if (StringUtils.isBlank(contextConfigLocation)) {
@@ -368,15 +392,6 @@ public class RoseFilter extends GenericFilterBean {
                 contextConfigLocation = webxmlContextConfigLocation;
             }
         }
-
-        // 如果web.xml配置使用了spring装载root应用context或多个roseFilter ...... 不可以
-        if (getServletContext().getAttribute(ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE) != null) {
-            throw new IllegalStateException(
-                    "Cannot initialize context because there is already a root application context present - "
-                            + "check whether you have multiple ContextLoader* or RoseFilter definitions in your web.xml!");
-        }
-
-        RoseWebAppContext rootContext = new RoseWebAppContext(getServletContext(), load, false);
         rootContext.setConfigLocation(contextConfigLocation);
         rootContext.setId("rose.root");
         rootContext.refresh();
