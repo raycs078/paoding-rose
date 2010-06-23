@@ -156,9 +156,18 @@ public class ControllerRef {
         }
         for (String[] paths : restMethods.values()) {
             for (int i = 0; i < paths.length; i++) {
-                String path = paths[i];
-                if (path.length() > 0 && path.charAt(0) != '/') {
-                    paths[i] = "/" + path;
+                if (paths[i].equals("/")) {
+                    paths[i] = "";
+                } else if (paths[i].length() > 0 && paths[i].charAt(0) != '/') {
+                    paths[i] = "/" + paths[i];
+                }
+                if (paths[i].length() > 1 && paths[i].endsWith("/")) {
+                    if (paths[i].endsWith("//")) {
+                        throw new IllegalArgumentException("invalid path '" + paths[i]
+                                + "' for method " + method.getDeclaringClass().getName() + "#"
+                                + method.getName() + ": don't end with more than one '/'");
+                    }
+                    paths[i] = paths[i].substring(0, paths[i].length() - 1);
                 }
             }
         }

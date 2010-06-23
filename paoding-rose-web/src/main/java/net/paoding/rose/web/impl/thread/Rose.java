@@ -122,11 +122,12 @@ public class Rose implements EngineChain {
     }
 
     private boolean innerStart() throws Throwable {
+        final boolean debugEnabled = logger.isDebugEnabled();
         final List<MatchResult> matchResults = mappingTree.match(originalHttpRequest, this.path);
         if (matchResults == null) {
             // not rose uri
-            if (logger.isDebugEnabled()) {
-                logger.debug("not rose uri");
+            if (debugEnabled) {
+                logger.debug("not rose uri: '" + this.path.getUri() + "'");
             }
             return false;
         }
@@ -137,8 +138,9 @@ public class Rose implements EngineChain {
         if (leafEngine == null) {
             if (leafEngineGroup.size() == 0) {
                 // not rose uri
-                if (logger.isDebugEnabled()) {
-                    logger.debug("not rose uri, not exits leaf engines for it ");
+                if (debugEnabled) {
+                    logger.debug("not rose uri, not exits leaf engines for it: '"
+                            + this.path.getUri() + "'");
                 }
                 return false;
 
@@ -166,6 +168,13 @@ public class Rose implements EngineChain {
                 return true;
             }
 
+        }
+
+        if (debugEnabled) {
+            ActionEngine actionEngine = (ActionEngine) leafEngine.getTarget();
+            logger.debug("mapped '" + path.getUri() + "' to "
+                    + actionEngine.getControllerClass().getName() + "#"
+                    + actionEngine.getMethod().getName());
         }
 
         // 完成一次成功匹配需要走到树的叶子结点，并且是方法级别的结点
