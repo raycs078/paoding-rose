@@ -58,7 +58,7 @@ public class MappingFactory {
         int paramBegin = -1;
         int paramNameEnd = -1;
         int constantBegin = -1;
-        int bracketDeep = 0; // > 0 表示要把{}视为普通括号，而非param声明
+        int bracketDeep = 0; // > 0 表示要把{}视为普通括号
         boolean startsWithBracket = true;
         for (int i = 0; i < chars.length; i++) {
             switch (chars[i]) {
