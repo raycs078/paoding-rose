@@ -49,7 +49,7 @@ public class RoseWebAppContext extends XmlWebApplicationContext {
     /** Default config location for the root context */
     public static final String DEFAULT_CONFIG_LOCATION = "/WEB-INF/applicationContext*.xml";
 
-    private String[] scopeValues;
+    private LoadScope scope;
 
     public RoseWebAppContext(ServletContext servletContext, boolean refresh) {
         this(servletContext, "", refresh);
@@ -60,7 +60,7 @@ public class RoseWebAppContext extends XmlWebApplicationContext {
     }
 
     public RoseWebAppContext(ServletContext servletContext, LoadScope scope, boolean refresh) {
-        this.scopeValues = scope.getScope("controllers");
+        this.scope = scope;
         this.setServletContext(servletContext);
         if (refresh) {
             refresh();
@@ -94,7 +94,7 @@ public class RoseWebAppContext extends XmlWebApplicationContext {
     }
 
     protected Resource[] getConfigResourcesThrows() throws IOException {
-        return RoseResources.findContextResources(this.scopeValues).toArray(new Resource[0]);
+        return RoseResources.findContextResources(scope).toArray(new Resource[0]);
     }
 
     /**
@@ -136,7 +136,7 @@ public class RoseWebAppContext extends XmlWebApplicationContext {
         if (logger.isInfoEnabled()) {
             logger.info("[roseWebApp/messages] start  ...");
         }
-        String[] messageBasenames = RoseResources.findMessageBasenames(scopeValues);
+        String[] messageBasenames = RoseResources.findMessageBasenames(scope);
 
         if (logger.isInfoEnabled()) {
             logger.info("[roseWebApp/messages] exits ");
