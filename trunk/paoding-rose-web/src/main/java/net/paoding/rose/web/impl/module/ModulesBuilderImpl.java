@@ -232,10 +232,19 @@ public class ModulesBuilderImpl implements ModulesBuilder {
             for (int i = 0; i < controllerPaths.length; i++) {
                 if ("#".equals(controllerPaths[i])) {
                     controllerPaths[i] = "/" + controllerName;
-                } else if (controllerPaths[i].length() > 0 && controllerPaths[i].charAt(0) != '/') {
-                    controllerPaths[i] = '/' + controllerPaths[i];
                 } else if (controllerPaths[i].equals("/")) {
                     controllerPaths[i] = "";
+                } else if (controllerPaths[i].length() > 0 && controllerPaths[i].charAt(0) != '/') {
+                    controllerPaths[i] = "/" + controllerPaths[i];
+                }
+                if (controllerPaths[i].length() > 1 && controllerPaths[i].endsWith("/")) {
+                    if (controllerPaths[i].endsWith("//")) {
+                        throw new IllegalArgumentException("invalid path '" + controllerPaths[i]
+                                + "' for controller " + beanClassName
+                                + ": don't end with more than one '/'");
+                    }
+                    controllerPaths[i] = controllerPaths[i].substring(0, controllerPaths[i]
+                            .length() - 1);
                 }
             }
         } else {

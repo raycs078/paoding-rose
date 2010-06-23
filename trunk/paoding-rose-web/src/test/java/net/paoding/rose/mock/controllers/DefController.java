@@ -4,10 +4,10 @@ import net.paoding.rose.web.annotation.Param;
 import net.paoding.rose.web.annotation.Path;
 import net.paoding.rose.web.annotation.rest.Get;
 
-@Path({ "", "def" })
+@Path({"/", "def" })
 public class DefController {
 
-    @Get
+    @Get("/")
     public String index() {
         return "index";
     }

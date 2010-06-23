@@ -178,6 +178,14 @@ public class RequestPath {
     }
 
     public void setRosePath(String rosePath) {
+        // 如果是"/"，也转化为""
+        if (rosePath.equals("") || rosePath.equals("/")) {
+            this.rosePath = "";
+            return;
+        }
+        while (rosePath.charAt(rosePath.length() - 1) == '/') {
+            rosePath = rosePath.substring(0, rosePath.length() - 1);
+        }
         this.rosePath = rosePath;
     }
 

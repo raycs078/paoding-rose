@@ -31,21 +31,35 @@ public class MappingFactory {
     // {}        
     public static List<Mapping> parse(String path) {
 
+        //
+        if (path.equals("/")) {
+            path = "";
+        } else if (path.length() > 0 && path.charAt(0) != '/') {
+            path = "/" + path;
+        }
+        if (path.length() > 1 && path.endsWith("/")) {
+            if (path.endsWith("//")) {
+                throw new IllegalArgumentException("invalid path '" + path
+                        + "' : don't end with more than one '/'");
+            }
+            path = path.substring(0, path.length() - 1);
+        }
+
         if (path.length() == 0) {
             return Collections.emptyList();
         }
 
         List<Mapping> mappings = new ArrayList<Mapping>(8);
-        if (path.charAt(0) != '/') {
-            path = "/" + path;
-        }
+
+        //
 
         char[] chars = new char[path.length()];
         path.getChars(0, path.length(), chars, 0);
         int paramBegin = -1;
         int paramNameEnd = -1;
         int constantBegin = -1;
-        boolean inScope = false; // true表示要把{}视为普通括号，而非param声明
+        int bracketDeep = 0; // > 0 表示要把{}视为普通括号，而非param声明
+        boolean startsWithBracket = true;
         for (int i = 0; i < chars.length; i++) {
             switch (chars[i]) {
                 case '$':
@@ -66,12 +80,16 @@ public class MappingFactory {
                     }
                     if (chars[i + 1] != '{') {
                         paramBegin = i + 1;
+                        bracketDeep = 1;
+                        startsWithBracket = false;
                     }
                     break;
                 case '{':
+                    if (bracketDeep++ > 0) { //++在后
+                        break;
+                    }
                     if (paramBegin < 0) {
                         paramBegin = i + 1;
-                        inScope = true;
                     }
                     // 针对$name{xyz}的"$name"的
                     else {
@@ -97,12 +115,14 @@ public class MappingFactory {
                     }
                     break;
                 case '}':
+                    if (--bracketDeep > 0) { // --在前
+                        break;
+                    }
                     if (paramBegin < 0) {
                         throw new IllegalArgumentException(//
                                 "invalid string '" + path + "', wrong '}' at position " + i);
                     } else {
                         mappings.add(createRegexMapping(path, paramBegin, paramNameEnd, i));
-                        inScope = false;
                         paramBegin = -1;
                         paramNameEnd = -1;
                     }
@@ -114,11 +134,12 @@ public class MappingFactory {
                         }
                         constantBegin = i;
                         break;
-                    } else if (!inScope) {
+                    } else if (bracketDeep == 0 || (bracketDeep == 1 && !startsWithBracket)) {
                         mappings.add(createRegexMapping(path, paramBegin, paramNameEnd, i));
                         paramBegin = -1;
                         constantBegin = i;
                         paramNameEnd = -1;
+                        bracketDeep = 0;
                         break;
                     }
 

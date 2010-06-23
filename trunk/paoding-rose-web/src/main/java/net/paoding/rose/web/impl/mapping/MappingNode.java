@@ -139,7 +139,7 @@ public class MappingNode implements Comparable<MappingNode> {
         String remaining = requestPath.getRosePath();
 
         // mark代表一个已经匹配了/结尾的路径了，但是还想去看看有没有更能处理/结尾的，在去看看之前做一个记号，万一不成功要退回来。
-        int mark = -1;
+        // int mark = -1;
 
         // 最后一次匹配结果
         MatchResult last = null;
@@ -148,22 +148,24 @@ public class MappingNode implements Comparable<MappingNode> {
         while (true) {
             //
             if (remaining.length() == 0 && curNode != this) {
-                if (mark >= 0 && last.getMappingNode().getLeafEngines().size() == 0) {
+                /*if (mark >= 0 && last.getMappingNode().getLeafEngines().size() == 0) {
                     // block a
                     while (mark < matchResults.size()) {
                         matchResults.remove(matchResults.size() - 1);
                     }
                 }
+                */
                 if (debugEnabled) {
                     logger.debug("['" + requestPath.getRosePath() + "'] matched over.");
                 }
                 return matchResults;
             }
-            if (remaining.equals("/")) {
+            /*
+             if (remaining.equals("/")) {
                 mark = matchResults.size();
-            }
+            }*/
             if (curNode == null) {
-                if (mark >= 0) {
+                /*if (mark >= 0) {
                     // block b=block a
                     while (mark < matchResults.size()) {
                         matchResults.remove(matchResults.size() - 1);
@@ -172,7 +174,7 @@ public class MappingNode implements Comparable<MappingNode> {
                         logger.debug("['" + requestPath.getRosePath() + "'] matched over.");
                     }
                     return matchResults;
-                }
+                }*/
                 if (debugEnabled) {
                     logger.debug("['" + requestPath.getRosePath() + "'] not matched");
                 }
@@ -203,7 +205,6 @@ public class MappingNode implements Comparable<MappingNode> {
             }
             remaining = remaining.substring(len);
             curNode = curNode.leftMostChild;
-
         }
     }
 

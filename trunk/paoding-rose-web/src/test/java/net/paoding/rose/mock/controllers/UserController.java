@@ -29,6 +29,7 @@ public class UserController {
         return id;
     }
 
+    /*-不再支持这个测试，现在认为 @Get("{id}/")完全等价于 @Get("{id}")
     // 有/结尾，则/12345/将调用show2而非show
     @Get("{id}/")
     public int show2(@Param("id") Integer id, Invocation inv) {
@@ -39,8 +40,9 @@ public class UserController {
             throw new IllegalStateException("request.getParameter should return params in uri");
         }
         return id * 2;
-    }
+    }*/
 
+    /*-不再支持这个测试，现在认为 @Get("{id}/404/")完全等价于 @Get("{id}/404")
     // 假设设置了{id}/404/而没有设置{id}/404，则访问/12345/404将404
     @Get("{id}/404/")
     public int show404(@Param("id") Integer id, Invocation inv) {
@@ -52,6 +54,7 @@ public class UserController {
         }
         return id * 2;
     }
+    */
 
     @Get("{id}/account")
     public String account(@Param("id") Integer id) {
