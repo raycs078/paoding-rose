@@ -17,6 +17,8 @@ package net.paoding.rose.web;
 
 import java.lang.reflect.Method;
 
+import org.springframework.util.Assert;
+
 import net.paoding.rose.web.advancedinterceptor.ActionSelector;
 import net.paoding.rose.web.advancedinterceptor.DispatcherSelector;
 import net.paoding.rose.web.advancedinterceptor.Named;
@@ -31,7 +33,7 @@ import net.paoding.rose.web.impl.thread.AfterCompletion;
 public class InterceptorDelegate implements Ordered, Named, ControllerInterceptor, AfterCompletion,
         ActionSelector, DispatcherSelector {
 
-    protected ControllerInterceptor interceptor;
+    protected final ControllerInterceptor interceptor;
 
     private String name;
 
@@ -49,6 +51,7 @@ public class InterceptorDelegate implements Ordered, Named, ControllerIntercepto
     }
 
     public InterceptorDelegate(ControllerInterceptor interceptor) {
+        Assert.notNull(interceptor);
         this.interceptor = interceptor;
         this.isAfterCompletion = interceptor instanceof AfterCompletion;
         this.isDispatcherSelector = interceptor instanceof DispatcherSelector;
@@ -108,6 +111,11 @@ public class InterceptorDelegate implements Ordered, Named, ControllerIntercepto
         if (isAfterCompletion) {
             ((AfterCompletion) interceptor).afterCompletion(inv, ex);
         }
+    }
+
+    @Override
+    public String toString() {
+        return interceptor.getClass().getName();
     }
 
 }
