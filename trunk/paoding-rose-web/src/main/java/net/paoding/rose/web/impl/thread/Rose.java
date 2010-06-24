@@ -222,13 +222,12 @@ public class Rose implements EngineChain {
         Map<String, String> uriParameters = null;
         for (int i = matchResults.size() - 1; i >= 0; i--) {
             MatchResult matchResult = matchResults.get(i);
-            if (matchResult.getParameterCount() > 0) {
+            String name = matchResult.getParameterName();
+            if (name != null) {
                 if (uriParameters == null) {
-                    uriParameters = new HashMap<String, String>(6);
+                    uriParameters = new HashMap<String, String>(matchResults.size() << 1);
                 }
-                for (String name : matchResult.getParameterNames()) {
-                    uriParameters.put(name, matchResult.getParameter(name));
-                }
+                uriParameters.put(name, matchResult.getValue());
             }
         }
 

@@ -194,7 +194,7 @@ public class MappingNode implements Comparable<MappingNode> {
 
             if (debugEnabled) {
                 logger.debug("['" + requestPath.getRosePath() + "'] matched(" //
-                        + (matchResults.size() + 1) + "): '" + last.getValue() + "'");
+                        + (matchResults.size() + 1) + "): '" + last + "'");
             }
 
             // add to results for return

@@ -119,37 +119,32 @@ public class ModulesBuilderImpl implements ModulesBuilder {
 
             // 从Spring应用环境中找出本web模块要使用的ParamValidator，ParamResolver, ControllerInterceptor, ControllerErrorHandler
             List<ParamResolver> customerResolvers = findContextResolvers(moduleContext);
-            List<InterceptorDelegate> interceptors = findContextInterceptors(moduleContext);
-            List<ParamValidator> validators = findContextValidators(moduleContext);
-            ControllerErrorHandler errorHandler = getContextErrorHandler(moduleContext);
 
             // resolvers
-            for (ParamResolver resolver : customerResolvers) {
-                module.addCustomerResolver(resolver);
-            }
+            module.setCustomerResolvers(customerResolvers);
             if (logger.isDebugEnabled()) {
                 logger.debug("module '" + module.getMappingPath() + "': apply resolvers "
                         + customerResolvers);
             }
 
             // 将拦截器设置到module中
-            for (InterceptorDelegate interceptor : interceptors) {
-                module.addControllerInterceptor(interceptor);
-            }
+            List<InterceptorDelegate> interceptors = findInterceptors(moduleContext);
+            module.setControllerInterceptors(interceptors);
             if (logger.isDebugEnabled()) {
                 logger.debug("module '" + module.getMappingPath() + "': apply intercetpors "
                         + interceptors);
             }
+
             // 将validator设置到module中
-            for (ParamValidator validator : validators) {
-                module.addValidator(validator);
-            }
+            List<ParamValidator> validators = findContextValidators(moduleContext);
+            module.setValidators(validators);
             if (logger.isDebugEnabled()) {
                 logger.debug("module '" + module.getMappingPath() + "': apply global validators "
                         + validators);
             }
 
             // errorhandler
+            ControllerErrorHandler errorHandler = getContextErrorHandler(moduleContext);
             if (errorHandler != null) {
                 if (Proxy.isProxyClass(errorHandler.getClass())) {
                     module.setErrorHandler(errorHandler);
@@ -174,6 +169,30 @@ public class ModulesBuilderImpl implements ModulesBuilder {
         }
 
         return modules;
+    }
+
+    private void throwExceptionIfDuplicatedNames(List<InterceptorDelegate> interceptors) {
+        for (int i = 0; i < interceptors.size(); i++) {
+            InterceptorDelegate interceptor = interceptors.get(i);
+            for (int j = i + 1; j < interceptors.size(); j++) {
+                // 先判断是否有"名字"一样的拦截器
+                InterceptorDelegate position = interceptors.get(j);
+                if (position.getName().equals(interceptor.getName())) {
+                    // rose内部要求interceptor要有一个唯一的标识
+                    // 请这两个类的提供者商量改类名，不能同时取一样的类名
+                    // 如果是通过@Component等设置名字的，则不要设置一样
+                    ControllerInterceptor duplicated1 = InterceptorDelegate
+                            .getMostInnerInterceptor(position);
+                    ControllerInterceptor duplicated2 = InterceptorDelegate
+                            .getMostInnerInterceptor(interceptor);
+
+                    throw new IllegalArgumentException(
+                            "duplicated interceptor name for these two interceptors: '"
+                                    + duplicated1.getClass() + "' and '" + duplicated2.getClass()
+                                    + "'");
+                }
+            }
+        }
     }
 
     private boolean checkController(final XmlWebApplicationContext context, String beanName,
@@ -398,10 +417,10 @@ public class ModulesBuilderImpl implements ModulesBuilder {
         return resolvers;
     }
 
-    private List<InterceptorDelegate> findContextInterceptors(XmlWebApplicationContext context) {
+    private List<InterceptorDelegate> findInterceptors(XmlWebApplicationContext context) {
         String[] interceptorNames = SpringUtils.getBeanNames(context.getBeanFactory(),
                 ControllerInterceptor.class);
-        ArrayList<InterceptorDelegate> globalInterceptors = new ArrayList<InterceptorDelegate>(
+        ArrayList<InterceptorDelegate> interceptors = new ArrayList<InterceptorDelegate>(
                 interceptorNames.length);
         for (String beanName : interceptorNames) {
             ControllerInterceptor interceptor = (ControllerInterceptor) context.getBean(beanName);
@@ -440,7 +459,7 @@ public class ModulesBuilderImpl implements ModulesBuilder {
             builder.name(interceporName);
 
             InterceptorDelegate wrapper = builder.build();
-            globalInterceptors.add(wrapper);
+            interceptors.add(wrapper);
             if (logger.isDebugEnabled()) {
                 int priority = 0;
                 if (interceptor instanceof Ordered) {
@@ -450,8 +469,9 @@ public class ModulesBuilderImpl implements ModulesBuilder {
                         + wrapper.getName() + "=" + userClass.getName());
             }
         }
-        // TODO: 可能存在多个拦截器名字一样的情况，后续这里要做判断，提示web资源模块的要进行更改!
-        return globalInterceptors;
+        Collections.sort(interceptors);
+        throwExceptionIfDuplicatedNames(interceptors);
+        return interceptors;
     }
 
     private List<ParamValidator> findContextValidators(XmlWebApplicationContext context) {

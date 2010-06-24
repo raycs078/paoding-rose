@@ -15,8 +15,6 @@
  */
 package net.paoding.rose.web.impl.mapping;
 
-import java.util.Collection;
-
 /**
  * 控制器的action path参数映射结果,从这个结果中可以知道一个地址映射给哪个资源、资源的参数值是什么
  * 
@@ -39,25 +37,11 @@ public interface MatchResult {
     public String getValue();
 
     /**
-     * 从结果字符串中得到的资源参数个数
-     * 
-     * @return
-     */
-    public int getParameterCount();
-
-    /**
-     * 资源从结果字符串中得到的资源参数列表(如果该资源使用了使用了参数化的映射地址)
-     * 
-     * @return
-     */
-    public Collection<String> getParameterNames();
-
-    /**
-     * 返回从结果字符串中得到的资源参数值(如果该资源使用了使用了参数化的映射地址)
+     * 返回从结果字符串中得到的资源参数名(如果该资源使用了使用了参数化的映射地址)
      * 
      * @param name
      * @return
      */
-    public String getParameter(String name);
+    public String getParameterName();
 
 }

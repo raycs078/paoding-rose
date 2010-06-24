@@ -17,13 +17,13 @@ package net.paoding.rose.web;
 
 import java.lang.reflect.Method;
 
-import org.springframework.util.Assert;
-
 import net.paoding.rose.web.advancedinterceptor.ActionSelector;
 import net.paoding.rose.web.advancedinterceptor.DispatcherSelector;
 import net.paoding.rose.web.advancedinterceptor.Named;
 import net.paoding.rose.web.advancedinterceptor.Ordered;
 import net.paoding.rose.web.impl.thread.AfterCompletion;
+
+import org.springframework.util.Assert;
 
 /**
  * 
@@ -31,7 +31,7 @@ import net.paoding.rose.web.impl.thread.AfterCompletion;
  * 
  */
 public class InterceptorDelegate implements Ordered, Named, ControllerInterceptor, AfterCompletion,
-        ActionSelector, DispatcherSelector {
+        ActionSelector, DispatcherSelector, Comparable<InterceptorDelegate> {
 
     protected final ControllerInterceptor interceptor;
 
@@ -111,6 +111,19 @@ public class InterceptorDelegate implements Ordered, Named, ControllerIntercepto
         if (isAfterCompletion) {
             ((AfterCompletion) interceptor).afterCompletion(inv, ex);
         }
+    }
+
+    @Override
+    public int compareTo(InterceptorDelegate o) {
+        if (o == this) {
+            return 0;
+        }
+        int c = this.getPriority() - o.getPriority();
+        if (c != 0) {
+            return -c; // 优先级高，比起来更低
+        }
+        // 优先级一样的，按字符串顺序；
+        return getName().compareTo(o.getName());
     }
 
     @Override
