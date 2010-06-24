@@ -466,6 +466,11 @@ public final class InvocationBean implements Invocation {
     }
 
     @Override
+    public void addAfterCompletion(AfterCompletion afterComletion) {
+        rose.addAfterCompletion(afterComletion);
+    }
+
+    @Override
     public String toString() {
         return requestPath.getUri();
     }

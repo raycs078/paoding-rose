@@ -220,4 +220,9 @@ public class InvocationLocalImpl implements InvocationLocal {
     public String getResourceId() {
         return required().getResourceId();
     }
+
+    @Override
+    public void addAfterCompletion(AfterCompletion afterComletion) {
+        required().addAfterCompletion(afterComletion);
+    }
 }

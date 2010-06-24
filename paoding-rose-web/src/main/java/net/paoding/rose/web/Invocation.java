@@ -24,6 +24,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import net.paoding.rose.web.annotation.Param;
+import net.paoding.rose.web.impl.thread.AfterCompletion;
 import net.paoding.rose.web.paramresolver.ParamResolver;
 import net.paoding.rose.web.var.Flash;
 import net.paoding.rose.web.var.Model;
@@ -339,9 +340,22 @@ public interface Invocation {
     public Invocation getHeadInvocation();
 
     /**
+     * 返回类似 /user/{userId} 这样的字符串
      * 
      * @return
      */
     public String getResourceId();
+
+    /**
+     * <p>
+     * 增加 {@link AfterCompletion}
+     * 对象，使整个页面渲染结束时，或者整个流程接下来的任何一点有异常时，都能够执行该对象的逻辑。
+     * 
+     * <p>
+     * 注意：越先加入的afterComletion对象，越靠后执行。
+     * 
+     * @param afterComletion
+     */
+    public void addAfterCompletion(AfterCompletion afterComletion);
 
 }
