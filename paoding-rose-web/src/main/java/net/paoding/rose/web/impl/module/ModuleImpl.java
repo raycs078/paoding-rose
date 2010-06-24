@@ -21,7 +21,6 @@ import java.util.Collections;
 import java.util.List;
 
 import net.paoding.rose.web.ControllerErrorHandler;
-import net.paoding.rose.web.ControllerInterceptor;
 import net.paoding.rose.web.InterceptorDelegate;
 import net.paoding.rose.web.ParamValidator;
 import net.paoding.rose.web.paramresolver.ParamResolver;
@@ -56,13 +55,13 @@ public class ModuleImpl implements Module {
     private List<ControllerRef> controllers = new ArrayList<ControllerRef>();
 
     // 本module使用的所有非内置的方法参数解析器
-    private List<ParamResolver> customerResolvers = new ArrayList<ParamResolver>();
+    private List<ParamResolver> customerResolvers = Collections.emptyList();
 
     // 用于add方法加进来
-    private List<InterceptorDelegate> interceptors = new ArrayList<InterceptorDelegate>(32);
+    private List<InterceptorDelegate> interceptors = Collections.emptyList();
 
     // 用于add方法加进来
-    private List<ParamValidator> validators = new ArrayList<ParamValidator>(32);
+    private List<ParamValidator> validators = Collections.emptyList();
 
     // 本模块使用的错误处理器(如果本模块没有定义，则使用上级模块的errorHanlder或根applicationContext的errorHandler)
     private ControllerErrorHandler errorHandler;
@@ -130,45 +129,16 @@ public class ModuleImpl implements Module {
         return this;
     }
 
-    public ModuleImpl addCustomerResolver(ParamResolver resolver) {
-        customerResolvers.add(resolver);
-        return this;
+    public void setCustomerResolvers(List<ParamResolver> resolvers) {
+        this.customerResolvers = resolvers;
     }
 
     public List<ParamResolver> getCustomerResolvers() {
         return Collections.unmodifiableList(customerResolvers);
     }
 
-    public ModuleImpl addControllerInterceptor(final InterceptorDelegate interceptor) {
-        boolean added = false;
-        for (int i = 0; i < interceptors.size(); i++) {
-            // 先判断是否有"名字"一样的拦截器
-            InterceptorDelegate temp = interceptors.get(i);
-            if (temp.getName().equals(interceptor.getName())) {
-                // rose内部要求interceptor要有一个唯一的标识
-                // 请这两个类的提供者商量改类名，不能同时取一样的类名
-                // 如果是通过@Component等设置名字的，则不要设置一样
-                ControllerInterceptor duplicated1 = InterceptorDelegate
-                        .getMostInnerInterceptor(temp);
-                ControllerInterceptor duplicated2 = InterceptorDelegate
-                        .getMostInnerInterceptor(interceptor);
-
-                throw new IllegalArgumentException(
-                        "duplicated interceptor name for these two interceptors: '"
-                                + duplicated1.getClass() + "' and '" + duplicated2.getClass() + "'");
-            }
-            // 加入到这个位置?
-            if (!added && interceptor.getPriority() > temp.getPriority()) {
-                this.interceptors.add(i, interceptor);
-                added = true;
-            }
-        }
-        if (!added) {
-            // Appends the specified element to the end of this list
-            this.interceptors.add(interceptor);
-            added = true;
-        }
-        return this;
+    public void setControllerInterceptors(List<InterceptorDelegate> interceptors) {
+        this.interceptors = interceptors;
     }
 
     @Override
@@ -176,9 +146,8 @@ public class ModuleImpl implements Module {
         return interceptors;
     }
 
-    public ModuleImpl addValidator(ParamValidator validator) {
-        this.validators.add(validator);
-        return this;
+    public void setValidators(List<ParamValidator> validators) {
+        this.validators = validators;
     }
 
     @Override

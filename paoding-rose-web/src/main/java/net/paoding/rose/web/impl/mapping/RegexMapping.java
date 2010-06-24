@@ -87,7 +87,7 @@ public class RegexMapping implements Mapping {
             value = value.substring(0, value.length() - 1);
         }
         MatchResultImpl mr = new MatchResultImpl(this.mappingNode, value);
-        mr.putParameter(paramName, value);
+        mr.setParameter(paramName);
         return mr;
 
     }
