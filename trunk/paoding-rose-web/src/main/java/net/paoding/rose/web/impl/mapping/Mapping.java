@@ -53,6 +53,14 @@ public interface Mapping extends Comparable<Mapping> {
     public void setMappingNode(MappingNode mappingNode);
 
     /**
+     * 资源参数名(如果该资源使用了使用了参数化的映射地址)
+     * 
+     * @param name
+     * @return
+     */
+    public String getParameterName();
+
+    /**
      * 判断给定的请求地址<code>path</code>是否能够和本 {@link Mapping}对象相匹配。
      * <p>
      * 若能够匹配，返回非null的 {@link MatchResult}对象，并把该映射绑定的结点资源设置到匹配结果中返回。

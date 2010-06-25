@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import net.paoding.rose.util.PrinteHelper;
 import net.paoding.rose.web.annotation.ReqMethod;
 import net.paoding.rose.web.impl.module.ControllerRef;
 import net.paoding.rose.web.impl.module.MethodRef;
@@ -51,6 +52,7 @@ public class TreeBuilder {
      */
     public void create(MappingNode tree, List<Module> modules) {
         addRoot(tree, modules);
+        check(tree, tree, "");
     }
 
     private void addRoot(MappingNode rootNode, List<Module> modules) {
@@ -150,5 +152,33 @@ public class TreeBuilder {
                 target.getLeafEngines().addEngine(method, linkedActionEngine);
             }
         }
+    }
+
+    /**
+     * 检查整个树的状况，尽可能报告可能存在的问题
+     * 
+     * @param tree
+     * @param parent
+     * @param prefix
+     */
+    private void check(MappingNode tree, MappingNode parent, String prefix) {
+        MappingNode child = parent.getLeftMostChild();
+        MappingNode sibling = null;
+        while (child != null) {
+            if (sibling != null) {
+                if (child.compareTo(sibling) == 0) {
+                    logger.error("mapping confict: '" + child.getMapping().getDefinition()
+                            + "' in parent path '" + prefix + "'; here is the mapping tree, "
+                            + "you should find the confict in it:\n" + PrinteHelper.list(tree));
+                    throw new IllegalArgumentException("mapping confict: '"
+                            + child.getMapping().getDefinition() + "' in parent path '" + prefix
+                            + "'");
+                }
+            }
+            check(tree, child, prefix + child.getMapping().getDefinition());
+            sibling = child;
+            child = child.getSibling();
+        }
+
     }
 }
