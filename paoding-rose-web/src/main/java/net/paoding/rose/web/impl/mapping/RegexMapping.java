@@ -28,17 +28,19 @@ public class RegexMapping implements Mapping {
     /** 该映射代表的结点 */
     private MappingNode mappingNode;
 
-    /**  */
-    private String definition;
+    private final String definition;
 
-    private String paramName;
+    private final String paramName;
 
-    private Pattern pattern;
+    private final Pattern pattern;
+
+    private final String regex;
 
     public RegexMapping(String definition, String name, String regex) {
         this.definition = definition;
         this.paramName = name;
-        this.pattern = Pattern.compile("^" + xx(regex));
+        this.regex = xx(regex);
+        this.pattern = Pattern.compile("^" + this.regex);
     }
 
     private String xx(String regex) {
@@ -71,6 +73,11 @@ public class RegexMapping implements Mapping {
     }
 
     @Override
+    public String getParameterName() {
+        return paramName;
+    }
+
+    @Override
     public String getDefinition() {
         return definition;
     }
@@ -96,6 +103,33 @@ public class RegexMapping implements Mapping {
     public int compareTo(Mapping o) {
         if (o instanceof ConstantMapping) {
             return -((ConstantMapping) o).compareTo(this);
+        }
+        if (o instanceof RegexMapping) {
+            RegexMapping t = (RegexMapping) o;
+            if (regex.equals(t.regex) || definition.equals(t.definition)) {
+                return 0;
+            }
+            // 以下是抽样性测试
+            boolean thisIsDigit = this.pattern.matcher("123456").find();
+            boolean thatIsDigit = t.pattern.matcher("123456").find();
+            if (thisIsDigit && !thatIsDigit) {
+                return -1;
+            }
+            if (!thisIsDigit && thatIsDigit) {
+                return 1;
+            }
+            if (!this.pattern.matcher("/").find() && t.pattern.matcher("/").find()) {
+                return -1;
+            }
+            if (this.pattern.matcher("/").find() && !t.pattern.matcher("/").find()) {
+                return 1;
+            }
+            if (!this.pattern.matcher(".").find() && t.pattern.matcher(".").find()) {
+                return -1;
+            }
+            if (this.pattern.matcher(".").find() && !t.pattern.matcher(".").find()) {
+                return 1;
+            }
         }
         return 0;
     }

@@ -45,6 +45,12 @@ public class ConstantMapping implements Mapping {
     }
 
     @Override
+    public String getParameterName() {
+        // 没有参数
+        return null;
+    }
+
+    @Override
     public MatchResult match(CharSequence input) {
         boolean matched = RoseStringUtil.startsWith(input, definition);
         return !matched ? null : new MatchResultImpl(mappingNode, definition);

@@ -43,6 +43,9 @@ public class MappingNode implements Comparable<MappingNode> {
     /** 右兄弟结点 */
     private MappingNode sibling;
 
+    /** 子节点是变量参数映射的数目 */
+    private int ammountOfRegexChildren = -1;
+
     /** 叶子引擎: 只有含有叶子引擎的结点才能处理对应地址的请求 */
     private final EngineGroup leafEngines = new EngineGroupImpl();
 
@@ -89,7 +92,8 @@ public class MappingNode implements Comparable<MappingNode> {
                     prev.sibling = child;
                     break;
                 }
-                if (child.getMapping().compareTo(position.getMapping()) < 0) {
+                int c = child.getMapping().compareTo(position.getMapping());
+                if (c < 0) {
                     child.sibling = position;
                     if (prev == null) {
                         this.leftMostChild = child;
@@ -138,56 +142,38 @@ public class MappingNode implements Comparable<MappingNode> {
         // 给当前判断结点判断的path
         String remaining = requestPath.getRosePath();
 
-        // mark代表一个已经匹配了/结尾的路径了，但是还想去看看有没有更能处理/结尾的，在去看看之前做一个记号，万一不成功要退回来。
-        // int mark = -1;
-
         // 最后一次匹配结果
         MatchResult last = null;
 
         // 开始匹配，直至成功或失败
         while (true) {
-            //
-            if (remaining.length() == 0 && curNode != this) {
-                /*if (mark >= 0 && last.getMappingNode().getLeafEngines().size() == 0) {
-                    // block a
-                    while (mark < matchResults.size()) {
-                        matchResults.remove(matchResults.size() - 1);
-                    }
-                }
-                */
-                if (debugEnabled) {
-                    logger.debug("['" + requestPath.getRosePath() + "'] matched over.");
-                }
-                return matchResults;
-            }
-            /*
-             if (remaining.equals("/")) {
-                mark = matchResults.size();
-            }*/
-            if (curNode == null) {
-                /*if (mark >= 0) {
-                    // block b=block a
-                    while (mark < matchResults.size()) {
-                        matchResults.remove(matchResults.size() - 1);
-                    }
-                    if (debugEnabled) {
-                        logger.debug("['" + requestPath.getRosePath() + "'] matched over.");
-                    }
-                    return matchResults;
-                }*/
-                if (debugEnabled) {
-                    logger.debug("['" + requestPath.getRosePath() + "'] not matched");
-                }
-                return null;
-            }
             // 当前结点的匹配结果result: 如果能够匹配path成功，一定会返回一个非空的result
             // 一旦result非空，这个请求只能在这个结点中处理了，不可能再由其它结点处理，
             // 即，如果因为某些原因本结点无法处理此请求，可以直接得出结论：这个请求不能被处理了
             last = curNode.getMapping().match(remaining);
+            if (last != null) {
+                // mapping是 /abc/efg，requestUri是 /abc123的不应该进入/abc分支，reset last为null
+                if (curNode.ammountOfRegexChildren < 0) {
+                    // 这个if块里面的代码不用考虑同步，因此在并发下可能有若干、少数次的重复计算，不过对结果、性能没影响
+                    curNode.ammountOfRegexChildren = countRegexChildren(curNode);
+                }
+                if (curNode.ammountOfRegexChildren == 0) {
+                    if (remaining.length() > last.getValue().length()
+                            && remaining.charAt(last.getValue().length()) != '/') {
+                        last = null;
+                    }
+                }
+            }
 
             // 当前结点打不赢 
             if (last == null) {
                 // 兄弟，你上!
+                if (curNode.sibling == null) {
+                    if (debugEnabled) {
+                        logger.debug("['" + requestPath.getRosePath() + "'] not matched");
+                    }
+                    return null;
+                }
                 curNode = curNode.sibling;
                 continue;
             }
@@ -199,13 +185,36 @@ public class MappingNode implements Comparable<MappingNode> {
 
             // add to results for return
             matchResults.add(last);
-            int len = last.getValue().length();
-            if (len == 0 && curNode != this) {
-                throw new IllegalArgumentException("empty got by mapping " + curNode.getMapping());
+            remaining = remaining.substring(last.getValue().length());
+
+            //
+            if (remaining.length() == 0) {
+                if (debugEnabled) {
+                    logger.debug("['" + requestPath.getRosePath() + "'] matched over.");
+                }
+                return matchResults;
             }
-            remaining = remaining.substring(len);
+            //
+            if (curNode.leftMostChild == null) {
+                if (debugEnabled) {
+                    logger.debug("['" + requestPath.getRosePath() + "'] not matched");
+                }
+                return null;
+            }
             curNode = curNode.leftMostChild;
         }
+    }
+
+    private int countRegexChildren(MappingNode curNode) {
+        int ammountOfRegexChildren = 0;
+        MappingNode child = curNode.leftMostChild;
+        while (child != null) {
+            if (child.getMapping().getParameterName() != null) {
+                ammountOfRegexChildren++;
+            }
+            child = child.sibling;
+        }
+        return ammountOfRegexChildren;
     }
 
     @Override
