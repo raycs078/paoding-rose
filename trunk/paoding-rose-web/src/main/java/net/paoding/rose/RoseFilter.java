@@ -325,7 +325,7 @@ public class RoseFilter extends GenericFilterBean {
 
         //  简单、快速判断本次请求，如果不应由Rose执行，返回true
         if (quicklyPass(requestPath)) {
-            forwardToWebContainer(filterChain, httpRequest, httpResponse, requestPath.getUri());
+            notMatched(filterChain, httpRequest, httpResponse, requestPath);
             return;
         }
 
@@ -344,7 +344,7 @@ public class RoseFilter extends GenericFilterBean {
 
         // 非Rose的请求转发给WEB容器的其他组件处理，而且不放到上面的try-catch块中
         if (!matched) {
-            forwardToWebContainer(filterChain, httpRequest, httpResponse, requestPath.getUri());
+            notMatched(filterChain, httpRequest, httpResponse, requestPath);
         }
     }
 
@@ -500,14 +500,14 @@ public class RoseFilter extends GenericFilterBean {
         super.destroy();
     }
 
-    private void forwardToWebContainer(//
+    protected void notMatched(//
             FilterChain filterChain, //
             HttpServletRequest httpRequest,//
             HttpServletResponse httpResponse,//
-            String uri)//
+            RequestPath path)//
             throws IOException, ServletException {
         if (logger.isDebugEnabled()) {
-            logger.debug("not rose uri: " + uri);
+            logger.debug("not rose uri: " + path.getUri());
         }
         // 调用其它Filter
         filterChain.doFilter(httpRequest, httpResponse);
