@@ -22,6 +22,15 @@ public class DefControllerTest extends AbstractControllerTest {
         assertEquals("index", invoke("/"));
     }
 
+    /*测试{}.html的不需要{}/.html*/
+    public void testTiny() throws ServletException, IOException {
+        assertEquals("yizuoyiwang", invoke("/def/t/yizuoyiwang.html"));
+    }
+
+    public void testTiny2() throws ServletException, IOException {
+        assertEquals("yizuoyiwang", invoke("/t/yizuoyiwang.html"));
+    }
+
     public void testMethod() throws ServletException, IOException {
         assertEquals("method", invoke("/method"));
     }

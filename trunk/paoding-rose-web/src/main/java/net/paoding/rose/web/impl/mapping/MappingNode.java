@@ -151,7 +151,7 @@ public class MappingNode implements Comparable<MappingNode> {
             // 一旦result非空，这个请求只能在这个结点中处理了，不可能再由其它结点处理，
             // 即，如果因为某些原因本结点无法处理此请求，可以直接得出结论：这个请求不能被处理了
             last = curNode.getMapping().match(remaining);
-            if (last != null) {
+            if (last != null && /*只对常量匹配的作判断*/last.getParameterName() == null) {
                 // mapping是 /abc/efg，requestUri是 /abc123的不应该进入/abc分支，reset last为null
                 if (curNode.ammountOfRegexChildren < 0) {
                     // 这个if块里面的代码不用考虑同步，因此在并发下可能有若干、少数次的重复计算，不过对结果、性能没影响
@@ -159,7 +159,8 @@ public class MappingNode implements Comparable<MappingNode> {
                 }
                 if (curNode.ammountOfRegexChildren == 0) {
                     if (remaining.length() > last.getValue().length()
-                            && remaining.charAt(last.getValue().length()) != '/') {
+
+                    && remaining.charAt(last.getValue().length()) != '/') {
                         last = null;
                     }
                 }
