@@ -215,7 +215,11 @@ public final class ActionEngine implements Engine {
 
                         // TODO: request.getParameter将导致request的queryString立即被解析，将使@HttpFeature失效
                         String paramValue = request.getParameter(paramName);
-
+						if (logger.isDebugEnabled()) {
+							logger.debug(this.toString()
+									+ " is checking param:" + paramName + "="
+									+ paramValue);
+						}
                         if (StringUtils.isNotBlank(paramValue)) { //规则中没有约束参数值，所以只要存在就ok
                             return 10;
                         } else {
@@ -235,6 +239,11 @@ public final class ActionEngine implements Engine {
                         @Override
                         public int check(HttpServletRequest request) {
                             String paramValue = request.getParameter(paramName);
+							if (logger.isDebugEnabled()) {
+								logger.debug(this.toString()
+										+ " is checking param:" + paramName
+										+ "=" + paramValue);
+							}
                             if (StringUtils.isNotBlank(paramValue)) {
                                 return 10;
                             } else {
@@ -256,6 +265,12 @@ public final class ActionEngine implements Engine {
                         @Override
                         public int check(HttpServletRequest request) {
                             String paramValue = request.getParameter(paramName);
+							if (logger.isDebugEnabled()) {
+								logger.debug(this.toString()
+										+ " is checking param:" + paramName
+										+ "=" + paramValue + ", pattern="
+										+ pattern.pattern());
+							}
                             if (paramValue == null) { //参数值不能存在就不能通过
                                 return -1;
                             }
@@ -272,6 +287,12 @@ public final class ActionEngine implements Engine {
                         @Override
                         public int check(HttpServletRequest request) {
                             String paramValue = request.getParameter(paramName);
+							if (logger.isDebugEnabled()) {
+								logger.debug(this.toString()
+										+ " is checking param:" + paramName
+										+ "=" + paramValue + ", expected="
+										+ expected);
+							}
                             // 13优先于正则表达式的12
                             return expected.equals(paramValue) ? 13 : -1;
                         }
@@ -291,7 +312,11 @@ public final class ActionEngine implements Engine {
         for (AcceptedChecker checker : acceptedCheckers) {
             int c = checker.check(request);
             if (c == -1) { //-1表示此约束条件未通过
-                return -1;
+				if (logger.isDebugEnabled()) {
+					logger.debug("Accepted check not passed by "
+							+ checker.toString());
+				}
+            	return -1;
             }
             //FIXME 目前采用各个检查条件权值相加的办法来决定最终权值，
             //在权值相等的情况下，可能会有选举问题，需要更好的策略来取代
