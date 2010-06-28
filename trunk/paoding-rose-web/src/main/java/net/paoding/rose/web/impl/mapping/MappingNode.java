@@ -159,8 +159,7 @@ public class MappingNode implements Comparable<MappingNode> {
                 }
                 if (curNode.ammountOfRegexChildren == 0) {
                     if (remaining.length() > last.getValue().length()
-
-                    && remaining.charAt(last.getValue().length()) != '/') {
+                            && remaining.charAt(last.getValue().length()) != '/') {
                         last = null;
                     }
                 }
