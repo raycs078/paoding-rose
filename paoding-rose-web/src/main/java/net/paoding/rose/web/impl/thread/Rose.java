@@ -290,11 +290,27 @@ public class Rose implements EngineChain {
 
         for (LinkedEngine engine : engines) {
             int candidate = engine.isAccepted(this.originalHttpRequest);
+			if (logger.isDebugEnabled()) {
+				logger.debug("Score of " + engine.getClass().getName() + ":"
+						+ candidate);
+			}
             if (candidate > score) {
                 selectedEngine = engine;
                 score = candidate;
             }
         }
+		if (logger.isDebugEnabled()) {
+			String msg;
+			if (selectedEngine.getTarget() instanceof ActionEngine) {
+				ActionEngine actionEngine = (ActionEngine) selectedEngine
+						.getTarget();
+				msg = actionEngine.getController().getClass().getName() + "#"
+						+ actionEngine.getMethod().getName();
+			} else {
+				msg = selectedEngine.toString();
+			}
+			logger.debug("Engine selected:" + msg);
+		}
         return selectedEngine;
     }
 
