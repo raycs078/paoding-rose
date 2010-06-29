@@ -50,6 +50,14 @@ public class RequestPath {
     private String actionPath;
 
     private Dispatcher dispatcher;
+    
+    public RequestPath(ReqMethod method, String uri, String ctxpath, Dispatcher dispatcher) {
+        this.setMethod(method);
+        setUri(uri);
+        setCtxpath(ctxpath);
+        setDispatcher(dispatcher);
+        setRosePath(uri.substring(ctxpath.length()));
+    }
 
     public RequestPath(HttpServletRequest request) {
         // method

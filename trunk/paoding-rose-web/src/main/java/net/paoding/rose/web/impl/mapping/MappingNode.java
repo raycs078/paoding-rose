@@ -17,8 +17,6 @@ package net.paoding.rose.web.impl.mapping;
 
 import java.util.ArrayList;
 
-import javax.servlet.http.HttpServletRequest;
-
 import net.paoding.rose.web.RequestPath;
 
 import org.apache.commons.logging.Log;
@@ -36,6 +34,9 @@ public class MappingNode implements Comparable<MappingNode> {
 
     /** 所使用的映射 */
     private final Mapping mapping;
+
+    /** 最左子结点 */
+    private MappingNode parent;
 
     /** 最左子结点 */
     private MappingNode leftMostChild;
@@ -107,6 +108,7 @@ public class MappingNode implements Comparable<MappingNode> {
                 }
             }
         }
+        child.parent = this;
     }
 
     public MappingNode getChild(String mapping) {
@@ -129,7 +131,7 @@ public class MappingNode implements Comparable<MappingNode> {
         return middleEngines;
     }
 
-    public ArrayList<MatchResult> match(HttpServletRequest request, RequestPath requestPath) {
+    public ArrayList<MatchResult> match(RequestPath requestPath) {
 
         // 用来储存并返回的匹配结果集合
         ArrayList<MatchResult> matchResults = new ArrayList<MatchResult>(16);
