@@ -22,7 +22,9 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -74,7 +76,7 @@ public final class ActionEngine implements Engine {
 
     private final ParamValidator[] validators;
 
-    private final AcceptedChecker[] acceptedCheckers;
+    private final ParamExistenceChecker[] paramExistenceChecker;
 
     private final MethodParameterResolver methodParameterResolver;
 
@@ -88,7 +90,7 @@ public final class ActionEngine implements Engine {
         this.interceptors = compileInterceptors();
         this.methodParameterResolver = compileParamResolvers();
         this.validators = compileValidators();
-        this.acceptedCheckers = compileAcceptedCheckers();
+        this.paramExistenceChecker = compileParamExistenceChecker();
     }
 
     public InterceptorDelegate[] getRegisteredInterceptors() {
@@ -173,29 +175,29 @@ public final class ActionEngine implements Engine {
     }
 
     /**
-     * 用来抽象isAccepted过滤的判断逻辑
+     * 用来抽象与{@link IfParamExists}相对应的判断逻辑
      * 
      * @author Li Weibo (weibo.leo@gmail.com)
      */
-    private static interface AcceptedChecker {
+    private static interface ParamExistenceChecker {
 
-        public int check(HttpServletRequest request);
+        public int check(Map<String, String[]> params);
     }
 
     /**
-     * 初始化的时候来决定所有的判断条件，并抽象为AcceptedChecker数组
+     * 初始化的时候来决定所有的判断条件，并抽象为{@link ParamExistenceChecker}数组
      * 
      * @return
      */
-    private AcceptedChecker[] compileAcceptedCheckers() {
+    private ParamExistenceChecker[] compileParamExistenceChecker() {
 
         IfParamExists ifParamExists = method.getAnnotation(IfParamExists.class);
         //没标注IfParamExists或者标注了IfParamExists("")都认为不作检查
         if (ifParamExists == null || ifParamExists.value().trim().length() == 0) {
-            return new AcceptedChecker[] {};
+            return new ParamExistenceChecker[] {};
         }
 
-        List<AcceptedChecker> checkers = new ArrayList<AcceptedChecker>(); //所有判断条件的列表
+        List<ParamExistenceChecker> checkers = new ArrayList<ParamExistenceChecker>(); //所有判断条件的列表
         String value = ifParamExists.value();
 
         //可以写多个判断条件，以这样的形式: type&subtype=value&anothername=value2
@@ -206,21 +208,21 @@ public final class ActionEngine implements Engine {
         for (final String term : terms) {
             final int index = term.indexOf('='); //找'='
             if (index == -1) { //没有=说明只有参数名，此时term就是参数名
-                checkers.add(new AcceptedChecker() {
+                checkers.add(new ParamExistenceChecker() {
 
                     final String paramName = term.trim();
 
                     @Override
-                    public int check(HttpServletRequest request) {
-
-                        // TODO: request.getParameter将导致request的queryString立即被解析，将使@HttpFeature失效
-                        String paramValue = request.getParameter(paramName);
+                    public int check(Map<String, String[]> params) {
+                        String[] paramValues = params.get(paramName);
 						if (logger.isDebugEnabled()) {
 							logger.debug(this.toString()
 									+ " is checking param:" + paramName + "="
-									+ paramValue);
+									+ Arrays.toString(paramValues));
 						}
-                        if (StringUtils.isNotBlank(paramValue)) { //规则中没有约束参数值，所以只要存在就ok
+						
+						//规则中没有约束参数值，所以只要存在就ok
+                        if (paramValues != null && paramValues.length > 0) {
                             return 10;
                         } else {
                             return -1;
@@ -232,26 +234,7 @@ public final class ActionEngine implements Engine {
                 final String paramName = term.substring(0, index).trim(); //参数名
                 final String expected = term.substring(index + 1).trim(); //期望的参数值
 
-                //xxx=等价于xxx的
-                if (expected.length() == 0) {
-                    checkers.add(new AcceptedChecker() {
-
-                        @Override
-                        public int check(HttpServletRequest request) {
-                            String paramValue = request.getParameter(paramName);
-							if (logger.isDebugEnabled()) {
-								logger.debug(this.toString()
-										+ " is checking param:" + paramName
-										+ "=" + paramValue);
-							}
-                            if (StringUtils.isNotBlank(paramValue)) {
-                                return 10;
-                            } else {
-                                return -1;
-                            }
-                        }
-                    });
-                } else if (expected.startsWith(":")) { //expected是正则表达式
+                if (expected.startsWith(":")) { //expected是正则表达式
                     Pattern tmpPattern = null;
                     try {
                         tmpPattern = Pattern.compile(expected.substring(1));
@@ -260,57 +243,68 @@ public final class ActionEngine implements Engine {
                                 + "#" + method.getName(), e);
                     }
                     final Pattern pattern = tmpPattern; //转成final的
-                    checkers.add(new AcceptedChecker() {
+                    checkers.add(new ParamExistenceChecker() {
 
                         @Override
-                        public int check(HttpServletRequest request) {
-                            String paramValue = request.getParameter(paramName);
+                        public int check(Map<String, String[]> params) {
+                            String[] paramValues = params.get(paramName);
 							if (logger.isDebugEnabled()) {
 								logger.debug(this.toString()
 										+ " is checking param:" + paramName
-										+ "=" + paramValue + ", pattern="
+										+ "=" + Arrays.toString(paramValues) + ", pattern="
 										+ pattern.pattern());
 							}
-                            if (paramValue == null) { //参数值不能存在就不能通过
+                            if (paramValues == null) { //参数值不能存在就不能通过
                                 return -1;
                             }
-                            if (pattern != null && pattern.matcher(paramValue).matches()) {
-                                return 12;
-                            } else {
-                                return -1;
+                            
+                            for (String paramValue : paramValues) {
+                            	 if (pattern != null && pattern.matcher(paramValue).matches()) {
+                                     return 12;
+                                 } 
                             }
+                            return -1;
                         }
                     });
-                } else { //expected不为""且不是正则表达式
-                    checkers.add(new AcceptedChecker() {
+                } else { //expected是常量字符串，包括空串""
+                    checkers.add(new ParamExistenceChecker() {
 
                         @Override
-                        public int check(HttpServletRequest request) {
-                            String paramValue = request.getParameter(paramName);
+                        public int check(Map<String, String[]> params) {
+                            String[] paramValues = params.get(paramName);
 							if (logger.isDebugEnabled()) {
 								logger.debug(this.toString()
 										+ " is checking param:" + paramName
-										+ "=" + paramValue + ", expected="
+										+ "=" + Arrays.toString(paramValues) + ", expected="
 										+ expected);
 							}
-                            // 13优先于正则表达式的12
-                            return expected.equals(paramValue) ? 13 : -1;
+							if (paramValues == null) { //参数值不能存在就不能通过
+                                return -1;
+                            }
+                            
+							for (String paramValue : paramValues) {
+								if (expected.equals(paramValue)){
+									return 13;// 13优先于正则表达式的12
+								}
+							}
+                            return -1;
                         }
                     });
                 }
             }
         }
-        return checkers.toArray(new AcceptedChecker[] {});
+        return checkers.toArray(new ParamExistenceChecker[] {});
     }
 
     @Override
     public int isAccepted(HttpServletRequest request) {
-        if (acceptedCheckers.length == 0) { //没有约束条件，返回1
+        if (paramExistenceChecker.length == 0) { //没有约束条件，返回1
             return 1;
         }
         int total = 0;
-        for (AcceptedChecker checker : acceptedCheckers) {
-            int c = checker.check(request);
+        Map<String, String[]> params = resolveQueryString(request.getQueryString());
+        for (ParamExistenceChecker checker : paramExistenceChecker) {
+            int c = checker.check(params);
             if (c == -1) { //-1表示此约束条件未通过
 				if (logger.isDebugEnabled()) {
 					logger.debug("Accepted check not passed by "
@@ -325,6 +319,38 @@ public final class ActionEngine implements Engine {
         return total;
     }
 
+    private Map<String, String[]> resolveQueryString(String queryString) {
+    	Map<String, String[]> params;
+    	if (queryString == null || queryString.length() == 0) {
+        	params = new HashMap<String, String[]>(0);
+        } else {
+        	params = new HashMap<String, String[]>();
+        	String[] kvs = queryString.split("&");
+        	for (String kv : kvs) {
+        		String[] pair = kv.split("=");
+        		if (pair.length == 2) {
+        			mapPut(params, pair[0], pair[1]);
+        		} else if (pair.length == 1){
+        			mapPut(params, pair[0], "");
+        		} else {
+        			logger.error("Illegal queryString:" + queryString);
+        		}
+        	}
+        }
+    	return params;
+    }
+    private void mapPut(Map<String, String[]> map, String key, String value) {
+    	String[] values = map.get(key);
+    	if (values == null) {
+    		values = new String[]{value};
+    	} else {
+    		values = Arrays.copyOf(values, values.length + 1);
+    		values[values.length - 1] = value;
+    	}
+    	map.put(key, values);
+    }
+    
+    
     @Override
     public Object execute(Rose rose) throws Throwable {
         try {
@@ -539,5 +565,15 @@ public final class ActionEngine implements Engine {
     public void destroy() {
 
     }
-
+    
+    public static void main(String[] args) {
+		/*System.out.println(resolveQueryString(""));
+		System.out.println(resolveQueryString(null));
+		System.out.println(resolveQueryString("param"));
+		System.out.println(resolveQueryString("param=1"));
+		System.out.println(resolveQueryString("param=1&k2&k3=v3"));*/
+    	
+    	System.out.println((new String[]{"hehe","haha"}));
+    	
+	}
 }
