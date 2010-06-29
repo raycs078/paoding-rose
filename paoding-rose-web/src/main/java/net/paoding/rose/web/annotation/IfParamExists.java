@@ -24,6 +24,8 @@ import java.lang.annotation.Target;
 /**
  * 将 {@link IfParamExists} 标注在控制器方法的参数上，用于表示只有符合此条件时，才将请求映射到该方法。
  * 
+ * 注意：{@link IfParamExists}只判断query string中的参数，不判断request body中的参数。
+ * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
