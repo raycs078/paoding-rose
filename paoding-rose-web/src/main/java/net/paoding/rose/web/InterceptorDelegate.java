@@ -118,9 +118,13 @@ public class InterceptorDelegate implements Ordered, Named, ControllerIntercepto
         if (o == this) {
             return 0;
         }
-        int c = this.getPriority() - o.getPriority();
-        if (c != 0) {
-            return -c; // 优先级高，比起来更低
+        // 优先级高，比起来更低
+        // !! 不要通过 this.getPriority() - o.getPriority() 来判断，会溢出导致错误Integer.MAX_VALUE - -2000
+        if (this.getPriority() > o.getPriority()) {
+            return -1;
+        }
+        if (this.getPriority() < o.getPriority()) {
+            return 1;
         }
         // 优先级一样的，按字符串顺序；
         return getName().compareTo(o.getName());
