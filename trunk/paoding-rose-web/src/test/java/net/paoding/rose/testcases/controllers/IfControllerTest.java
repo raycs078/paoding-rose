@@ -8,42 +8,54 @@ import net.paoding.rose.testcases.AbstractControllerTest;
 
 public class IfControllerTest extends AbstractControllerTest {
 
+	public void tetIfNotAb1() throws ServletException, IOException {
+		request.addParameter("a", "a");
+		request.addParameter("b", "b");
+		assertEquals("a", invoke("/if")); 
+	}
+	
 	public void testIfab1() throws ServletException, IOException {
-    	request.addParameter("a", "a");
-    	request.addParameter("b", "b");
+    	request.setQueryString("a=a&b=b");
+    	assertEquals("ab1", invoke("/if"));
+    }
+	
+	public void testIfab1_2() throws ServletException, IOException {
+    	request.setQueryString("a=haha&b=haha&a=a&b=b&b=");
     	assertEquals("ab1", invoke("/if"));
     }
 	
 	public void testIfab2() throws ServletException, IOException {
-    	request.addParameter("a", "111");
-    	request.addParameter("b", "222");
+    	request.setQueryString("a=111&b=222");
     	assertEquals("ab2", invoke("/if"));
     }
 	
 	public void testIfab3() throws ServletException, IOException {
-    	request.addParameter("a", "fdsaffas");
-    	request.addParameter("b", "fasdfas");
+    	request.setQueryString("a=fdsaffas&b=fdsaffas");
+    	assertEquals("ab3", invoke("/if"));
+    }
+	
+	public void testIfab3_2() throws ServletException, IOException {
+    	request.setQueryString("a=&b=");
+    	assertEquals("ab3", invoke("/if"));
+    }
+	
+	public void testIfab3_3() throws ServletException, IOException {
+    	request.setQueryString("a&b");
     	assertEquals("ab3", invoke("/if"));
     }
 	
 	public void testIfNotAb1() throws ServletException, IOException {
-    	request.addParameter("a", "a");
-    	request.addParameter("b", "bfsdfsd");
-    	System.out.println(invoke("/if"));
+    	request.setQueryString("a=a&b=bfsdfsd");
     	assertEquals("ab3", invoke("/if"));
     }
 	
 	public void testIfabc1() throws ServletException, IOException {
-    	request.addParameter("a", "a");
-    	request.addParameter("b", "b");
-    	request.addParameter("c", "c");
+    	request.setQueryString("a=a&b=b&c=c");
     	assertEquals("abc1", invoke("/if"));
     }
 	
 	public void testIfNotAbc1() throws ServletException, IOException {
-    	request.addParameter("a", "a");
-    	request.addParameter("b", "b");
-    	request.addParameter("c", "fasdfsad");
+    	request.setQueryString("a=a&b=b&c=fasdfsad");
     	assertEquals("ab1", invoke("/if"));
     }
 	
@@ -52,27 +64,36 @@ public class IfControllerTest extends AbstractControllerTest {
     }
 
     public void testIfb() throws ServletException, IOException {
-        request.addParameter("b", "anyvalueforb");
+        request.setQueryString("b=anyvalueforb");
         assertEquals("b", invoke("/if"));
     }
 
     public void testIfc() throws ServletException, IOException {
-        request.addParameter("c", "anyvalueforc");
+        request.setQueryString("c=anyvalueforc");
+        assertEquals("c", invoke("/if"));
+    }
+    
+    public void testIfc_2() throws ServletException, IOException {
+        request.setQueryString("c=");
+        assertEquals("c", invoke("/if"));
+    }
+    
+    public void testIfc_3() throws ServletException, IOException {
+        request.setQueryString("c");
         assertEquals("c", invoke("/if"));
     }
 
     public void testIfc3() throws ServletException, IOException {
-        request.addParameter("c", "3");
+        request.setQueryString("c=3");
         assertEquals("c3", invoke("/if"));
     }
 
     public void testIfc2() throws ServletException, IOException {
-        request.addParameter("c", "2");
+        request.setQueryString("c=2");
         assertEquals("c2", invoke("/if"));
     }
 
     public void testSubDir() throws ServletException, IOException {
         assertEquals("d", invoke("/if/d"));
     }
-    
 }
