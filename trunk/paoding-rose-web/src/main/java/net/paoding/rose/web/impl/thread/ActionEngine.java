@@ -22,6 +22,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -322,7 +323,7 @@ public final class ActionEngine implements Engine {
     private Map<String, String[]> resolveQueryString(String queryString) {
     	Map<String, String[]> params;
     	if (queryString == null || queryString.length() == 0) {
-        	params = new HashMap<String, String[]>(0);
+        	params = Collections.emptyMap();
         } else {
         	params = new HashMap<String, String[]>();
         	String[] kvs = queryString.split("&");
