@@ -15,12 +15,13 @@
  */
 package net.paoding.rose.web;
 
-import java.util.Random;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
+ * TODO 目前是每个Module中都有一个指定interceptor的实例（或Delegate），
+ * 这个可能造成一些隐患，需要修改掉。
+ * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  */
 public class OncePerRequestInterceptorDelegate extends InterceptorDelegate {
@@ -31,20 +32,29 @@ public class OncePerRequestInterceptorDelegate extends InterceptorDelegate {
 
     public OncePerRequestInterceptorDelegate(ControllerInterceptor interceptor) {
         super(interceptor);
-        this.filteredKey = "$$paoding-rose.interceptor.oncePerRequest." + "." + getName() + "-r"
-                + Integer.toHexString(new Random().nextInt());
+        String realInterceptorName = getMostInnerInterceptor(interceptor).getClass().getName();
+        this.filteredKey = "$$paoding-rose.interceptor.oncePerRequest." + "." + realInterceptorName;
     }
 
     @Override
     public Object roundInvocation(Invocation inv, InvocationChain chain) throws Exception {
         Invocation tempInv = inv;
         boolean tobeIntercepted; // true代表该执行拦截器，false代表不执行该拦截器而把流程交给下一个拦截器
+        
+        int preCount = 0;
         while (true) {
             tobeIntercepted = (tempInv.getAttribute(filteredKey) == null);
             if (!tobeIntercepted) {
-                break;
+                if (logger.isDebugEnabled()) {
+                	logger.debug(preCount + "-th preInvocation found filteredKey:" + filteredKey);
+                }
+            	break;
             }
             tempInv = tempInv.getPreInvocation();
+            preCount ++;
+            if (logger.isDebugEnabled()) {
+            	logger.debug(preCount + "-th preInvocation:" + tempInv);
+            }
             if (tempInv == null) {
                 break;
             }
