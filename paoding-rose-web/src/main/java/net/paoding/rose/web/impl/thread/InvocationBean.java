@@ -305,6 +305,9 @@ public final class InvocationBean implements Invocation {
         if (attributes == null) {
             attributes = new HashMap<String, Object>();
         }
+        if (logger.isDebugEnabled()) {
+        	logger.debug("setAttribute(" + name + "=" + value + ")");
+        }
         attributes.put(name, value);
         return this;
     }
