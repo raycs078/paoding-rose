@@ -122,7 +122,7 @@ public class ControllerInterceptorAdapter implements Named, Ordered, ControllerI
      * @throws Exception
      */
     protected Object before(Invocation inv) throws Exception {
-        return true;
+        return Boolean.TRUE;
     }
 
     /**
