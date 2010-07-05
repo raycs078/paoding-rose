@@ -25,6 +25,7 @@ import net.paoding.rose.util.SpringUtils;
 import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.impl.thread.InvocationBean;
 
+import org.apache.commons.lang.math.NumberUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.stereotype.Component;
@@ -121,7 +122,11 @@ public class InstructionExecutorImpl implements InstructionExecutor {
                 int begin = str.indexOf(':') + 1;
                 int codeEnd = str.indexOf(';');
                 if (codeEnd == -1) {
-                    return HttpError.code(Integer.parseInt(str.substring(begin)));
+                    String text = str.substring(begin);
+                    if (text.length() > 0 && NumberUtils.isNumber(text)) {
+                        return HttpError.code(Integer.parseInt(text));
+                    }
+                    return HttpError.code(500, text);
                 } else {
                     return HttpError.code(Integer.parseInt(str.substring(begin, codeEnd)), str
                             .substring(codeEnd + 1).trim());
