@@ -50,7 +50,7 @@ public class RequestPath {
     private String actionPath;
 
     private Dispatcher dispatcher;
-    
+
     public RequestPath(ReqMethod method, String uri, String ctxpath, Dispatcher dispatcher) {
         this.setMethod(method);
         setUri(uri);
@@ -191,7 +191,8 @@ public class RequestPath {
             this.rosePath = "";
             return;
         }
-        while (rosePath.charAt(rosePath.length() - 1) == '/') {
+        // 只判断一次，如果有以request请求以'//'结尾的，rose肯定会映射失败，但是rose不会为了兼容做这个事情
+        if (rosePath.charAt(rosePath.length() - 1) == '/') {
             rosePath = rosePath.substring(0, rosePath.length() - 1);
         }
         this.rosePath = rosePath;
