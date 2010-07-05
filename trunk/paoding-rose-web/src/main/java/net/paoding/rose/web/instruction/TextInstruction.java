@@ -57,6 +57,18 @@ public class TextInstruction extends AbstractInstruction {
             return;
         }
         HttpServletResponse response = inv.getResponse();
+        String oldEncoding = response.getCharacterEncoding();
+        if (StringUtils.isBlank(oldEncoding) || oldEncoding.startsWith("ISO-")) {
+            String encoding = inv.getRequest().getCharacterEncoding();
+            Assert.isTrue(encoding != null);
+            response.setCharacterEncoding(encoding);
+            if (logger.isDebugEnabled()) {
+                logger.debug("set response.characterEncoding by default:"
+                        + response.getCharacterEncoding());
+            }
+        }
+
+        //
         String mainContentType = null; // text中说明的mainContentType，分号之前的部分(如有分号的话）
         final int contentTypeIndex = text.indexOf(':');
         int mainContentTypeIndex = -1;

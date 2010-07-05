@@ -62,24 +62,8 @@ public class ViewInstruction extends AbstractInstruction {
     // 视图名称，不包含路径，一般没有后缀名
     private String name;
 
-    // 非空时，设置该页面的内容格式
-    private String contentType;
-
-    // 非空时，设置该页面的编码格式
-    private String encoding;
-
     // 如果applicationContext能够获取到这个名字的对象，则使用这个对象作为viewResolver
     private String viewDispatcherName = "viewDispatcher";
-
-    public ViewInstruction contentType(String contentType) {
-        setContentType(contentType);
-        return this;
-    }
-
-    public ViewInstruction encoding(String encoding) {
-        setEncoding(encoding);
-        return this;
-    }
 
     public ViewInstruction name(String name) {
         setName(name);
@@ -88,22 +72,6 @@ public class ViewInstruction extends AbstractInstruction {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public void setEncoding(String encoding) {
-        this.encoding = encoding;
-    }
-
-    public void setContentType(String contentType) {
-        this.contentType = contentType;
-    }
-
-    public String encoding() {
-        return encoding;
-    }
-
-    public String contentType() {
-        return contentType;
     }
 
     @Override
@@ -116,15 +84,7 @@ public class ViewInstruction extends AbstractInstruction {
             HttpServletResponse response = inv.getResponse();
             //
             View view = viewResolver.resolveViewName(inv, viewPath, request.getLocale());
-            //
-            if (contentType != null) {
-                String contentType = resolvePlaceHolder(this.contentType, inv);
-                response.setContentType(contentType);
-            }
-            if (encoding != null) {
-                String encoding = resolvePlaceHolder(this.encoding, inv);
-                response.setCharacterEncoding(encoding);
-            }
+
             if (!Thread.interrupted()) {
                 inv.addModel(ROSE_INVOCATION, inv);
                 view.render(inv.getModel().getAttributes(), request, response);

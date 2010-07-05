@@ -448,7 +448,9 @@ public final class ActionEngine implements Engine {
                 return this.instruction;
             } else if (index == interceptors.length) {
                 // applies http features before the resolvers
-                applyHttpFeatures(rose.getInvocation());
+                if (httpFeatures != null) {
+                    applyHttpFeatures(rose.getInvocation());
+                }
 
                 this.instruction = method.invoke(controller, rose.getInvocation()
                         .getMethodParameters());
@@ -485,46 +487,31 @@ public final class ActionEngine implements Engine {
     }
 
     private void applyHttpFeatures(final Invocation inv) throws UnsupportedEncodingException {
-        HttpServletRequest request = inv.getRequest();
         HttpServletResponse response = inv.getResponse();
-        if (httpFeatures != null) {
-            if (StringUtils.isNotBlank(httpFeatures.charset())) {
-                response.setCharacterEncoding(httpFeatures.charset());
-                if (logger.isDebugEnabled()) {
-                    logger.debug("set response.characterEncoding by HttpFeatures:"
-                            + httpFeatures.charset());
-                }
-            }
-            if (StringUtils.isNotBlank(httpFeatures.contentType())) {
-                String contentType = httpFeatures.contentType();
-                if (contentType.equals("json")) {
-                    contentType = "application/json";
-                } else if (contentType.equals("xml")) {
-                    contentType = "text/xml";
-                } else if (contentType.equals("html")) {
-                    contentType = "text/html";
-                } else if (contentType.equals("plain") || contentType.equals("text")) {
-                    contentType = "text/plain";
-                }
-                response.setContentType(contentType);
-                if (logger.isDebugEnabled()) {
-                    logger.debug("set response.contentType by HttpFeatures:"
-                            + response.getContentType());
-                }
-            }
-        }
-        String oldEncoding = response.getCharacterEncoding();
-        if (StringUtils.isBlank(oldEncoding) || oldEncoding.startsWith("ISO-")) {
-            String encoding = request.getCharacterEncoding();
-            Assert.isTrue(encoding != null);
-            response.setCharacterEncoding(encoding);
+        if (StringUtils.isNotBlank(httpFeatures.charset())) {
+            response.setCharacterEncoding(httpFeatures.charset());
             if (logger.isDebugEnabled()) {
-                logger.debug("set response.characterEncoding by default:"
-                        + response.getCharacterEncoding());
+                logger.debug("set response.characterEncoding by HttpFeatures:"
+                        + httpFeatures.charset());
             }
         }
-
-        // !!不用写设置content-type代码，web容器会自动把修改后的charset加进去!
+        if (StringUtils.isNotBlank(httpFeatures.contentType())) {
+            String contentType = httpFeatures.contentType();
+            if (contentType.equals("json")) {
+                contentType = "application/json";
+            } else if (contentType.equals("xml")) {
+                contentType = "text/xml";
+            } else if (contentType.equals("html")) {
+                contentType = "text/html";
+            } else if (contentType.equals("plain") || contentType.equals("text")) {
+                contentType = "text/plain";
+            }
+            response.setContentType(contentType);
+            if (logger.isDebugEnabled()) {
+                logger.debug("set response.contentType by HttpFeatures:"
+                        + response.getContentType());
+            }
+        }
     }
 
     @Override
