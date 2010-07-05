@@ -73,6 +73,8 @@ public final class ActionEngine implements Engine {
 
     private final Method method;
 
+    private final HttpFeatures httpFeatures;
+
     private final InterceptorDelegate[] interceptors;
 
     private final ParamValidator[] validators;
@@ -92,6 +94,11 @@ public final class ActionEngine implements Engine {
         this.methodParameterResolver = compileParamResolvers();
         this.validators = compileValidators();
         this.paramExistenceChecker = compileParamExistenceChecker();
+        HttpFeatures httpFeatures = method.getAnnotation(HttpFeatures.class);
+        if (httpFeatures == null) {
+            httpFeatures = this.controllerClass.getAnnotation(HttpFeatures.class);
+        }
+        this.httpFeatures = httpFeatures;
     }
 
     public InterceptorDelegate[] getRegisteredInterceptors() {
@@ -216,13 +223,12 @@ public final class ActionEngine implements Engine {
                     @Override
                     public int check(Map<String, String[]> params) {
                         String[] paramValues = params.get(paramName);
-						if (logger.isDebugEnabled()) {
-							logger.debug(this.toString()
-									+ " is checking param:" + paramName + "="
-									+ Arrays.toString(paramValues));
-						}
-						
-						//规则中没有约束参数值，所以只要存在就ok
+                        if (logger.isDebugEnabled()) {
+                            logger.debug(this.toString() + " is checking param:" + paramName + "="
+                                    + Arrays.toString(paramValues));
+                        }
+
+                        //规则中没有约束参数值，所以只要存在就ok
                         if (paramValues != null && paramValues.length > 0) {
                             return 10;
                         } else {
@@ -249,20 +255,19 @@ public final class ActionEngine implements Engine {
                         @Override
                         public int check(Map<String, String[]> params) {
                             String[] paramValues = params.get(paramName);
-							if (logger.isDebugEnabled()) {
-								logger.debug(this.toString()
-										+ " is checking param:" + paramName
-										+ "=" + Arrays.toString(paramValues) + ", pattern="
-										+ pattern.pattern());
-							}
+                            if (logger.isDebugEnabled()) {
+                                logger.debug(this.toString() + " is checking param:" + paramName
+                                        + "=" + Arrays.toString(paramValues) + ", pattern="
+                                        + pattern.pattern());
+                            }
                             if (paramValues == null) { //参数值不能存在就不能通过
                                 return -1;
                             }
-                            
+
                             for (String paramValue : paramValues) {
-                            	 if (pattern != null && pattern.matcher(paramValue).matches()) {
-                                     return 12;
-                                 } 
+                                if (pattern != null && pattern.matcher(paramValue).matches()) {
+                                    return 12;
+                                }
                             }
                             return -1;
                         }
@@ -273,21 +278,20 @@ public final class ActionEngine implements Engine {
                         @Override
                         public int check(Map<String, String[]> params) {
                             String[] paramValues = params.get(paramName);
-							if (logger.isDebugEnabled()) {
-								logger.debug(this.toString()
-										+ " is checking param:" + paramName
-										+ "=" + Arrays.toString(paramValues) + ", expected="
-										+ expected);
-							}
-							if (paramValues == null) { //参数值不能存在就不能通过
+                            if (logger.isDebugEnabled()) {
+                                logger.debug(this.toString() + " is checking param:" + paramName
+                                        + "=" + Arrays.toString(paramValues) + ", expected="
+                                        + expected);
+                            }
+                            if (paramValues == null) { //参数值不能存在就不能通过
                                 return -1;
                             }
-                            
-							for (String paramValue : paramValues) {
-								if (expected.equals(paramValue)){
-									return 13;// 13优先于正则表达式的12
-								}
-							}
+
+                            for (String paramValue : paramValues) {
+                                if (expected.equals(paramValue)) {
+                                    return 13;// 13优先于正则表达式的12
+                                }
+                            }
                             return -1;
                         }
                     });
@@ -307,11 +311,10 @@ public final class ActionEngine implements Engine {
         for (ParamExistenceChecker checker : paramExistenceChecker) {
             int c = checker.check(params);
             if (c == -1) { //-1表示此约束条件未通过
-				if (logger.isDebugEnabled()) {
-					logger.debug("Accepted check not passed by "
-							+ checker.toString());
-				}
-            	return -1;
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Accepted check not passed by " + checker.toString());
+                }
+                return -1;
             }
             //FIXME 目前采用各个检查条件权值相加的办法来决定最终权值，
             //在权值相等的情况下，可能会有选举问题，需要更好的策略来取代
@@ -321,37 +324,37 @@ public final class ActionEngine implements Engine {
     }
 
     private Map<String, String[]> resolveQueryString(String queryString) {
-    	Map<String, String[]> params;
-    	if (queryString == null || queryString.length() == 0) {
-        	params = Collections.emptyMap();
+        Map<String, String[]> params;
+        if (queryString == null || queryString.length() == 0) {
+            params = Collections.emptyMap();
         } else {
-        	params = new HashMap<String, String[]>();
-        	String[] kvs = queryString.split("&");
-        	for (String kv : kvs) {
-        		String[] pair = kv.split("=");
-        		if (pair.length == 2) {
-        			mapPut(params, pair[0], pair[1]);
-        		} else if (pair.length == 1){
-        			mapPut(params, pair[0], "");
-        		} else {
-        			logger.error("Illegal queryString:" + queryString);
-        		}
-        	}
+            params = new HashMap<String, String[]>();
+            String[] kvs = queryString.split("&");
+            for (String kv : kvs) {
+                String[] pair = kv.split("=");
+                if (pair.length == 2) {
+                    mapPut(params, pair[0], pair[1]);
+                } else if (pair.length == 1) {
+                    mapPut(params, pair[0], "");
+                } else {
+                    logger.error("Illegal queryString:" + queryString);
+                }
+            }
         }
-    	return params;
+        return params;
     }
+
     private void mapPut(Map<String, String[]> map, String key, String value) {
-    	String[] values = map.get(key);
-    	if (values == null) {
-    		values = new String[]{value};
-    	} else {
-    		values = Arrays.copyOf(values, values.length + 1);
-    		values[values.length - 1] = value;
-    	}
-    	map.put(key, values);
+        String[] values = map.get(key);
+        if (values == null) {
+            values = new String[] { value };
+        } else {
+            values = Arrays.copyOf(values, values.length + 1);
+            values[values.length - 1] = value;
+        }
+        map.put(key, values);
     }
-    
-    
+
     @Override
     public Object execute(Rose rose) throws Throwable {
         try {
@@ -363,8 +366,6 @@ public final class ActionEngine implements Engine {
 
     protected Object innerExecute(Rose rose) throws Throwable {
         Invocation inv = rose.getInvocation();
-        // applies http features before the resolvers
-        applyHttpFeatures(inv);
 
         // creates parameter binding result (not bean, just simple type, like int, Integer, int[] ...
         ParameterBindingResult paramBindingResult = new ParameterBindingResult(inv);
@@ -446,6 +447,9 @@ public final class ActionEngine implements Engine {
                 }
                 return this.instruction;
             } else if (index == interceptors.length) {
+                // applies http features before the resolvers
+                applyHttpFeatures(rose.getInvocation());
+
                 this.instruction = method.invoke(controller, rose.getInvocation()
                         .getMethodParameters());
 
@@ -483,10 +487,6 @@ public final class ActionEngine implements Engine {
     private void applyHttpFeatures(final Invocation inv) throws UnsupportedEncodingException {
         HttpServletRequest request = inv.getRequest();
         HttpServletResponse response = inv.getResponse();
-        HttpFeatures httpFeatures = method.getAnnotation(HttpFeatures.class);
-        if (httpFeatures == null) {
-            httpFeatures = this.controllerClass.getAnnotation(HttpFeatures.class);
-        }
         if (httpFeatures != null) {
             if (StringUtils.isNotBlank(httpFeatures.charset())) {
                 response.setCharacterEncoding(httpFeatures.charset());
@@ -566,15 +566,15 @@ public final class ActionEngine implements Engine {
     public void destroy() {
 
     }
-    
+
     public static void main(String[] args) {
-		/*System.out.println(resolveQueryString(""));
-		System.out.println(resolveQueryString(null));
-		System.out.println(resolveQueryString("param"));
-		System.out.println(resolveQueryString("param=1"));
-		System.out.println(resolveQueryString("param=1&k2&k3=v3"));*/
-    	
-    	System.out.println((new String[]{"hehe","haha"}));
-    	
-	}
+        /*System.out.println(resolveQueryString(""));
+        System.out.println(resolveQueryString(null));
+        System.out.println(resolveQueryString("param"));
+        System.out.println(resolveQueryString("param=1"));
+        System.out.println(resolveQueryString("param=1&k2&k3=v3"));*/
+
+        System.out.println((new String[] { "hehe", "haha" }));
+
+    }
 }
