@@ -31,6 +31,7 @@ public class AccessControlInterceptor extends ControllerInterceptorAdapter {
     @Override
     public Object before(Invocation inv) throws Exception {
         if (!LogFactory.getLog(inv.getControllerClass()).isDebugEnabled()) {
+            inv.getResponse().setContentType("text/html;encoding=utf-8");
             return Frame.wrap(String.format(
                     "Forbidden [DEBUG NOT ENABLED %s]<br> Rose-Version: %s", inv
                             .getControllerClass().getName(), RoseVersion.getVersion()));
