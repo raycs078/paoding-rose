@@ -50,15 +50,15 @@ ROOT
 /help
     GET="HomeController#help" package="com.xiaonei.xxx.controllers"
 
-ROOT代表这是一个根地址，也就是http://localhost/代表的地址；
+ROOT代表这是一个根地址，也就是 http://localhost/ 代表的地址；
 
 ROOT的下级有个GET结点，代表对该地址支持GET访问，不支持POST等其它访问，如果进行POST访问将以405错误回应。
 
-/book代表这是一个/book地址，也就是http://localhost/book代表的地址；
+/book代表这是一个/book地址，也就是 http://localhost/book 代表的地址；
 
 /book下级有GET、POST两个结点，说明它支持GET和POST方法，根据HTTP语义，GET代表浏览，POST代表追加(向一个集合中追加一个条目)。
 
-/book下还有/book/地址，这个地址有点特别，它以'/'结尾，但实际它不会被任何地址访问到，rose对http://localhost/book/的处理会将它等价于http://localhost/book。
+/book下还有/book/地址，这个地址有点特别，它以'/'结尾，但实际它不会被任何地址访问到，rose对http://localhost/book/的处理会将它等价于 http://localhost/book 。
 
 这个特别的地址的存在完全是匹配树结构所需导致的，但不对实际匹配有任何坏的影响，所以也没有任何GET、POST等子结点。
 
