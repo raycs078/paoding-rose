@@ -1,5 +1,5 @@
 #summary One-sentence summary of this page.
-
+<wiki:toc max_depth="3" />
 = 目的 =
 
 这个示例内容会比较丰富，通过这个示例的了解，我相信您已经能够较为熟练地使用rose开发。
@@ -30,26 +30,95 @@ http://localhost/lib 是它的访问地址，其中/lib是contextpath，因此�
 
 = URI设计=
 
-
 || *URI* & *method* ||     Desc   ||
 || */lib*  ||     
-|| ........ GET || 按页浏览书库的书，参数page表示页数；||
-|| ........ POST||增加一本书，参数为name、author、price，都是必填项目；||
+|| ....1) GET || 跳转到/lib/book；||
+|| */lib/book*  ||     
+|| ....2) GET || 按页浏览书库的书，参数page表示页数；||
+|| ....3) POST||增加一本书，参数为name、author、price，都是必填项目；||
 || */lib/book/{bookId* }  ||  ||
-|| ........ GET ||  展示该书的详细信息，包括附属的所有评论，最新的备注在前；<br> *如果带有edit参数*，则返回编辑页面，页面不包含评论||
-|| ........ PUT ||修改该书的信息 ||
+|| ....4) GET ||  展示该书的详细信息，包括附属的所有评论，最新的备注在前；<br> *如果带有edit参数*，则返回编辑页面，页面不包含评论||
+|| ....5) PUT ||修改该书的信息 ||
 || */lib/book/{bookId}/remark*   ||  ||
-|| ........ DELETE|| 删除该书的所有备注||
+|| ....6) DELETE|| 删除该书的所有备注||
 || */lib/book/{bookId}/remark/{remarkId}* ||   ||
-|| ........ DELETE || 删除某一个备注||
+|| ....7) DELETE || 删除某一个备注||
 || */lib/login* ||   ||
-|| ........ GET  ||  返回登录页面 ||
-|| ........ POST|| 执行登录判断 ||
+|| ....8) GET  ||  返回登录页面 ||
+|| ....9) POST|| 执行登录判断 ||
 || */lib/user* ||   ||
-|| ........ GET|| 列出所有用户||
-|| ........ POST|| 新增一个注册用户||
+|| ...10) GET|| 列出所有用户||
+|| ...11) POST|| 新增一个注册用户||
 || */lib/user/{userId}* ||    ||
-|| ........ DELETE || 注销某个用户||
+|| ...12) DELETE || 注销某个用户||
+
+= 控制器结构 =
+
+* HomeController.java
+{{{
+package com.company.lib.controllers;
+
+@Path("")
+public class HomeController {
+    // 1)
+    @Get
+    public String redirect() {
+         return "r:/lib/book";
+    }
+}
+
+}}}
+
+* ListController.java
+{{{
+package com.company.lib.controllers.book;
+
+@Path("")
+public class ListController {
+
+    // 2)
+    @Get
+    public String listByPage(@Param("page") @DefValue("1") int page) {
+        // TODO: query from database
+        return "book-list";
+    }
+
+    // 3)
+    @Post
+    public String add(Book book) {
+        // TODO: insert into database
+        return "r:/lib/book";
+    }
+
+}
+}}}
 
 
+* BookController.java
+{{{
+package com.company.lib.controllers.book;
 
+// TODOL bookId?id?
+@Path("{bookId:[a-zA-Z0-9]+}")
+public class BookController {
+
+    // 4)
+    @Get
+    public String show(@Param("bookId") String bookId, @Param("edit") boolean isEdit) {
+        // TODO: query from database
+        if (isEdit) {
+            return "book-edit";
+        }
+        // TODO: query remarks from database
+        return "book-show";
+    }
+
+    // 5)
+    @Put
+    public String update(Book book) {
+        // TODO: update book
+        return "r:/lib/book/" + book.getId() + "?edit=true";
+    }
+
+}
+}}}
