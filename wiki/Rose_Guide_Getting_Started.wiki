@@ -7,7 +7,7 @@
 
 ===后件：成果===
  按照这个文档说明的步骤开发后，最后能够把Rose运行起来，并通过 http://127.0.0.1/hello/world 访问，呈现以下的效果：<p>
-http://webrose.googlecode.com/issues/attachment?aid=1563428544168265712&name=rose-guide-getting-started-hello-world.PNG
+http://webrose.googlecode.com/issues/attachment?aid=1563428544168265712&token=906de100a387395e85c5f9b9e70e9e49&name=rose-guide-getting-started-hello-world.PNG
 
 ===创建动态web项目===
 {{{
@@ -152,4 +152,4 @@ Eclipse
 ===验证===
 访问 http://127.0.0.1/hello/world 或 http://127.0.0.1:8080/hello/world<br>
 <p>
-http://webrose.googlecode.com/issues/attachment?aid=1563428544168265712&name=rose-guide-getting-started-hello-world.PNG
+http://webrose.googlecode.com/issues/attachment?aid=1563428544168265712&token=906de100a387395e85c5f9b9e70e9e49&name=rose-guide-getting-started-hello-world.PNG
