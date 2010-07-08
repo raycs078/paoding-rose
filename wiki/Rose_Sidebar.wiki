@@ -28,7 +28,7 @@
 
  * 【API】
   # [Rose_Guide_Invocation Invocation对象]
-  # [Rose_Guide_ReqMapping 地址映射规范]
+  # [Rose_Guide_Mapping 地址映射规范]
   # [Rose_Guide_Regex 正则表达式技术回顾]
   # [Rose_Guide_Instruction “指示”规范]
   # [Rose_Guide_Interceptor 拦截器]
