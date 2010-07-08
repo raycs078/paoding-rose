@@ -18,6 +18,7 @@
 
  * 【开始】
   # [Rose_Guide_Getting_Started 第一支程序]
+  # [Rose_Guide_Application2 第二支程序]
   # [Rose_Guide_WEB_XML web.xml]
   # [Rose_Guide_Dependencies 依赖的Jar包]
 
