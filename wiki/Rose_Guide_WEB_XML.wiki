@@ -45,13 +45,9 @@ Rose内部使用apache的commons-logging作为日志输出接口，故Rose并没
 
 <!--
 	- 这个就是Log4jConfigListener配置，它可以读取上面配置的log4jConfigLocation等信息，
-	- 配置Log4J信息以及进行webapp根地址的暴露(暴露使其成为一个System属性，参见上面的
-	- log4jExposeWebAppRoot配置)
+	- 配置Log4J信息以及进行webapp根地址的暴露(暴露使其成为一个System属性，请搜索
+	- log4jExposeWebAppRoot了解相关说明)
 -->
-<!--
-	- 如果您使用JBoss作为应用服务器，请把这个配置注释掉，使它不生效，JBoss已经提供了全局的Log4J配置了。
-	- 其它情况，您可以打开以下注释(Rose默认为注释掉的)，使它生效。
- -->
 <listener>
 	<listener-class>org.springframework.web.util.Log4jConfigListener</listener-class>
 </listener>
