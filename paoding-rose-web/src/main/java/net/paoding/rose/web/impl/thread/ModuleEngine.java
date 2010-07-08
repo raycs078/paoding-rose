@@ -24,6 +24,7 @@ import net.paoding.rose.util.SpringUtils;
 import net.paoding.rose.web.ControllerErrorHandler;
 import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.annotation.NotForSubModules;
+import net.paoding.rose.web.annotation.SuppressMultipartResolver;
 import net.paoding.rose.web.impl.module.Module;
 
 import org.apache.commons.logging.Log;
@@ -91,6 +92,10 @@ public class ModuleEngine implements Engine {
         return module;
     }
 
+    public MultipartResolver getMultipartResolver() {
+        return multipartResolver;
+    }
+
     @Override
     public int isAccepted(HttpServletRequest rose) {
         return 1;
@@ -106,19 +111,7 @@ public class ModuleEngine implements Engine {
 
         boolean isMultiPartRequest = false;
         try {
-            if (isMultiPartRequest = checkMultipart(inv)) {
-                inv.setAttribute("$$paoding-rose.isMultiPartRequest", Boolean.TRUE);
-            }
-            return innerInvoke(rose);
-        } finally {
-            if (isMultiPartRequest) {
-                cleanupMultipart(inv);
-            }
-        }
-    }
-
-    private Object innerInvoke(Rose rose) throws Throwable {
-        try {
+            isMultiPartRequest = checkMultipart(inv);
             return rose.doNext();
         } catch (Throwable invException) {
             // 抛出异常了(可能是拦截器或控制器抛出的)，此时让该控制器所在模块的ControllerErrorHanlder处理
@@ -170,6 +163,10 @@ public class ModuleEngine implements Engine {
                 }
             }
             return instruction;
+        } finally {
+            if (isMultiPartRequest) {
+                cleanupMultipart(inv);
+            }
         }
     }
 
@@ -192,6 +189,9 @@ public class ModuleEngine implements Engine {
     //------------------------------------------------------
 
     protected boolean checkMultipart(Invocation inv) throws MultipartException {
+        if (inv.getMethod().isAnnotationPresent(SuppressMultipartResolver.class)) {
+            return false;
+        }
         if (this.multipartResolver.isMultipart(inv.getRequest())) {
             if (inv.getRequest() instanceof MultipartHttpServletRequest) {
                 logger.debug("Request is already a MultipartHttpServletRequest");
