@@ -67,12 +67,45 @@ import org.springframework.web.context.WebApplicationContext;
  * </ul>
  * <p>
  * 
- * 
+ * WIKI上的说明 <a href=
+ * "http://code.google.com/p/paoding-rose/wiki/Rose_Guide_Invocation"
+ * >http://code.google.com/p/paoding-rose/wiki/Rose_Guide_Invocation</a>
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
 public interface Invocation {
+
+    /**
+     * 返回rose对本次请求的地址、方法的信息
+     * <p>
+     * 比如你想得到本次调用的 URL，通过 {@link RequestPath#getUri()} 将是最准确的，而非
+     * {@link HttpServletRequest#getRequestURI()}。
+     * 
+     * @return
+     */
+    public RequestPath getRequestPath();
+
+    /**
+     * 返回本次调用的 {@link HttpServletRequest}对象
+     * 
+     * @return
+     */
+    public HttpServletRequest getRequest();
+
+    /**
+     * 返回本次调用的 {@link HttpServletResponse}对象
+     * 
+     * @return
+     */
+    public HttpServletResponse getResponse();
+
+    /**
+     * 更改本次调用的请求对象
+     * 
+     * @param request
+     */
+    public void setRequest(HttpServletRequest request);
 
     /**
      * 本次调用的目标控制器对象。
@@ -115,7 +148,7 @@ public interface Invocation {
      * </ul>
      * 对用户对应的实体Bean，一般没有标注@Param，他的参数名即是该实体类名的首字母小写化字符串。<br>
      * (额外注意：通过@Param标注一个实体类，
-     * 不仅仅改变了默认的参数名，同时也将改变数据绑定规则，即时通过@Param标注的名字和默认的一样)。
+     * 不仅仅改变了默认的参数名，同时也将改变数据绑定规则，即使通过@Param标注的名字和默认的一样)。
      * 
      * @see Param
      * @return
@@ -132,10 +165,11 @@ public interface Invocation {
     public Object[] getMethodParameters();
 
     /**
-     * 获取在URI、flash信息、请求查询串(即问号后的xx=yyy)中所带的参数值
+     * 获取在请求查询串(即问号后的xx=yyy)、POST中Body中、URI所带的参数值。
      * <p>
-     * URI中的参数需要通过在控制器方法中通过类似@ReqMapping(path="user_${name}")进行声明，
-     * 才可以获取name的参数<br>
+     * URI中的参数需要通过在控制器方法中通过类似@Path("user_{name}")进行声明，才可以获取name的参数<br>
+     * 同时因为 Rose 对 {@link HttpServletRequest}
+     * 进行了封装，使得其request的getParameter和inv的getParameter的语义相同。
      * 
      * @param name
      * @return
@@ -209,6 +243,9 @@ public interface Invocation {
 
     /**
      * 设置一个和本次调用关联的属性。这个属性可以在多个拦截器中共享。
+     * <p>
+     * 因为所设置的属性值和本次调用有关，所以他与 {@link #getRequest()#setAttribute(String,
+     * Object)}是不相同的。
      * 
      * @param name
      * @param value
@@ -225,6 +262,7 @@ public interface Invocation {
     public Object getAttribute(String name);
 
     /**
+     * 删除inv的某一个属性
      * 
      * @param name
      */
@@ -246,57 +284,53 @@ public interface Invocation {
     public void addFlash(String name, String msg);
 
     /**
+     * 返回本次请求附带的Flash信息，如果上次请求的响应中没有往用户端写入Flash信息，仍旧会返回一个非空的Flash对象，
+     * 只是里面的数据将为空。
      * 
      * @return
      */
     public Flash getFlash();
 
     /**
+     * 返回本次请求附带的Flash信息。
+     * <p>
+     * 如果之前没有获取过这个Flash信息，且create参数为false则返回null，否则创建Flash对象，并填充可能的Flash信息。
      * 
+     * @param create
      * @return
      */
-    public RequestPath getRequestPath();
+    public Flash getFlash(boolean create);
 
     /**
-     * 返回本次调用的 {@link HttpServletRequest}对象
-     * 
-     * @return
-     */
-    public HttpServletRequest getRequest();
-
-    /**
-     * 返回本次调用的 {@link HttpServletResponse}对象
-     * 
-     * @return
-     */
-    public HttpServletResponse getResponse();
-
-    /**
+     * 返回本次调用控制器所在模块的 {@link WebApplicationContext} 对象
      * 
      * @return
      */
     public WebApplicationContext getApplicationContext();
 
     /**
+     * 返回 {@link ServletContext} 对象
      * 
      * @return
      */
     public ServletContext getServletContext();
 
     /**
+     * 返回所有参数绑定名
      * 
      * @return
      */
     public List<String> getBindingResultNames();
 
     /**
+     * 返回所有参数绑定结果对象
      * 
      * @return
      */
     public List<BindingResult> getBindingResults();
 
     /**
-     * 获取控制器action方法普通参数的绑定结果
+     * 获取控制器方法普通参数的绑定结果
      * 
      * @return
      * @throws NullPointerException 如果当前线程中没有绑定请求对象时
@@ -304,26 +338,13 @@ public interface Invocation {
     public BindingResult getParameterBindingResult();
 
     /**
-     * 获取控制器action方法各个bean的绑定结果
+     * 获取控制器方法各个bean的绑定结果
      * 
      * @param bean bean实体对象或bindingResult的名字
      * @return
      * @throws NullPointerException 如果当前线程中没有绑定请求对象时
      */
     public BindingResult getBindingResult(String bean);
-
-    /**
-     * 
-     * @param request
-     */
-    public void setRequest(HttpServletRequest request);
-
-    /**
-     * 
-     * @param create
-     * @return
-     */
-    public Flash getFlash(boolean create);
 
     /**
      * 获取前一个Invocation对象，如果没有返回null
@@ -348,8 +369,8 @@ public interface Invocation {
 
     /**
      * <p>
-     * 增加 {@link AfterCompletion}
-     * 对象，使整个页面渲染结束时，或者整个流程接下来的任何一点有异常时，都能够执行该对象的逻辑。
+     * 通过这个方法，可以在拦截器、控制器等能够拿到inv的地方设置一个“资源回收计划”。
+     * 在整个页面渲染结束时，或者因为异常导致流程中断时，所设置的“资源回收计划”能够被执行。
      * 
      * <p>
      * 注意：越先加入的afterComletion对象，越靠后执行。
