@@ -25,7 +25,6 @@ import java.util.Set;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 
 import net.paoding.rose.web.Invocation;
@@ -60,7 +59,7 @@ public final class InvocationBean implements Invocation {
 
     private Map<String, Object> attributes;
 
-    private HttpServletRequestWrapper request;
+    private HttpServletRequest request;
 
     private HttpServletResponse response;
 
@@ -306,7 +305,7 @@ public final class InvocationBean implements Invocation {
             attributes = new HashMap<String, Object>();
         }
         if (logger.isDebugEnabled()) {
-        	logger.debug("setAttribute(" + name + "=" + value + ")");
+            logger.debug("setAttribute(" + name + "=" + value + ")");
         }
         attributes.put(name, value);
         return this;
@@ -341,7 +340,7 @@ public final class InvocationBean implements Invocation {
 
     @Override
     public HttpServletRequest getRequest() {
-        return (HttpServletRequest) (request == null ? null : request.getRequest());
+        return this.request;
     }
 
     @Override
@@ -357,12 +356,12 @@ public final class InvocationBean implements Invocation {
             return;
         }
         if (this.request == null) {
-            this.request = new HttpServletRequestWrapper(request);
+            this.request = request;
         } else {
-            if (this.request.getRequest() == InvocationUtils.getCurrentThreadRequest()) {
+            if (this.request == InvocationUtils.getCurrentThreadRequest()) {
                 InvocationUtils.bindRequestToCurrentThread(request);
             }
-            this.request.setRequest(request);
+            this.request = request;
         }
     }
 
