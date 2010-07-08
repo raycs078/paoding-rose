@@ -84,13 +84,13 @@ rose拦截器实现AOP编程的一个手段，rose将这些拦截器分为2种�
 
 ==全局拦截器==
 
-  所谓全局拦截器是指，那些不是局部拦截器的其它拦截器，并且作为bean配置到root context中的拦截器。所谓root context默认是由WEB-INF/applicationContext*.xml、classes/applicationContext*.xml、xxx.jar/applicationContext*.xml组成的ApplicationContext。
+  所谓全局拦截器是指，那些不是局部拦截器的其它拦截器，并且作为bean配置到root context中的拦截器。所谓root context默认是由{{{WEB-INF/applicationContext*.xml、classes/applicationContext*.xml、xxx.jar/applicationContext*.xml}}}组成的ApplicationContext。
 
   如果你的拦截器是公司级别的，希望在多个项目中共用的，就可以考虑提供一个单独的拦截器包，把拦截器创建在这个包中，并把它配置在src/applicationContext-intercetors.xml下。
 
-  为了使jar文件根目录下的applicationContext*.xml能够被rose“认识到”，你需要在xxx.jar/META-INF下创建一个rose.properties文件，并写入一个属性rose=applicationContext 。如果没有这个属性，即使你的xxx.jar包根目录含有applicationContext*.xml文件，也不会被rose识别。
+  为了使jar文件根目录下的{{{applicationContext*.xml}}}能够被rose“认识到”，你需要在xxx.jar/META-INF下创建一个rose.properties文件，并写入一个属性rose=applicationContext 。如果没有这个属性，即使你的xxx.jar包根目录含有{{{applicationContext*.xml}}}文件，也不会被rose识别。
 
 
 ==作用范围与实际拦截的区别==
 
-当一个拦截器作用于某个范围时，不代表就能够拦截到那个范围内的控制器。每个拦截器可以覆盖getRequiredAnnotationClass、isForAction等方法允许或排除某些控制器或方法，控制器及其方法也可以通过@Intercepted的allow和deny属性进行控制。
+  当一个拦截器作用于某个范围时，不代表就能够拦截到那个范围内的控制器。每个拦截器可以覆盖getRequiredAnnotationClass、isForAction等方法允许或排除某些控制器或方法，控制器及其方法也可以通过@Intercepted的allow和deny属性进行控制。
