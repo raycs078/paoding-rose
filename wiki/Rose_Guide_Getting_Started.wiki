@@ -15,7 +15,7 @@ Eclipse
  --> New
  --> Other...
  --> Web --> Dynamic Web Project
- --> Project Name: RoseGettingStartted
+ --> Project Name: HelloRose
  --> Target Runtime: 
      如果Eclipse已经有Server环境(Tomcat等)，选一个；
      如果没有的话，选择右边的New按钮，创建Server环境
@@ -53,7 +53,7 @@ Eclipse
 </filter-mapping>
 }}}
 
- * 创建WEB-INF/log4j.properties
+ * 创建WEB-INF/log4j.properties 
 
 {{{
 log4j.rootLogger=INFO, stdout
@@ -67,6 +67,8 @@ log4j.logger.net.paoding=DEBUG
 # set roseInfo INFO to close /rose-inf
 log4j.logger.net.paoding.rose.web.controllers.roseInfo=DEBUG
 }}}
+
+请顺便确认WEB-INF/lib含有log4j的jar，如果没有那就下载一个(1.0 的rose依赖包已经含有)。
 
  * 创建WEB-INF/toolbox.xml文件
 
@@ -83,9 +85,9 @@ log4j.logger.net.paoding.rose.web.controllers.roseInfo=DEBUG
 }}}
 
 ===拷贝jar包===
- * 把下载包中的dist/paoding-rose-x.y.jar拷贝到WebContent/WEB-INF/lib下
- * 把下载包中的lib/的所有jar拷贝到WebContent/WEB-INF/lib下
- * 刷新Eclipse中该项目，使build path生效
+ * 把下载包中的 {{{dist/paoding-rose*.jar}}} 拷贝到 WebContent/WEB-INF/lib下
+ * 把下载包中的 lib/ 的所有jar拷贝到 WebContent/WEB-INF/lib下
+ * 刷新 Eclipse 中该项目，使 build path 生效
 
 ===设计视图模板===
  * 在WebContent下创建views子目录
@@ -138,6 +140,15 @@ public class HelloController {
 }
 
 }}}
+
+===做一个标识===
+
+目前来说这个步骤是可选的，但是如果您是通过打jar来部署的，则这个步骤不可避免。
+
+在src下建立创建META-INF/rose.properties文件，写上rose=controllers, applicationContext, dao
+
+这个标识指示rose要识别你开发的jar包中的web代码、jar根目录下的applicationContext*.xml以及jar包中的Jade DAO对象（Jade在本示例没有说明，他是rose提供的DAO编写规范，你只要写DAO接口就可以使用他访问数据库的技术，这个技术一样在人人网、糯米网大力使用）
+
 
 ===启动===
 {{{
