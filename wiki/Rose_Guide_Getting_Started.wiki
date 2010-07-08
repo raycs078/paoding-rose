@@ -147,7 +147,7 @@ public class HelloController {
 
 在src下建立创建META-INF/rose.properties文件，写上rose=controllers, applicationContext, dao, messages
 
-这个标识指示rose要识别你开发的jar包中的web代码、jar根目录下的{{{applicationContext*.xml、messages*.xml}}}，以及jar包中的Jade DAO对象（Jade在本示例没有说明，他是rose提供的DAO编写规范，你只要写DAO接口就可以使用他访问数据库的技术，这个技术一样在人人网、糯米网大力使用）
+这个标识指示rose要识别你开发的jar包中的web代码、jar根目录下的{{{applicationContext*.xml、messages*.xml或messages*.properties}}}，以及jar包中的Jade DAO对象（Jade在本示例没有说明，他是rose提供的DAO编写规范，你只要写DAO接口就可以使用他访问数据库的技术，这个技术一样在人人网、糯米网大力使用）
 
 
 ===启动===
