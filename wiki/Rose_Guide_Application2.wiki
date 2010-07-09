@@ -34,7 +34,7 @@ http://localhost/lib 是它的访问地址，其中/lib是contextpath，因此�
 || */lib*  ||     
 || ....1) GET || 跳转到/lib/book；||
 || */lib/book*  ||     
-|| ....2) GET || 按页浏览书库的书，参数page表示页数；||
+|| ....2) GET || 按页浏览书库的书，参数offset用于分页；||
 || ....3) POST||增加一本书，参数为name、author、price，都是必填项目；||
 || */lib/book/add  ||  ||
 || ....4) GET ||  显示增加书的页面 ||
@@ -89,7 +89,7 @@ public class BookController {
 
     // 2)
     @Get
-    public String list(@Param("page") @DefValue("1") int page) {
+    public String list(@Param("offset") int offset) {
         // 控制器方法返回以"@"开头，是为暂时策略;
         // 这样使得在没有页面的情况下不会404错误，当页面准备好的时候要去掉"@"
         // 下同
@@ -337,7 +337,7 @@ public AutoLogInterceptor extends ControllerInterceptorAdapter {
 == book表 ==
 
 || *列名*     || *类型*       || *说明*     ||
-|| id         || bigint       || 主健、自增 ||
+|| id         || bigint       || 主健、自增、降序返回 ||
 || name       || varchar(255) || 书名       ||
 || price      || float        || 价格       ||
 || author     || varchar(255) || 作者       ||
@@ -352,7 +352,7 @@ public AutoLogInterceptor extends ControllerInterceptorAdapter {
 || essay      || varchar(2000)|| 备注内容   ||
 || create_time|| timestamp    || 创建时间   ||
 
-== logs表 ==
+== oper_log表 ==
 
 || *列名*     || *类型*       || *说明*     ||
 || id         || bigint       || 主健、自增 ||
@@ -362,3 +362,104 @@ public AutoLogInterceptor extends ControllerInterceptorAdapter {
 || success          || tinyint(1)   || 操作成功?    ||
 || remarks          || varchar(255) || 对操作的额外说明 ||
 || create_time      || timestamp    || 创建时间         ||
+
+= DAO设计=
+
+== BookDAO.java ==
+
+{{{
+package com.company.lib.dao;
+
+@DAO
+public interface BookDAO {
+
+    @SQL("select id, name, price, author from book where id = :1")
+    public Book get(long bookId);
+
+    @SQL("select id, name, price, author from book limit :1 order by id desc ")
+    public Book find(int limit);
+
+    @SQL("select id, name, price, author from book where id < :1 limit :2 order by id desc ")
+    public Book find(long bookId, int limit);
+
+    @SQL("update book set name=:1.name, price=:1.price, author=:1.author where id=:1.id")
+    public void update(Book book);
+
+    @SQL("insert into book (name, price, author) values (:1.name, :1.price, :1.author)")
+    public Identity save(Book book)
+
+}
+
+}}}
+
+== RemarkDAO.java ==
+
+{{{
+package com.company.lib.dao;
+id	 bigint	 主健、自增
+user_name	 varchar(255)	 备注人姓名
+book_id	 varchar(255)	 书名
+essay	 varchar(2000)	 备注内容
+create_time	 timestamp	
+@DAO
+public interface RemarkDAO {
+
+    @SQL("select id, user_name, book_id, essay, create_time from remark where book_id=:1")
+    public List<Remark> findByBook(long bookId);
+
+    @SQL("delete from remark where book_id=:1")
+    public void deleteByBook(long bookId);
+
+    @SQL("delete from remark where id=:1")
+    public void delete(long remarkId);
+
+    @SQL("insert into remark (user_name, book_id, essay) values (:1.userName, :1.bookId, :1.essay")
+    public Identity save(Remark remark);
+
+    
+
+}
+
+}}}
+
+
+== UserDAO.java ==
+
+{{{
+package com.company.lib.dao;
+
+@DAO
+public interface UserDAO {
+
+    @SQL("select id, name, login_name from user where login_name=:1") 
+    public User getByLoginName(String loginName);
+
+    @SQL("select id, name, password, login_name, create_time from user where id=:1") 
+    public User get(long userId);
+
+    @SQL("select id, name, login_name, create_time from user")
+    public List<User> find();
+
+    @SQL("delete from user where id=:1")
+    public void delete(long userId);
+
+}
+}}}
+
+== OperLogDAO.java ==
+
+{{{
+package com.company.lib.dao;
+
+@DAO
+public interface OperLogDAO {
+
+    @SQL("select id, user_name, resource_pattern, resource_id, success, remarks, create_time from oper_log")
+    public List<OperLog> find();
+
+    @SQL("insert into oper_log (user_name, resource_pattern, resource_id, success, remarks) values (:1.userName, :1.resourcePatterh, :1.resourceId, :1.success, :1.remarks)")
+    public void save(OperLog operLog);
+
+}
+
+}}}
