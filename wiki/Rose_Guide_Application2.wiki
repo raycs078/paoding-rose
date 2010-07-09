@@ -1,4 +1,4 @@
-#summary One-sentence summary of this page.
+#
 
 第二支程序
 
@@ -120,7 +120,8 @@ public class BookController {
     }
 
     // 5)
-    // 可以通过打括号表示一个变量，通过冒号说明他的正则规则
+    // 可以通过大括号表示一个变量，通过冒号说明他的正则规则
+    // 正则通常是可以省略的(默认规则是除‘\’的任何的多个字符)，就像后面还有的{remarkId}，虽然remarkId也应该只是数字
     @Get("{bookId:[0-9]+}")
     public String show(@Param("bookId") long bookId, @Param("edit") boolean isEdit) {
         // TODO: query from database
@@ -398,8 +399,11 @@ public @interface LoginRequired {
 == BookDAO.java ==
 
 {{{
+// dao类必须在xxx.dao或子包下
 package com.company.lib.dao;
 
+// 必须是接口，并且以大写DAO结尾
+// 必须标注@DAO，DAO中有一个catalog属性，对于大部分人来说，这个都是没用的
 @DAO
 public interface BookDAO {
 
@@ -425,11 +429,9 @@ public interface BookDAO {
 == RemarkDAO.java ==
 
 {{{
-// dao类必须在xxx.dao或子包下
 package com.company.lib.dao;
 
-// 必须是接口，并且以大写DAO结尾
-// 必须标注@DAO，DAO中有一个catalog属性，对于大部分人来说，这个都是没用的
+
 @DAO
 public interface RemarkDAO {
 
@@ -494,6 +496,8 @@ public interface OperLogDAO {
 
 }
 }}}
+
+更详细的，可转看[Jade_DAO_Spec Jade DAO编写规范]
 
 = 资源的提供 =
 
@@ -603,6 +607,7 @@ package com.company.lib.controllers;
 
 public AutoLogInterceptor extends ControllerInterceptorAdapter {
 
+    // 这里的executorService，在applicationContext-executor.xml中并没有id="xxx", 但这没有问题，Spring会给该Bean一个默认的id（类全名）
     @Autowired
     private ExecutorService executorService;
     
@@ -618,12 +623,15 @@ public AutoLogInterceptor extends ControllerInterceptorAdapter {
             operLog.setUserName(loginUser.getName());
         }
         
+        // 封装为一个任务
         Runnable task = new Runnable() {
             public void run() {
                  operLogDAO.save(operLog);
             }
         };
-        
+
+        // 将插入到数据库的操作提交executorService做异步更新
+        // 在实际场景中，这种方式要注意webapp shutdown的时候，还未执行的Task的处理问题
         executorService.submit(task);
     }
 }
