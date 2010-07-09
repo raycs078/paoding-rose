@@ -38,7 +38,7 @@ http://localhost/lib 是它的访问地址，其中/lib是contextpath，因此�
 || ....3) POST||增加一本书，参数为name、author、price，都是必填项目；||
 || */lib/book/add  ||  ||
 || ....4) GET ||  显示增加书的页面 ||
-|| */lib/book/{bookId* }  ||  ||
+|| */lib/book/{bookId}*  ||  ||
 || ....5) GET ||  展示该书的详细信息，包括附属的所有评论，最新的备注在前；<br> *如果带有edit参数*，则返回编辑页面，页面不包含评论||
 || ....6) PUT ||修改该书的信息 ||
 || */lib/book/{bookId}/remark*   ||  ||
@@ -59,13 +59,14 @@ http://localhost/lib 是它的访问地址，其中/lib是contextpath，因此�
 || */lib/logs* ||    ||
 || ...16) GET|| 按页列出所有用户操作日志||
 
-= 控制器结构 =
+= 控制器设计 =
 
 
-* HomeController.java
+== {{{ HomeController.java }}}==
 {{{
 package com.company.lib.controllers;
 
+@LoginRequired
 @Path("")
 public class HomeController {
     // 1)
@@ -78,10 +79,11 @@ public class HomeController {
 }}}
 
 
-* book.BookController.java
+== {{{ book.BookController.java }}}==
 {{{
 package com.company.lib.controllers.book;
 
+@LoginRequired
 @Path("")
 public class BookController {
 
@@ -132,10 +134,11 @@ public class BookController {
 }
 }}}
 
-* book.RemarkController.java
+== {{{book.RemarkController.java }}}==
 {{{
 package com.company.lib.controllers.book;
 
+@LoginRequired
 @Path("{bookId}/remark}")
 public class RemarkController {
 
@@ -154,7 +157,7 @@ public class RemarkController {
 
 }}}
 
-* LoginController.java
+== {{{LoginController.java }}}==
 {{{
 package com.company.lib.controllers;
 
@@ -175,10 +178,11 @@ public class LoginController {
 }
 }}}
 
-* user.UserController.java
+== {{{user.UserController.java}}} ==
 {{{
 package com.company.lib.controllers.user;
 
+@LoginRequired
 @Path("")
 public class UserController {
 
@@ -221,11 +225,12 @@ public class UserController {
 }
 }}}
 
-* logs.LogsController.java
+== {{{ logs.LogsController.java }}}==
 
 {{{
 package com.company.lib.controllers.logs;
 
+@LoginRequired
 @Path("")
 public class LogsCotnroller {
 
@@ -233,6 +238,88 @@ public class LogsCotnroller {
     @Get
     public String list(@Param("offset") int offset) {
         return "@logs-list";
+    }
+}
+}}}
+
+= 拦截器设计 =
+
+
+== {{{ PassportInterceptor.java }}}==
+
+{{{
+package com.company.lib.controllers;
+
+@Interceptor(oncePerRequest = true)
+public PassportInterceptor extends ControllerInterceptorAdapter {
+
+
+    public PassportInterceptor() {
+        setPriority(1000);
+    }
+    
+    protected Object before(Invocation inv) throws Exception  {
+        User loginUser = ...;
+        inv.getRequest().setAttribute("loginUser", loginUser);
+        return true;
+    }
+}
+}}}
+
+== {{{ LoginRequredInterceptor.java }}}==
+
+{{{
+package com.company.lib.controllers;
+
+public LoginRequredInterceptor extends ControllerInterceptorAdapter {
+
+    public LoginRequredInterceptor() {
+        setPriority(900);
+    }
+
+    protected Class<? extends Annotation> getRequiredAnnotationClass() {
+        return LoginRequired.class;
+    }
+    
+    protected Object before(Invocation inv) throws Exception {
+        User loginUser = inv.getRequest().getAttribute("loginUser");
+        if (loginUser == null) {
+             return "r:/lib/login";
+        }
+        return true;
+    }
+}
+}}}
+
+== {{{ LoginRequired.java }}}==
+
+{{{
+
+package com.company.lib.controllers;
+
+@Inherited
+@Target( { ElementType.TYPE, ElementType.METHOD })
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+public @interface LoginRequired {
+
+}
+
+}}}
+
+== {{{ AutoLogInterceptor.java }}}==
+
+{{{
+package com.company.lib.controllers;
+
+public AutoLogInterceptor extends ControllerInterceptorAdapter {
+    
+    public void afterCompletion(Invocation inv, Throwable ex) throws Exception  {
+        String uid = inv.getResourceId(); // e.g. /lib/book/{bookId}
+        String uri = inv.getRequestPath().getUri(); // e.g. /lib/book/123456
+        boolean fail = (ex != null);
+        String failMessage = fail ? ex.getMessage() : null;
+        // TODO: put into a executor that save it to database 
     }
 }
 }}}
