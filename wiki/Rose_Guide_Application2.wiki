@@ -36,23 +36,31 @@ http://localhost/lib 是它的访问地址，其中/lib是contextpath，因此�
 || */lib/book*  ||     
 || ....2) GET || 按页浏览书库的书，参数page表示页数；||
 || ....3) POST||增加一本书，参数为name、author、price，都是必填项目；||
+|| */lib/book/add  ||  ||
+|| ....4) GET ||  显示增加书的页面 ||
 || */lib/book/{bookId* }  ||  ||
-|| ....4) GET ||  展示该书的详细信息，包括附属的所有评论，最新的备注在前；<br> *如果带有edit参数*，则返回编辑页面，页面不包含评论||
-|| ....5) PUT ||修改该书的信息 ||
+|| ....5) GET ||  展示该书的详细信息，包括附属的所有评论，最新的备注在前；<br> *如果带有edit参数*，则返回编辑页面，页面不包含评论||
+|| ....6) PUT ||修改该书的信息 ||
 || */lib/book/{bookId}/remark*   ||  ||
-|| ....6) DELETE|| 删除该书的所有备注||
+|| ....7) DELETE|| 删除该书的所有备注||
 || */lib/book/{bookId}/remark/{remarkId}* ||   ||
-|| ....7) DELETE || 删除某一个备注||
+|| ....8) DELETE || 删除某一个备注||
 || */lib/login* ||   ||
-|| ....8) GET  ||  返回登录页面 ||
-|| ....9) POST|| 执行登录判断 ||
+|| ....9) GET  ||  返回登录页面 ||
+|| ...10) POST|| 执行登录判断 ||
 || */lib/user* ||   ||
-|| ...10) GET|| 列出所有用户||
-|| ...11) POST|| 新增一个注册用户||
+|| ...11) GET|| 列出所有用户||
+|| ...12) POST|| 新增一个注册用户||
+|| */lib/user/add* ||   ||
+|| ...13) GET|| 显示增加用户的页面||
 || */lib/user/{userId}* ||    ||
-|| ...12) DELETE || 注销某个用户||
+|| ...14) GET|| 显示某个用户的详细信息；<br> *如果带有edit参数*，则返回编辑页面||
+|| ...15) DELETE || 注销某个用户||
+|| */lib/logs* ||    ||
+|| ...16) GET|| 按页列出所有用户操作日志||
 
 = 控制器结构 =
+
 
 * HomeController.java
 {{{
@@ -69,56 +77,162 @@ public class HomeController {
 
 }}}
 
-* ListController.java
+
+* book.BookController.java
 {{{
 package com.company.lib.controllers.book;
 
 @Path("")
-public class ListController {
+public class BookController {
 
     // 2)
     @Get
-    public String listByPage(@Param("page") @DefValue("1") int page) {
-        // TODO: query from database
-        return "book-list";
+    public String list(@Param("page") @DefValue("1") int page) {
+        // 控制器方法返回以"@"开头，是为暂时策略;
+        // 这样使得在没有页面的情况下不会404错误，当页面准备好的时候要去掉"@"
+        // 下同
+        return "@book-list";
     }
 
     // 3)
     @Post
     public String add(Book book) {
         // TODO: insert into database
-        return "r:/lib/book";
+        if (success) {
+            return "r:/lib/book";
+        } else {
+            return "@book-add";
+        }
     }
 
-}
-}}}
-
-
-* BookController.java
-{{{
-package com.company.lib.controllers.book;
-
-// TODOL bookId?id?
-@Path("{bookId:[a-zA-Z0-9]+}")
-public class BookController {
-
     // 4)
-    @Get
-    public String show(@Param("bookId") String bookId, @Param("edit") boolean isEdit) {
-        // TODO: query from database
-        if (isEdit) {
-            return "book-edit";
-        }
-        // TODO: query remarks from database
-        return "book-show";
+    @Get("add")
+    public String showAdd() {
+        return "@book-add";
     }
 
     // 5)
-    @Put
+    @Get("{bookId}")
+    public String show(@Param("bookId") String bookId, @Param("edit") boolean isEdit) {
+        // TODO: query from database
+        if (isEdit) {
+            return "@book-edit";
+        }
+        // TODO: query remarks from database
+        return "@book-page";
+    }
+
+    // 6)
+    @Put("{bookId}")
     public String update(Book book) {
         // TODO: update book
         return "r:/lib/book/" + book.getId() + "?edit=true";
     }
 
+}
+}}}
+
+* book.RemarkController.java
+{{{
+package com.company.lib.controllers.book;
+
+@Path("{bookId}/remark}")
+public class RemarkController {
+
+    // 7)
+    @Delete
+    public String clear(@Param("bookId") String bookId) {
+        return "r:/lib/book/" + bookId;
+    }
+
+    // 8)
+    @Delete("{remarkId}")
+    public String delete(@Param("bookId") String bookId, @Param("remarkId") String remarkId) {
+        return "r:/lib/book/" + bookId;
+    }
+}
+
+}}}
+
+* LoginController.java
+{{{
+package com.company.lib.controllers;
+
+@Path("login")
+public class LoginController {
+
+    // 9)
+    @Get
+    public String show() {
+        return "@login";
+    }
+
+    // 10)
+    @Post
+    public String doLogin() {
+        return "r:/lib/book";
+    }
+}
+}}}
+
+* user.UserController.java
+{{{
+package com.company.lib.controllers.user;
+
+@Path("")
+public class UserController {
+
+    // 11)
+    @Get
+    public String list() {
+        return "@user-list";
+    }
+
+    // 12)
+    @Post
+    public String add(User user) {
+        if (success) {
+            return "r:/lib/user";
+        } else {
+            return "@user-add";
+        }
+    }
+
+    // 13)
+    @Get("add")
+    public String showAdd() {
+        return "@user-add";
+    }
+
+    // 14)
+    @Get("{userId}")
+    public String show(@Param("userId") String userId, @Param("isEdit") boolean isEdit) {
+        if (isEdit) {
+            return "@user-edit";
+        }
+        return "@user-page";
+    }
+
+    // 15)
+    @Delete("{userId}")
+    public String delete(@Param("userId") String userId) {
+        return "r:/lib/user";
+    }
+}
+}}}
+
+* logs.LogsController.java
+
+{{{
+package com.company.lib.controllers.logs;
+
+@Path("")
+public class LogsCotnroller {
+
+    // 16)
+    @Get
+    public String list(@Param("offset") int offset) {
+        return "@logs-list";
+    }
 }
 }}}
