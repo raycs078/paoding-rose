@@ -132,7 +132,7 @@ portal.css
 
 ==并发数配置==
 
-在web.xml的<web-app>下配置并发参数值：
+在web.xml的{{{<web-app>}}}下配置并发参数值：
 {{{
 	<context-param>
 		<param-name>portalExecutorCorePoolSize</param-name>
@@ -161,4 +161,4 @@ portal.css
 
 运行该webapp，访问http://localhost/portal 显示如下
 
-[http://fmn.xnimg.cn/fmn038/20100610/1040/p_large_DZax_127c0000077e2d14.jpg]
+[http://webrose.googlecode.com/issues/attachment?aid=6159855606613425491&name=p_large_DZax_127c0000077e2d14%5B1%5D.jpg&token=05b6d675be91a08d0a958b10259dddf7&.jpg]
