@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang.math.NumberUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeanInstantiationException;
@@ -122,7 +123,8 @@ public class BeanPropertyRowMapper implements RowMapper {
                 }
                 this.mappedFields.put(pd.getName().toLowerCase(), pd);
                 for (String underscoredName : underscoreName(pd.getName())) {
-                    if (!pd.getName().toLowerCase().equals(underscoredName)) {
+                    if (underscoredName != null
+                            && !pd.getName().toLowerCase().equals(underscoredName)) {
                         this.mappedFields.put(underscoredName, pd);
                     }
                 }
@@ -135,24 +137,36 @@ public class BeanPropertyRowMapper implements RowMapper {
      * Any upper case letters are converted to lower case with a preceding
      * underscore.
      * 
-     * @param name the string containing original name
+     * @param camelCaseName the string containing original name
      * @return the converted name
      */
-    private String[] underscoreName(String name) {
+    private String[] underscoreName(String camelCaseName) {
         StringBuilder result = new StringBuilder();
-        if (name != null && name.length() > 0) {
-            result.append(name.substring(0, 1).toLowerCase());
-            for (int i = 1; i < name.length(); i++) {
-                String s = name.substring(i, i + 1);
-                if (s.equals(s.toUpperCase())) {
+        if (camelCaseName != null && camelCaseName.length() > 0) {
+            result.append(camelCaseName.substring(0, 1).toLowerCase());
+            for (int i = 1; i < camelCaseName.length(); i++) {
+                char ch = camelCaseName.charAt(i);
+                if (Character.isUpperCase(ch)) {
                     result.append("_");
-                    result.append(s.toLowerCase());
+                    result.append(Character.toLowerCase(ch));
                 } else {
-                    result.append(s);
+                    result.append(ch);
                 }
             }
         }
-        return new String[] { result.toString() };
+        String name = result.toString();
+        // 因为兼容问题,需要把 passportMd5映射为passport_md5和passport_md_5两种形式
+        String name2 = null;
+        for (int i = name.length() - 1; i >= 0; i--) {
+            if (Character.isDigit(name.charAt(i))) {
+                continue;
+            }
+            if (i < name.length() - 1 && i > 0) {
+                name2 = name.substring(0, i + 1) + "_" + name.substring(i + 1);
+                break;
+            }
+        }
+        return new String[] { name, name2 };
     }
 
     /**
