@@ -591,3 +591,11 @@ public AutoLogInterceptor extends ControllerInterceptorAdapter {
 }}}
 
 = 视图组件的设计 =
+
+ * 你需要在webapps/lib下创建views目录,也就是views目录要和WEB-INF同级别，这个不能错了，否则会404;
+
+ * controllers下的控制器对应的视图仓库是views，controllers.book、controllers.user、controllers.logs对应的视图仓库是views/book、views/user、views/logs，即与他们向对于controlles的路径一样;
+
+ * 您可以使用jsp、vm，就像 [Rose_Guide_Getting_Started#设计视图模板 第一支程序] 中陈述那样，无论食用jsp还是vm，控制器返回都不需要带后缀，rose会判断实际views目录中存在的是jsp或vm等(极端地，如果2个文件都存在，则以字母顺序优先，即jsp优先于vm)
+
+ * 具体的jsp和vm如何写，是否需要在本页面中作示范？[您可以在评论中发表意见或直接发邮件给我qieqie.wang # gmail.com]
