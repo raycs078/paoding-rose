@@ -1,15 +1,19 @@
 #labels Featured
-===前件：运行环境===
+第一支程序
+
+<wiki:toc max_depth="3" />
+
+=前件：运行环境=
  * 已经下载rose开发包，如果没有，请先把Rose[Rose_Download 下载]下来
  * 确认Java运行环境没问题：[Rose_Environment 开发和运行环境]
  * 有一个Tomcat、Resin或其他web容器：[Rose_Environment 开发和运行环境]
  * 有一个Java编辑器，如Eclipse等(此文假设您使用的是Eclipse)
 
-===后件：成果===
+=后件：成果=
  按照这个文档说明的步骤开发后，最后能够把Rose运行起来，并通过 http://127.0.0.1/hello/world 访问，呈现以下的效果：<p>
 http://webrose.googlecode.com/issues/attachment?aid=1563428544168265712&token=906de100a387395e85c5f9b9e70e9e49&name=rose-guide-getting-started-hello-world.PNG
 
-===创建动态web项目===
+=创建动态web项目=
 {{{
 Eclipse
  --> New
@@ -26,7 +30,7 @@ Eclipse
  --> 确认项目使用的字符集是UTF-8 （项目属性->Resource选项卡)
 }}}
 
-===WEB-INF===
+=WEB-INF=
  * 在web.xml下配置一个Filter,以及 *可选的* log4j功能
 
 {{{
@@ -84,12 +88,12 @@ log4j.logger.net.paoding.rose.web.controllers.roseInfo=DEBUG
 </toolbox>
 }}}
 
-===拷贝jar包===
+=拷贝jar包=
  * 把下载包中的 {{{dist/paoding-rose*.jar}}} 拷贝到 WebContent/WEB-INF/lib下
  * 把下载包中的 lib/ 的所有jar拷贝到 WebContent/WEB-INF/lib下
  * 刷新 Eclipse 中该项目，使 build path 生效
 
-===设计视图模板===
+=设计视图模板=
  * 在WebContent下创建views子目录
  * 在views目录下创建hello-world.vm文件
 
@@ -100,7 +104,7 @@ log4j.logger.net.paoding.rose.web.controllers.roseInfo=DEBUG
 </html>
 }}}
 
-===国际化文件===
+=国际化文件=
  * 在src下创建messages.xml 【[http://www.ibm.com/developerworks/java/library/j-tiger02254.html xml格式参考]】
 {{{
 <?xml version="1.0" encoding="UTF-8"?>
@@ -115,7 +119,7 @@ log4j.logger.net.paoding.rose.web.controllers.roseInfo=DEBUG
 hello = 您好
 }}}
 
-===编写控制器===
+=编写控制器=
 
 创建com.xiaonei.rose.gettingStarted.*controllers*.HelloController
 {{{
@@ -141,7 +145,7 @@ public class HelloController {
 
 }}}
 
-===做一个标识===
+=做一个标识=
 
 目前来说这个步骤是可选的，但是如果您是通过打jar来部署的，则这个步骤不可避免。
 
@@ -150,7 +154,7 @@ public class HelloController {
 这个标识指示rose要识别你开发的jar包中的web代码、jar根目录下的{{{applicationContext*.xml、messages*.xml或messages*.properties}}}，以及jar包中的Jade DAO对象（Jade在本示例没有说明，他是rose提供的DAO编写规范，你只要写DAO接口就可以使用他访问数据库的技术，这个技术一样在人人网、糯米网大力使用 详见：[Jade_DAO_Spec Jade DAO规范]）
 
 
-===启动===
+=启动=
 {{{
 Eclipse
  --> 选中项目
@@ -160,7 +164,11 @@ Eclipse
  --> OK
 }}}
 
-===验证===
+=验证=
 访问 http://127.0.0.1/hello/world 或 http://127.0.0.1:8080/hello/world<br>
 <p>
 http://webrose.googlecode.com/issues/attachment?aid=1563428544168265712&token=906de100a387395e85c5f9b9e70e9e49&name=rose-guide-getting-started-hello-world.PNG
+
+= 接下来 =
+
+接下来你可以看一个更丰富的、比较完整的程序 [Rose_Guide_Application2 第二支程序]
