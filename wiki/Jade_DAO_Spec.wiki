@@ -1,6 +1,8 @@
+Jade DAO规范
+
 <wiki:toc max_depth="3" />
 
-==简单的DAO接口==
+=简单的DAO接口=
 
 一个Jade DAO首先需要符合以下基本要求：
 <br>
@@ -28,7 +30,7 @@ public interface CustomerDAO {
 }
 }}}
 
-==具有继承关系的DAO接口==
+=具有继承关系的DAO接口=
 
 一个接口(ChildDAO)可以扩展继承另外一个接口(ParentDAO)，只要ChildDAO符合《简单的DAO接口》的规定，它就是一个合格的Jade DAO接口类。<br>
 如果ChildDAO没有标注@DAO，但其上级接口(包含祖先)标注了@DAO，则也被认为是标注了@DAO。
@@ -57,7 +59,7 @@ public interface ComplexDAO extends UserDAO, CustomerDAO {
 
 如没有特殊指明，下文简单地使用DAO指代符合Jade 规范的DAO接口。
 
-==DAO方法==
+=DAO方法=
 一个DAO接口可以不限制地定义自己的方法，但只有标注 @SQL 注解的方法才被Jade识别为可以查询数据库的、真正的DAO方法。
 
 示例一：
@@ -73,7 +75,7 @@ public User findOne();
 public void updateName(long userId, String userName);
 }}}
 
-==DAO方法规范==
+=DAO方法规范=
 1、	必须标注 @SQL 注解;<br>
 2、	返回类型可以是void，也可以根据不同应用情况进行声明，详看《返回类型》；<br>
 3、	方法名称不限，但应该使用符合人类思维的名字以体现我们是正常的人类；<br>
@@ -95,13 +97,13 @@ public List<User> findByNameLike(String likeString) throws DataAccessException;
 public int deleteUser(long[] userId) throws DataAccessException;
 }}}
 
-==两种SQL类型==
+=两种SQL类型=
 
 Jade将 SQL语句分为两种类型："查询语句"和"非查询语句"，更进一步的，Jade默认只把以 SELECT 、SHOW、DESC、DESCRIBE 开始的 SQL 语句才识别为查询语句。<br>
 对于查询语句，Jade 会期望数据库返回一个结果集 ；非查询语句的，Jade 只是期望数据库返回一个更新的条目数。<br>
 对于存储过程，如果没有特别指定 Jade 会把它当成非查询类型。<br>
 
-==@SQL的基本用法==
+=@SQL的基本用法=
 
 @SQL用于标注在 DAO 方法上，表示这是一个 DAO 方法，同时说明执行这次 DAO 方法调用所要执行的 SQL 语句。<br>
 可以在 @SQL 中写入完整的一个 SQL 语句：<br>
@@ -129,11 +131,11 @@ public void updateName(long userId,  @SQLParam("name") String userName);
 如果要执行一个存储过程，亦可以写到@SQL中，但需要该存储过程返回结果集的，则可通过 type 来指定SQL 类型：
 @SQL(value = "…" type = SQLType.READ")
 
-==DAO 方法的返回类型==
+=DAO 方法的返回类型=
 
 书写 DAO 方法的返回类型时要讲究，要根据不同的 SQL 类型做不同的处理。<br><br>
 
-===非查询类型语句===
+==非查询类型语句==
 
 非查询类型的 DAO 方法，Jade 只期待数据库返回一个整型数，表示此次执行数据库变更了多少行的记录。
 
@@ -148,7 +150,7 @@ public void updateName(long userId,  @SQLParam("name") String userName);
 
 如果你的 SQL 语句是一个插入语句，并且会产生一个自增 ID的，可通过声明返回类型为Idenity 明确返回该自增 ID，而非"记录变更数目"。
 
-===查询类型语句===
+==查询类型语句==
 
 查询类型的 DAO 方法的返回类型虽然力求简单、明了，但总体比较丰富，也比较复杂：
 || *方法返回类型*	|| *适用的情况* ||
@@ -161,7 +163,7 @@ public void updateName(long userId,  @SQLParam("name") String userName);
 ||Map<Long, String>	|| 返回任意行，每行2列，前一列为key，后一列为value的结果<br>SELECT id, name FROM user;||
 ||Map<Long, User>	|| 返回任意行，每行不限制列，第一列为key，整行为value的结果<br>SELECT id, name, age FROM user;||
 
-==Bean映射规则(默认)==
+=Bean映射规则(默认)=
 DAO 方法可以声明返回一个 Bean 或者 Bean 的数组或集合，以下陈述映射规则。
 
 示例一：
@@ -188,7 +190,7 @@ public List<User> find(int offset, int maxSize);
 <br>
 提醒一下的是，Jade使用默认使用的映射不仅限于此，但我强烈建议各位开发者严格按照这个规则来处理映射，因为哪一天Jade将更加严格(如果做了严格限制，一旦映射失败会提示InvalidDataAccessApiUsageException异常)。
 
-==自定义 Bean 映射==
+=自定义 Bean 映射=
 
 示例一：使用自定义的UserRowMapper
 
@@ -204,11 +206,11 @@ public Object mapRow(ResultSet rs, int rowNum) throws SQLException {
 }
 }}}
 
-==方法参数==
+=方法参数=
 
 方法参数可以是和数据库列类型相对应Java类型，比如String、int、Integer、long、Long、java.util.Date、java.sql.Date等，也支持以下类型：数组、List、Set、Map、Java Bean。
 
-===数组或集合类型作为参数的(for IN)===
+==数组或集合类型作为参数的(for IN)==
 
 集合类型指实现Collection接口的一些类型，比如List、Set等。集合类型、数组 参数用于处理 in 的情况，而且这个数组或集合类型的元素应该是一些数据库列相对应的Java类型：
 
@@ -245,7 +247,7 @@ userDAO.findNames("1,2,3");
 }}}
 
 
-===Bean作为参数的===
+==Bean作为参数的==
 通过 ’.’ 号来使用Bean 的属性，将其作为 SQL 参数。<br>
 
 示例一: 使用 :1.id、:1.name、:1.age
@@ -256,7 +258,7 @@ public void save(User user);
 }}}
 
 
-===Map作为参数的===
+==Map作为参数的==
 通过方括号来使用 Map 的值，将其作为 SQL 参数。
 
 示例一: 使用  :1[id] :1[name]  :1[age]
@@ -266,7 +268,7 @@ public void save(User user);
 public void save(Map<String, ?> userProperties);
 }}}
 
-===数组元素===
+==数组元素==
 类似Map的使用，通过方括号来使用 数组 的值，将其作为 SQL 参数。
 
 示例一: 使用   :1[0] :1[1]  :1[2]
