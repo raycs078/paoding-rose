@@ -30,34 +30,32 @@ http://localhost/lib 是它的访问地址，其中/lib是contextpath，因此�
 
 = URI设计=
 
-|| *URI* & *method* ||     Desc   ||
-|| */lib*  ||     
-|| ....1) GET || 跳转到/lib/book；||
-|| */lib/book*  ||     
-|| ....2) GET || 按页浏览书库的书，参数byBookId用于定位与分页；||
-|| ....3) POST||增加一本书，参数为name、author、price，都是必填项目；||
-|| */lib/book/add  ||  ||
-|| ....4) GET ||  显示增加书的页面 ||
-|| */lib/book/{bookId}*  ||  ||
-|| ....5) GET ||  展示该书的详细信息，包括附属的所有评论，最新的备注在前；<br> *如果带有edit参数*，则返回编辑页面，页面不包含评论||
-|| ....6) PUT ||修改该书的信息 ||
-|| */lib/book/{bookId}/remark*   ||  ||
-|| ....7) DELETE|| 删除该书的所有备注||
-|| */lib/book/{bookId}/remark/{remarkId}* ||   ||
-|| ....8) DELETE || 删除某一个备注||
-|| */lib/login* ||   ||
-|| ....9) GET  ||  返回登录页面 ||
-|| ...10) POST|| 执行登录判断 ||
-|| */lib/user* ||   ||
-|| ...11) GET|| 列出所有用户||
-|| ...12) POST|| 新增一个注册用户||
-|| */lib/user/add* ||   ||
-|| ...13) GET|| 显示增加用户的页面||
-|| */lib/user/{userId}* ||    ||
-|| ...14) GET|| 显示某个用户的详细信息；<br> *如果带有edit参数*，则返回编辑页面||
-|| ...15) DELETE || 注销某个用户||
-|| */lib/logs* ||    ||
-|| ...16) GET|| 按页列出所有用户操作日志||
+|| || *method* || *URI* ||    * Desc *  ||    
+|| 01 || GET || /lib || 跳转到/lib/book；||
+|| 02 || GET||  /lib/book || 按页浏览书库的书，参数byBookId用于定位与分页；||
+|| 03 || POST|| /lib/book||增加一本书，参数为name、author、price，都是必填项目；||
+|| 04 || GET || /lib/book/add ||  显示增加书的页面 ||
+|| 05 || GET || /lib/book/{bookId}||  展示该书的详细信息，包括附属的所有评论，最新的备注在前；<br> *如果带有edit参数*，则返回编辑页面，页面不包含评论||
+|| 06 || PUT || /lib/book/{bookId}||修改该书的信息 ||
+|| 07 || DELETE ||/lib/book/{bookId}/remark|| 删除该书的所有备注||
+|| 08 || DELETE ||/lib/book/{bookId}/remark/{remarkId}|| 删除某一个备注||
+|| 09 || GET  ||/lib/login||  返回登录页面 ||
+|| 10 || POST ||/lib/login|| 执行登录判断 ||
+|| 11 || GET  ||/lib/user|| 列出所有用户||
+|| 12 || POST ||/lib/user|| 新增一个注册用户||
+|| 13 || GET  ||/lib/user/add|| 显示增加用户的页面||
+|| 14 || GET  ||/lib/user/{userId|| 显示某个用户的详细信息；<br> *如果带有edit参数*，则返回编辑页面||
+|| 15||  DELETE|| /lib/user/{userId|| 注销某个用户||
+|| 16||  GET || /lib/logs|| 按页列出所有用户操作日志||
+
+*严重说明 :)*
+
+上面这个表格中使用了目前浏览器不能支持的PUT、DELETE两个方法，您有两种选择：
+
+ * 选择一：不使用PUT、DELETE：在这种选择下，建议您改为POST，但需要在URI增加一级/update、/delete
+ * 选择二：继续使用PUT、DELETE：在这种选择下，则请求需要以POST提交，并且在表单中增加一个hidden字段：name为_method，value为PUT或DELETE
+
+本应用选择了第二种选择(并不是第一种就是不好的，这只是一个权衡，而且无论选择哪一种优缺点都很明显)。
 
 = 控制器设计 =
 
@@ -245,7 +243,7 @@ public class LogsCotnroller {
 = 拦截器设计 =
 
 
-== {{{ PassportInterceptor.java }}}==
+== {{{ PassportInterceptor.java }}} ==
 
 {{{
 package com.company.lib.controllers;
@@ -599,3 +597,5 @@ public AutoLogInterceptor extends ControllerInterceptorAdapter {
  * 您可以使用jsp、vm，就像 [http://code.google.com/p/paoding-rose/wiki/Rose_Guide_Getting_Started#设计视图模板 第一支程序] 中陈述那样，无论食用jsp还是vm，控制器返回都不需要带后缀，rose会判断实际views目录中存在的是jsp或vm等(极端地，如果2个文件都存在，则以字母顺序优先，即jsp优先于vm)(rose会做缓存的，而非总是通过转动磁盘来判断)
 
  * 具体的jsp和vm如何写，是否需要在本页面中作示范？[您可以在评论中发表意见或直接发邮件给我qieqie.wang # gmail.com]
+
+ * 因为我们使用了PUT、DELETE，注意相关的请求，在页面上需要写一个hidden字段，参考 《URI设计》表格下面的 *严重说明 :)* 
