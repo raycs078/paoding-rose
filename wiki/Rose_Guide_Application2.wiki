@@ -2,7 +2,7 @@
 <wiki:toc max_depth="3" />
 = 目的 =
 
-这个示例内容会比较丰富，通过这个示例的了解，我相信您已经能够较为熟练地使用rose开发。
+这个示例内容会比较丰富，通过这个示例的了解，我相信您将能够较为熟练地使用rose开发。
 
 在实践前，我假设您已经把工程的基本建立了，具体过程可参考 [Rose_Guide_Getting_Started 第一支程序]
 
@@ -44,8 +44,8 @@ http://localhost/lib 是它的访问地址，其中/lib是contextpath，因此�
 || 11 || GET  ||/lib/user|| 列出所有用户||
 || 12 || POST ||/lib/user|| 新增一个注册用户||
 || 13 || GET  ||/lib/user/add|| 显示增加用户的页面||
-|| 14 || GET  ||/lib/user/{userId|| 显示某个用户的详细信息；<br> *如果带有edit参数*，则返回编辑页面||
-|| 15||  DELETE|| /lib/user/{userId|| 注销某个用户||
+|| 14 || GET  ||/lib/user/{userId}|| 显示某个用户的详细信息；<br> *如果带有edit参数*，则返回编辑页面||
+|| 15||  DELETE|| /lib/user/{userId}|| 注销某个用户||
 || 16||  GET || /lib/logs|| 按页列出所有用户操作日志||
 
 *严重说明 :)*
