@@ -181,11 +181,14 @@ public List<User> find(int offset, int maxSize);
 	Jade会找相应的set方法，将值设置给Bean对象；<br>
 	如果列名是一个普通字符串，即不包含下划线、数字的列，如id，将首字母大写拼在set后：setId；<br>
 	如果列名含有下划线的，将下划线后的字母变为大写，first_name  --> setFirstName<br>
-	如果列名含有数字，且数字前没有下划线，如 name2，这样的字符串无法映射给任何 bean 属性，对此默认情况下jade会抛出InvalidDataAccessApiUsageException 异常；<br>
-	请通过as来做适配：SELECT name2 as name_2 FROM user，这样才能映射给bean的name2属性<br>
+
+        1.0.2版本：name2将映射给bean的name2属性了，user1_name2以及user_1_name_2列都能映射到user1Name2属性，但是user1_name_2不能映射给任何属性,必须写user1_name_2 as user1_name2。
+<br>
+        1.0.1版本：name2(列名含有数字，且数字前没有下划线)，这样的字符串无法映射给任何 bean 属性，对此默认情况下jade会抛出InvalidDataAccessApiUsageException 异常；<br>
+	这要通过as来做适配：SELECT name2 as name_2 FROM user，这样才能映射给bean的name2属性<br>
 
 <br>
-提醒一下的是，Jade使用默认使用的映射不仅限于此，但我强烈建议各位开发者严格按照这个规则来处理映射，这是最好的。
+提醒一下的是，Jade使用默认使用的映射不仅限于此，但我强烈建议各位开发者严格按照这个规则来处理映射，因为哪一天Jade将更加严格(如果做了严格限制，一旦映射失败会提示InvalidDataAccessApiUsageException异常)。
 
 ==自定义 Bean 映射==
 
