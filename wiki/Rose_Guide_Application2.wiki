@@ -114,7 +114,7 @@ public class BookController {
     }
 
     // 5)
-    @Get("{bookId}")
+    @Get("{bookId:[0-9]+}")
     public String show(@Param("bookId") long bookId, @Param("edit") boolean isEdit) {
         // TODO: query from database
         if (isEdit) {
@@ -125,8 +125,8 @@ public class BookController {
     }
 
     // 6)
-    @Put("{bookId}")
-    public String update(@Param("bookId) long bookId, Book book) {
+    @Put("{bookId:[0-9]+}")
+    public String update(@Param("bookId") long bookId, Book book) {
         // TODO: update book
         return "r:/lib/book/" + bookId;
     }
@@ -139,7 +139,7 @@ public class BookController {
 package com.company.lib.controllers.book;
 
 @LoginRequired
-@Path("{bookId}/remark}")
+@Path("{bookId:[0-9]+}/remark}")
 public class RemarkController {
 
     // 7)
