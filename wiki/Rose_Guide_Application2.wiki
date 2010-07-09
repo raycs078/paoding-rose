@@ -1,4 +1,7 @@
 #summary One-sentence summary of this page.
+
+第二支程序
+
 <wiki:toc max_depth="3" />
 = 目的 =
 
@@ -64,10 +67,12 @@ http://localhost/lib 是它的访问地址，其中/lib是contextpath，因此�
 {{{
 package com.company.lib.controllers;
 
+// @Path是Rose提供的注解
 @LoginRequired
 @Path("")
 public class HomeController {
     // 1)
+    // 这个"1)"表示这个对应于《URI设计》表格中的序号
     @Get
     public String redirect() {
          return "r:/lib/book";
@@ -81,11 +86,13 @@ public class HomeController {
 {{{
 package com.company.lib.controllers.book;
 
+// LoginRequird是这个示例特有的注解，下面有对应的解释
 @LoginRequired
 @Path("")
 public class BookController {
 
     // 2)
+    // @Get 表示对空串的Get请求可有此方法处理
     @Get
     public String list(@Param("byBookId") long byBookId) {
         // 控制器方法返回以"@"开头，是为暂时策略;
@@ -106,12 +113,14 @@ public class BookController {
     }
 
     // 4)
+    // @Get("add") 表示对"add"的GET请求，可有此方法处理
     @Get("add")
     public String showAdd() {
         return "@book-add";
     }
 
     // 5)
+    // 可以通过打括号表示一个变量，通过冒号说明他的正则规则
     @Get("{bookId:[0-9]+}")
     public String show(@Param("bookId") long bookId, @Param("edit") boolean isEdit) {
         // TODO: query from database
@@ -123,6 +132,7 @@ public class BookController {
     }
 
     // 6)
+    // 这里使用目前浏览器无法支持的@Put，你懂的，详看《URI设计》表格中的《严重说明》:)
     @Put("{bookId:[0-9]+}")
     public String update(@Param("bookId") long bookId, Book book) {
         // TODO: update book
@@ -242,23 +252,50 @@ public class LogsCotnroller {
 
 = 拦截器设计 =
 
+== {{{ AutoLogInterceptor.java }}}==
+
+{{{
+// 拦截器放在controllers包下，称为局部拦截器，局部拦截器只作用于所在目录以及子目录的控制器
+package com.company.lib.controllers;
+
+// 通过扩展 ControllerInterceptorAdapter 实现一个拦截器类；
+public AutoLogInterceptor extends ControllerInterceptorAdapter {
+    
+    // afterCompletion 在整个页面渲染完毕或者因异常导致流程被中断后执行
+    // 无论请求正常或异常地被处理，每一个拦截器的afterCompletion都会被执行
+    @Override
+    public void afterCompletion(Invocation inv, Throwable ex) throws Exception  {
+        String uid = inv.getResourceId(); // e.g. /lib/book/{bookId}
+        String uri = inv.getRequestPath().getUri(); // e.g. /lib/book/123456
+        boolean success = (ex == null);
+        String remarks = success ? null : ex.getMessage();
+        // TODO: save it to database 
+    }
+}
+}}}
 
 == {{{ PassportInterceptor.java }}} ==
 
 {{{
 package com.company.lib.controllers;
 
+// 设置oncePerRequest为true，表示如果当前的请求如果是被forward、include转来的，并且之前已经执行了该拦截器，则当前不再过该拦截器，在大部分情况下可以这样理解“一个请求只执行一次”
 @Interceptor(oncePerRequest = true)
 public PassportInterceptor extends ControllerInterceptorAdapter {
 
-
     public PassportInterceptor() {
+        // 设置优先级，优先级越高的拦截器，before方法越先执行
+        // PassportInterceptor要比很多拦截器都要先执行，其中包括LoginRequredInterceptor 
         setPriority(1000);
     }
     
+    // before方法在调用控制器方法前执行，相反的after则是控制器执行后才执行
+    @Override
     protected Object before(Invocation inv) throws Exception  {
         User loginUser = ...;
-        inv.getRequest().setAttribute("loginUser", loginUser);
+        if (loginUser != null) {
+            inv.getRequest().setAttribute("loginUser", loginUser);
+        }
         return true;
     }
 }
@@ -272,18 +309,26 @@ package com.company.lib.controllers;
 public LoginRequredInterceptor extends ControllerInterceptorAdapter {
 
     public LoginRequredInterceptor() {
+        // 这个优先级要小于PassportInterceptor，必须的
         setPriority(900);
     }
 
+    // 覆盖这个方法返回一个注解类，使得只有注解了该annotation的方法才会被起作用(注解在控制器类或方法上均有效)
+    // 还有一个相反功能的方法：getDenyAnnotationClass，表示注解了某个annotatioin后，拦截器不要拦截他
+    @Override
     protected Class<? extends Annotation> getRequiredAnnotationClass() {
         return LoginRequired.class;
     }
     
+    @Override
     protected Object before(Invocation inv) throws Exception {
         User loginUser = inv.getRequest().getAttribute("loginUser");
+        // 如果当前没有登录就返回"r:/lib/login"表示重定向到http://host:port/lib/login页面
         if (loginUser == null) {
+             // 没有返回true或null，表示要中断整个处理流程，即不再继续调用其他拦截器以及最终的控制器
              return "r:/lib/login";
         }
+        // 返回true或null，表示继续整个流程
         return true;
     }
 }
@@ -295,6 +340,9 @@ public LoginRequredInterceptor extends ControllerInterceptorAdapter {
 
 package com.company.lib.controllers;
 
+// 这是一个annotation，所谓annotation就是一个“标签”，他的职责是“表明”
+// 至于表明之后该怎么样？则由其他代码来处理
+// 对于LoginRequired具体的处理代码是LoginRequiredInterceptor.java
 @Inherited
 @Target( { ElementType.TYPE, ElementType.METHOD })
 @Retention(RetentionPolicy.RUNTIME)
@@ -305,22 +353,6 @@ public @interface LoginRequired {
 
 }}}
 
-== {{{ AutoLogInterceptor.java }}}==
-
-{{{
-package com.company.lib.controllers;
-
-public AutoLogInterceptor extends ControllerInterceptorAdapter {
-    
-    public void afterCompletion(Invocation inv, Throwable ex) throws Exception  {
-        String uid = inv.getResourceId(); // e.g. /lib/book/{bookId}
-        String uri = inv.getRequestPath().getUri(); // e.g. /lib/book/123456
-        boolean fail = (ex != null);
-        String failMessage = fail ? ex.getMessage() : null;
-        // TODO: put into a executor that save it to database 
-    }
-}
-}}}
 
 = 数据库表设计 =
 
@@ -393,20 +425,29 @@ public interface BookDAO {
 == RemarkDAO.java ==
 
 {{{
+// dao类必须在xxx.dao或子包下
 package com.company.lib.dao;
 
+// 必须是接口，并且以大写DAO结尾
+// 必须标注@DAO，DAO中有一个catalog属性，对于大部分人来说，这个都是没用的
 @DAO
 public interface RemarkDAO {
 
+    // 标注一个@SQL，写入你的sql语句
+    // 不能写select * from remark，这样的后果可能会因为数据库增加了一个字段，但Remark没有相应字段的属性，Jade将抛出异常
+    // 参数以冒号开始，:1表示第一个参数
     @SQL("select id, user_name, book_id, essay, create_time from remark where book_id=:1")
     public List<Remark> findByBook(long bookId);
 
     @SQL("delete from remark where book_id=:1")
     public void deleteByBook(long bookId);
 
+    // 返回int表示变更的条数，就这个示例而言，应该就是返回1
     @SQL("delete from remark where id=:1")
-    public void delete(long remarkId);
+    public int delete(long remarkId);
 
+    // 返回Idenity用于获取自增生成的那个id
+    // :1.userName表示第一个参数的userName属性
     @SQL("insert into remark (user_name, book_id, essay) values (:1.userName, :1.bookId, :1.essay")
     public Identity save(Remark remark);
 }
