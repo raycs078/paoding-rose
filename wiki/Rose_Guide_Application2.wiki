@@ -34,7 +34,7 @@ http://localhost/lib 是它的访问地址，其中/lib是contextpath，因此�
 || */lib*  ||     
 || ....1) GET || 跳转到/lib/book；||
 || */lib/book*  ||     
-|| ....2) GET || 按页浏览书库的书，参数offset用于分页；||
+|| ....2) GET || 按页浏览书库的书，参数byBookId用于定位与分页；||
 || ....3) POST||增加一本书，参数为name、author、price，都是必填项目；||
 || */lib/book/add  ||  ||
 || ....4) GET ||  显示增加书的页面 ||
@@ -89,7 +89,7 @@ public class BookController {
 
     // 2)
     @Get
-    public String list(@Param("offset") int offset) {
+    public String list(@Param("byBookId") long byBookId) {
         // 控制器方法返回以"@"开头，是为暂时策略;
         // 这样使得在没有页面的情况下不会404错误，当页面准备好的时候要去掉"@"
         // 下同
@@ -115,7 +115,7 @@ public class BookController {
 
     // 5)
     @Get("{bookId}")
-    public String show(@Param("bookId") String bookId, @Param("edit") boolean isEdit) {
+    public String show(@Param("bookId") long bookId, @Param("edit") boolean isEdit) {
         // TODO: query from database
         if (isEdit) {
             return "@book-edit";
@@ -126,9 +126,9 @@ public class BookController {
 
     // 6)
     @Put("{bookId}")
-    public String update(Book book) {
+    public String update(@Param("bookId) long bookId, Book book) {
         // TODO: update book
-        return "r:/lib/book/" + book.getId() + "?edit=true";
+        return "r:/lib/book/" + bookId;
     }
 
 }
@@ -144,13 +144,13 @@ public class RemarkController {
 
     // 7)
     @Delete
-    public String clear(@Param("bookId") String bookId) {
+    public String clear(@Param("bookId") long bookId) {
         return "r:/lib/book/" + bookId;
     }
 
     // 8)
     @Delete("{remarkId}")
-    public String delete(@Param("bookId") String bookId, @Param("remarkId") String remarkId) {
+    public String delete(@Param("bookId") long bookId, @Param("remarkId") String remarkId) {
         return "r:/lib/book/" + bookId;
     }
 }
@@ -396,11 +396,7 @@ public interface BookDAO {
 
 {{{
 package com.company.lib.dao;
-id	 bigint	 主健、自增
-user_name	 varchar(255)	 备注人姓名
-book_id	 varchar(255)	 书名
-essay	 varchar(2000)	 备注内容
-create_time	 timestamp	
+
 @DAO
 public interface RemarkDAO {
 
@@ -415,9 +411,6 @@ public interface RemarkDAO {
 
     @SQL("insert into remark (user_name, book_id, essay) values (:1.userName, :1.bookId, :1.essay")
     public Identity save(Remark remark);
-
-    
-
 }
 
 }}}
@@ -461,5 +454,140 @@ public interface OperLogDAO {
     public void save(OperLog operLog);
 
 }
-
 }}}
+
+= 资源的提供 =
+
+== 数据库配置 WEB-INF/applicationContext-dataSource.xml ==
+
+{{{
+<?xml version="1.0" encoding="utf-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.5.xsd" default-lazy-init="true">
+<beans>
+    <!-- 这里使用Spring自带的DriverManagerDataSource，实际开发产品应该使用具有连接持管理的DataSource等 -->
+    <bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+        <property name="driverClassName" value="com.mysql.jdbc.Driver"/>
+        <property name="url" value="jdbc:mysql://localhost:3306/app_lib?useUnicode=true&amp;characterEncoding=utf8"/>
+        <property name="user" value="root"/>
+        <property name="password" value=""/>
+    </bean>
+
+</beans>
+}}}
+
+
+== 执行器配置 WEB-INF/applicationContext-executor.xml ==
+
+由AutoLogInterceptor调用，用于具体执行将操作日志写入到数据
+
+{{{
+<?xml version="1.0" encoding="utf-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.5.xsd" default-lazy-init="true">
+<beans>
+    <bean class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor" destroy="shutdown"/>
+</beans>
+}}}
+
+= 资源的使用 =
+
+此处将以BookController以及AutoLogInterceptor作为示例，演示资源使用相关的两个问题：
+
+ * 如何声明并注入
+   * 通过@Autowired注入；
+   * DAO接口不用写实现类即可使用
+ * 如何调用
+   * 和调用普通类方法一样
+
+== {{{ book.BookController.java }}}==
+
+{{{
+package com.company.lib.controllers.book;
+
+@LoginRequired
+@Path("")
+public class BookController {
+
+    // 推荐使用bookDAO作为字段名，但这不是必须的，如果要以其它名称作为名字也不需要另外的配置
+    // 如果使用多个DAO，则需要写多个@Autowired在每个DAO声明前
+    @Autowired
+    private BookDAO bookDAO;
+
+    // 2)
+    @Get
+    public String list(Invocation inv, @Param("byBookId") long byBookId) {
+        int limit = 30;
+        List<Book> books = (byBookId <= 0) ? bookDAO.find(limit) : bookDAO.find(byBookId, limit);
+        inv.addModel("books", books);
+        return "@book-list";
+    }
+
+    // 3)
+    @Post
+    public String add(Book book) {
+        bookDAO.save(book);
+        return "r:/lib/book";
+    }
+
+    // 4)
+    @Get("add")
+    public String showAdd() {
+        return "@book-add";
+    }
+
+    // 5)
+    @Get("{bookId}")
+    public String show(Invocation inv, @Param("bookId") long bookId, @Param("edit") boolean isEdit) {
+        Book book = bookDAO.get(bookId);
+        inv.addModel("book", book);
+        if (isEdit) {
+            return "@book-edit";
+        }
+        return "@book-page";
+    }
+
+    // 6)
+    @Put("{bookId}")
+    public String update(@Param("bookId") long bookId, Book book) {
+        book.setId(bookId);
+        bookDAO.update(book);
+        return "r:/lib/book/" + bookId;
+    }
+
+}
+}}}
+
+
+== {{{ AutoLogInterceptor.java }}}==
+
+{{{
+package com.company.lib.controllers;
+
+public AutoLogInterceptor extends ControllerInterceptorAdapter {
+
+    @Autowired
+    private ExecutorService executorService;
+    
+    public void afterCompletion(Invocation inv, Throwable ex) throws Exception  {
+        final OperLog operLog = new OperLog();
+        operLog.setResourcePattern(inv.getResourceId());
+        operLog.setResourceId(inv.getRequestPath().getUri());
+        operLog.setSuccess(ex == null);
+        operLog.setRemarks(ex == null ? null : ex.getMessage()); 
+        
+        User loginUser = (User) inv.getRequest().getAttribute("loginUser");
+        if (loginUser != null) {
+            operLog.setUserName(loginUser.getName());
+        }
+        
+        Runnable task = new Runnable() {
+            public void run() {
+                 operLogDAO.save(operLog);
+            }
+        };
+        
+        executorService.submit(task);
+    }
+}
+}}}
+
+= 视图组件的设计 =
