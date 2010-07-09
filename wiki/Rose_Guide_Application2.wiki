@@ -323,3 +323,42 @@ public AutoLogInterceptor extends ControllerInterceptorAdapter {
     }
 }
 }}}
+
+= 数据库表设计 =
+
+== user表 ==
+|| *列名*     || *类型*       || *说明*     ||
+|| id         || bigint       || 主健、自增 ||
+|| login_name || varchar(255) || 登录名、非空、唯一||
+|| passord    || varchar(255) || 密码       ||
+|| name       || varchar(255) ||  姓名      ||
+|| create_time|| timestamp    || 创建时间   ||
+
+== book表 ==
+
+|| *列名*     || *类型*       || *说明*     ||
+|| id         || bigint       || 主健、自增 ||
+|| name       || varchar(255) || 书名       ||
+|| price      || float        || 价格       ||
+|| author     || varchar(255) || 作者       ||
+|| create_time|| timestamp    || 创建时间   ||
+
+== remark表 ==
+
+|| *列名*     || *类型*       || *说明*     ||
+|| id         || bigint       || 主健、自增 ||
+|| user_name  || varchar(255) || 备注人姓名 ||
+|| book_id    || varchar(255) || 书名       ||
+|| essay      || varchar(2000)|| 备注内容   ||
+|| create_time|| timestamp    || 创建时间   ||
+
+== logs表 ==
+
+|| *列名*     || *类型*       || *说明*     ||
+|| id         || bigint       || 主健、自增 ||
+|| user_name  || varchar(255) || 操作者人姓名 ||
+|| resource_pattern || varchar(255) || 资源地址模式 ||
+|| resource_id      || varchar(255) || 资源地址     ||
+|| success          || tinyint(1)   || 操作成功?    ||
+|| remarks          || varchar(255) || 对操作的额外说明 ||
+|| create_time      || timestamp    || 创建时间         ||
