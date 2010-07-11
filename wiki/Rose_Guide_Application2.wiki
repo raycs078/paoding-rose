@@ -505,7 +505,9 @@ public interface OperLogDAO {
 
 {{{
 <?xml version="1.0" encoding="utf-8"?>
-<beans xmlns="http://www.springframework.org/schema/beans" xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.5.xsd" default-lazy-init="true">
+<beans xmlns="http://www.springframework.org/schema/beans" 
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.5.xsd" default-lazy-init="true">
 <beans>
     <!-- 这里使用Spring自带的DriverManagerDataSource，实际开发产品应该使用具有连接持管理的DataSource等 -->
     <bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
@@ -525,7 +527,9 @@ public interface OperLogDAO {
 
 {{{
 <?xml version="1.0" encoding="utf-8"?>
-<beans xmlns="http://www.springframework.org/schema/beans" xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.5.xsd" default-lazy-init="true">
+<beans xmlns="http://www.springframework.org/schema/beans" 
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.5.xsd" default-lazy-init="true">
 <beans>
     <bean class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor" destroy="shutdown"/>
 </beans>
