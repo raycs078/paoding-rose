@@ -148,7 +148,7 @@ public class BookController {
 package com.company.lib.controllers.book;
 
 @LoginRequired
-@Path("{bookId:[0-9]+}/remark}")
+@Path("{bookId:[0-9]+}/remark")
 public class RemarkController {
 
     // 7)
