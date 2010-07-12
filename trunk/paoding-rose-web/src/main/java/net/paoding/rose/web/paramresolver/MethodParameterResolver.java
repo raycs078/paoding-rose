@@ -37,8 +37,6 @@ public final class MethodParameterResolver {
 
     private static Log logger = LogFactory.getLog(MethodParameterResolver.class);
 
-    private static final TypeConverter typeConverter = new ThreadSafedSimpleTypeConverter();
-
     // ---------------------------------------------------------
 
     private final Method method;
@@ -123,10 +121,14 @@ public final class MethodParameterResolver {
                         } else if (paramMetaDatas[i].getParamType() == float.class) {
                             parameters[i] = Float.valueOf(0);
                         } else {
+                            TypeConverter typeConverter = SafedTypeConverterFactory
+                                    .getCurrentConverter();
                             parameters[i] = typeConverter.convertIfNecessary("0", paramMetaDatas[i]
                                     .getParamType());
                         }
                     } else {
+                        TypeConverter typeConverter = SafedTypeConverterFactory
+                                .getCurrentConverter();
                         parameters[i] = typeConverter.convertIfNecessary(defValudeAnnotation
                                 .value(), paramMetaDatas[i].getParamType());
                     }
