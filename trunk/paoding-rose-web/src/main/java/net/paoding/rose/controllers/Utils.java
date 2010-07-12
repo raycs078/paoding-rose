@@ -1,5 +1,5 @@
 /*
- * Copyright 2007-2009 the original author or authors.
+ * Copyright 2007-2010 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,15 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.paoding.rose.web.controllers.roseInfo;
+package net.paoding.rose.controllers;
 
-import net.paoding.rose.web.annotation.Intercepted;
 /**
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
-@Intercepted(allow = "accessControl")
-public interface BaseController {
+import net.paoding.rose.RoseVersion;
 
+import org.springframework.core.SpringVersion;
+
+class Utils {
+
+    public static String wrap(String msg) {
+        String roseVersion = RoseVersion.getVersion();
+        String springVersion = SpringVersion.getVersion();
+        return "@<html><head><title>Paoding Rose " + roseVersion + "@Spring-" + springVersion
+                + "</title></head><body>" + msg + "<div>" + roseVersion + "@Spring-"
+                + springVersion + "</div></body></html>";
+    }
 }

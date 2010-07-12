@@ -465,7 +465,14 @@ public class ResolverFactoryImpl implements ResolverFactory {
 
         @Override
         public boolean supports(ParamMetaData metaData) {
-            return metaData.getParamType() == Rose.class;
+            boolean result = metaData.getParamType() == Rose.class;
+            if (result) {
+                if (!metaData.getControllerClass().getName().startsWith("net.paoding.rose")) {
+                    throw new IllegalStateException("Rose is not allowed as a method parameter:"
+                            + metaData);
+                }
+            }
+            return result;
         }
 
         @Override
