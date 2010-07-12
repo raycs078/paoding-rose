@@ -43,6 +43,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import net.paoding.rose.util.RoseBeanUtils;
 import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.annotation.Create;
 import net.paoding.rose.web.annotation.DefValue;
@@ -59,7 +60,6 @@ import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.SimpleTypeConverter;
 import org.springframework.beans.TypeConverter;
 import org.springframework.context.ApplicationContext;
@@ -81,8 +81,6 @@ import org.springframework.web.util.WebUtils;
 public class ResolverFactoryImpl implements ResolverFactory {
 
     private static Log logger = LogFactory.getLog(MethodParameterResolver.class);
-
-    private static final TypeConverter typeConverter = new ThreadSafedSimpleTypeConverter();
 
     public static final String MAP_SEPARATOR = ":";
 
@@ -486,7 +484,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
 
         @Override
         public Object resolve(Invocation inv, ParamMetaData metaData) {
-            Object bean = BeanUtils.instantiateClass(metaData.getParamType());
+            Object bean = RoseBeanUtils.instantiateClass(metaData.getParamType());
             ServletRequestDataBinder binder;
             if (!metaData.isAnnotationPresent(Param.class)) {
                 binder = new ServletRequestDataBinder(bean);
@@ -566,6 +564,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
                         arrayType = Array.newInstance((Class<?>) compnentType, 0).getClass();
                     }
                 }
+                TypeConverter typeConverter = SafedTypeConverterFactory.getCurrentConverter();
                 Object array = typeConverter.convertIfNecessary(toConvert, arrayType);
                 return array;
             }
@@ -719,6 +718,8 @@ public class ResolverFactoryImpl implements ResolverFactory {
                         for (Map.Entry<?, ?> entry : toConvert.entrySet()) {
                             Object key = entry.getKey();
                             Object value = entry.getValue();
+                            TypeConverter typeConverter = SafedTypeConverterFactory
+                                    .getCurrentConverter();
                             if (keyType != String.class) {
                                 key = typeConverter.convertIfNecessary(key, keyType);
                             }
@@ -900,8 +901,8 @@ public class ResolverFactoryImpl implements ResolverFactory {
             if (ClassUtils.isPrimitiveOrWrapper(metaData.getParamType())) {
                 return true;
             }
-            SimpleTypeConverter simpleTypeConverter = ((ThreadSafedSimpleTypeConverter) typeConverter)
-                    .getSimpleTypeConverter();
+            SimpleTypeConverter simpleTypeConverter = SafedTypeConverterFactory
+                    .getCurrentConverter();
             return simpleTypeConverter.findCustomEditor(metaData.getParamType(), null) != null
                     || simpleTypeConverter.getDefaultEditor(metaData.getParamType()) != null;
         }
@@ -931,6 +932,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
                 }
             }
             if (toConvert != null) {
+                SimpleTypeConverter typeConverter = SafedTypeConverterFactory.getCurrentConverter();
                 return typeConverter.convertIfNecessary(toConvert, metaData.getParamType());
             }
             if (metaData.getParamType().isPrimitive()) {
@@ -946,6 +948,8 @@ public class ResolverFactoryImpl implements ResolverFactory {
                 } else if (metaData.getParamType() == float.class) {
                     return Float.valueOf(0);
                 } else {
+                    SimpleTypeConverter typeConverter = SafedTypeConverterFactory
+                            .getCurrentConverter();
                     return typeConverter.convertIfNecessary("0", metaData.getParamType());
                 }
             }

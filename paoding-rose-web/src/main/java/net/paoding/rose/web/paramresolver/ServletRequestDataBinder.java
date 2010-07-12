@@ -15,11 +15,17 @@
  */
 package net.paoding.rose.web.paramresolver;
 
+import java.util.Date;
+
 import javax.servlet.ServletRequest;
+
+import net.paoding.rose.web.paramresolver.ResolverFactoryImpl.DateEditor;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.MutablePropertyValues;
+import org.springframework.beans.PropertyEditorRegistry;
 import org.springframework.beans.PropertyValue;
+import org.springframework.validation.AbstractPropertyBindingResult;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.ServletRequestBindingException;
 import org.springframework.web.bind.WebDataBinder;
@@ -93,6 +99,24 @@ public class ServletRequestDataBinder extends WebDataBinder {
     public ServletRequestDataBinder(Object target, String objectName) {
         super(target, objectName);
         prefix = objectName + '.';
+    }
+
+    /**
+     * Return the internal BindingResult held by this DataBinder, as
+     * AbstractPropertyBindingResult.
+     */
+    @Override
+    protected AbstractPropertyBindingResult getInternalBindingResult() {
+        AbstractPropertyBindingResult bindingResult = super.getInternalBindingResult();
+
+        // by rose
+        PropertyEditorRegistry registry = bindingResult.getPropertyEditorRegistry();
+        registry.registerCustomEditor(Date.class, new DateEditor(Date.class));
+        registry.registerCustomEditor(java.sql.Date.class, new DateEditor(java.sql.Date.class));
+        registry.registerCustomEditor(java.sql.Time.class, new DateEditor(java.sql.Time.class));
+        registry.registerCustomEditor(java.sql.Timestamp.class, new DateEditor(
+                java.sql.Timestamp.class));
+        return bindingResult;
     }
 
     /**
@@ -174,14 +198,4 @@ public class ServletRequestDataBinder extends WebDataBinder {
         }
     }
 
-    // private AbstractPropertyBindingResult result;
-    //
-    // @Override
-    // protected AbstractPropertyBindingResult getInternalBindingResult() {
-    // if (result == null) {
-    // result = new BeanPropertyBindingResult(this.getTarget(),
-    // getObjectName());
-    // }
-    // return result;
-    // }
 }
