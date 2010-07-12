@@ -33,23 +33,29 @@ http://localhost/lib 是它的访问地址，其中/lib是contextpath，因此�
 
 = URI设计=
 
-|| || *method* || *URI* ||    * Desc *  ||    
-|| 01 || GET || /lib || 跳转到/lib/book；||
-|| 02 || GET||  /lib/book || 按页浏览书库的书，参数byBookId用于定位与分页；||
-|| 03 || POST|| /lib/book||增加一本书，参数为name、author、price，都是必填项目；||
-|| 04 || GET || /lib/book/add ||  显示增加书的页面 ||
-|| 05 || GET || /lib/book/{bookId}||  展示该书的详细信息，包括附属的所有评论，最新的备注在前；<br> *如果带有edit参数*，则返回编辑页面，页面不包含评论||
-|| 06 || PUT || /lib/book/{bookId}||修改该书的信息 ||
-|| 07 || DELETE ||/lib/book/{bookId}/remark|| 删除该书的所有备注||
-|| 08 || DELETE ||/lib/book/{bookId}/remark/{remarkId}|| 删除某一个备注||
-|| 09 || GET  ||/lib/login||  返回登录页面 ||
-|| 10 || POST ||/lib/login|| 执行登录判断 ||
-|| 11 || GET  ||/lib/user|| 列出所有用户||
-|| 12 || POST ||/lib/user|| 新增一个注册用户||
-|| 13 || GET  ||/lib/user/add|| 显示增加用户的页面||
-|| 14 || GET  ||/lib/user/{userId}|| 显示某个用户的详细信息；<br> *如果带有edit参数*，则返回编辑页面||
-|| 15||  DELETE|| /lib/user/{userId}|| 注销某个用户||
-|| 16||  GET || /lib/logs|| 按页列出所有用户操作日志||
+{{{
++----+--------+--------------------------------------+---------------------------------------------------------+
+| id | method | uri                                  | desc                                                    |
++----+--------+--------------------------------------+---------------------------------------------------------+
+| 01 | GET    | /lib/                                | 跳转到/lib/book；                                       |
+| 02 | GET    | /lib/book                            | 按页浏览书库的书，参数byBookId用于定位与分页；          |
+| 03 | POST   | /lib/book                            | 增加一本书，参数为name、author、price，都是必填项目；   |
+| 04 | GET    | /lib/book/add                        | 显示增加书的页面                                        |
+| 05 | GET    | /lib/book/{bookId}                   | 展示该书的详细信息，包括附属的所有评论，最新的备注在前；|
+|    |        |                                      | 如果带有edit参数，则返回编辑页面，页面不包含评论        |
+| 06 | PUT    | /lib/book/{bookId}                   | 修改该书的信息                                          |
+| 07 | DELETE | /lib/book/{bookId}/remark            | 删除该书的所有备注                                      |
+| 08 | DELETE | /lib/book/{bookId}/remark/{remarkId} | 删除某一个备注                                          |
+| 09 | GET    | /lib/login                           | 返回登录页面                                            |
+| 10 | POST   | /lib/login                           | 执行登录判断                                            |
+| 11 | GET    | /lib/user                            | 列出所有用户                                            |
+| 12 | POST   | /lib/user                            | 新增一个注册用户                                        |
+| 13 | GET    | /lib/user/add                        | 显示增加用户的页面                                      |
+| 14 | GET    | /lib/user/{userId}                   | 显示某个用户的详细信息；如果带有edit参数，则返回编辑页面|
+| 15 | DELETE | /lib/user/{userId}                   | 注销某个用户                                            |
+| 16 | GET    | /lib/logs                            | 按页列出所有用户操作日志                                |
++----+--------+--------------------------------------+---------------------------------------------------------+
+}}}
 
 *严重说明 :)*
 
