@@ -136,4 +136,9 @@ class ParamMetaDataImpl implements ParamMetaData {
         paramNames[0] = paramName;
     }
 
+    @Override
+    public String toString() {
+        return this.controllerClass.getName() + "#" + this.method.getName() + "@" + index;
+    }
+
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2007-2009 the original author or authors.
+ * Copyright 2007-2010 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,29 +13,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.paoding.rose.web.controllers.roseInfo;
+package net.paoding.rose.controllers;
 
 import net.paoding.rose.RoseVersion;
 import net.paoding.rose.web.ControllerInterceptorAdapter;
 import net.paoding.rose.web.Invocation;
 
 import org.apache.commons.logging.LogFactory;
+import org.springframework.stereotype.Component;
 
 /**
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
-public class AccessControlInterceptor extends ControllerInterceptorAdapter {
+@Component("roseInfoToolsInterceptor")
+public class ToolsInterceptor extends ControllerInterceptorAdapter {
 
     @Override
     public Object before(Invocation inv) throws Exception {
-        if (!LogFactory.getLog(inv.getControllerClass()).isDebugEnabled()) {
-            inv.getResponse().setContentType("text/html;encoding=utf-8");
-            return Frame.wrap(String.format(
-                    "Forbidden [DEBUG NOT ENABLED %s]<br> Rose-Version: %s", inv
-                            .getControllerClass().getName(), RoseVersion.getVersion()));
+        Class<?> controllerClass = inv.getControllerClass();
+        if (!LogFactory.getLog(controllerClass).isDebugEnabled()) {
+            String msg = String.format("warnning: set logger.%s to debug level first. "
+                    + "<br> Rose-Version: %s", controllerClass.getName(), RoseVersion.getVersion());
+            return Utils.wrap(msg);
         }
         return true;
     }
+
 }
