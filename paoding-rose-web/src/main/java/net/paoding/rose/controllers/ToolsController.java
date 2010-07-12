@@ -56,13 +56,23 @@ public class ToolsController {
     private Date startupTime = new Date();
 
     @Get
-    public String tools() {
+    public String tools(Invocation inv) {
+        String prefix = inv.getRequestPath().getUri() + "/";
         String s = "tool list:<p>";
-        s += "<div style='margin-left:20px'><a href=\"tree\">/rose-info/tree</a></div>";
-        s += "<div style='margin-left:20px'><a href=\"modules\">/rose-info/modules</a></div>";
-        s += "<div style='margin-left:20px'><a href=\"resources\">/rose-info/resources</a></div>";
-        s += "<div style='margin-left:20px'><a href=\"method\">/rose-info/method</a></div>";
-        s += "<div style='margin-left:20px'><a href=\"startupInfo\">/rose-info/startupInfo</a></div>";
+        s += "<div style='margin-left:20px'>";
+        s += "<a href=\"" + prefix + "tree\">/rose-info/tree</a></div>";
+        
+        s += "<div style='margin-left:20px'>";
+        s += "<a href=\"" + prefix + "modules\">/rose-info/modules</a></div>";
+        
+        s += "<div style='margin-left:20px'>";
+        s += "<a href=\"" + prefix + "resources\">/rose-info/resources</a></div>";
+        
+        s += "<div style='margin-left:20px'>";
+        s += "<a href=\"" + prefix + "method\">/rose-info/method</a></div>";
+        
+        s += "<div style='margin-left:20px'>";
+        s += "<a href=\"" + prefix + "startupInfo\">/rose-info/startupInfo</a></div>";
         s += "<p>";
         return Utils.wrap(s);
     }
