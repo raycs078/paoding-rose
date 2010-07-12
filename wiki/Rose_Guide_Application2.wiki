@@ -358,42 +358,98 @@ public @interface LoginRequired {
 = 数据库表设计 =
 
 == user表 ==
-|| *列名*     || *类型*       || *说明*     ||
-|| id         || bigint       || 主健、自增 ||
-|| login_name || varchar(255) || 登录名、非空、唯一||
-|| passord    || varchar(255) || 密码       ||
-|| name       || varchar(255) ||  姓名      ||
-|| create_time|| timestamp    || 创建时间   ||
+
+{{{
++-------------+--------+--------------+------+-----+-------------------+-----------------------------+
+| Field       | Desc   | Type         | Null | Key | Default           | Extra                       |
++-------------+--------+--------------+------+-----+-------------------+-----------------------------+
+| id          | 主健   | bigint(20)   | NO   | PRI | NULL              | auto_increment              |
+| login_name  | 登录名 | varchar(255) | NO   |     | NULL              |                             |
+| password    | 密码   | varchar(255) | NO   |     | NULL              |                             |
+| name        | 姓名   | varchar(255) | NO   |     | NULL              |                             |
+| create_time |创建时间| timestamp    | NO   |     | CURRENT_TIMESTAMP | on update CURRENT_TIMESTAMP |
++-------------+--------+--------------+------+-----+-------------------+-----------------------------+
+
+
+create table user (
+    id bigint not null primary key auto_increment,
+    login_name varchar(255) not null, 
+    password varchar(255) not null,
+    name varchar(255) not null, 
+    create_time timestamp not null
+) character set utf8;
+}}}
 
 == book表 ==
 
-|| *列名*     || *类型*       || *说明*     ||
-|| id         || bigint       || 主健、自增、降序返回 ||
-|| name       || varchar(255) || 书名       ||
-|| price      || float        || 价格       ||
-|| author     || varchar(255) || 作者       ||
-|| create_time|| timestamp    || 创建时间   ||
+{{{
++-------------+--------+--------------+------+-----+-------------------+-----------------------------+
+| Field       | Desc   | Type         | Null | Key | Default           | Extra                       |
++-------------+--------+--------------+------+-----+-------------------+-----------------------------+
+| id          | 主键   | bigint(20)   | NO   | PRI | NULL              | auto_increment              |
+| name        | 书名   | varchar(255) | NO   |     | NULL              |                             |
+| price       | 价格   | float        | NO   |     | NULL              |                             |
+| author      | 作者   | varchar(255) | NO   |     | NULL              |                             |
+| create_time |创建时间| timestamp    | NO   |     | CURRENT_TIMESTAMP | on update CURRENT_TIMESTAMP |
++-------------+--------+--------------+------+-----+-------------------+-----------------------------+
+
+
+create table book(
+    id bigint not null primary key auto_increment,
+    name varchar(255) not null, 
+    price varchar(255) not null, 
+    author varchar(255) not null,
+    create_time timestamp not null
+) character set utf8;
+}}}
 
 == remark表 ==
 
-|| *列名*     || *类型*       || *说明*     ||
-|| id         || bigint       || 主健、自增 ||
-|| user_name  || varchar(255) || 备注人姓名 ||
-|| book_id    || varchar(255) || 书名       ||
-|| essay      || varchar(2000)|| 备注内容   ||
-|| create_time|| timestamp    || 创建时间   ||
+{{{
++-------------+--------+---------------+------+-----+-------------------+-----------------------------+
+| Field       | Desc   | Type          | Null | Key | Default           | Extra                       |
++-------------+--------+---------------+------+-----+-------------------+-----------------------------+
+| id          | 主键   | bigint(20)    | NO   | PRI | NULL              | auto_increment              |
+| user_name   | 操作者 | varchar(255)  | NO   |     | NULL              |                             |
+| book_id     | 书ID   | bigint(20)    | YES  |     | NULL              |                             |
+| essay       | 内容   | varchar(2000) | NO   |     | NULL              |                             |
+| create_time |创建时间| timestamp     | NO   |     | CURRENT_TIMESTAMP | on update CURRENT_TIMESTAMP |
++-------------+--------+---------------+------+-----+-------------------+-----------------------------+
+
+create table remark(
+    id bigint not null primary key auto_increment,
+    user_name varchar(255) not null, 
+    book_id  bigint, 
+    essay varchar(2000) not null,
+    create_time timestamp not null
+) character set utf8;
+}}}
 
 == oper_log表 ==
 
-|| *列名*     || *类型*       || *说明*     ||
-|| id         || bigint       || 主健、自增 ||
-|| user_name  || varchar(255) || 操作者人姓名 ||
-|| resource_pattern || varchar(255) || 资源地址模式 ||
-|| resource_id      || varchar(255) || 资源地址     ||
-|| success          || tinyint(1)   || 操作成功?    ||
-|| remarks          || varchar(255) || 对操作的额外说明 ||
-|| create_time      || timestamp    || 创建时间         ||
+{{{
++------------------+--------+--------------+------+-----+-------------------+-----------------------------+
+| Field            | Desc   | Type         | Null | Key | Default           | Extra                       |
++------------------+--------+--------------+------+-----+-------------------+-----------------------------+
+| id               | 主健   | bigint(20)   | NO   | PRI | NULL              | auto_increment              |
+| user_name        | 操作者 | varchar(255) | NO   |     | NULL              |                             |
+| resource_pattern |资源模式| varchar(255) | NO   |     | NULL              |                             |
+| resource_id      |资源地址| varchar(255) | NO   |     | NULL              |                             |
+| success          |成功标识| tinyint(1)   | NO   |     | NULL              |                             |
+| remarks          |额外说明| varchar(255) | NO   |     | NULL              |                             |
+| create_time      |创建时间| timestamp    | NO   |     | CURRENT_TIMESTAMP | on update CURRENT_TIMESTAMP |
++------------------+--------+--------------+------+-----+-------------------+-----------------------------+
 
+create table oper_log(
+    id bigint not null primary key auto_increment,
+    user_name varchar(255) not null, 
+    resource_pattern varchar(255) not null, 
+    resource_id varchar(255) not null, 
+    success tinyint(1)  not null,
+    remarks varchar(255) not null, 
+    create_time timestamp not null
+) character set utf8;
+}}}
 = DAO设计=
 
 == BookDAO.java ==
