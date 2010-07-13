@@ -50,7 +50,6 @@ import net.paoding.rose.web.paramresolver.ParamResolver;
 import net.paoding.rose.web.paramresolver.ParameterNameDiscovererImpl;
 import net.paoding.rose.web.paramresolver.ResolverFactoryImpl;
 
-import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -162,13 +161,11 @@ public final class ActionEngine implements Engine {
             // 通过@Intercepted注解的allow和deny排除拦截器
             if (intercepted != null) {
                 // 3.1 先排除deny禁止的
-                if (ArrayUtils.contains(intercepted.deny(), "*")
-                        || ArrayUtils.contains(intercepted.deny(), interceptor.getName())) {
+                if (matches(intercepted.deny(), interceptor.getName())) {
                     continue;
                 }
                 // 3.2 确认最大的allow允许
-                else if (!ArrayUtils.contains(intercepted.allow(), "*")
-                        && !ArrayUtils.contains(intercepted.allow(), interceptor.getName())) {
+                else if (!matches(intercepted.allow(), interceptor.getName())) {
                     continue;
                 }
             }
@@ -180,6 +177,33 @@ public final class ActionEngine implements Engine {
         //
         return registeredInterceptors
                 .toArray(new InterceptorDelegate[registeredInterceptors.size()]);
+    }
+
+    /**
+     * 支持'*'前后的匹配
+     * 
+     * @param array
+     * @param value
+     * @return
+     */
+    private static boolean matches(String[] patterns, String value) {
+        for (int i = 0; i < patterns.length; i++) {
+            String pattern = patterns[i];
+            if (pattern.equals(value)) {
+                return true;
+            }
+            if (pattern.endsWith("*")) {
+                if (value.startsWith(pattern.substring(0, pattern.length() - 1))) {
+                    return true;
+                }
+            }
+            if (pattern.startsWith("*")) {
+                if (value.endsWith(pattern.substring(1))) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**
@@ -551,17 +575,6 @@ public final class ActionEngine implements Engine {
     }
 
     public void destroy() {
-
-    }
-
-    public static void main(String[] args) {
-        /*System.out.println(resolveQueryString(""));
-        System.out.println(resolveQueryString(null));
-        System.out.println(resolveQueryString("param"));
-        System.out.println(resolveQueryString("param=1"));
-        System.out.println(resolveQueryString("param=1&k2&k3=v3"));*/
-
-        System.out.println((new String[] { "hehe", "haha" }));
 
     }
 }

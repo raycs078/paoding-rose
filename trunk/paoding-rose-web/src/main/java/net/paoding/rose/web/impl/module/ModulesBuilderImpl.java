@@ -455,6 +455,15 @@ public class ModulesBuilderImpl implements ModulesBuilder {
             } else {
                 interceporName = StringUtils.removeEnd(beanName, RoseConstants.INTERCEPTOR_SUFFIX);
             }
+            final String rose = "rose";
+            if (interceporName.startsWith(rose)
+                    && (interceporName.length() == rose.length() || Character
+                            .isUpperCase(interceporName.charAt(rose.length())))
+                    && !userClass.getName().startsWith("net.paoding.rose.")) {
+                throw new IllegalArgumentException("illegal interceptor name '" + interceporName
+                        + "' for " + userClass.getName()
+                        + ": don't starts with 'rose', it's reserved");
+            }
 
             builder.name(interceporName);
 
