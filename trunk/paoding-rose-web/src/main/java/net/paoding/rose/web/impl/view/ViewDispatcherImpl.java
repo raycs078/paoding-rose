@@ -42,7 +42,6 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.web.context.ConfigurableWebApplicationContext;
 import org.springframework.web.servlet.View;
 import org.springframework.web.servlet.ViewResolver;
-import org.springframework.web.servlet.view.AbstractView;
 import org.springframework.web.servlet.view.InternalResourceViewResolver;
 import org.springframework.web.servlet.view.JstlView;
 import org.springframework.web.servlet.view.velocity.VelocityConfig;
@@ -81,22 +80,12 @@ public class ViewDispatcherImpl implements ViewDispatcher, ApplicationContextAwa
 
     @Override
     public View resolveViewName(Invocation inv, String viewPath, Locale locale) throws Exception {
-        // 如果以/开头表示去绝对路径
-        if (viewPath.charAt(0) == '/') {
-            return getSpringViewResolver(inv, viewPath).resolveViewName(viewPath, locale);
-        }
         ViewResolver viewResolver = getSpringViewResolver(inv, viewPath);
         if (logger.isDebugEnabled()) {
             logger.debug("found viewResolver '" + viewResolver + "' for viewPath '" + viewPath
                     + "'");
         }
-        View view = viewResolver.resolveViewName(viewPath, locale);
-        if (view instanceof AbstractView) {
-            if (viewPath.endsWith(".xml")) {
-                ((AbstractView) view).setContentType("text/xml;charset=UTF-8");
-            }
-        }
-        return view;
+        return viewResolver.resolveViewName(viewPath, locale);
     }
 
     protected ViewResolver getSpringViewResolver(Invocation inv, String viewPath)
@@ -111,8 +100,7 @@ public class ViewDispatcherImpl implements ViewDispatcher, ApplicationContextAwa
             if (logger.isDebugEnabled()) {
                 logger.debug("to get velocity view resolver.");
             }
-            return new DyContentTypeViewResolver(getVelocityViewResolver(inv, viewPath),
-                    "text/xml;charset=UTF-8");
+            return new DyContentTypeViewResolver(getVelocityViewResolver(inv, viewPath), "text/xml");
         }
         if (viewPath.endsWith(".jsp")) {
             if (logger.isDebugEnabled()) {

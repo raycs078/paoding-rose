@@ -20,15 +20,13 @@ import net.paoding.rose.web.ControllerInterceptorAdapter;
 import net.paoding.rose.web.Invocation;
 
 import org.apache.commons.logging.LogFactory;
-import org.springframework.stereotype.Component;
 
 /**
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
-@Component("roseInfoToolsInterceptor")
-public class ToolsInterceptor extends ControllerInterceptorAdapter {
+public class RoseToolsInterceptor extends ControllerInterceptorAdapter {
 
     @Override
     public Object before(Invocation inv) throws Exception {

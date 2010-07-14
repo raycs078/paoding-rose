@@ -30,7 +30,6 @@ import net.paoding.rose.web.InterceptorDelegate;
 import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.RequestPath;
 import net.paoding.rose.web.annotation.HttpFeatures;
-import net.paoding.rose.web.annotation.Intercepted;
 import net.paoding.rose.web.annotation.Path;
 import net.paoding.rose.web.annotation.ReqMethod;
 import net.paoding.rose.web.annotation.rest.Get;
@@ -50,7 +49,6 @@ import net.paoding.rose.web.impl.thread.Rose;
  * 
  */
 @Path("")
-@Intercepted(allow = "rose*")
 public class ToolsController {
 
     private Date startupTime = new Date();
