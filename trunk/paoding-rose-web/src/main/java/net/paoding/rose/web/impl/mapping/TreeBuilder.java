@@ -167,12 +167,13 @@ public class TreeBuilder {
         while (child != null) {
             if (sibling != null) {
                 if (child.compareTo(sibling) == 0) {
-                    logger.error("mapping confict: '" + child.getMapping().getDefinition()
-                            + "' in parent path '" + prefix + "'; here is the mapping tree, "
-                            + "you should find the confict in it:\n" + PrinteHelper.list(tree));
-                    throw new IllegalArgumentException("mapping confict: '"
-                            + child.getMapping().getDefinition() + "' in parent path '" + prefix
-                            + "'");
+                    logger.error("mapping conflicts: '" + child.getMapping().getDefinition()
+                            + "' conflicts with '" + sibling.getMapping().getDefinition()
+                            + "' in '" + prefix + "'; here is the mapping tree, "
+                            + "you can find the conflict in it:\n" + PrinteHelper.list(tree));
+                    throw new IllegalArgumentException("mapping conflicts: '"
+                            + child.getMapping().getDefinition() + "' conflicts with '"
+                            + sibling.getMapping().getDefinition() + "' in '" + prefix + "'");
                 }
             }
             check(tree, child, prefix + child.getMapping().getDefinition());
