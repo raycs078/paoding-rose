@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -29,6 +30,7 @@ import javax.servlet.ServletContext;
 
 import net.paoding.rose.RoseConstants;
 import net.paoding.rose.scanner.ModuleResource;
+import net.paoding.rose.util.RoseStringUtil;
 import net.paoding.rose.util.SpringUtils;
 import net.paoding.rose.web.ControllerErrorHandler;
 import net.paoding.rose.web.ControllerInterceptor;
@@ -129,6 +131,43 @@ public class ModulesBuilderImpl implements ModulesBuilder {
 
             // 将拦截器设置到module中
             List<InterceptorDelegate> interceptors = findInterceptors(moduleContext);
+            for (Iterator<InterceptorDelegate> iter = interceptors.iterator(); iter.hasNext();) {
+                InterceptorDelegate interceptor = iter.next();
+
+                ControllerInterceptor most = InterceptorDelegate
+                        .getMostInnerInterceptor(interceptor);
+
+                if (most.getClass().getName().startsWith("net.paoding.rose.web")) {
+                    continue;
+                }
+
+                // 先排除deny禁止的
+                if (moduleResource.getInterceptedDeny() != null) {
+                    if (RoseStringUtil.matches(moduleResource.getInterceptedDeny(), interceptor
+                            .getName())) {
+                        iter.remove();
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("module '" + module.getMappingPath()
+                                    + "': remove interceptor by rose.properties: "
+                                    + most.getClass().getName());
+                        }
+                        continue;
+                    }
+                }
+                //  确认最大的allow允许
+                if (moduleResource.getInterceptedAllow() != null) {
+                    if (!RoseStringUtil.matches(moduleResource.getInterceptedAllow(), interceptor
+                            .getName())) {
+                        iter.remove();
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("module '" + module.getMappingPath()
+                                    + "': remove interceptor by rose.properties: "
+                                    + most.getClass().getName());
+                        }
+                        continue;
+                    }
+                }
+            }
             module.setControllerInterceptors(interceptors);
             if (logger.isDebugEnabled()) {
                 logger.debug("module '" + module.getMappingPath() + "': apply intercetpors "

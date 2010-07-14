@@ -94,7 +94,7 @@ public class InstructionExecutorImpl implements InstructionExecutor {
                 return Text.text(str.substring(1)); // 具体content-type等信息由@HttpFeatures决定
             }
             if (str.charAt(0) == '/') {
-                return View.name(str);
+                return new ViewInstruction(str);
             }
             if (str.startsWith("r:") || str.startsWith("redirect:")) {
                 StringInstruction si = new StringInstruction(false, str
@@ -201,7 +201,7 @@ public class InstructionExecutorImpl implements InstructionExecutor {
                 } else if (fr.isForward()) {
                     return Forward.path(str);
                 } else {
-                    return View.name(str);
+                    return new ViewInstruction(str);
                 }
             }
             if (fr.isReirect()) {
@@ -209,7 +209,7 @@ public class InstructionExecutorImpl implements InstructionExecutor {
             } else if (fr.isForward()) {
                 return Forward.path(str);
             }
-            return View.name(str);
+            return new ViewInstruction(str);
         } else if (ins instanceof InputStream) {
             return new InputStreamInstruction((InputStream) ins);
         } else if (ins instanceof byte[]) {

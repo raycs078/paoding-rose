@@ -65,6 +65,10 @@ public class ModuleResource implements Comparable<ModuleResource> {
     // 父模块资源。xxx.controllers.subpkg的父模块资源是xxx.controllers对应的模块，xxx.controllers是顶级模块资源。
     private ModuleResource parent;
 
+    private String[] interceptedAllow;
+
+    private String[] interceptedDeny;
+
     // getters & setters
 
     public URL getModuleUrl() {
@@ -121,6 +125,22 @@ public class ModuleResource implements Comparable<ModuleResource> {
 
     public void addModuleClass(Class<?> moduleClass) {
         this.moduleClasses.add(moduleClass);
+    }
+
+    public String[] getInterceptedAllow() {
+        return interceptedAllow;
+    }
+
+    public void setInterceptedAllow(String[] interceptedAllow) {
+        this.interceptedAllow = interceptedAllow;
+    }
+
+    public String[] getInterceptedDeny() {
+        return interceptedDeny;
+    }
+
+    public void setInterceptedDeny(String[] interceptedDeny) {
+        this.interceptedDeny = interceptedDeny;
     }
 
     // -- overrides --

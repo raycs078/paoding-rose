@@ -60,17 +60,12 @@ public class ViewInstruction extends AbstractInstruction {
     private static Map<String, ViewPathCache> globalViewPathCaches = new HashMap<String, ViewPathCache>();
 
     // 视图名称，不包含路径，一般没有后缀名
-    private String name;
+    private final String name;
 
     // 如果applicationContext能够获取到这个名字的对象，则使用这个对象作为viewResolver
     private String viewDispatcherName = "viewDispatcher";
 
-    public ViewInstruction name(String name) {
-        setName(name);
-        return this;
-    }
-
-    public void setName(String name) {
+    public ViewInstruction(String name) {
         this.name = name;
     }
 
@@ -107,8 +102,9 @@ public class ViewInstruction extends AbstractInstruction {
         if (logger.isDebugEnabled()) {
             logger.debug("resolving view name = '" + viewName + "'");
         }
-        // 如果以/开头表示到绝对路径的文件
-        if (viewName.charAt(0) == '/') {
+        // 如果以/开头、非/views/的表示到绝对路径的文件
+        if (viewName.charAt(0) == '/'
+                && !viewName.startsWith(RoseConstants.VIEWS_PATH_WITH_END_SEP)) {
             return viewName;
         }
         // 其他的按惯例行走
@@ -151,36 +147,51 @@ public class ViewInstruction extends AbstractInstruction {
         if (viewPath != null) {
             return viewPath;
         }
-        if (logger.isDebugEnabled()) {
+
+        final boolean debugEnabled;
+        if (debugEnabled = logger.isDebugEnabled()) {
             logger.debug("to find viewPath by viewName '" + viewName + "'");
         }
+        //
         final String notDirectoryViewName;
-        String directoryPath = viewPathCache.getDirectoryPath();
-        int viewNameIndex = viewName.lastIndexOf('/');
         File directoryFile;
+        String directoryPath;
+        //
+        int viewNameIndex = viewName.lastIndexOf('/');
         if (viewNameIndex > 0) {
             notDirectoryViewName = viewName.substring(viewNameIndex + 1);
-            String subDirPath = viewName.substring(0, viewNameIndex);
-            File tempHome = new File(inv.getServletContext().getRealPath(directoryPath));
-            if (!tempHome.exists()) {
-                directoryFile = null;
+
+            if (viewName.charAt(0) == '/') {
+                directoryPath = viewName.substring(0, viewNameIndex);
+                directoryFile = new File(inv.getServletContext().getRealPath(directoryPath));
             } else {
-                directoryFile = searchDirectory(tempHome, subDirPath);
-                if (directoryFile != null) {
-                    subDirPath = directoryFile.getPath().substring(tempHome.getPath().length())
-                            .replace('\\', '/');
-                    directoryPath = directoryPath + subDirPath;
+                directoryPath = viewPathCache.getDirectoryPath();
+                String subDirPath = viewName.substring(0, viewNameIndex);
+                File tempHome = new File(inv.getServletContext().getRealPath(directoryPath));
+                if (!tempHome.exists()) {
+                    directoryFile = null;
+                } else {
+                    directoryFile = searchDirectory(tempHome, subDirPath);
+                    if (directoryFile != null) {
+                        subDirPath = directoryFile.getPath().substring(tempHome.getPath().length())
+                                .replace('\\', '/');
+                        directoryPath = directoryPath + subDirPath;
+                    }
                 }
             }
         } else {
+            directoryPath = viewPathCache.getDirectoryPath();
             notDirectoryViewName = viewName;
             directoryFile = new File(inv.getServletContext().getRealPath(directoryPath));
         }
         if (directoryFile == null || !directoryFile.exists()) {
+            if (logger.isWarnEnabled()) {
+                logger.warn("not found directoryPath '" + directoryPath + "'");
+            }
             inv.getResponse().sendError(404, "not found directoryPath '" + directoryPath + "'");
             return null;
         } else {
-            if (logger.isDebugEnabled()) {
+            if (debugEnabled) {
                 logger.debug("found directory " + directoryFile.getAbsolutePath());
             }
             String viewFileName = searchViewFile(directoryFile, notDirectoryViewName, false);
@@ -188,6 +199,9 @@ public class ViewInstruction extends AbstractInstruction {
                 viewFileName = searchViewFile(directoryFile, notDirectoryViewName, true);
             }
             if (viewFileName == null) {
+                if (logger.isWarnEnabled()) {
+                    logger.warn("not found directoryPath '" + directoryPath + "'");
+                }
                 inv.getResponse().sendError(404,
                         "not found view file '" + notDirectoryViewName + "' in " + directoryPath);
                 return null;

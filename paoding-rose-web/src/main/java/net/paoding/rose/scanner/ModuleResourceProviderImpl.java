@@ -15,6 +15,8 @@
  */
 package net.paoding.rose.scanner;
 
+import static net.paoding.rose.RoseConstants.CONF_INTERCEPTED_ALLOW;
+import static net.paoding.rose.RoseConstants.CONF_INTERCEPTED_DENY;
 import static net.paoding.rose.RoseConstants.CONF_MODULE_IGNORED;
 import static net.paoding.rose.RoseConstants.CONF_MODULE_PATH;
 import static net.paoding.rose.RoseConstants.CONF_PARENT_MODULE_PATH;
@@ -159,6 +161,8 @@ public class ModuleResourceProviderImpl implements ModuleResourceProvider {
 
         String relative = topModuleFile.getName().getRelativeName(candidate.getName());
         String mappingPath = null;
+        String[] interceptedAllow = null;
+        String[] interceptedDeny = null;
 
         ModuleResource parentModule = local.moduleResourceMap.get(candidate.getParent());
         // 如果rose.properties设置了controllers的module.path?
@@ -202,6 +206,20 @@ public class ModuleResourceProviderImpl implements ModuleResourceProvider {
                 }
                 mappingPath = RoseStringUtil.mappingPath(mappingPath);
             }
+
+            //interceptedAllow、interceptedDeny
+            String interceptedAllowStrings = p.getProperty(CONF_INTERCEPTED_ALLOW);
+            interceptedAllowStrings = StringUtils.trimToEmpty(interceptedAllowStrings);
+            if (interceptedAllowStrings.length() > 0) {
+                interceptedAllow = StringUtils.split(interceptedAllowStrings, ",");
+            }
+
+            String interceptedDenyStrings = p.getProperty(CONF_INTERCEPTED_DENY);
+            interceptedDenyStrings = StringUtils.trimToEmpty(interceptedDenyStrings);
+            if (interceptedDenyStrings.length() > 0) {
+                interceptedDeny = StringUtils.split(interceptedDenyStrings, ",");
+            }
+
         }
         // 
         if (mappingPath == null) {
@@ -217,6 +235,12 @@ public class ModuleResourceProviderImpl implements ModuleResourceProvider {
         moduleResource.setModuleUrl(candidate.getURL());
         moduleResource.setRelativePath(RoseStringUtil.relativePathToModulePath(relative));
         moduleResource.setParent(parentModule);
+        if (interceptedAllow != null) {
+            moduleResource.setInterceptedAllow(interceptedAllow);
+        }
+        if (interceptedDeny != null) {
+            moduleResource.setInterceptedDeny(interceptedDeny);
+        }
         local.moduleResourceMap.put(candidate, moduleResource);
         local.moduleResourceList.add(moduleResource);
         if (logger.isDebugEnabled()) {

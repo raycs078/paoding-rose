@@ -69,6 +69,16 @@ public interface RoseConstants {
     public static final String CONF_MODULE_PATH = "module.path";
 
     /**
+     * 可配置在模块下的module的rose.properties表示本模块的最大允许的拦截器
+     */
+    public static final String CONF_INTERCEPTED_ALLOW = "intercepted.allow";
+
+    /**
+     * 可配置在模块下的module的rose.properties表示本模块的不能允许的拦截器
+     */
+    public static final String CONF_INTERCEPTED_DENY = "intercepted.deny";
+
+    /**
      *用于在每个module的包的rose.properties中中，定义module.path时，
      * 可通过它引用上个package定义的module.path
      */

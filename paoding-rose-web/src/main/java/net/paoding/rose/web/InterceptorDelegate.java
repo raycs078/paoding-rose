@@ -132,7 +132,7 @@ public class InterceptorDelegate implements Ordered, Named, ControllerIntercepto
 
     @Override
     public String toString() {
-        return interceptor.getClass().getName();
+        return getMostInnerInterceptor(this).getClass().getName();
     }
 
 }

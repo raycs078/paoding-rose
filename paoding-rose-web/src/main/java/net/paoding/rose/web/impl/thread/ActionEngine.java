@@ -33,6 +33,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import net.paoding.rose.RoseVersion;
+import net.paoding.rose.util.RoseStringUtil;
+import net.paoding.rose.web.ControllerInterceptor;
 import net.paoding.rose.web.InterceptorDelegate;
 import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.InvocationChain;
@@ -152,6 +154,13 @@ public final class ActionEngine implements Engine {
         List<InterceptorDelegate> registeredInterceptors = new ArrayList<InterceptorDelegate>(
                 interceptors.size());
         for (InterceptorDelegate interceptor : interceptors) {
+
+            ControllerInterceptor most = InterceptorDelegate.getMostInnerInterceptor(interceptor);
+
+            if (most.getClass().getName().startsWith("net.paoding.rose.web")) {
+                continue;
+            }
+
             // 获取@Intercepted注解 (@Intercepted注解配置于控制器或其方法中，决定一个拦截器是否应该拦截之。没有配置按“需要”处理)
             Intercepted intercepted = method.getAnnotation(Intercepted.class);
             if (intercepted == null) {
@@ -161,11 +170,11 @@ public final class ActionEngine implements Engine {
             // 通过@Intercepted注解的allow和deny排除拦截器
             if (intercepted != null) {
                 // 3.1 先排除deny禁止的
-                if (matches(intercepted.deny(), interceptor.getName())) {
+                if (RoseStringUtil.matches(intercepted.deny(), interceptor.getName())) {
                     continue;
                 }
                 // 3.2 确认最大的allow允许
-                else if (!matches(intercepted.allow(), interceptor.getName())) {
+                if (!RoseStringUtil.matches(intercepted.allow(), interceptor.getName())) {
                     continue;
                 }
             }
@@ -177,33 +186,6 @@ public final class ActionEngine implements Engine {
         //
         return registeredInterceptors
                 .toArray(new InterceptorDelegate[registeredInterceptors.size()]);
-    }
-
-    /**
-     * 支持'*'前后的匹配
-     * 
-     * @param array
-     * @param value
-     * @return
-     */
-    private static boolean matches(String[] patterns, String value) {
-        for (int i = 0; i < patterns.length; i++) {
-            String pattern = patterns[i];
-            if (pattern.equals(value)) {
-                return true;
-            }
-            if (pattern.endsWith("*")) {
-                if (value.startsWith(pattern.substring(0, pattern.length() - 1))) {
-                    return true;
-                }
-            }
-            if (pattern.startsWith("*")) {
-                if (value.endsWith(pattern.substring(1))) {
-                    return true;
-                }
-            }
-        }
-        return false;
     }
 
     /**

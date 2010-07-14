@@ -35,7 +35,9 @@ import net.paoding.rose.web.ControllerInterceptor;
  * 控制器默认不用标注{@link Intercepted}都将被拦截。 使用{@link Intercepted}
  * 主要是用来改变默认的行为,使只有某些拦截器才能拦截该控制器<br>
  * 开发者可以使用2种设置方式，一种是通过配置allow，表示只有在allow内的拦截器才能拦截到；另一种是通过配置deny，
- * 表示除了deny中的拦截器都要拦截到(<=allow范围内的)。如果没有配置allow以及deny表示所有拦截器都能拦截到。
+ * 表示除了deny中的拦截器都要拦截到
+ * (<=allow范围内的)。如果没有配置allow以及deny表示所有拦截器都能拦截到。如果allow和deny同时配置
+ * ，则只有同时满足deny和allow才能拦截到，
  * <p>
  * allow和deny里面的字符串表示的是相关拦截器在applicationContext中的id或name。
  * <p>
@@ -48,7 +50,11 @@ import net.paoding.rose.web.ControllerInterceptor;
  * Rose优先找方法声明的Intercepted标注，然后再是类的标注。
  * <p>
  * 
- * 
+ * <strong>扩展</strong>
+ * <p>
+ * 可以在每个module目录下的rose.properties写intercepted.allow和intercepted.
+ * deny属性配置该module的拦截器可见范围，使得该module下的控制器只能在这些可见的拦截下进行更进一步的选择。<br>
+ * rose.properties的这个特性不作用子module
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
