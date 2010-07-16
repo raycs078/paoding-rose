@@ -1,6 +1,12 @@
 Portal示例
 
 <wiki:toc max_depth="3" />
+
+== 介绍 ==
+
+本示例示范如何使用rose portal (基于servlet规范)，页面效果：
+
+[http://qieqie.info/my_images/rose-portal-demo.JPG]
 =创建控制器=
 
 1个是Portal主控，另外2个是窗口控制器
@@ -163,4 +169,4 @@ portal.css
 
 运行该webapp，访问http://localhost/portal 显示如下
 
-[http://webrose.googlecode.com/issues/attachment?aid=6159855606613425491&name=p_large_DZax_127c0000077e2d14%5B1%5D.jpg&token=05b6d675be91a08d0a958b10259dddf7&.jpg]
+[http://qieqie.info/my_images/rose-portal-demo.JPG]
