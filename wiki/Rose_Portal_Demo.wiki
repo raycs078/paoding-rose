@@ -2,7 +2,7 @@ Portal示例
 
 <wiki:toc max_depth="3" />
 
-== 介绍 ==
+= 介绍 =
 
 本示例示范如何使用rose portal (基于servlet规范)，页面效果：
 
