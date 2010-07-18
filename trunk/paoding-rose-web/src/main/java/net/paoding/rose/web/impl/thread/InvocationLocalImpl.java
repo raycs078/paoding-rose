@@ -15,6 +15,7 @@
  */
 package net.paoding.rose.web.impl.thread;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Set;
@@ -128,6 +129,16 @@ public class InvocationLocalImpl implements InvocationLocal {
     @Override
     public Method getMethod() {
         return required().getMethod();
+    }
+
+    @Override
+    public boolean isAnnotationPresent(Class<? extends Annotation> annotationClass) {
+        return required().isAnnotationPresent(annotationClass);
+    }
+
+    @Override
+    public <T extends Annotation> T getAnnotation(Class<T> annotationClass) {
+        return required().getAnnotation(annotationClass);
     }
 
     @Override

@@ -15,6 +15,7 @@
  */
 package net.paoding.rose.web;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Set;
@@ -131,6 +132,23 @@ public interface Invocation {
      * @return
      */
     public Method getMethod();
+
+    /**
+     * 在该调用所在方法、控制器上上是否标注了该注解对象，如果没有返回false
+     * 
+     * @param annotationClass
+     * @return
+     */
+    public boolean isAnnotationPresent(Class<? extends Annotation> annotationClass);
+
+    /**
+     * 获取标注在该调用所在方法、控制器上的注解对象，如果没有返回null
+     * 
+     * @param <T>
+     * @param annotationClass
+     * @return
+     */
+    public <T extends Annotation> T getAnnotation(Class<T> annotationClass);
 
     /**
      * 本地调用的目标控制器方法中，各参数的名字。
