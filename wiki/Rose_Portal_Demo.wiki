@@ -4,7 +4,11 @@ Portal示例
 
 = 介绍 =
 
-本示例示范如何使用rose portal (基于servlet规范)，页面效果：
+“portal”一词中文翻译为“门户”，所谓门户是指各种信息的集成。
+
+rose portal基于rose框架，是rose的一个插件。这个技术不是基于JavaEE的portlet规范，您只需要使用标准的servlet容器即可实现，而且更简单。
+
+本示例示范如何使用rose portal (基于servlet规范)，在一个门户可以显示两个独立的“信息”，效果如下：
 
 [http://qieqie.info/my_images/rose-portal-demo.JPG]
 =创建控制器=
