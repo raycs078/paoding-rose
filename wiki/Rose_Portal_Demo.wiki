@@ -15,20 +15,31 @@ rose portal基于rose框架，是rose的一个插件。这个技术不是基于J
 
 1个是Portal主控，另外2个是窗口控制器
 1) 在controllers或子目录下创建Portal控制器：PortalController，创建处理方法，并声明Portal参数
-{{{
+
 PortalController.java
+{{{
+    // 按照rose规范来编写控制器即可，控制器必须放到controllers或其子package
     package com.xiaonei.xxx.controllers;
  
     import net.paoding.rose.web.annotation.ReqMapping;
     import net.paoding.rose.web.annotation.rest.Get;
     import net.paoding.rose.web.portal.Portal;
  
+    @Path("portal")
     public class PortalController {
  
+        // 标注@Get,表示这个方法要处理的是对/portal的GET请求
+        // 在主控控制方法上声明Portal参数即表示这个页面是portal，就这样!
         @Get
         public String home(Portal portal) throws Exception {
+            // 使用addWindow向这个portal页面加入各种子信息(我们成为窗口)
             portal.addWindow("weather", "/windows/weather");
-            portal.addWindow("todo", "/windows/todo");
+
+            // 第一个参数是用于标识该窗口，使得portal页面中可以引用到这个窗口的html
+            // 第二个参数表示这个窗口的地址(可以包含参数)，这个地址等价于forward的地址(也就是这里只要能forward的地址都可以，无论是否是rose框架的，甚至可以是一个jsp页面)
+            // 因此，地址没有说一定要以"/windows"开始
+            portal.addWindow("todo", "/windows/todo?name=value");
+
             return "portal-home";
         }
     }
@@ -42,8 +53,10 @@ WeatherController.java
     import net.paoding.rose.web.Invocation;
     import net.paoding.rose.web.annotation.rest.Get;
  
+    @Path("weather")
     public class WeatherController {
  
+        // 这个方法处理"/windows/weather"，它只是返回一串中文，而非jsp、vm等页面
         @Get
         public String xxx(Invocation inv) {
             return "@今天天气真好，花儿都开料!";
@@ -58,9 +71,13 @@ TodoController.java
     import net.paoding.rose.web.Invocation;
     import net.paoding.rose.web.annotation.rest.Get;
  
+    @Path("todo")
     public class TodoController {
+
+        // 在控制器使用全局变量并不好，在此仅是一个演示而已
         private int count;
  
+        // 方法名是什么不要紧，关进是@Get代表了这个方法用于处理对/todo的GET请求
         @Get
         public String xxx(Invocation inv, Window window) {
             List<String> list = new ArrayList<String>();
@@ -68,6 +85,7 @@ TodoController.java
             list.add("睡觉");
             list.add(String.valueOf(count++));
             inv.addModel("todolist", list);
+            // 返回页面，rose将从这个模块对应的/views/windows下找名字以todo开始的页面
             return "todo";
         }
     }
@@ -89,12 +107,14 @@ webapp/views下创建PortalController需要的portal-home.vm
  
 	<div class="window">
 	<div class="title">天气</div>
+        <!--这里使用$weather的"weather"即是第一个window的标识-->
 	<div class="content">$weather</div>
 	</div>
  
  
 	<div class="window">
 	<div class="title">待做</div>
+        <!--$todo实际是一个Window对象，velocity会调用其toString()输出html的-->
 	<div class="content">$todo</div>
 	</div>
  
