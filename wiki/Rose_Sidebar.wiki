@@ -1,20 +1,13 @@
 #summary One-sentence summary of this page.
 
-=== 基本信息===
+= 基本信息=
 
  * [Rose_Download 下载指南] 
  * [Rose_Environment 开发和运行环境] 
  * [Rose_Philosophy Rose的哲学] 
  * [Rose_Architect Rose原理] 
 
-=== 开发指南 ===
-
- * 【代码预览】
-  # [Rose_Code_Fragment_Controller 控制器类代码]
-  # [Rose_Code_Fragment_Controller2 控制器类代码2]
-  # [Rose_Code_Fragment_Controller3 控制器类代码3]
-  # [Rose_Code_Fragment_ErrorHandler 错误处理器代码]
-  # [Rose_Code_Fragment_Interceptor 拦截器代码]
+= 开发指南 =
 
  * 【开始】
   # [Rose_Guide_Getting_Started 第一支程序]
@@ -27,6 +20,13 @@
   # [Rose_Guide_View 视图开发规范]
   # [Rose_Guide_Model 数据模型设置规范]
 
+ * 【代码预览】
+  # [Rose_Code_Fragment_Controller 控制器类代码]
+  # [Rose_Code_Fragment_Controller2 控制器类代码2]
+  # [Rose_Code_Fragment_Controller3 控制器类代码3]
+  # [Rose_Code_Fragment_ErrorHandler 错误处理器代码]
+  # [Rose_Code_Fragment_Interceptor 拦截器代码]
+
  * 【API】
   # [Rose_Guide_Invocation Invocation对象]
   # [Rose_Guide_Mapping 地址映射规范]
@@ -38,12 +38,15 @@
   # [Rose_Guide_Message_Source 国际化使用规范]
   # [Rose_Guide_Binding 参数绑定规范]
   # [Rose_Guide_Validation 参数的服务端验证]
-  # [Rose_Portal_Demo Portal示例]
-  # [Rose_Guide_Portal Portal开发规范]
 
  * 【扩展】
   # [Rose_Guide_Param_Resolver 方法参数解析器]
   # [Rose_Guide_Application_Context Spring配置文件]
 
-===Jade===
+=portal=
+  # [Rose_Portal_Demo 第一支portal程序]
+  # [Rose_Portal_Inside portal原理]
+  # [Rose_Guide_Portal portal开发规范]
+
+=jade=
   # [Jade_DAO_Spec Jade DAO规范]
