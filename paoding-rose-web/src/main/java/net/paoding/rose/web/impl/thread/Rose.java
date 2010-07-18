@@ -177,7 +177,6 @@ public class Rose implements EngineChain {
                     + actionEngine.getMethod().getName());
         }
 
-        // 完成一次成功匹配需要走到树的叶子结点，并且是方法级别的结点
         // bind engines
         LinkedEngine tempEngine = leafEngine;
         MappingNode moduleNode = null;

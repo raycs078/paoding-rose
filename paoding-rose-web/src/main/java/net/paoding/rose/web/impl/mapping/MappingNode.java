@@ -36,9 +36,6 @@ public class MappingNode implements Comparable<MappingNode> {
     private final Mapping mapping;
 
     /** 最左子结点 */
-    private MappingNode parent;
-
-    /** 最左子结点 */
     private MappingNode leftMostChild;
 
     /** 右兄弟结点 */
@@ -108,7 +105,6 @@ public class MappingNode implements Comparable<MappingNode> {
                 }
             }
         }
-        child.parent = this;
     }
 
     public MappingNode getChild(String mapping) {

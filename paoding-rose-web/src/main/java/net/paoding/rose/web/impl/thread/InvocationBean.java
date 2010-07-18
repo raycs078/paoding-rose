@@ -15,6 +15,7 @@
  */
 package net.paoding.rose.web.impl.thread;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -142,6 +143,21 @@ public final class InvocationBean implements Invocation {
     @Override
     public Method getMethod() {
         return getActionEngine().getMethod();
+    }
+
+    @Override
+    public boolean isAnnotationPresent(Class<? extends Annotation> annotationClass) {
+        return getMethod().isAnnotationPresent(annotationClass)
+                || getControllerClass().isAnnotationPresent(annotationClass);
+    }
+
+    @Override
+    public <T extends Annotation> T getAnnotation(Class<T> annotationClass) {
+        T t = getMethod().getAnnotation(annotationClass);
+        if (t == null) {
+            t = getControllerClass().getAnnotation(annotationClass);
+        }
+        return t;
     }
 
     public ModuleEngine getModuleEngine() {
