@@ -2,8 +2,29 @@ Portal原理
 
 <wiki:toc max_depth="3" />
 
-= 概述 =
+= 内容 =
+这个wiki主要介绍rose portal的实现技术
 
-[==，我先睡觉，。。。]
+= 妄语 =
 
-我认为portal技术，真是一个亮点，不怪我脸皮厚，我真想推荐你使用，绝对是我们的独闯！
+我认为roes portal技术，真是一个亮点，不怪我脸皮厚，我真想推荐你使用，绝对是我们的独创！
+
+rose portal是一个服务端portal技术，而非客户端技术。所谓服务端portal技术，是指所有工作发生在服务器上，客户端在整个过程中没有任何作用，使用rose portal不需要任何js技术的支持。
+
+使用rose portal，您可以将一个页面切成互不相关的多个子模块(我们称之为"window")，如果和配置组件结合，您可以根据根据不同用户的选择为之选择不同的模板以及窗口。
+
+
+虽然rose portal不依赖前端技术，但你也可以通过和前端技术的结合实现"rose pipe"技术，所谓rose pipe借助了rose portal，不仅仅能够加快了服务器的执行速度，更是降低了页面的渲染和传输等待时间。
+
+关于rose pipe技术及其实现，详见 [Rose_Portal_RosePipe rose pipe]
+
+= 开发概述 =
+
+rose portal是rose扩展开的一种重要技术，从某种角度光耀甚至超过作为其基础的rose。
+
+我们尽量把复杂和创意封装在实现代码中，暴露出来的api是及其简约的。如同[Roese_Portal_Demo 第一支portal程序]所述的那样，开发一个portal程序，你只需要把Portal参数声明在方法上，并在方法中调用portal.addWindow就完成了整个代码结构。这就是和普通rose唯一不同的地方，剩下就都一样了。
+
+= 关键技术 =
+
+
+[==，我先睡觉，。。。2]
