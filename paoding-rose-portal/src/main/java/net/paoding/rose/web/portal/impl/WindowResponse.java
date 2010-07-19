@@ -41,6 +41,8 @@ class WindowResponse extends HttpServletResponseWrapper {
 
     private Locale locale;
 
+    private String charset;
+
     public WindowResponse(WindowImpl window) {
         super(window.getPortal().getResponse());
         this.window = window;
@@ -163,6 +165,12 @@ class WindowResponse extends HttpServletResponseWrapper {
 
     @Override
     public void setCharacterEncoding(String charset) {
+        this.charset = charset;
+    }
+
+    @Override
+    public String getCharacterEncoding() {
+        return charset != null ? charset : super.getCharacterEncoding();
     }
 
     @Override
