@@ -137,34 +137,33 @@ public class ModulesBuilderImpl implements ModulesBuilder {
                 ControllerInterceptor most = InterceptorDelegate
                         .getMostInnerInterceptor(interceptor);
 
-                if (most.getClass().getName().startsWith("net.paoding.rose.web")) {
-                    continue;
-                }
+                if (!most.getClass().getName().startsWith("net.paoding.rose.web")) {
 
-                // 先排除deny禁止的
-                if (moduleResource.getInterceptedDeny() != null) {
-                    if (RoseStringUtil.matches(moduleResource.getInterceptedDeny(), interceptor
-                            .getName())) {
-                        iter.remove();
-                        if (logger.isDebugEnabled()) {
-                            logger.debug("module '" + module.getMappingPath()
-                                    + "': remove interceptor by rose.properties: "
-                                    + most.getClass().getName());
+                    // 先排除deny禁止的
+                    if (moduleResource.getInterceptedDeny() != null) {
+                        if (RoseStringUtil.matches(moduleResource.getInterceptedDeny(), interceptor
+                                .getName())) {
+                            iter.remove();
+                            if (logger.isDebugEnabled()) {
+                                logger.debug("module '" + module.getMappingPath()
+                                        + "': remove interceptor by rose.properties: "
+                                        + most.getClass().getName());
+                            }
+                            continue;
                         }
-                        continue;
                     }
-                }
-                //  确认最大的allow允许
-                if (moduleResource.getInterceptedAllow() != null) {
-                    if (!RoseStringUtil.matches(moduleResource.getInterceptedAllow(), interceptor
-                            .getName())) {
-                        iter.remove();
-                        if (logger.isDebugEnabled()) {
-                            logger.debug("module '" + module.getMappingPath()
-                                    + "': remove interceptor by rose.properties: "
-                                    + most.getClass().getName());
+                    //  确认最大的allow允许
+                    if (moduleResource.getInterceptedAllow() != null) {
+                        if (!RoseStringUtil.matches(moduleResource.getInterceptedAllow(),
+                                interceptor.getName())) {
+                            iter.remove();
+                            if (logger.isDebugEnabled()) {
+                                logger.debug("module '" + module.getMappingPath()
+                                        + "': remove interceptor by rose.properties: "
+                                        + most.getClass().getName());
+                            }
+                            continue;
                         }
-                        continue;
                     }
                 }
             }

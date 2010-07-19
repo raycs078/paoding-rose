@@ -57,7 +57,7 @@ public class ModuleEngine implements Engine {
     /** 模块对象 */
     private final Module module;
 
-    private MultipartResolver multipartResolver;
+    private final MultipartResolver multipartResolver;
 
     // ---------------------------------------------------------------------
 
@@ -191,6 +191,10 @@ public class ModuleEngine implements Engine {
     protected boolean checkMultipart(Invocation inv) throws MultipartException {
         if (inv.getMethod().isAnnotationPresent(SuppressMultipartResolver.class)) {
             return false;
+        }
+        if (inv.getRequest().getMethod() == null) {
+            System.out.println("---inv.getRequest().getClass=" + inv.getRequest().getClass().getName());
+            throw new NullPointerException();
         }
         if (this.multipartResolver.isMultipart(inv.getRequest())) {
             if (inv.getRequest() instanceof MultipartHttpServletRequest) {
