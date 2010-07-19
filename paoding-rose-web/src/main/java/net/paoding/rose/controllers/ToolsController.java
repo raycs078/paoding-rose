@@ -55,7 +55,10 @@ public class ToolsController {
 
     @Get
     public String tools(Invocation inv) {
-        String prefix = inv.getRequestPath().getUri() + "/";
+        String prefix = inv.getRequestPath().getUri();
+        if (!prefix.endsWith("/")) {
+            prefix = prefix + "/";
+        }
         String s = "tool list:<p>";
         s += "<div style='margin-left:20px'>";
         s += "<a href=\"" + prefix + "tree\">/rose-info/tree</a></div>";
