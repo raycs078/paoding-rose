@@ -47,6 +47,7 @@
   # [Rose_Portal_Demo 第一支portal程序]
   # [Rose_Portal_Inside portal原理]
   # [Rose_Guide_Portal portal开发规范]
+  # [Rose_SJ 文章：圣战中的 rose portal]
 
 =jade=
   # [Jade_DAO_Spec Jade DAO规范]
