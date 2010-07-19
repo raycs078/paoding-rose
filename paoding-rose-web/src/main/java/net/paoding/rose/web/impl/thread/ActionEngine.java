@@ -157,35 +157,59 @@ public final class ActionEngine implements Engine {
 
             ControllerInterceptor most = InterceptorDelegate.getMostInnerInterceptor(interceptor);
 
-            if (most.getClass().getName().startsWith("net.paoding.rose.web")) {
-                continue;
-            }
+            if (!most.getClass().getName().startsWith("net.paoding.rose.web")) {
 
-            // 获取@Intercepted注解 (@Intercepted注解配置于控制器或其方法中，决定一个拦截器是否应该拦截之。没有配置按“需要”处理)
-            Intercepted intercepted = method.getAnnotation(Intercepted.class);
-            if (intercepted == null) {
-                // 对于标注@Inherited的annotation，class.getAnnotation可以保证：如果本类没有，自动会从父类判断是否具有
-                intercepted = this.controllerClass.getAnnotation(Intercepted.class);
-            }
-            // 通过@Intercepted注解的allow和deny排除拦截器
-            if (intercepted != null) {
-                // 3.1 先排除deny禁止的
-                if (RoseStringUtil.matches(intercepted.deny(), interceptor.getName())) {
-                    continue;
+                // 获取@Intercepted注解 (@Intercepted注解配置于控制器或其方法中，决定一个拦截器是否应该拦截之。没有配置按“需要”处理)
+                Intercepted intercepted = method.getAnnotation(Intercepted.class);
+                if (intercepted == null) {
+                    // 对于标注@Inherited的annotation，class.getAnnotation可以保证：如果本类没有，自动会从父类判断是否具有
+                    intercepted = this.controllerClass.getAnnotation(Intercepted.class);
                 }
-                // 3.2 确认最大的allow允许
-                if (!RoseStringUtil.matches(intercepted.allow(), interceptor.getName())) {
-                    continue;
+                // 通过@Intercepted注解的allow和deny排除拦截器
+                if (intercepted != null) {
+                    // 3.1 先排除deny禁止的
+                    if (RoseStringUtil.matches(intercepted.deny(), interceptor.getName())) {
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("action '" + controllerClass.getName() + "#"
+                                    + method.getName()
+                                    + "': remove interceptor by @Intercepted.deny: "
+                                    + most.getClass().getName());
+                        }
+                        continue;
+                    }
+                    // 3.2 确认最大的allow允许
+                    if (!RoseStringUtil.matches(intercepted.allow(), interceptor.getName())) {
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("action '" + controllerClass.getName() + "#"
+                                    + method.getName()
+                                    + "': remove interceptor by @Intercepted.allow: "
+                                    + most.getClass().getName());
+                        }
+                        continue;
+                    }
                 }
             }
             // 取得拦截器同意后，注册到这个控制器方法中
             if (interceptor.isForAction(controllerClass, method)) {
                 registeredInterceptors.add(interceptor);
+            } else {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("action '" + controllerClass.getName() + "#" + method.getName()
+                            + "': remove interceptor by interceptor.isForAction: "
+                            + most.getClass().getName());
+                }
             }
         }
         //
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("interceptors of " + controllerClass.getName() + "#" + method.getName()
+                    + "=(" + registeredInterceptors.size() + "/" + interceptors.size() + ")"
+                    + registeredInterceptors);
+        }
         return registeredInterceptors
                 .toArray(new InterceptorDelegate[registeredInterceptors.size()]);
+
     }
 
     /**
