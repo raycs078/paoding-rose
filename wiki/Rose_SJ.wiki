@@ -24,24 +24,24 @@
 在后台，这些被分解为不同的模块，我们称之为”window”。这每一个window都意味着可能连接一个独立的服务集群，比如基本信息服务、留言服务、好友服务、相册服务等等。这样，一个公共主页就等于多个独立的、可配置的window模块组成，如下图：
 
   [http://paoding-rose.googlecode.com/svn/other/imgs/sj/2.jpg]
-  图2 公共主页的window模块组成
+   图2 公共主页的window模块组成
 
 随着伟大圣战的深入，这个页面就变成这样(右边的栏目不见了)：
 
   [http://paoding-rose.googlecode.com/svn/other/imgs/sj/3.jpg]
-  图3 圣战进行中时模块的自动保护
+   图3 圣战进行中时模块的自动保护
 
 产品同学看到此情此景，仍然很开心：“只要留言的window能在，其它的没在不要紧”
 
 但是不一会，继续恶化：
 
   [http://paoding-rose.googlecode.com/svn/other/imgs/sj/4.jpg]
-  图4 圣战进行中压力进一步增加
+   图4 圣战进行中压力进一步增加
 
 甚至：
  
   [http://paoding-rose.googlecode.com/svn/other/imgs/sj/5.jpg]
-  图5 圣战进行中压力进一步增加
+   图5 圣战进行中压力进一步增加
 
 黄晶看着公共主页呈现出这种状况时，笑着形容这样的图“缺胳膊少腿”：“怎么还没加机器”。当公共主页技术团队把机器逐步增加一倍的时候，这种情况变少了，甚至就没有了。
 
@@ -66,6 +66,7 @@ http://code.google.com/p/paoding-rose/wiki/Rose_Portal_Demo
 献上现在最新的sj主页（2010/6/10 10:46）作为结束，目前粉丝 粉丝 21w+、留言146w+，谢谢（另感谢李伟博同学，以上图片均是他收集的）：
 
   [http://paoding-rose.googlecode.com/svn/other/imgs/sj/6.jpg]
+    图6 最新的sj主页
  
 
 转自五四科学院：
