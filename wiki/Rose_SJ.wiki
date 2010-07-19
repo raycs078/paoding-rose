@@ -1,6 +1,6 @@
 = 时文：一场技术的圣战：rose开源框架之portal =
 
-（54chen按：此文为客座博文，王志亮大侠，人人网架构师，庖丁分词创始人，rose是他的另一开源大作。关于69圣战，请看http://zhidao.baidu.com/question/158643718.html?si=2&wtp=wk）
+（54chen按：此文为客座博文，王志亮大侠，人人网架构师，庖丁分词创始人，rose是他的另一开源大作。关于69圣战，请看 http://www.baidu.com/s?wd=69%CA%A5%D5%BD&n=2  ）
 
 2010年的6月9日是一个圣战的日子，零点一到就有人开始，好戏也如约在晚上7点发生。人人网战场是SJ的公共主页：http://page.renren.com/sj
 
