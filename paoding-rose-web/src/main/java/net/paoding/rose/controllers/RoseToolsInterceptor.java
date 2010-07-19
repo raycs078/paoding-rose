@@ -32,7 +32,7 @@ public class RoseToolsInterceptor extends ControllerInterceptorAdapter {
     public Object before(Invocation inv) throws Exception {
         Class<?> controllerClass = inv.getControllerClass();
         if (!LogFactory.getLog(controllerClass).isDebugEnabled()) {
-            String msg = String.format("warnning: set logger.%s to debug level first. "
+            String msg = String.format("warning: set logger.%s to debug level first. "
                     + "<br> Rose-Version: %s", controllerClass.getName(), RoseVersion.getVersion());
             return Utils.wrap(msg);
         }
