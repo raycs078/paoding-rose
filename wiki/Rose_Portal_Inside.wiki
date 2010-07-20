@@ -26,10 +26,14 @@ rose portal是rose扩展开的一种重要技术，从某种角度其光耀甚�
 
 = 关键技术 =
 
-== forward ==
+== 转发==
 
-== 并发执行 ==
+HttpServletRequest的[http://java.sun.com/products/servlet/2.5/docs/servlet-2_5-mr2/javax/servlet/ServletRequest.html#getRequestDispatcher(java.lang.String) getRequestDispatcher]方法可返回一个RequestDispatcher的对象，通过该对象的forward方法可以把请求转发到另外的地址处理。
 
-== threadlocal
+== 并发 ==
+
+
+== 输出 ==
+
 
 [未完，待续(每天都会有更新)]
