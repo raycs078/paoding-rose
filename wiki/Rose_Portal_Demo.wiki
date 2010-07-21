@@ -195,3 +195,7 @@ portal.css
 运行该webapp，访问http://localhost/portal 显示如下
 
 [http://paoding-rose.googlecode.com/svn/other/imgs/demo/portal/portal-with-two-windows.large.jpg]
+
+=接下来=
+
+如果您对上面的演示已经掌握，想看看具体的实现，请看： [Rose_Portal_Inside 《rose portal原理]〉 
