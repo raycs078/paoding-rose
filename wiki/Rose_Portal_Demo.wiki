@@ -10,7 +10,8 @@ rose portal基于rose框架，是rose的一个插件。这个技术不是基于J
 
 本示例示范如何使用rose portal (基于servlet规范)，在一个门户可以显示两个独立的“信息”，效果如下：
 
-[http://qieqie.info/my_images/rose-portal-demo.JPG]
+http://paoding-rose.googlecode.com/svn/other/imgs/demo/portal/portal-with-two-windows.jpg
+
 =创建控制器=
 
 1个是Portal主控，另外2个是窗口控制器
@@ -193,4 +194,4 @@ portal.css
 
 运行该webapp，访问http://localhost/portal 显示如下
 
-[http://qieqie.info/my_images/rose-portal-demo.JPG]
+[http://paoding-rose.googlecode.com/svn/other/imgs/demo/portal/portal-with-two-windows.large.jpg]
