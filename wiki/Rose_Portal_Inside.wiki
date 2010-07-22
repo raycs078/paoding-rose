@@ -51,7 +51,16 @@ rose portal要把每个window的输出独立出来，window执行服务可以和
 
 rose portal目前采用的是window自行缓冲页面内容，并由主线程来负责实际输出的形式。
 
-= 技术实现及其难点 =
+= 技术实现关键组件 =
 
+== 技术难点==
+ * 如何使web容器在并发转发下不会出错？
+ * 各个window如何进行独立输出？
+ * 主线程和并发的window线程的交互以及结果合并。
 
-[未完]
+== 关键代码 ==
+ 
+ * [http://paoding-rose.googlecode.com/svn/trunk/paoding-rose-portal/src/main/java/net/paoding/rose/web/portal/impl/PortalRequest.java net.paoding.rose.web.portal.impl.PortalRequest.java] 
+ * [http://paoding-rose.googlecode.com/svn/trunk/paoding-rose-portal/src/main/java/net/paoding/rose/web/portal/impl/WindowImpl.java net.paoding.rose.web.portal.impl.WindowImpl.java] 
+ * [http://paoding-rose.googlecode.com/svn/trunk/paoding-rose-portal/src/main/java/net/paoding/rose/web/portal/impl/PrivateRequestWrapper.java net.paoding.rose.web.portal.impl.PrivateRequestWrapper.java]
+ * [http://paoding-rose.googlecode.com/svn/trunk/paoding-rose-portal/src/main/java/net/paoding/rose/web/portal/impl/PortalWaitInterceptor.java net.paoding.rose.web.portal.impl.PortalWaitInterceptor.java]
