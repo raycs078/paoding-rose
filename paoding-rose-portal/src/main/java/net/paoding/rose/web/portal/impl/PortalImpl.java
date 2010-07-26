@@ -15,7 +15,7 @@
  */
 package net.paoding.rose.web.portal.impl;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -51,9 +51,13 @@ class PortalImpl implements Portal, PortalListener {
 
     private Invocation invocation;
 
-    private List<WindowImpl> windows = new LinkedList<WindowImpl>();
+    private List<Window> windows = Collections.emptyList();
+
+    private List<Window> pipeWindows = Collections.emptyList();
 
     private long timeout;
+
+    private long pipeTimeout;
 
     public PortalImpl(Invocation inv, ExecutorService executorService, PortalListener portalListener) {
         this.invocation = inv;
@@ -67,6 +71,14 @@ class PortalImpl implements Portal, PortalListener {
 
     public long getTimeout() {
         return timeout;
+    }
+
+    public void setPipeTimeout(long timeForPipe) {
+        this.pipeTimeout = timeForPipe;
+    }
+
+    public long getPipeTimeout() {
+        return pipeTimeout;
     }
 
     @Override
@@ -89,10 +101,13 @@ class PortalImpl implements Portal, PortalListener {
     }
 
     @Override
-    public List<Window> getWindows() {
-        synchronized (windows) {
-            return new ArrayList<Window>(windows);
-        }
+    public synchronized List<Window> getWindows() {
+        return Collections.unmodifiableList(windows);
+    }
+
+    @Override
+    public synchronized List<Window> getPipeWindows() {
+        return Collections.unmodifiableList(pipeWindows);
     }
 
     @Override
@@ -108,6 +123,8 @@ class PortalImpl implements Portal, PortalListener {
 
     @Override
     public Window addWindow(String name, String windowPath, Map<String, Object> attributes) {
+        boolean usePipe = name.startsWith("pipe:");
+
         // 创建 窗口对象
         WindowImpl window = new WindowImpl((PortalImpl) this, name, windowPath);
 
@@ -124,8 +141,20 @@ class PortalImpl implements Portal, PortalListener {
         WindowTask task = new WindowTask(window);
 
         // 注册到相关变量中
-        synchronized (windows) {
-            this.windows.add(window);
+        if (usePipe) {
+            synchronized (this) {
+                if (this.pipeWindows.size() == 0) {
+                    this.pipeWindows = new LinkedList<Window>();
+                }
+                this.pipeWindows.add(window);
+            }
+        } else {
+            synchronized (this) {
+                if (this.windows.size() == 0) {
+                    this.windows = new LinkedList<Window>();
+                }
+                this.windows.add(window);
+            }
         }
         this.invocation.addModel(name, window);
 
