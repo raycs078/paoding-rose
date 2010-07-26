@@ -57,6 +57,12 @@ http://www.springframework.org/schema/aop http://www.springframework.org/schema/
 	<util:list id="portalListenerList">
 		<bean class="net.paoding.rose.web.portal.PortalLoggerListener" />
 	</util:list>
+	
+	
+	
+	<!-- pipe -->
+	<bean class="net.paoding.rose.web.portal.impl.PipeManagerImpl"></bean>
+	<bean id="rosePipeInterceptor" class="net.paoding.rose.web.portal.impl.RosePipeInterceptor" />
 
 
 

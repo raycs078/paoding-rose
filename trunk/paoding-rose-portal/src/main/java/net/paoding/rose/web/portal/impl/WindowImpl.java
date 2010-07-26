@@ -162,6 +162,7 @@ class WindowImpl implements Window {
         return throwable;
     }
 
+    @Override
     public void setThrowable(Throwable throwable) {
         this.throwable = throwable;
     }

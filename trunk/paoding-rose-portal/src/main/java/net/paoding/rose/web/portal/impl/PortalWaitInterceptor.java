@@ -29,6 +29,8 @@ import net.paoding.rose.web.portal.Portal;
 import net.paoding.rose.web.portal.PortalListener;
 import net.paoding.rose.web.portal.Window;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 /**
  * 这个拦截器只拦截 Portal 控制器方法，用于等待所有该 portal 的窗口执行完成或进行超时取消。
  * 
@@ -36,6 +38,9 @@ import net.paoding.rose.web.portal.Window;
  * 
  */
 public class PortalWaitInterceptor extends ControllerInterceptorAdapter {
+
+    @Autowired
+    private PipeManager pipeManager;
 
     // 只拦截含有 Portal 的控制器方法
     @Override
@@ -62,18 +67,21 @@ public class PortalWaitInterceptor extends ControllerInterceptorAdapter {
                 break;
             }
         }
-        if (portal != null) {
-            long begin = System.currentTimeMillis();
-            if (logger.isDebugEnabled()) {
-                logger.debug(portal + " is going to wait windows.");
-            }
-            //
-            waitForWindows((PortalImpl) portal, (PortalListener) portal);
-            //
-            if (logger.isDebugEnabled()) {
-                logger.debug(portal + ".waitForWindows is done; cost="
-                        + (System.currentTimeMillis() - begin));
-            }
+        long begin = System.currentTimeMillis();
+        if (logger.isDebugEnabled()) {
+            logger.debug(portal + " is going to wait windows.");
+        }
+        //
+        long start = System.currentTimeMillis();
+        waitForWindows(portal, (PortalListener) portal);
+        long cost = System.currentTimeMillis() - start;
+        if (portal.getTimeout() > 0) {
+            portal.setPipeTimeout(portal.getTimeout() - cost);
+        }
+        //
+        if (logger.isDebugEnabled()) {
+            logger.debug(portal + ".waitForWindows is done; cost="
+                    + (System.currentTimeMillis() - begin));
         }
         return instruction;
     }
@@ -96,8 +104,7 @@ public class PortalWaitInterceptor extends ControllerInterceptorAdapter {
         }
         int winSize = portal.getWindows().size();
         int winIndex = 0;
-        for (Window w : portal.getWindows()) {
-            WindowImpl window = (WindowImpl) w;
+        for (Window window : portal.getWindows()) {
             winIndex++;
             Future<?> future = window.getFuture();
             if (future.isDone()) {
@@ -164,4 +171,26 @@ public class PortalWaitInterceptor extends ControllerInterceptorAdapter {
         }
         listener.onPortalReady(portal);
     }
+
+    @Override
+    public void afterCompletion(Invocation inv, Throwable ex) throws Exception {
+        if (ex != null) {
+            return;
+        }
+        //
+        Pipe pipe = pipeManager.getPipe(inv.getRequest());
+        pipe.fire();
+        
+        PortalImpl portal = null;
+        for (Object param : inv.getMethodParameters()) {
+            if (param instanceof Portal) {
+                portal = (PortalImpl) param;
+                break;
+            }
+        }
+        if (portal.getPipeTimeout() >= 0) {
+            pipe.await(portal.getPipeTimeout());
+        }
+    }
+
 }

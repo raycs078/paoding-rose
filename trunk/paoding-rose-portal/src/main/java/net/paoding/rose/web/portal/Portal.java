@@ -89,6 +89,12 @@ public interface Portal {
     public List<Window> getWindows();
 
     /**
+     * 
+     * @return
+     */
+    public List<Window> getPipeWindows();
+
+    /**
      * 返回这个 {@link Portal} 对象邦定的 {@link Invocation} 对象
      * 
      * @return

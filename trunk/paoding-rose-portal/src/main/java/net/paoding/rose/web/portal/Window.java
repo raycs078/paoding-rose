@@ -170,6 +170,12 @@ public interface Window {
     public Throwable getThrowable();
 
     /**
+     * 
+     * @param throwable
+     */
+    public void setThrowable(Throwable throwable);
+
+    /**
      * 返回该窗口请求的错误信息
      * 
      * @return
