@@ -49,9 +49,9 @@
   # [Rose_Guide_Portal portal开发规范]
   # [Rose_SJ 文章：圣战中的 rose portal]
 
-=rosepipe=
-  # [Rose_RosePipe_Demo]
-  # [Rose_RosePipe_Inside]
+=pipe=
+  # [Rose_RosePipe_Demo 第二支portal程序]
+  # [Rose_RosePipe_Inside rosepipe原理]
 
 =jade=
   # [Jade_DAO_Spec Jade DAO规范]
