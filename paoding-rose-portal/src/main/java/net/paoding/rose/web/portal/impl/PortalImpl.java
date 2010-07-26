@@ -59,6 +59,8 @@ class PortalImpl implements Portal, PortalListener {
 
     private long pipeTimeout;
 
+    private PipeManager pipeManager;
+
     public PortalImpl(Invocation inv, ExecutorService executorService, PortalListener portalListener) {
         this.invocation = inv;
         this.executorService = executorService;
@@ -142,6 +144,9 @@ class PortalImpl implements Portal, PortalListener {
 
         // 注册到相关变量中
         if (usePipe) {
+            // create pipe
+            pipeManager.getPipe(invocation, true);
+            //
             synchronized (this) {
                 if (this.pipeWindows.size() == 0) {
                     this.pipeWindows = new LinkedList<Window>();
