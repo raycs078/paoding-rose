@@ -1,0 +1,3 @@
+rosepipe是rose portal的一个具体应用，和facebook工程师自己创造的bigpipe的动机和目的一样。
+
+rosepipe已经在开发中，敬请等待。
