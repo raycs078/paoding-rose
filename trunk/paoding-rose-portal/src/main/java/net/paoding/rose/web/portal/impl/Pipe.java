@@ -29,4 +29,6 @@ public interface Pipe {
 
     public void await(long timeout);
 
+    public void close();
+
 }

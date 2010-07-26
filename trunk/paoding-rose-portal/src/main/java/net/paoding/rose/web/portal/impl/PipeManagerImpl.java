@@ -17,15 +17,16 @@ package net.paoding.rose.web.portal.impl;
 
 import java.io.IOException;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.portal.Window;
 
 public class PipeManagerImpl implements PipeManager {
 
     @Override
-    public Pipe getPipe(final HttpServletRequest request) {
+    public Pipe getPipe(Invocation inv, boolean create) {
+
         return new Pipe() {
 
             private HttpServletResponse response;
@@ -43,6 +44,12 @@ public class PipeManagerImpl implements PipeManager {
             @Override
             public void submit(Window window) {
                 //
+            }
+
+            @Override
+            public void close() {
+                // TODO Auto-generated method stub
+
             }
 
         };

@@ -40,7 +40,8 @@ public class RosePipeInterceptor extends ControllerInterceptorAdapter {
             // TODO
             // 到此表示某个pipe window已经准备好页面了
             // 识别pipe windows，并把它交给一个统一的处理器，让这个处理器负责输出该window出去
-            pipeManager.getPipe(inv.getRequest()).submit(window);
+            Invocation pipeInv = window.getPortal().getInvocation();
+            pipeManager.getPipe(pipeInv, true).submit(window);
         }
     }
 }

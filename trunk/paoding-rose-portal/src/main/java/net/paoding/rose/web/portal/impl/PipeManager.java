@@ -15,10 +15,11 @@
  */
 package net.paoding.rose.web.portal.impl;
 
-import javax.servlet.http.HttpServletRequest;
+import net.paoding.rose.web.Invocation;
 
 public interface PipeManager {
 
-    public Pipe getPipe(HttpServletRequest request);
+    // 
+    public Pipe getPipe(Invocation inv, boolean create);
 
 }

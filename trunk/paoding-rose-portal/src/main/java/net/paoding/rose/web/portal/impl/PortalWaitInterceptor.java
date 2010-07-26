@@ -174,13 +174,16 @@ public class PortalWaitInterceptor extends ControllerInterceptorAdapter {
 
     @Override
     public void afterCompletion(Invocation inv, Throwable ex) throws Exception {
-        if (ex != null) {
+        //
+        Pipe pipe = pipeManager.getPipe(inv, false);
+        if (pipe == null) {
             return;
         }
-        //
-        Pipe pipe = pipeManager.getPipe(inv.getRequest());
+        if (ex != null) {
+            pipe.close();
+            return;
+        }
         pipe.fire();
-        
         PortalImpl portal = null;
         for (Object param : inv.getMethodParameters()) {
             if (param instanceof Portal) {
@@ -191,6 +194,7 @@ public class PortalWaitInterceptor extends ControllerInterceptorAdapter {
         if (portal.getPipeTimeout() >= 0) {
             pipe.await(portal.getPipeTimeout());
         }
+        pipe.close();
     }
 
 }
