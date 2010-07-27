@@ -28,11 +28,17 @@ public class PipeManagerImpl implements PipeManager {
     public Pipe getPipe(Invocation inv, boolean create) {
 
         return new Pipe() {
+            
+            @Override
+            public void register(Window window) {
+                // TODO Auto-generated method stub
+                
+            }
 
             private HttpServletResponse response;
 
             @Override
-            public void fire() throws IOException {
+            public void setup() throws IOException {
                 response.flushBuffer();
             }
 
@@ -42,7 +48,7 @@ public class PipeManagerImpl implements PipeManager {
             }
 
             @Override
-            public void submit(Window window) {
+            public void fire(Window window) {
                 //
             }
 

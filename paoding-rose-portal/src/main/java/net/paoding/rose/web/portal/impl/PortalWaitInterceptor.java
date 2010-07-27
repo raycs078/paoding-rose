@@ -183,7 +183,7 @@ public class PortalWaitInterceptor extends ControllerInterceptorAdapter {
             pipe.close();
             return;
         }
-        pipe.fire();
+        pipe.setup();
         PortalImpl portal = null;
         for (Object param : inv.getMethodParameters()) {
             if (param instanceof Portal) {
