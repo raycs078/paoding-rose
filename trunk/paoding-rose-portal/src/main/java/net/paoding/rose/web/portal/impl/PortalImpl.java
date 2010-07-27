@@ -53,8 +53,6 @@ class PortalImpl implements Portal, PortalListener {
 
     private List<Window> windows = Collections.emptyList();
 
-    private List<Window> pipeWindows = Collections.emptyList();
-
     private long timeout;
 
     private long pipeTimeout;
@@ -108,11 +106,6 @@ class PortalImpl implements Portal, PortalListener {
     }
 
     @Override
-    public synchronized List<Window> getPipeWindows() {
-        return Collections.unmodifiableList(pipeWindows);
-    }
-
-    @Override
     public Window addWindow(String windowPath) {
         String windowName = windowPath;
         return this.addWindow(windowName, windowPath);
@@ -145,14 +138,8 @@ class PortalImpl implements Portal, PortalListener {
         // 注册到相关变量中
         if (usePipe) {
             // create pipe
-            pipeManager.getPipe(invocation, true);
-            //
-            synchronized (this) {
-                if (this.pipeWindows.size() == 0) {
-                    this.pipeWindows = new LinkedList<Window>();
-                }
-                this.pipeWindows.add(window);
-            }
+            Pipe pipe = pipeManager.getPipe(invocation, true);
+            pipe.register(window);
         } else {
             synchronized (this) {
                 if (this.windows.size() == 0) {

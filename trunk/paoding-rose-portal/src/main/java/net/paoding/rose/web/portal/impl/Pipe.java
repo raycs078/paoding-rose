@@ -21,11 +21,13 @@ import net.paoding.rose.web.portal.Window;
 
 public interface Pipe {
 
-    public void fire() throws IOException;
+    public void register(Window window);
+
+    public void setup() throws IOException;
 
     // 实现上要注意：并发控制的问题；另外一定要在主portal已经flush的情况下才能真正输出Window
     // 要把window的内容加工为script
-    public void submit(Window window);
+    public void fire(Window window);
 
     public void await(long timeout);
 

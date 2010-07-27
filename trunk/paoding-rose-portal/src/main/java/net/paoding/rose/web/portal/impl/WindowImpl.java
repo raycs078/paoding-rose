@@ -192,4 +192,16 @@ class WindowImpl implements Window {
         return getContent();
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof Window)) {
+            return false;
+        }
+        return this.name.equals(((Window) obj).getName());
+    }
+
+    @Override
+    public int hashCode() {
+        return this.name.hashCode();
+    }
 }
