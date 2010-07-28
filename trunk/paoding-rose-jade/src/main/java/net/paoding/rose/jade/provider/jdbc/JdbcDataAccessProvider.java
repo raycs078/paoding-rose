@@ -68,7 +68,11 @@ public class JdbcDataAccessProvider extends AbstractDataAccessProvider implement
     protected final DataAccess createDataAccess(DataSource dataSource) {
         JdbcDataAccess dataAccess = createEmptyJdbcTemplateDataAccess(dataSource);
         dataAccess.setInterpreters(findSQLInterpreters());
-        dataAccess.setJdbcWrappers(findJdbcWrappers());
+        JdbcWrapper[] jdbcs = findJdbcWrappers();
+        for (JdbcWrapper jdbcWrapper : jdbcs) {
+            jdbcWrapper.setDataSource(dataSource);
+        }
+        dataAccess.setJdbcWrappers(jdbcs);
         return dataAccess;
     }
 
@@ -80,6 +84,7 @@ public class JdbcDataAccessProvider extends AbstractDataAccessProvider implement
      * @author tai.wang@opi-corp.com May 26, 2010 - 4:30:09 PM
      */
     protected JdbcWrapper[] findJdbcWrappers() {
+        // JdbcWrapper必须把score写为prototype
         @SuppressWarnings("unchecked")
         Collection<JdbcWrapper> jdbcWrappers = this.applicationContext.getBeansOfType(
                 JdbcWrapper.class).values();
