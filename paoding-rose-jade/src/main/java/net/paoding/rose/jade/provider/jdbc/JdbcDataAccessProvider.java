@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.paoding.rose.jade.provider.jdbctemplate;
+package net.paoding.rose.jade.provider.jdbc;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -24,8 +24,6 @@ import javax.sql.DataSource;
 
 import net.paoding.rose.jade.datasource.DataSourceFactory;
 import net.paoding.rose.jade.datasource.SpringDataSourceFactory;
-import net.paoding.rose.jade.plugin.IJadePlugin;
-import net.paoding.rose.jade.plugin.JadePluginWrapper;
 import net.paoding.rose.jade.provider.AbstractDataAccessProvider;
 import net.paoding.rose.jade.provider.DataAccess;
 import net.paoding.rose.jade.provider.SQLInterpreter;
@@ -35,13 +33,14 @@ import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.annotation.Order;
+import org.springframework.util.Assert;
 
 /**
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  * @author 廖涵 [in355hz@gmail.com]
  */
-public class JdbcTemplateDataAccessProvider extends AbstractDataAccessProvider implements
+public class JdbcDataAccessProvider extends AbstractDataAccessProvider implements
         ApplicationContextAware {
 
     protected ApplicationContext applicationContext;
@@ -67,10 +66,9 @@ public class JdbcTemplateDataAccessProvider extends AbstractDataAccessProvider i
 
     @Override
     protected final DataAccess createDataAccess(DataSource dataSource) {
-        JdbcTemplateDataAccess dataAccess = createEmptyJdbcTemplateDataAccess();
-        dataAccess.setDataSource(dataSource);
+        JdbcDataAccess dataAccess = createEmptyJdbcTemplateDataAccess(dataSource);
         dataAccess.setInterpreters(findSQLInterpreters());
-        dataAccess.setDBMonitorPlugin(findPlugin());
+        dataAccess.setJdbcWrappers(findJdbcWrappers());
         return dataAccess;
     }
 
@@ -81,19 +79,31 @@ public class JdbcTemplateDataAccessProvider extends AbstractDataAccessProvider i
      * 
      * @author tai.wang@opi-corp.com May 26, 2010 - 4:30:09 PM
      */
-    private IJadePlugin findPlugin() {
-        IJadePlugin[] ps;
-        try {
-            Collection<?> jc = this.applicationContext.getBeansOfType(IJadePlugin.class).values();
-            ps = jc.toArray(new IJadePlugin[0]);
-        } catch (BeansException e) {
-            ps = new IJadePlugin[0];
+    protected JdbcWrapper[] findJdbcWrappers() {
+        @SuppressWarnings("unchecked")
+        Collection<JdbcWrapper> jdbcWrappers = this.applicationContext.getBeansOfType(
+                JdbcWrapper.class).values();
+        JdbcWrapper[] arrayJdbcWrappers = jdbcWrappers.toArray(new JdbcWrapper[0]);
+        for (JdbcWrapper jdbcWrapper : arrayJdbcWrappers) {
+            Assert.isNull(jdbcWrapper.getJdbc());// jdbc should be null here
         }
-        return new JadePluginWrapper(ps);
+        Arrays.sort(arrayJdbcWrappers, new Comparator<JdbcWrapper>() {
+
+            @Override
+            public int compare(JdbcWrapper thees, JdbcWrapper that) {
+                Order thessOrder = thees.getClass().getAnnotation(Order.class);
+                Order thatOrder = that.getClass().getAnnotation(Order.class);
+                int thessValue = thessOrder == null ? 0 : thessOrder.value();
+                int thatValue = thatOrder == null ? 0 : thatOrder.value();
+                return thessValue - thatValue;
+            }
+
+        });
+        return arrayJdbcWrappers;
     }
 
-    protected JdbcTemplateDataAccess createEmptyJdbcTemplateDataAccess() {
-        return new JdbcTemplateDataAccess();
+    protected JdbcDataAccess createEmptyJdbcTemplateDataAccess(DataSource dataSource) {
+        return new JdbcDataAccess(new JdbcImpl(dataSource), dataSource);
     }
 
     protected SQLInterpreter[] findSQLInterpreters() {

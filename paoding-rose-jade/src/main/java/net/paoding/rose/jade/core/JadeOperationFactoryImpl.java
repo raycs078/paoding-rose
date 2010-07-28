@@ -26,11 +26,11 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.util.Assert;
 
 /**
- * 实现创建: {@link JdbcOperation} 的工厂。
+ * 实现创建: {@link JadeOperation} 的工厂。
  * 
  * @author han.liao
  */
-public class JdbcOperationFactoryImpl implements JdbcOperationFactory {
+public class JadeOperationFactoryImpl implements JadeOperationFactory {
 
     private static Pattern[] SELECT_PATTERNS = new Pattern[] {
     //
@@ -43,7 +43,7 @@ public class JdbcOperationFactoryImpl implements JdbcOperationFactory {
     private RowMapperFactory rowMapperFactory = new RowMapperFactoryImpl();
 
     @Override
-    public JdbcOperation getJdbcOperation(DataAccess dataAccess, Modifier modifier) {
+    public JadeOperation getOperation(DataAccess dataAccess, Modifier modifier) {
 
         // 检查方法的  Annotation
         SQL sql = modifier.getAnnotation(SQL.class);

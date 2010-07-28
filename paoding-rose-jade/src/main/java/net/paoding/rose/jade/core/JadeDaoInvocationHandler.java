@@ -17,9 +17,9 @@ public class JadeDaoInvocationHandler implements InvocationHandler {
 
     private static final Log logger = LogFactory.getLog(JadeDaoFactoryBean.class);
 
-    private static JdbcOperationFactory jdbcOperationFactory = new JdbcOperationFactoryImpl();
+    private static JadeOperationFactory jdbcOperationFactory = new JadeOperationFactoryImpl();
 
-    private HashMap<Method, JdbcOperation> jdbcOperations = new HashMap<Method, JdbcOperation>();
+    private HashMap<Method, JadeOperation> jdbcOperations = new HashMap<Method, JadeOperation>();
 
     private final Definition definition;
 
@@ -41,13 +41,13 @@ public class JadeDaoInvocationHandler implements InvocationHandler {
             return method.invoke(this, args);
         }
 
-        JdbcOperation operation = jdbcOperations.get(method);
+        JadeOperation operation = jdbcOperations.get(method);
         if (operation == null) {
             synchronized (jdbcOperations) {
                 operation = jdbcOperations.get(method);
                 if (operation == null) {
                     Modifier modifier = new Modifier(definition, method);
-                    operation = jdbcOperationFactory.getJdbcOperation(dataAccess, modifier);
+                    operation = jdbcOperationFactory.getOperation(dataAccess, modifier);
                     jdbcOperations.put(method, operation);
                 }
             }

@@ -33,7 +33,7 @@ import org.springframework.util.NumberUtils;
  * @author 王志亮 [qieqie.wang@gmail.com]
  * @author 廖涵 [in355hz@gmail.com]
  */
-public class UpdateOperation implements JdbcOperation {
+public class UpdateOperation implements JadeOperation {
 
     private final String sql;
 
