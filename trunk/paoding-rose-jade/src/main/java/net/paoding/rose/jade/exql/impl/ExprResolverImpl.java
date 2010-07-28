@@ -29,6 +29,9 @@ public class ExprResolverImpl implements ExprResolver {
     private static final Pattern PREFIX_PATTERN = Pattern.compile( // NL
             "(\\:|\\$)([a-zA-Z0-9_]+)(\\.[a-zA-Z0-9_]+)*");
 
+    private static final Pattern MAP_PATTERN = Pattern.compile( // NL
+            "\\[([\\.a-zA-Z0-9_]+)\\]");
+
     // 常量前缀
     private static final String CONST_PREFIX = "_mapConsts";
 
@@ -113,29 +116,53 @@ public class ExprResolverImpl implements ExprResolver {
     }
 
     @Override
-    public Object executeExpr(String expression) throws Exception {
+    public Object executeExpr(final String expression) throws Exception {
 
         // 从缓存中获取解析的表达式
         Expression expr = cache.get(expression);
 
         if (expr == null) {
+            //
+            StringBuilder builder = new StringBuilder(expression.length() * 2);
 
-            // 转换表达式中的前缀字符, 保证可编译
-            StringBuilder builder = new StringBuilder(expression.length());
-
+            // 将[name]替换为['name']
+            Matcher mapMatcher = MAP_PATTERN.matcher(expression);
             int index = 0;
+            while (mapMatcher.find()) {
+                builder.append(expression.substring(index, mapMatcher.start()));
+                String t = mapMatcher.group(1);
+                if (!NumberUtils.isDigits(t)) {
+                    builder.append("['");
+                    builder.append(mapMatcher.group(1));
+                    builder.append("']");
+                } else {
+                    builder.append(mapMatcher.group(0));
+                }
+                index = mapMatcher.end();
+            }
+
+            String expression2;
+            if (builder.length() == 0) {
+                expression2 = expression;
+            } else {
+                builder.append(expression.substring(index));
+                expression2 = builder.toString();
+                builder.setLength(0);
+            }
+
+            index = 0;
 
             // 匹配正则表达式, 并替换内容
-            Matcher matcher = PREFIX_PATTERN.matcher(expression);
+            Matcher matcher = PREFIX_PATTERN.matcher(expression2);
             while (matcher.find()) {
 
-                builder.append(expression.substring(index, matcher.start()));
+                builder.append(expression2.substring(index, matcher.start()));
 
                 String prefix = matcher.group(1);
                 String name = matcher.group(2);
                 if (":".equals(prefix)) {
-
-                    if (NumberUtils.isDigits(name)) {
+                    boolean isDigits = NumberUtils.isDigits(name);
+                    if (isDigits) {
                         // 按顺序访问变量
                         name = ':' + name;
                     }
@@ -147,9 +174,9 @@ public class ExprResolverImpl implements ExprResolver {
 
                     // 按名称访问变量
                     builder.append(VAR_PREFIX);
-                    builder.append("[\'");
+                    builder.append("['");
                     builder.append(name);
-                    builder.append("\']");
+                    builder.append("']");
 
                 } else if ("$".equals(prefix)) {
 
@@ -168,11 +195,11 @@ public class ExprResolverImpl implements ExprResolver {
                 index = matcher.end(2);
             }
 
-            builder.append(expression.substring(index));
+            builder.append(expression2.substring(index));
 
             // 编译表达式
             expr = ExpressionFactory.createExpression(builder.toString());
-            cache.putIfAbsent(expression, expr);
+            cache.putIfAbsent(expression2, expr);
         }
 
         // 进行表达式求值
@@ -198,8 +225,15 @@ public class ExprResolverImpl implements ExprResolver {
         map.put("numbers", new Integer[] { 1, 2, 3, 5, 8, 13, 21, 34 });
         map.put("index", 5);
         map.put(":2", 2);
+        map.put("map", map);
 
         ExprResolver exprResolver = new ExprResolverImpl(map, map);
+        
+
+        System.out.println("map['index']=" +  // NL
+                exprResolver.executeExpr(":map[index]"));
+        System.out.println("numbers[5]=" +  // NL
+                exprResolver.executeExpr(":map[numbers][5]"));
 
         System.out.println( // NL
                 exprResolver.executeExpr( // NL
@@ -210,5 +244,27 @@ public class ExprResolverImpl implements ExprResolver {
         System.out.println( // NL
                 exprResolver.executeExpr( // NL
                         ":current.year - ($current.month + $current.day) + $numbers[:index] + :2"));
+    }
+
+    public static void main2(String[] args) {
+        StringBuilder sb = new StringBuilder(100 * 2);
+        String ex = ":1.id[id.kkj][idkkj], :2[name], :3[age], :3[4]";
+        Matcher m = MAP_PATTERN.matcher(ex);
+        int index = 0;
+        while (m.find()) {
+            sb.append(ex.substring(index, m.start()));
+            String t = m.group(1);
+            if (!NumberUtils.isDigits(t)) {
+                sb.append("['");
+                sb.append(m.group(1));
+                sb.append("']");
+            } else {
+                sb.append(m.group(0));
+            }
+            index = m.end();
+        }
+        sb.append(ex.substring(index));
+        System.out.println(sb);
+
     }
 }
