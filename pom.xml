@@ -10,7 +10,7 @@
 	<name>paoding-rose-jade</name>
 
 	<properties>
-		<Implementation-Version>1.0-20100604</Implementation-Version>
+		<Implementation-Version>1.0-20100729</Implementation-Version>
 	</properties>
 
 	<!-- 开发人员说明 -->
@@ -36,7 +36,7 @@
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring</artifactId>
-			<version>2.5.6.SEC01</version>
+			<version>2.5.6.SEC02</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-lang</groupId>
