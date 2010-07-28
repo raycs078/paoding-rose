@@ -1,4 +1,4 @@
-package net.paoding.rose.jade.provider.jdbctemplate;
+package net.paoding.rose.jade.provider.jdbc;
 
 import java.sql.SQLSyntaxErrorException;
 import java.util.Map;
@@ -18,12 +18,12 @@ import org.springframework.jdbc.BadSqlGrammarException;
 /**
  * 提供动态: SQL 语句功能的 {@link DataAccess} 实现。
  * 
- * @author han.liao
+ * @author 廖涵 [in355hz@gmail.com]
  */
-public class ExpressSQLInterpreter implements SQLInterpreter {
+public class SimpleSQLInterpreter implements SQLInterpreter {
 
     @Override
-    // 转换 JDQL 语句为正常的 SQL 语句
+    // 转换 JadeSQL 语句为正常的 SQL 语句
     public SQLInterpreterResult interpret(DataSource dataSource, String sql, Modifier modifier,
             Map<String, Object> parametersAsMap, Object[] parametersAsArray) {
 

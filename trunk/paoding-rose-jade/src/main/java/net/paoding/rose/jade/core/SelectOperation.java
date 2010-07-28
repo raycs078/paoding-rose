@@ -35,7 +35,7 @@ import org.springframework.jdbc.core.RowMapper;
  * @author 王志亮 [qieqie.wang@gmail.com]
  * @author 廖涵 [in355hz@gmail.com]
  */
-public class SelectOperation implements JdbcOperation {
+public class SelectOperation implements JadeOperation {
 
     private final String sql;
 

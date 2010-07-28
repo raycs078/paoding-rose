@@ -1,4 +1,4 @@
-package net.paoding.rose.jade.provider.jdbctemplate;
+package net.paoding.rose.jade.provider.jdbc;
 
 import java.util.Collection;
 import java.util.LinkedList;
@@ -21,7 +21,7 @@ import org.springframework.beans.BeanWrapperImpl;
 /**
  * 提供动态: SQL 语句功能的 {@link DataAccess} 实现。
  * 
- * @author han.liao
+ * @author 廖涵 [in355hz@gmail.com]
  */
 public class SimpleNamedParamSQLInterpreter implements SQLInterpreter {
 

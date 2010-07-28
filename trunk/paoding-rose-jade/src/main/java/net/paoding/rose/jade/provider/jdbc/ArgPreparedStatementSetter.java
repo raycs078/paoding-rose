@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.paoding.rose.jade.provider.jdbctemplate;
+package net.paoding.rose.jade.provider.jdbc;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;

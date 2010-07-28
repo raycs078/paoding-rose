@@ -10,7 +10,7 @@ import net.paoding.rose.jade.provider.Modifier;
  * @author 王志亮 [qieqie.wang@gmail.com]
  * @author han.liao
  */
-public interface JdbcOperation {
+public interface JadeOperation {
 
     /**
      * 
