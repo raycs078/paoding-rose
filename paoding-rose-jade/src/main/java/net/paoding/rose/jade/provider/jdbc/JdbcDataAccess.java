@@ -57,6 +57,7 @@ public class JdbcDataAccess implements DataAccess {
     }
 
     public void setJdbcWrappers(JdbcWrapper[] jdbcWrappers) {
+        // start from 1
         for (int i = 1; i < jdbcWrappers.length; i++) {
             JdbcWrapper pre = jdbcWrappers[i - 1];
             pre.setJdbc(jdbcWrappers[i]);
