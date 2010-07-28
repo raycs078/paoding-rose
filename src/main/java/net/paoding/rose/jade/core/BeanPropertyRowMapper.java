@@ -25,7 +25,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.lang.math.NumberUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeanInstantiationException;
@@ -155,16 +154,24 @@ public class BeanPropertyRowMapper implements RowMapper {
             }
         }
         String name = result.toString();
-        // 因为兼容问题,需要把 passportMd5映射为passport_md5和passport_md_5两种形式
+        // 当name为user1_name2时，使name2为user_1_name_2
+        // 这使得列user_1_name_2的列能映射到user1Name2属性
         String name2 = null;
+        boolean digitFound = false;
         for (int i = name.length() - 1; i >= 0; i--) {
             if (Character.isDigit(name.charAt(i))) {
+            	// 遇到数字就做一个标识并continue,直到不是时才不continue
+                digitFound = true;
                 continue;
             }
-            if (i < name.length() - 1 && i > 0) {
-                name2 = name.substring(0, i + 1) + "_" + name.substring(i + 1);
-                break;
+            // 只有上一个字符是数字才做下划线
+            if (digitFound && i < name.length() - 1 && i > 0) {
+                if (name2 == null) {
+                    name2 = name;
+                }
+                name2 = name2.substring(0, i + 1) + "_" + name2.substring(i + 1);
             }
+            digitFound = false;
         }
         return new String[] { name, name2 };
     }
