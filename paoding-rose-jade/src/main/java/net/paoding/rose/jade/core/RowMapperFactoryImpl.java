@@ -16,10 +16,12 @@
 package net.paoding.rose.jade.core;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import net.paoding.rose.jade.annotation.RowHandler;
 import net.paoding.rose.jade.core.mapper.ArrayRowMapper;
 import net.paoding.rose.jade.core.mapper.ListRowMapper;
 import net.paoding.rose.jade.core.mapper.MapEntryColumnRowMapper;
@@ -30,7 +32,7 @@ import net.paoding.rose.jade.provider.Modifier;
 import org.apache.commons.lang.ClassUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.jdbc.core.BeanPropertyRowMapper;
+import org.springframework.beans.BeanInstantiationException;
 import org.springframework.jdbc.core.ColumnMapRowMapper;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.SingleColumnRowMapper;
@@ -61,8 +63,27 @@ public class RowMapperFactoryImpl implements RowMapperFactory {
 
     private static Log logger = LogFactory.getLog(RowMapperFactory.class);
 
+    private Map<String, RowMapper> rowMappers = new HashMap<String, RowMapper>();
+
     @Override
     public RowMapper getRowMapper(Modifier modifier) {
+        RowHandler rowHandler = modifier.getAnnotation(RowHandler.class);
+        if (rowHandler != null) {
+            if (rowHandler.rowMapper() != RowHandler.ByDefault.class) {
+                try {
+                    RowMapper rowMapper = rowHandler.rowMapper().newInstance();
+                    if (logger.isInfoEnabled()) {
+                        logger.info("using rowMapper " + rowMapper + " for " + modifier);
+                    }
+
+                    return rowMapper;
+                } catch (Exception ex) {
+                    throw new BeanInstantiationException(rowHandler.rowMapper(), ex.getMessage(),
+                            ex);
+                }
+            }
+        }
+        //
 
         Class<?> returnClassType = modifier.getReturnType();
         Class<?> rowType = getRowType(modifier);
@@ -94,7 +115,16 @@ public class RowMapperFactoryImpl implements RowMapperFactory {
             } else if (rowType == Set.class) {
                 rowMapper = new SetRowMapper(modifier);
             } else {
-                rowMapper = new BeanPropertyRowMapper(rowType);
+                boolean checkColumns = (rowHandler == null) ? true : rowHandler.checkColumns();
+                boolean checkProperties = (rowHandler == null) ? false : rowHandler
+                        .checkProperties();
+                String key = rowType.getName() + "[checkColumns=" + checkColumns
+                        + "&checkProperties=" + checkProperties + "]";
+                rowMapper = rowMappers.get(key);
+                if (rowMapper == null) {
+                    rowMapper = new BeanPropertyRowMapper(rowType, checkColumns, checkProperties); // jade's BeanPropertyRowMapper here
+                    rowMappers.put(key, rowMapper);
+                }
             }
             // 如果DAO方法最终返回的是Map，rowMapper要返回Map.Entry对象
             if (returnClassType == Map.class) {
