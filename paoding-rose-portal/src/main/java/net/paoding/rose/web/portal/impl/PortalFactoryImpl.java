@@ -21,6 +21,7 @@ import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.portal.Portal;
 import net.paoding.rose.web.portal.PortalFactory;
 import net.paoding.rose.web.portal.PortalListener;
+import net.paoding.rose.web.portal.PortalSetting;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -88,8 +89,23 @@ public class PortalFactoryImpl implements PortalFactory, InitializingBean {
     @Override
     public Portal createPortal(Invocation inv) {
         PortalImpl portal = new PortalImpl(inv, pipeFactory, executorService, portalListener);
+
+        long timeout = 0;
+        PortalSetting portalSetting = inv.getMethod().getAnnotation(PortalSetting.class);
+        if (portalSetting != null) {
+            if (portalSetting.timeout() >= 0) {
+                long annotationTimeout = portalSetting.timeUnit().toMillis(portalSetting.timeout());
+                // < 0的情况，是PortalSetting的默认设置，即如果PortalSetting没有设置有效的timeout，则使用defaultTimeout策略
+                // == 0的情况表示并且要求表示不需要设置超时时间，并且也不使用defaultTimeout策略
+                if (annotationTimeout >= 0) {
+                    timeout = annotationTimeout;
+                }
+            }
+        }
+        if (timeout > 0) {
+            portal.setTimeout(timeout);
+        }
         portal.onPortalCreated(portal);
         return portal;
     }
-
 }

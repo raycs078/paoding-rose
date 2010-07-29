@@ -18,6 +18,7 @@ package net.paoding.rose.web.portal.impl;
 import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -86,7 +87,8 @@ public class PortalWaitInterceptor extends ControllerInterceptorAdapter {
         return instruction;
     }
 
-    protected void waitForWindows(PortalImpl portal, PortalListener listener) {
+    protected void waitForWindows(PortalImpl portal, PortalListener listener)
+            throws InterruptedException {
         boolean debugEnabled = logger.isDebugEnabled();
         long deadline;
         long begin = System.currentTimeMillis();
@@ -105,7 +107,8 @@ public class PortalWaitInterceptor extends ControllerInterceptorAdapter {
         }
         int winSize = portal.getWindows().size();
         int winIndex = 0;
-        for (Window window : portal.getWindows()) {
+        List<Window> windows = portal.getWindows();
+        for (Window window : windows) {
             if (window.getName().indexOf(':') >= 0) {
                 continue;
             }
@@ -177,6 +180,22 @@ public class PortalWaitInterceptor extends ControllerInterceptorAdapter {
             logger.debug("[" + winIndex + "/" + winSize + "] size of simple windows = " + winIndex);
         }
         listener.onPortalReady(portal);
+
+        // codes for fix this exception:
+        // "Cannot forward after response has been committed"
+        for (Window window : windows) {
+            if (window.get("$$window.in") != Boolean.TRUE) {
+                if (debugEnabled) {
+                    logger.debug("waitting for window '" + window.getName() + "''s forwarding");
+                }
+                synchronized (window) {
+                    while (window.get("$$window.in") != Boolean.TRUE) {
+                        window.set("$$window.in.wait", Boolean.TRUE);
+                        window.wait();
+                    }
+                }
+            }
+        }
     }
 
     @Override

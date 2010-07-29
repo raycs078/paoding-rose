@@ -28,6 +28,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import net.paoding.rose.web.Invocation;
+import net.paoding.rose.web.portal.PipeRender;
 import net.paoding.rose.web.portal.Portal;
 import net.paoding.rose.web.portal.PortalListener;
 import net.paoding.rose.web.portal.PortalListeners;
@@ -61,6 +62,8 @@ class PortalImpl implements Portal, PortalListener {
 
     private PipeFactory pipeFactory;
 
+    private PipeRender pipeRender;
+
     public PortalImpl(Invocation inv, PipeFactory pipeFactory, ExecutorService executorService,
             PortalListener portalListener) {
         this.invocation = inv;
@@ -77,8 +80,8 @@ class PortalImpl implements Portal, PortalListener {
         return timeout;
     }
 
-    public void setPipeTimeout(long timeForPipe) {
-        this.pipeTimeout = timeForPipe;
+    public void setPipeTimeout(long pipeTimeout) {
+        this.pipeTimeout = pipeTimeout;
     }
 
     public long getPipeTimeout() {
@@ -316,6 +319,16 @@ class PortalImpl implements Portal, PortalListener {
                 logger.error("", e);
             }
         }
+    }
+
+    @Override
+    public void setPipeRender(PipeRender render) {
+        this.pipeRender = render;
+    }
+
+    @Override
+    public PipeRender getPipeRender() {
+        return pipeRender;
     }
 
 }

@@ -25,6 +25,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import net.paoding.rose.web.Invocation;
+import net.paoding.rose.web.portal.PipeRender;
+import net.paoding.rose.web.portal.SimplePipeRender;
 import net.paoding.rose.web.portal.Window;
 
 import org.apache.commons.logging.Log;
@@ -50,8 +52,16 @@ public class PipeImpl implements Pipe {
 
     private Invocation inv;
 
+    private PrintWriter out;
+
     public PipeImpl(Invocation inv) {
         this.inv = inv;
+        try {
+            // fix: java.lang.IllegalStateException: getWriter() has already been called for this response
+            this.out = inv.getResponse().getWriter();
+        } catch (IOException e) {
+            throw new java.lang.IllegalStateException(e);
+        }
     }
 
     @Override
@@ -75,7 +85,11 @@ public class PipeImpl implements Pipe {
                 throw new IllegalStateException("only avalabled when started.");
             }
         }
-        latch.await(timeout, TimeUnit.MILLISECONDS);
+        if (timeout > 0) {
+            latch.await(timeout, TimeUnit.MILLISECONDS);
+        } else {
+            latch.await();
+        }
     }
 
     @Override
@@ -116,23 +130,26 @@ public class PipeImpl implements Pipe {
                 logger.debug("firing '" + window.getName() + "' : add to waiting list");
             }
         } else {
-            doFire(window);
+            try {
+                doFire(window);
+            } finally {
+                latch.countDown();
+            }
         }
     }
 
-    // TODO: 转化为script
     protected synchronized void doFire(Window window) throws IOException {
         if (state != 1) {
             throw new IllegalStateException("only avalabled when started.");
         }
-        PrintWriter out = inv.getResponse().getWriter();
-        out.print("<script type=\"text/javascript\"> alert(\"pipe.");
-        out.print(window.getName());
-        out.print("\n");
-        out.print(window.getContent());
-        out.print("\");</script>");
+        PipeRender render = window.getPortal().getPipeRender();
+        if (render == null) {
+            logger.warn(//
+                    "please set your pipeRender to your portal in controller to customer your PipeRender");
+            render = SimplePipeRender.getInstance();
+        }
+        render.render(window, out);
         out.flush();
-        latch.countDown();
         if (logger.isDebugEnabled()) {
             logger.debug("firing '" + window.getName() + "' : done");
         }

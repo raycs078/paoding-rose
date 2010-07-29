@@ -14,35 +14,36 @@ http://www.springframework.org/schema/aop http://www.springframework.org/schema/
 
 	<!-- 两个Resolver以及一个Interceptor是Portal框架插入到Rose的接口实现 -->
 
-	<bean id="portalResolver" class="net.paoding.rose.web.portal.impl.PortalResolver">
-		<property name="portalFactory" ref="portalFactory" />
+	<bean id="rose.portalResolver" class="net.paoding.rose.web.portal.impl.PortalResolver">
+		<property name="portalFactory" ref="rose.portalFactory" />
 	</bean>
 
-	<bean id="windowResolver" class="net.paoding.rose.web.portal.impl.WindowResolver" />
+	<bean id="rose.windowResolver" class="net.paoding.rose.web.portal.impl.WindowResolver" />
 
-	<bean id="portalWaitInterceptor" class="net.paoding.rose.web.portal.impl.PortalWaitInterceptor" />
+	<bean id="rose.portalWaitInterceptor" class="net.paoding.rose.web.portal.impl.PortalWaitInterceptor" />
+	<bean id="rose.windowInInterceptor" class="net.paoding.rose.web.portal.impl.WindowInInterceptor" />
 
-	<bean id="mergeWindowAttributesToModelInterceptor"
+	<bean id="rose.mergeWindowAttributesToModelInterceptor"
 		class="net.paoding.rose.web.portal.impl.MergeWindowAttributesToModelInterceptor" />
 
 	<!--
 		portalBeanPostProcessor读取web.xml的配置，初始化portalExecutor中的参数，以及从applicationContext识别PortalListener对象进行登记添加
 	-->
 
-	<bean id="portalBeanPostProcessor"
+	<bean id="rose.portalBeanPostProcessor"
 		class="net.paoding.rose.web.portal.impl.PortalBeanPostProcessor" />
 
-	<bean id="portalFactory" class="net.paoding.rose.web.portal.impl.PortalFactoryDelegate">
-		<property name="portalFactoryName" value="laziedPortalFactoryTaget" />
+	<bean id="rose.portalFactory" class="net.paoding.rose.web.portal.impl.PortalFactoryDelegate">
+		<property name="portalFactoryName" value="rose.laziedPortalFactoryTaget" />
 	</bean>
 
-	<bean id="laziedPortalFactoryTaget" class="net.paoding.rose.web.portal.impl.PortalFactoryImpl">
-		<property name="executorService" ref="portalExecutorService" />
-		<property name="portalListener" ref="portalListeners" />
-		<property name="pipeFactory" ref="rosePipeFactory" />
+	<bean id="rose.laziedPortalFactoryTaget" class="net.paoding.rose.web.portal.impl.PortalFactoryImpl">
+		<property name="executorService" ref="rose.portalExecutorService" />
+		<property name="portalListener" ref="rose.portalListeners" />
+		<property name="pipeFactory" ref="rose.pipeFactory" />
 	</bean>
 
-	<bean id="portalExecutorService"
+	<bean id="rose.portalExecutorService"
 		class="net.paoding.rose.web.portal.impl.ThreadPoolExcutorServiceFactoryBean">
 		<property name="threadPoolTaskExecutor">
 			<bean id="portalExecutor"
@@ -50,21 +51,21 @@ http://www.springframework.org/schema/aop http://www.springframework.org/schema/
 		</property>
 	</bean>
 
-	<bean id="portalListeners" class="net.paoding.rose.web.portal.PortalListeners">
-		<property name="listeners" ref="portalListenerList" />
+	<bean id="rose.portalListeners" class="net.paoding.rose.web.portal.PortalListeners">
+		<property name="listeners" ref="rose.portalListenerList" />
 	</bean>
 
 
-	<util:list id="portalListenerList">
+	<util:list id="rose.portalListenerList">
 		<bean class="net.paoding.rose.web.portal.PortalLoggerListener" />
 	</util:list>
 
 
 
 	<!-- pipe -->
-	<bean id="rosePipeFactory" class="net.paoding.rose.web.portal.impl.PipeFactoryImpl"></bean>
-	<bean id="rosePipedWindowInterceptor" class="net.paoding.rose.web.portal.impl.PipedWindowInterceptor">
-		<property name="pipeFactory" ref="rosePipeFactory" />
+	<bean id="rose.pipeFactory" class="net.paoding.rose.web.portal.impl.PipeFactoryImpl"></bean>
+	<bean id="rose.windowFiringInterceptor" class="net.paoding.rose.web.portal.impl.WindowFiringInterceptor">
+		<property name="pipeFactory" ref="rose.pipeFactory" />
 	</bean>
 
 
