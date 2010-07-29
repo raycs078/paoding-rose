@@ -16,8 +16,8 @@
 package net.paoding.rose.web.instruction;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 
-import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 
 import net.paoding.rose.web.Invocation;
@@ -129,10 +129,8 @@ public class TextInstruction extends AbstractInstruction {
                 encoding = "UTF-8";
                 response.setCharacterEncoding("UTF-8");
             }
-            byte[] content = text.getBytes(encoding);
-            response.setContentLength(content.length);
-            ServletOutputStream out = response.getOutputStream();
-            out.write(content);
+            PrintWriter out = response.getWriter();
+            out.print(text);
             out.flush();
         }
     }
