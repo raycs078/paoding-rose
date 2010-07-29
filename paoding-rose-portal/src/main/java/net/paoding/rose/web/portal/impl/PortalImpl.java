@@ -15,7 +15,9 @@
  */
 package net.paoding.rose.web.portal.impl;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -57,10 +59,12 @@ class PortalImpl implements Portal, PortalListener {
 
     private long pipeTimeout;
 
-    private PipeManager pipeManager;
+    private PipeFactory pipeFactory;
 
-    public PortalImpl(Invocation inv, ExecutorService executorService, PortalListener portalListener) {
+    public PortalImpl(Invocation inv, PipeFactory pipeFactory, ExecutorService executorService,
+            PortalListener portalListener) {
         this.invocation = inv;
+        this.pipeFactory = pipeFactory;
         this.executorService = executorService;
         addListener(portalListener);
     }
@@ -106,6 +110,37 @@ class PortalImpl implements Portal, PortalListener {
     }
 
     @Override
+    public List<Window> getSimpleWindows() {
+        return getWindows(Window.TYPE_SIMPLE);
+    }
+
+    @Override
+    public List<Window> getPipeWindows() {
+        return getWindows(Window.TYPE_PIPE);
+    }
+
+    protected List<Window> getWindows(String type) {
+        if (type == null || type.length() == 0 || type.equals("all")) {
+            return getWindows();
+        }
+        List<Window> clone = new ArrayList<Window>(windows);
+        String typePrefix = type + ":";
+        for (Iterator<Window> iter = clone.iterator(); iter.hasNext();) {
+            Window w = iter.next();
+            if (type.equals(Window.TYPE_SIMPLE)) {
+                if (w.getName().indexOf(':') < 0) {
+                    iter.remove();
+                }
+            } else {
+                if (!w.getName().startsWith(typePrefix)) {
+                    iter.remove();
+                }
+            }
+        }
+        return clone;
+    }
+
+    @Override
     public Window addWindow(String windowPath) {
         String windowName = windowPath;
         return this.addWindow(windowName, windowPath);
@@ -136,17 +171,16 @@ class PortalImpl implements Portal, PortalListener {
         WindowTask task = new WindowTask(window);
 
         // 注册到相关变量中
+        synchronized (this) {
+            if (this.windows.size() == 0) {
+                this.windows = new LinkedList<Window>();
+            }
+            this.windows.add(window);
+        }
         if (usePipe) {
             // create pipe
-            Pipe pipe = pipeManager.getPipe(invocation, true);
+            Pipe pipe = pipeFactory.getPipe(invocation, true);
             pipe.register(window);
-        } else {
-            synchronized (this) {
-                if (this.windows.size() == 0) {
-                    this.windows = new LinkedList<Window>();
-                }
-                this.windows.add(window);
-            }
         }
         this.invocation.addModel(name, window);
 

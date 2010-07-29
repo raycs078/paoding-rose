@@ -24,14 +24,18 @@ import net.paoding.rose.web.portal.PortalListener;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.util.Assert;
 
 /**
  * {@link PortalFactory} 的实现。
  * <p>
  * 
- * 创建 {@link PortalFactoryImpl}实例后，应该通过{@link #setExecutorService(ExecutorService)} 
- * 或 {@link #setExecutorServiceBySpring(ThreadPoolTaskExecutor)}设置执行器，用于执行Portal下的每个“窗口请求”。
+ * 创建 {@link PortalFactoryImpl}实例后，应该通过
+ * {@link #setExecutorService(ExecutorService)} 或
+ * {@link #setExecutorServiceBySpring(ThreadPoolTaskExecutor)}
+ * 设置执行器，用于执行Portal下的每个“窗口请求”。
  * <p>
  * 
  * 可选设置 {@link PortalListener} 来获知portal的创建以及窗口的创建、执行等状态信息。
@@ -41,7 +45,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
-public class PortalFactoryImpl implements PortalFactory {
+public class PortalFactoryImpl implements PortalFactory, InitializingBean {
 
     protected Log logger = LogFactory.getLog(getClass());
 
@@ -49,10 +53,12 @@ public class PortalFactoryImpl implements PortalFactory {
 
     private PortalListener portalListener;
 
+    private PipeFactory pipeFactory;
+
     public void setExecutorService(ExecutorService executor) {
-    	if (logger.isInfoEnabled()) {
+        if (logger.isInfoEnabled()) {
             logger.info("using executorService: " + executor);
-    	}
+        }
         this.executorService = executor;
     }
 
@@ -68,9 +74,20 @@ public class PortalFactoryImpl implements PortalFactory {
         return portalListener;
     }
 
+    public void setPipeFactory(PipeFactory pipeFactory) {
+        this.pipeFactory = pipeFactory;
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        Assert.notNull(portalListener);
+        Assert.notNull(executorService);
+        Assert.notNull(pipeFactory);
+    }
+
     @Override
     public Portal createPortal(Invocation inv) {
-        PortalImpl portal = new PortalImpl(inv, executorService, portalListener);
+        PortalImpl portal = new PortalImpl(inv, pipeFactory, executorService, portalListener);
         portal.onPortalCreated(portal);
         return portal;
     }
