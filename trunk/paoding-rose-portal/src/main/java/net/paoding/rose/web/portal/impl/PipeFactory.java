@@ -15,6 +15,8 @@
  */
 package net.paoding.rose.web.portal.impl;
 
+import java.io.IOException;
+
 import net.paoding.rose.web.Invocation;
 
 /**
@@ -29,6 +31,7 @@ public interface PipeFactory {
      * @param inv
      * @param create
      * @return
+     * @throws IOException
      */
     public Pipe getPipe(Invocation inv, boolean create);
 

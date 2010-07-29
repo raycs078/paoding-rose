@@ -21,7 +21,6 @@ import net.paoding.rose.web.paramresolver.ParamMetaData;
 import net.paoding.rose.web.paramresolver.ParamResolver;
 import net.paoding.rose.web.portal.Portal;
 import net.paoding.rose.web.portal.PortalFactory;
-import net.paoding.rose.web.portal.PortalSetting;
 
 /**
  * 
@@ -32,22 +31,12 @@ public class PortalResolver implements ParamResolver {
 
     private PortalFactory portalFactory;
 
-    private long defaultTimeout;
-
     public void setPortalFactory(PortalFactory portalFactory) {
         this.portalFactory = portalFactory;
     }
 
     public PortalFactory getPortalFactory() {
         return portalFactory;
-    }
-
-    public void setDefaultTimeout(long defaultTimeout) {
-        this.defaultTimeout = defaultTimeout;
-    }
-
-    public long getDefaultTimeout() {
-        return defaultTimeout;
     }
 
     @Override
@@ -61,23 +50,11 @@ public class PortalResolver implements ParamResolver {
     @Override
     public Portal resolve(Invocation inv, ParamMetaData paramMetaData) throws Exception {
         Portal portal = portalFactory.createPortal(inv);
+        //
+
         // 换request对象
         inv.setRequest(new PortalRequest(inv.getRequest()));
         ((InvocationBean) inv).setResponse(new PortalResponse(portal));
-        //
-        long timeout = this.defaultTimeout;
-        PortalSetting portalSetting = inv.getMethod().getAnnotation(PortalSetting.class);
-        if (portalSetting != null && portalSetting.timeout() >= 0) {
-            long annotationTimeout = portalSetting.timeUnit().toMillis(portalSetting.timeout());
-            // < 0的情况，是PortalSetting的默认设置，即如果PortalSetting没有设置有效的timeout，则使用defaultTimeout策略
-            // == 0的情况表示并且要求表示不需要设置超时时间，并且也不使用defaultTimeout策略
-            if (annotationTimeout >= 0) {
-                timeout = annotationTimeout;
-            }
-        }
-        if (timeout > 0) {
-            portal.setTimeout(timeout);
-        }
         inv.setAttribute("$$paoding-rose-portal.portal", portal);
         return portal;
     }

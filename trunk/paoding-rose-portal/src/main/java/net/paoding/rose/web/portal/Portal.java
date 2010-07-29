@@ -118,6 +118,18 @@ public interface Portal {
 
     /**
      * 
+     * @param render
+     */
+    public void setPipeRender(PipeRender render);
+
+    /**
+     * 
+     * @return
+     */
+    public PipeRender getPipeRender();
+
+    /**
+     * 
      * @return
      */
     public HttpServletRequest getRequest();

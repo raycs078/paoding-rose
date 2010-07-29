@@ -26,12 +26,10 @@ import net.paoding.rose.web.portal.Window;
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
-public class PipedWindowInterceptor extends ControllerInterceptorAdapter {
+public class WindowInInterceptor extends ControllerInterceptorAdapter {
 
-    private PipeFactory pipeFactory;
-
-    public void setPipeFactory(PipeFactory pipeFactory) {
-        this.pipeFactory = pipeFactory;
+    public WindowInInterceptor() {
+        setPriority(Integer.MAX_VALUE - 1);
     }
 
     @Override
@@ -40,11 +38,20 @@ public class PipedWindowInterceptor extends ControllerInterceptorAdapter {
     }
 
     @Override
-    public void afterCompletion(Invocation inv, Throwable ex) throws Exception {
+    protected Object before(Invocation inv) throws Exception {
         Window window = PortalUtils.getWindow(inv);
-        if (window != null && window.getName().startsWith("pipe:")) {
-            Invocation pipeInv = window.getPortal().getInvocation();
-            pipeFactory.getPipe(pipeInv, true).fire(window);
+        if (window != null) {
+            synchronized (window) {
+                window.set("$$window.in", Boolean.TRUE);
+                if (window.get("$$window.in.wait") == Boolean.TRUE) {
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("notify window '" + window.getName() + "'");
+                    }
+                    window.notifyAll();
+                }
+            }
         }
+        return Boolean.TRUE;
     }
+
 }
