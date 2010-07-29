@@ -82,11 +82,25 @@ public interface Portal {
     public Window addWindow(String name, String windowPath, Map<String, Object> attributes);
 
     /**
-     * 返回添加到这个 {@link Portal} 对象上的窗口
+     * 返回添加到这个 {@link Portal} 上的窗口，包含普通窗口和pipe窗口等
      * 
      * @return
      */
     public List<Window> getWindows();
+
+    /**
+     * 返回添加到这个 {@link Portal} 的普通窗口
+     * 
+     * @return
+     */
+    public List<Window> getSimpleWindows();
+
+    /**
+     * 返回添加到这个 {@link Portal} 的pipe窗口
+     * 
+     * @return
+     */
+    public List<Window> getPipeWindows();
 
     /**
      * 返回这个 {@link Portal} 对象邦定的 {@link Invocation} 对象

@@ -17,9 +17,19 @@ package net.paoding.rose.web.portal.impl;
 
 import net.paoding.rose.web.Invocation;
 
-public interface PipeManager {
+/**
+ * 
+ * @author 王志亮 [qieqie.wang@gmail.com]
+ * 
+ */
+public interface PipeFactory {
 
-    // 
+    /**
+     * 
+     * @param inv
+     * @param create
+     * @return
+     */
     public Pipe getPipe(Invocation inv, boolean create);
 
 }

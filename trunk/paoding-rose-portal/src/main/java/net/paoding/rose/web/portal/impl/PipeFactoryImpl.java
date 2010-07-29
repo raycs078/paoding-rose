@@ -15,27 +15,24 @@
  */
 package net.paoding.rose.web.portal.impl;
 
-import java.io.IOException;
-
-import net.paoding.rose.web.portal.Window;
+import net.paoding.rose.web.Invocation;
 
 /**
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
-public interface Pipe {
 
-    public void register(Window window);
+public class PipeFactoryImpl implements PipeFactory {
 
-    public void start() throws IOException;
-
-    // 实现上要注意：并发控制的问题；另外一定要在主portal已经flush的情况下才能真正输出Window
-    // 要把window的内容加工为script
-    public void fire(Window window) throws IOException;
-
-    public void await(long timeout) throws InterruptedException;
-
-    public void close();
+    @Override
+    public Pipe getPipe(Invocation inv, boolean create) {
+        Pipe pipe = (Pipe) inv.getRequest().getAttribute("$$paoding-rose.pipe");
+        if (pipe == null && create) {
+            pipe = new PipeImpl(inv);
+            inv.getRequest().setAttribute("$$paoding-rose.pipe", pipe);
+        }
+        return pipe;
+    }
 
 }

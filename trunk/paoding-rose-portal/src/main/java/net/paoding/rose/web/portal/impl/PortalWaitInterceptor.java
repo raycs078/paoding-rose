@@ -40,7 +40,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class PortalWaitInterceptor extends ControllerInterceptorAdapter {
 
     @Autowired
-    private PipeManager pipeManager;
+    private PipeFactory pipeFactory;
 
     // 只拦截含有 Portal 的控制器方法
     @Override
@@ -87,28 +87,32 @@ public class PortalWaitInterceptor extends ControllerInterceptorAdapter {
     }
 
     protected void waitForWindows(PortalImpl portal, PortalListener listener) {
+        boolean debugEnabled = logger.isDebugEnabled();
         long deadline;
         long begin = System.currentTimeMillis();
         if (portal.getTimeout() > 0) {
             deadline = begin + portal.getTimeout();
-            if (logger.isDebugEnabled()) {
+            if (debugEnabled) {
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss SSS");
                 logger.debug(portal + ".maxWait=" + portal.getTimeout() + "; deadline="
                         + sdf.format(new Date(deadline)));
             }
         } else {
             deadline = 0;
-            if (logger.isDebugEnabled()) {
+            if (debugEnabled) {
                 logger.debug(portal + ".maxWait=(forever)");
             }
         }
         int winSize = portal.getWindows().size();
         int winIndex = 0;
         for (Window window : portal.getWindows()) {
+            if (window.getName().indexOf(':') >= 0) {
+                continue;
+            }
             winIndex++;
             Future<?> future = window.getFuture();
             if (future.isDone()) {
-                if (logger.isDebugEnabled()) {
+                if (debugEnabled) {
                     if (future.isCancelled()) {
                         logger.debug("[" + winIndex + "/" + winSize + "] continue[cancelled]: "
                                 + window.getName());
@@ -126,12 +130,12 @@ public class PortalWaitInterceptor extends ControllerInterceptorAdapter {
                 if (deadline > 0) {
                     awaitTime = deadline - begineWait;
                     if (awaitTime > 0) {
-                        if (logger.isDebugEnabled()) {
+                        if (debugEnabled) {
                             logger.debug("[" + winIndex + "/" + winSize + "] waiting[begin]: "
                                     + window.getName() + "; maxWait=" + awaitTime);
                         }
                         future.get(awaitTime, TimeUnit.MILLISECONDS);
-                        if (logger.isDebugEnabled()) {
+                        if (debugEnabled) {
                             logger.debug("[" + winIndex + "/" + winSize + "] waiting[done]: "
                                     + window.getName() + "; actualWait="
                                     + (System.currentTimeMillis() - begineWait));
@@ -143,12 +147,12 @@ public class PortalWaitInterceptor extends ControllerInterceptorAdapter {
                         future.cancel(true);
                     }
                 } else {
-                    if (logger.isDebugEnabled()) {
+                    if (debugEnabled) {
                         logger.debug("[" + winIndex + "/" + winSize + "] waiting[begin]: "
                                 + window.getName() + "; maxWait=(forever)");
                     }
                     future.get();
-                    if (logger.isDebugEnabled()) {
+                    if (debugEnabled) {
                         logger.debug("[" + winIndex + "/" + winSize + "] waiting[done]: "
                                 + window.getName() + "; actualWait="
                                 + (System.currentTimeMillis() - begineWait));
@@ -169,21 +173,30 @@ public class PortalWaitInterceptor extends ControllerInterceptorAdapter {
                 future.cancel(true);
             }
         }
+        if (debugEnabled) {
+            logger.debug("[" + winIndex + "/" + winSize + "] size of simple windows = " + winIndex);
+        }
         listener.onPortalReady(portal);
     }
 
     @Override
     public void afterCompletion(Invocation inv, Throwable ex) throws Exception {
         //
-        Pipe pipe = pipeManager.getPipe(inv, false);
+        Pipe pipe = pipeFactory.getPipe(inv, false);
         if (pipe == null) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("there's no pipe windows.");
+            }
             return;
         }
         if (ex != null) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("close the pipe and returen because of exception previous.");
+            }
             pipe.close();
             return;
         }
-        pipe.setup();
+        pipe.start();
         PortalImpl portal = null;
         for (Object param : inv.getMethodParameters()) {
             if (param instanceof Portal) {
@@ -192,7 +205,20 @@ public class PortalWaitInterceptor extends ControllerInterceptorAdapter {
             }
         }
         if (portal.getPipeTimeout() >= 0) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("waiting for pipe windows up to " + portal.getPipeTimeout() + "ms");
+            }
+            long start = System.currentTimeMillis();
             pipe.await(portal.getPipeTimeout());
+            long cost = System.currentTimeMillis() - start;
+
+            if (logger.isDebugEnabled()) {
+                logger.debug("it takes " + cost + "ms for pipe windows.");
+            }
+        } else {
+            if (logger.isDebugEnabled()) {
+                logger.debug("there's no time to wait pipe windows.");
+            }
         }
         pipe.close();
     }

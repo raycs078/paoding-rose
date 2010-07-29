@@ -41,6 +41,10 @@ public interface Window {
 
     public static final String TITLE_ATTR = "_title_";
 
+    public static final String TYPE_SIMPLE = "simple";
+
+    public static final String TYPE_PIPE = "simple";
+
     /**
      * 该窗口所属的portal对象，如果一个窗口要把自己的数据“透露”给其他窗口，必须通过 Portal 对象实现
      * 
