@@ -98,7 +98,7 @@ public class ViewInstruction extends AbstractInstruction {
      * @return
      * @throws IOException
      */
-    private String getViewPath(InvocationBean inv, final String viewName) throws IOException {
+    private String getViewPath(InvocationBean inv, String viewName) throws IOException {
         if (logger.isDebugEnabled()) {
             logger.debug("resolving view name = '" + viewName + "'");
         }
@@ -108,7 +108,13 @@ public class ViewInstruction extends AbstractInstruction {
             return viewName;
         }
         // 其他的按惯例行走
-        String viewRelativePath = inv.getViewModule().getRelativePath();
+        String viewRelativePath;
+        if (viewName.startsWith(RoseConstants.VIEWS_PATH_WITH_END_SEP)) {
+            viewRelativePath = "";
+            viewName = viewName.substring(RoseConstants.VIEWS_PATH_WITH_END_SEP.length());
+        } else {
+            viewRelativePath = inv.getViewModule().getRelativePath();
+        }
         ViewPathCache viewPathCache = globalViewPathCaches.get(viewRelativePath);
         if (viewPathCache == null) {
             String directoryPath = RoseConstants.VIEWS_PATH + viewRelativePath;
