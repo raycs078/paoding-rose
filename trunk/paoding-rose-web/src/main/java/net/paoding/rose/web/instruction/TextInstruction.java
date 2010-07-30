@@ -124,11 +124,6 @@ public class TextInstruction extends AbstractInstruction {
 
     private void sendResponse(HttpServletResponse response, String text) throws IOException {
         if (StringUtils.isNotEmpty(text)) {
-            String encoding = response.getCharacterEncoding();
-            if (encoding == null) {
-                encoding = "UTF-8";
-                response.setCharacterEncoding("UTF-8");
-            }
             PrintWriter out = response.getWriter();
             out.print(text);
             out.flush();
