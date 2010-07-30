@@ -24,6 +24,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import net.paoding.rose.RoseConstants;
 import net.paoding.rose.web.ControllerInterceptorAdapter;
 import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.portal.Portal;
@@ -181,16 +182,16 @@ public class PortalWaitInterceptor extends ControllerInterceptorAdapter {
         }
         listener.onPortalReady(portal);
 
-        // codes for fix this exception:
-        // "Cannot forward after response has been committed"
+        // codes for fix this exception: "Cannot forward after response has been committed"
+        // @see RoseFilter#supportsRosepipe
+        // @see PortalImpl#addWindow
         for (Window window : windows) {
-            if (window.get("$$window.in") != Boolean.TRUE) {
+            if (window.getRequest().getAttribute(RoseConstants.PIPE_WINDOW_IN) != Boolean.TRUE) {
                 if (debugEnabled) {
                     logger.debug("waitting for window '" + window.getName() + "''s forwarding");
                 }
                 synchronized (window) {
-                    while (window.get("$$window.in") != Boolean.TRUE) {
-                        window.set("$$window.in.wait", Boolean.TRUE);
+                    while (window.getRequest().getAttribute(RoseConstants.PIPE_WINDOW_IN) != Boolean.TRUE) {
                         window.wait();
                     }
                 }

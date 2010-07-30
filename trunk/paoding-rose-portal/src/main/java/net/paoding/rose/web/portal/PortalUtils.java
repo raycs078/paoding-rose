@@ -15,6 +15,7 @@
  */
 package net.paoding.rose.web.portal;
 
+import net.paoding.rose.RoseConstants;
 import net.paoding.rose.web.Invocation;
 
 /**
@@ -25,7 +26,7 @@ import net.paoding.rose.web.Invocation;
 public class PortalUtils {
 
     public static Window getWindow(Invocation inv) {
-        return (Window) inv.getRequest().getAttribute("$$paoding-rose-portal.window");
+        return (Window) inv.getRequest().getAttribute(RoseConstants.WINDOW_ATTR);
     }
 
     public static Portal getPortal(Invocation inv) {

@@ -21,7 +21,6 @@ http://www.springframework.org/schema/aop http://www.springframework.org/schema/
 	<bean id="rose.windowResolver" class="net.paoding.rose.web.portal.impl.WindowResolver" />
 
 	<bean id="rose.portalWaitInterceptor" class="net.paoding.rose.web.portal.impl.PortalWaitInterceptor" />
-	<bean id="rose.windowInInterceptor" class="net.paoding.rose.web.portal.impl.WindowInInterceptor" />
 
 	<bean id="rose.mergeWindowAttributesToModelInterceptor"
 		class="net.paoding.rose.web.portal.impl.MergeWindowAttributesToModelInterceptor" />
@@ -64,9 +63,6 @@ http://www.springframework.org/schema/aop http://www.springframework.org/schema/
 
 	<!-- pipe -->
 	<bean id="rose.pipeFactory" class="net.paoding.rose.web.portal.impl.PipeFactoryImpl"></bean>
-	<bean id="rose.windowFiringInterceptor" class="net.paoding.rose.web.portal.impl.WindowFiringInterceptor">
-		<property name="pipeFactory" ref="rose.pipeFactory" />
-	</bean>
 
 
 
