@@ -26,6 +26,7 @@ import java.util.concurrent.Future;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import net.paoding.rose.RoseConstants;
 import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.portal.PipeRender;
 import net.paoding.rose.web.portal.Portal;
@@ -160,6 +161,10 @@ class PortalImpl implements Portal, PortalListener {
         // 创建 窗口对象
         WindowImpl window = new WindowImpl((PortalImpl) this, name, windowPath);
 
+        // PortalWaitInterceptor#waitForWindows
+        // RoseFilter#supportsRosepipe
+        window.getRequest().removeAttribute(RoseConstants.PIPE_WINDOW_IN);
+
         //
         if (attributes != null) {
             synchronized (attributes) {
@@ -170,7 +175,7 @@ class PortalImpl implements Portal, PortalListener {
         }
 
         // 定义窗口任务
-        WindowTask task = new WindowTask(window);
+        WindowTask task = new WindowTask(window, pipeFactory);
 
         // 注册到相关变量中
         synchronized (this) {

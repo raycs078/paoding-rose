@@ -18,7 +18,6 @@ package net.paoding.rose.web.portal.impl;
 import java.util.concurrent.ExecutorService;
 
 import javax.servlet.RequestDispatcher;
-import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -35,11 +34,14 @@ final class WindowTask implements Runnable {
 
     private final WindowImpl window;
 
-    public WindowTask(WindowImpl window) {
+    private final PipeFactory pipeFactory;
+
+    public WindowTask(WindowImpl window, PipeFactory pipeFactory) {
         if (window == null) {
             throw new NullPointerException("window");
         }
         this.window = window;
+        this.pipeFactory = pipeFactory;
     }
 
     public WindowImpl getWindow() {
@@ -53,10 +55,14 @@ final class WindowTask implements Runnable {
             window.getPortal().onWindowStarted(window);
 
             // doRequest
-            final HttpServletRequest request = window.getRequest();
+            final WindowRequest request = window.getRequest();
             final RequestDispatcher rd = request.getRequestDispatcher(window.getPath());
             request.setAttribute("$$paoding-rose-portal.window", window);
             rd.forward(request, window.getResponse());
+            if (window.getName().startsWith("pipe:")) {
+                Pipe pipe = pipeFactory.getPipe(window.getPortal().getInvocation(), true);
+                pipe.fire(window);
+            }
 
             // done!
             window.getPortal().onWindowDone(window);
