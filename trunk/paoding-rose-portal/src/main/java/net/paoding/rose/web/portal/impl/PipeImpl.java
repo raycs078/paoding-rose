@@ -26,7 +26,6 @@ import java.util.concurrent.TimeUnit;
 
 import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.portal.PipeRender;
-import net.paoding.rose.web.portal.SimplePipeRender;
 import net.paoding.rose.web.portal.Window;
 
 import org.apache.commons.logging.Log;
@@ -136,9 +135,12 @@ public class PipeImpl implements Pipe {
         }
         PipeRender render = window.getPortal().getPipeRender();
         if (render == null) {
-            logger.warn(//
-                    "please set your pipeRender to your portal in controller to customer your PipeRender");
-            render = SimplePipeRender.getInstance();
+            Invocation portalInv = window.getPortal().getInvocation();
+            throw new IllegalArgumentException("you should be set a "
+                    + PipeRender.class.getSimpleName()
+                    + " object to the Portal parameter in method before addWindow: "
+                    + portalInv.getControllerClass().getName() + "#"
+                    + portalInv.getMethod().getName());
         }
         // 这里不用设置response的encoding，即使用和主控一致的encoding
         PrintWriter out = inv.getResponse().getWriter();
