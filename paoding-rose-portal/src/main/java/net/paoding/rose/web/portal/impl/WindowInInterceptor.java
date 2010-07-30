@@ -26,6 +26,7 @@ import net.paoding.rose.web.portal.Window;
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
+//TODO: window 404的怎么处理?
 public class WindowInInterceptor extends ControllerInterceptorAdapter {
 
     public WindowInInterceptor() {

@@ -52,16 +52,8 @@ public class PipeImpl implements Pipe {
 
     private Invocation inv;
 
-    private PrintWriter out;
-
     public PipeImpl(Invocation inv) {
         this.inv = inv;
-        try {
-            // fix: java.lang.IllegalStateException: getWriter() has already been called for this response
-            this.out = inv.getResponse().getWriter();
-        } catch (IOException e) {
-            throw new java.lang.IllegalStateException(e);
-        }
     }
 
     @Override
@@ -148,6 +140,8 @@ public class PipeImpl implements Pipe {
                     "please set your pipeRender to your portal in controller to customer your PipeRender");
             render = SimplePipeRender.getInstance();
         }
+        // 这里不用设置response的encoding，即使用和主控一致的encoding
+        PrintWriter out = inv.getResponse().getWriter();
         render.render(window, out);
         out.flush();
         if (logger.isDebugEnabled()) {
