@@ -320,6 +320,8 @@ public class RoseFilter extends GenericFilterBean {
             logger.debug(httpRequest.getMethod() + " " + sb.toString());
         }
 
+        supportsRosepipe(httpRequest);
+
         // 创建RequestPath对象，用于记录对地址解析的结果
         final RequestPath requestPath = new RequestPath(httpRequest);
 
@@ -345,6 +347,27 @@ public class RoseFilter extends GenericFilterBean {
         // 非Rose的请求转发给WEB容器的其他组件处理，而且不放到上面的try-catch块中
         if (!matched) {
             notMatched(filterChain, httpRequest, httpResponse, requestPath);
+        }
+    }
+
+    // @see net.paoding.rose.web.portal.impl.PortalWaitInterceptor#waitForWindows
+    protected void supportsRosepipe(final HttpServletRequest httpRequest) {
+        // 这个代码为rosepipe所用，以避免rosepipe的"Cannot forward after response has been committed"异常
+        // @see net.paoding.rose.web.portal.impl.PortalWaitInterceptor
+        Object window = httpRequest.getAttribute(RoseConstants.WINDOW_ATTR);
+        if (window != null && window.getClass().getName().startsWith("net.paoding.rose.web.portal")) {
+            httpRequest.setAttribute(RoseConstants.PIPE_WINDOW_IN, Boolean.TRUE);
+            if (logger.isDebugEnabled()) {
+                try {
+                    logger.debug("notify window '"
+                            + httpRequest.getAttribute("$$paoding-rose-portal.window.name") + "'");
+                } catch (Exception e) {
+                    logger.error("", e);
+                }
+            }
+            synchronized (window) {
+                window.notifyAll();
+            }
         }
     }
 

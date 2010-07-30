@@ -86,4 +86,8 @@ public interface RoseConstants {
 
     public static final String WEB_APPLICATION_CONTEXT_ATTRIBUTE = RequestContext.WEB_APPLICATION_CONTEXT_ATTRIBUTE;
 
+    public static final String PIPE_WINDOW_IN = "$$paoding-rose-portal.window.in";
+
+    public static final String WINDOW_ATTR = "$$paoding-rose-portal.window";
+
 }
