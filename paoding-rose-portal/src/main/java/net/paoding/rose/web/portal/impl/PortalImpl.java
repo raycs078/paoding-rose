@@ -15,7 +15,6 @@
  */
 package net.paoding.rose.web.portal.impl;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -126,12 +125,12 @@ class PortalImpl implements Portal, PortalListener {
         if (type == null || type.length() == 0 || type.equals("all")) {
             return getWindows();
         }
-        List<Window> clone = new ArrayList<Window>(windows);
+        List<Window> clone = new LinkedList<Window>(windows);
         String typePrefix = type + ":";
         for (Iterator<Window> iter = clone.iterator(); iter.hasNext();) {
             Window w = iter.next();
             if (type.equals(Window.TYPE_SIMPLE)) {
-                if (w.getName().indexOf(':') < 0) {
+                if (w.getName().indexOf(':') >= 0) {
                     iter.remove();
                 }
             } else {
