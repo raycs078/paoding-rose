@@ -34,14 +34,11 @@ final class WindowTask implements Runnable {
 
     private final WindowImpl window;
 
-    private final PipeFactory pipeFactory;
-
-    public WindowTask(WindowImpl window, PipeFactory pipeFactory) {
+    public WindowTask(WindowImpl window) {
         if (window == null) {
             throw new NullPointerException("window");
         }
         this.window = window;
-        this.pipeFactory = pipeFactory;
     }
 
     public WindowImpl getWindow() {
@@ -52,7 +49,7 @@ final class WindowTask implements Runnable {
     public void run() {
         try {
             // started
-            window.getPortal().onWindowStarted(window);
+            window.getAggregate().onWindowStarted(window);
 
             // doRequest
             final WindowRequest request = window.getRequest();
@@ -61,23 +58,19 @@ final class WindowTask implements Runnable {
             if (window.getResponse().isCommitted()) {
                 if (logger.isDebugEnabled()) {
                     logger.debug("onWindowTimeout: response has committed. [" + window.getName()
-                            + "]@" + window.getPortal());
+                            + "]@" + window.getAggregate());
                 }
-                window.getPortal().onWindowTimeout(window);
+                window.getAggregate().onWindowTimeout(window);
                 return;
             }
             rd.forward(request, window.getResponse());
-            if (window.getName().startsWith("pipe:")) {
-                Pipe pipe = pipeFactory.getPipe(window.getPortal().getInvocation(), true);
-                pipe.fire(window);
-            }
 
             // done!
-            window.getPortal().onWindowDone(window);
+            window.getAggregate().onWindowDone(window);
         } catch (Throwable e) {
             logger.error("", e);
             window.setThrowable(e);
-            window.getPortal().onWindowError(window);
+            window.getAggregate().onWindowError(window);
         }
     }
 

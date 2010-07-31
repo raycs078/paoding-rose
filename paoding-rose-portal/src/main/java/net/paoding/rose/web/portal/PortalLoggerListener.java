@@ -44,43 +44,43 @@ public class PortalLoggerListener implements PortalListener {
     @Override
     public void onWindowAdded(Window window) {
         if (logger.isDebugEnabled()) {
-            logger.debug("onWindowAdded: [" + window.getName() + "]@" + window.getPortal());
+            logger.debug("onWindowAdded: [" + window.getName() + "]@" + window.getAggregate());
         }
     }
 
     @Override
     public void onWindowCanceled(Window window) {
         if (logger.isDebugEnabled()) {
-            logger.debug("onWindowCanceled: [" + window.getName() + "]@" + window.getPortal());
+            logger.debug("onWindowCanceled: [" + window.getName() + "]@" + window.getAggregate());
         }
     }
 
     @Override
     public void onWindowDone(Window window) {
         if (logger.isDebugEnabled()) {
-            logger.debug("onWindowDone: [" + window.getName() + "]@" + window.getPortal());
+            logger.debug("onWindowDone: [" + window.getName() + "]@" + window.getAggregate());
         }
     }
 
     @Override
     public void onWindowError(Window window) {
         if (logger.isDebugEnabled()) {
-            logger.debug("onWindowError: [" + window.getName() + "]@" + window.getPortal(), window
-                    .getThrowable());
+            logger.debug("onWindowError: [" + window.getName() + "]@" + window.getAggregate(),
+                    window.getThrowable());
         }
     }
 
     @Override
     public void onWindowStarted(Window window) {
         if (logger.isDebugEnabled()) {
-            logger.debug("onWindowStarted: [" + window.getName() + "]@" + window.getPortal());
+            logger.debug("onWindowStarted: [" + window.getName() + "]@" + window.getAggregate());
         }
     }
 
     @Override
     public void onWindowTimeout(Window window) {
         if (logger.isDebugEnabled()) {
-            logger.debug("onWindowTimeout: [" + window.getName() + "]@" + window.getPortal());
+            logger.debug("onWindowTimeout: [" + window.getName() + "]@" + window.getAggregate());
         }
     }
 }

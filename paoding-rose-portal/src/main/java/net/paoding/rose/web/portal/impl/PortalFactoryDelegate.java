@@ -16,6 +16,7 @@
 package net.paoding.rose.web.portal.impl;
 
 import net.paoding.rose.web.Invocation;
+import net.paoding.rose.web.portal.Pipe;
 import net.paoding.rose.web.portal.Portal;
 import net.paoding.rose.web.portal.PortalFactory;
 
@@ -47,9 +48,18 @@ public class PortalFactoryDelegate implements PortalFactory, ApplicationContextA
 
     @Override
     public Portal createPortal(Invocation inv) {
+        return getPortalFactory().createPortal(inv);
+    }
+
+    @Override
+    public Pipe createPipe(Portal portal, boolean create) {
+        return getPortalFactory().createPipe(portal, create);
+    }
+
+    protected PortalFactory getPortalFactory() {
         if (portalFactory == null) {
             portalFactory = (PortalFactory) applicationContext.getBean(portalFactoryName);
         }
-        return portalFactory.createPortal(inv);
+        return portalFactory;
     }
 }

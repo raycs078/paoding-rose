@@ -15,6 +15,7 @@
  */
 package net.paoding.rose.web.portal;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.Future;
 
@@ -50,7 +51,7 @@ public interface Window {
      * 
      * @return
      */
-    public Portal getPortal();
+    public Aggregate getAggregate();
 
     /**
      * 返回该window所使用的request对象
@@ -116,18 +117,20 @@ public interface Window {
     public String getPath();
 
     /**
-     * 返回该窗口的渲染结果文本，如果没有被渲染将返回null
+     * 返回该窗口的渲染结果文本，如果没有被渲染将返回长度为0的串
      * 
      * @return
      */
     public String getContent();
 
     /**
-     * 返回该窗口的渲染结果的文本大小，如果没有被渲染将返回0 (空串也返回0)
+     * 返回该窗口在portal或pipe中的输出，如果没有被渲染将返回长度为0的串
      * 
+     * @see WindowRender
      * @return
+     * @throws IOException
      */
-    public int getContentLength();
+    public String getOutputContent();
 
     /**
      * 设置窗口属性，使 {@link Window#get(String)}方法能够获取他

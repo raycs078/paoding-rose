@@ -18,7 +18,7 @@ package net.paoding.rose.web.portal.impl;
 import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.paramresolver.ParamMetaData;
 import net.paoding.rose.web.paramresolver.ParamResolver;
-import net.paoding.rose.web.portal.Portal;
+import net.paoding.rose.web.portal.Pipe;
 import net.paoding.rose.web.portal.PortalFactory;
 
 /**
@@ -26,7 +26,7 @@ import net.paoding.rose.web.portal.PortalFactory;
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
-public class PortalResolver implements ParamResolver {
+public class PipeResolver implements ParamResolver {
 
     private PortalFactory portalFactory;
 
@@ -43,12 +43,12 @@ public class PortalResolver implements ParamResolver {
         if (portalFactory == null) {
             return false;
         }
-        return paramMetaData.getParamType() == Portal.class;
+        return paramMetaData.getParamType() == Pipe.class;
     }
 
     @Override
-    public Portal resolve(Invocation inv, ParamMetaData paramMetaData) throws Exception {
-        return portalFactory.createPortal(inv);
+    public Pipe resolve(Invocation inv, ParamMetaData paramMetaData) throws Exception {
+        return portalFactory.createPipe(portalFactory.createPortal(inv), true);
     }
 
 }

@@ -13,26 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.paoding.rose.web.portal.impl;
-
-import java.io.IOException;
-
-import net.paoding.rose.web.Invocation;
+package net.paoding.rose.web.portal;
 
 /**
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
-public interface PipeFactory {
-
-    /**
-     * 
-     * @param inv
-     * @param create
-     * @return
-     * @throws IOException
-     */
-    public Pipe getPipe(Invocation inv, boolean create);
-
+public interface Pipe extends Aggregate {
 }

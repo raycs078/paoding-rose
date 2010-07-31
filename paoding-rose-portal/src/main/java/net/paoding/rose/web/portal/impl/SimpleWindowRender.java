@@ -15,24 +15,22 @@
  */
 package net.paoding.rose.web.portal.impl;
 
-import net.paoding.rose.web.Invocation;
+import java.io.IOException;
+import java.io.PrintWriter;
+
+import net.paoding.rose.web.portal.WindowRender;
+import net.paoding.rose.web.portal.Window;
 
 /**
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
-
-public class PipeFactoryImpl implements PipeFactory {
+public class SimpleWindowRender implements WindowRender {
 
     @Override
-    public Pipe getPipe(Invocation inv, boolean create) {
-        Pipe pipe = (Pipe) inv.getRequest().getAttribute("$$paoding-rose.pipe");
-        if (pipe == null && create) {
-            pipe = new PipeImpl(inv);
-            inv.getRequest().setAttribute("$$paoding-rose.pipe", pipe);
-        }
-        return pipe;
+    public void render(Window window, PrintWriter out) throws IOException {
+        out.print(window.getContent());
     }
 
 }

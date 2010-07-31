@@ -17,15 +17,18 @@ package net.paoding.rose.web.portal.impl;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.HashSet;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import net.paoding.rose.web.Invocation;
-import net.paoding.rose.web.portal.PipeRender;
+import javax.servlet.http.HttpServletResponse;
+
+import net.paoding.rose.web.portal.Pipe;
+import net.paoding.rose.web.portal.Portal;
+import net.paoding.rose.web.portal.PortalListener;
+import net.paoding.rose.web.portal.PortalListenerAdapter;
 import net.paoding.rose.web.portal.Window;
 
 import org.apache.commons.logging.Log;
@@ -37,45 +40,55 @@ import org.apache.commons.logging.LogFactory;
  * 
  */
 
-public class PipeImpl implements Pipe {
+public class PipeImpl extends AggregateImpl implements Pipe, NestedPipe {
 
     private static final Log logger = LogFactory.getLog(PipeImpl.class);
 
     private int state = 0;
 
-    private Set<Window> waits = new HashSet<Window>();
-
-    private List<Window> firing;
-
     private CountDownLatch latch;
 
-    private Invocation inv;
+    private final HttpServletResponse fireResponse;
 
-    public PipeImpl(Invocation inv) {
-        this.inv = inv;
+    // 暂时阻塞的窗口
+    private List<Window> blocking;
+
+    private Portal portal;
+
+    public PipeImpl(Portal portal, ExecutorService executorService, PortalListener portalListener) {
+        this(portal, executorService, portalListener, portal.getResponse());
     }
 
-    @Override
-    public synchronized void register(Window window) {
-        if (state != 0) {
-            throw new IllegalStateException("only avalabled when state=0; now state is " + state);
+    public PipeImpl(Portal portal, ExecutorService executorService, PortalListener portalListener,
+            HttpServletResponse fireResponse) {
+        super(portal.getInvocation(), executorService, portalListener);
+        this.fireResponse = fireResponse;
+        this.portal = portal;
+        addListener(new FireListener());
+    }
+
+    private class FireListener extends PortalListenerAdapter {
+
+        @Override
+        public void onWindowDone(Window window) {
+            try {
+                fire(window);
+            } catch (IOException e) {
+                logger.error("", e);
+            }
         }
-        if (waits.contains(window)) {
-            throw new IllegalArgumentException("duplicated windows '" + window.getName() + "'");
-        }
-        if (logger.isDebugEnabled()) {
-            logger.debug("register pipe window '" + window.getName() + "'");
-        }
-        waits.add(window);
+    }
+
+    public Portal getPortal() {
+        return portal;
+    }
+
+    public HttpServletResponse getFireResponse() {
+        return fireResponse;
     }
 
     @Override
     public void await(long timeout) throws InterruptedException {
-        synchronized (this) {
-            if (state < 1) {
-                throw new IllegalStateException("only avalabled when started.");
-            }
-        }
         if (timeout > 0) {
             latch.await(timeout, TimeUnit.MILLISECONDS);
         } else {
@@ -86,23 +99,22 @@ public class PipeImpl implements Pipe {
     @Override
     public synchronized void start() throws IOException {
         if (logger.isDebugEnabled()) {
-            logger.debug("start pipe " + inv.getRequestPath().getUri());
+            logger.debug("start pipe " + getInvocation().getRequestPath().getUri());
         }
         state = 1;
-        inv.getResponse().flushBuffer();
-        latch = new CountDownLatch(waits.size());
-        if (firing != null) {
-            for (Window window : firing) {
+        fireResponse.flushBuffer();
+        latch = new CountDownLatch(windows.size());
+        if (blocking != null) {
+            for (Window window : blocking) {
                 doFire(window);
             }
-            firing.clear();
-            firing = null;
+            blocking = null;
         }
     }
 
     @Override
     public synchronized void fire(Window window) throws IOException {
-        if (!waits.contains(window)) {
+        if (!super.windows.contains(window)) {
             throw new IllegalArgumentException(//
                     "not a register piped window '" + window.getName() + "'");
         }
@@ -112,20 +124,23 @@ public class PipeImpl implements Pipe {
             }
             return;
         } else if (state == 0) {
-            if (firing == null) {
-                firing = new LinkedList<Window>();
+            if (blocking == null) {
+                blocking = new ArrayList<Window>(windows.size());
+            } else {
+                if (blocking.contains(window)) {
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("firing '" + window.getName()
+                                + "' : has been add to waiting list");
+                    }
+                    return;
+                }
             }
-            firing.add(window);
-            waits.remove(window);
+            blocking.add(window);
             if (logger.isDebugEnabled()) {
                 logger.debug("firing '" + window.getName() + "' : add to waiting list");
             }
         } else {
-            try {
-                doFire(window);
-            } finally {
-                latch.countDown();
-            }
+            doFire(window);
         }
     }
 
@@ -133,33 +148,33 @@ public class PipeImpl implements Pipe {
         if (state != 1) {
             throw new IllegalStateException("only avalabled when started.");
         }
-        PipeRender render = window.getPortal().getPipeRender();
-        if (render == null) {
-            Invocation portalInv = window.getPortal().getInvocation();
-            throw new IllegalArgumentException("you should be set a "
-                    + PipeRender.class.getSimpleName()
-                    + " object to the Portal parameter in method before addWindow: "
-                    + portalInv.getControllerClass().getName() + "#"
-                    + portalInv.getMethod().getName());
+        try {
+            // 这里不用设置response的encoding，即使用和主控一致的encoding
+            PrintWriter out = fireResponse.getWriter();
+            out.println(window.getOutputContent());
+            out.flush();
+        } finally {
+            latch.countDown();
         }
-        // 这里不用设置response的encoding，即使用和主控一致的encoding
-        PrintWriter out = inv.getResponse().getWriter();
-        render.render(window, out);
-        out.flush();
         if (logger.isDebugEnabled()) {
-            logger
-                    .debug("firing '" + window.getName() + "' : done  content="
-                            + window.getContent());
+            logger.debug(//
+                    "firing '" + window.getName() + "' : done  content=" + window.getContent());
         }
     }
 
     @Override
     public synchronized void close() {
         if (logger.isDebugEnabled()) {
-            logger.debug("close pipe " + inv.getRequestPath().getUri());
+            logger.debug("close pipe " + getInvocation().getRequestPath().getUri());
         }
         this.state = -1;
-        this.waits = null;
+    }
+
+    //-------------实现toString()---------------F
+
+    @Override
+    public String toString() {
+        return "pipe ['" + getInvocation().getRequestPath().getUri() + "']";
     }
 
 }
