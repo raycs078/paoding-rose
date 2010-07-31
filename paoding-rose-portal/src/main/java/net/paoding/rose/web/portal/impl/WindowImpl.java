@@ -53,7 +53,7 @@ class WindowImpl implements Window {
         this.portal = portal;
         this.name = name;
         this.path = windowPath;
-        this.request = new WindowRequest(portal.getRequest());
+        this.request = new WindowRequest(this, portal.getRequest());
         this.response = new WindowResponse(this);
         this.request.setAttribute("$$paoding-rose-portal.window.name", name);
         this.request.setAttribute("$$paoding-rose-portal.window.path", path);

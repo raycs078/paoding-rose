@@ -24,7 +24,9 @@ import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
+import javax.servlet.http.HttpSession;
 
+import net.paoding.rose.web.portal.Window;
 import net.paoding.rose.web.portal.util.Enumerator;
 
 /**
@@ -34,6 +36,8 @@ import net.paoding.rose.web.portal.util.Enumerator;
  * 
  */
 class WindowRequest extends HttpServletRequestWrapper {
+
+    private final Window window;
 
     /**
      * 窗口请求对象私有的、有别于其他窗口的属性
@@ -48,8 +52,9 @@ class WindowRequest extends HttpServletRequestWrapper {
     /** 锁 */
     private Object mutex = this;
 
-    public WindowRequest(HttpServletRequest request) {
+    public WindowRequest(Window window, HttpServletRequest request) {
         super(request);
+        this.window = window;
     }
 
     // ------------------------------------------------- ServletRequest Methods
@@ -151,4 +156,31 @@ class WindowRequest extends HttpServletRequestWrapper {
         return Collections.unmodifiableMap(privateAttributes);
     }
 
+    @Override
+    public HttpSession getSession() {
+        HttpSession session = super.getSession(false);
+        if (session == null) {
+            if (!window.getPortal().getInvocation().getResponse().isCommitted()) {
+                try {
+                    session = super.getSession();
+                } catch (IllegalStateException e) {
+                    session = new SessionAfterCommitted(e);
+                }
+            } else {
+                session = new SessionAfterCommitted(new IllegalStateException(
+                        "Cannot create a session after the response has been committed"));
+            }
+        }
+        return session;
+    }
+
+    @Override
+    public HttpSession getSession(boolean create) {
+        if (create == true) {
+            return getSession();
+        }
+        return super.getSession(false);
+    }
+
+   
 }

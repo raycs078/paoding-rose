@@ -58,6 +58,14 @@ final class WindowTask implements Runnable {
             final WindowRequest request = window.getRequest();
             final RequestDispatcher rd = request.getRequestDispatcher(window.getPath());
             request.setAttribute("$$paoding-rose-portal.window", window);
+            if (window.getResponse().isCommitted()) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("onWindowTimeout: response has committed. [" + window.getName()
+                            + "]@" + window.getPortal());
+                }
+                window.getPortal().onWindowTimeout(window);
+                return;
+            }
             rd.forward(request, window.getResponse());
             if (window.getName().startsWith("pipe:")) {
                 Pipe pipe = pipeFactory.getPipe(window.getPortal().getInvocation(), true);
