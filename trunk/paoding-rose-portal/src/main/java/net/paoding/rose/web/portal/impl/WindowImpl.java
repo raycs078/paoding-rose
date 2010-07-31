@@ -15,12 +15,16 @@
  */
 package net.paoding.rose.web.portal.impl;
 
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Map;
 import java.util.concurrent.Future;
 
 import javax.servlet.http.HttpServletResponse;
 
 import net.paoding.rose.web.portal.Window;
+import net.paoding.rose.web.portal.WindowRender;
 
 /**
  * 
@@ -41,7 +45,7 @@ class WindowImpl implements Window {
 
     private String statusMessage = "";
 
-    private PortalImpl portal;
+    private AggregateImpl aggregate;
 
     private WindowRequest request;
 
@@ -49,18 +53,18 @@ class WindowImpl implements Window {
 
     private Future<?> future;
 
-    public WindowImpl(PortalImpl portal, String name, String windowPath) {
-        this.portal = portal;
+    public WindowImpl(AggregateImpl aggregate, String name, String windowPath) {
+        this.aggregate = aggregate;
         this.name = name;
         this.path = windowPath;
-        this.request = new WindowRequest(this, portal.getRequest());
+        this.request = new WindowRequest(this, aggregate.getRequest());
         this.response = new WindowResponse(this);
         this.request.setAttribute("$$paoding-rose-portal.window.name", name);
         this.request.setAttribute("$$paoding-rose-portal.window.path", path);
     }
 
-    public PortalImpl getPortal() {
-        return portal;
+    public AggregateImpl getAggregate() {
+        return aggregate;
     }
 
     public WindowRequest getRequest() {
@@ -114,9 +118,18 @@ class WindowImpl implements Window {
         return buffer == null ? "" : buffer.toString();
     }
 
-    @Override
-    public int getContentLength() {
-        return buffer == null ? 0 : buffer.length();
+    public String getOutputContent() {
+        WindowRender render = aggregate.getWindowRender();
+        if (render == null) {
+            return getContent();
+        }
+        StringWriter stringWriter = new StringWriter(getContent().length() << 1);
+        try {
+            render.render(this, new PrintWriter(stringWriter));
+        } catch (IOException e) {
+            throw new IllegalArgumentException(e);
+        }
+        return stringWriter.getBuffer().toString();
     }
 
     void appendContent(String content) {
@@ -191,7 +204,7 @@ class WindowImpl implements Window {
 
     @Override
     public String toString() {
-        return getContent();
+        return getOutputContent();
     }
 
     @Override

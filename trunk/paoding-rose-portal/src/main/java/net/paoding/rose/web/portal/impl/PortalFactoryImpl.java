@@ -18,6 +18,8 @@ package net.paoding.rose.web.portal.impl;
 import java.util.concurrent.ExecutorService;
 
 import net.paoding.rose.web.Invocation;
+import net.paoding.rose.web.impl.thread.InvocationBean;
+import net.paoding.rose.web.portal.Pipe;
 import net.paoding.rose.web.portal.Portal;
 import net.paoding.rose.web.portal.PortalFactory;
 import net.paoding.rose.web.portal.PortalListener;
@@ -54,8 +56,6 @@ public class PortalFactoryImpl implements PortalFactory, InitializingBean {
 
     private PortalListener portalListener;
 
-    private PipeFactory pipeFactory;
-
     public void setExecutorService(ExecutorService executor) {
         if (logger.isInfoEnabled()) {
             logger.info("using executorService: " + executor);
@@ -75,21 +75,20 @@ public class PortalFactoryImpl implements PortalFactory, InitializingBean {
         return portalListener;
     }
 
-    public void setPipeFactory(PipeFactory pipeFactory) {
-        this.pipeFactory = pipeFactory;
-    }
-
     @Override
     public void afterPropertiesSet() throws Exception {
         Assert.notNull(portalListener);
         Assert.notNull(executorService);
-        Assert.notNull(pipeFactory);
     }
 
     @Override
     public Portal createPortal(Invocation inv) {
-        PortalImpl portal = new PortalImpl(inv, pipeFactory, executorService, portalListener);
-
+        PortalImpl portal = (PortalImpl) inv.getAttribute("$$paoding-rose-portal.portal");
+        if (portal != null) {
+            return portal;
+        }
+        portal = new PortalImpl(inv, executorService, portalListener);
+        //
         long timeout = 0;
         PortalSetting portalSetting = inv.getMethod().getAnnotation(PortalSetting.class);
         if (portalSetting != null) {
@@ -105,7 +104,31 @@ public class PortalFactoryImpl implements PortalFactory, InitializingBean {
         if (timeout > 0) {
             portal.setTimeout(timeout);
         }
+
+        // 换request对象
+        inv.setRequest(new PortalRequest(inv.getRequest()));
+        ((InvocationBean) inv).setResponse(new PortalResponse(portal));
+        inv.setAttribute("$$paoding-rose-portal.portal", portal);
+
         portal.onPortalCreated(portal);
         return portal;
+    }
+
+    @Override
+    public Pipe createPipe(Portal portal, boolean create) {
+        PipeImpl pipe = (PipeImpl) portal.getRequest().getAttribute("$$paoding-rose-portal.pipe");
+        if (pipe == null) {
+            if (create) {
+                pipe = new PipeImpl(portal, executorService, portalListener);
+                portal.getRequest().setAttribute("$$paoding-rose-portal.pipe", pipe);
+            }
+        } else {
+            // TODO: 内嵌pipe的处理，new PipeImpl不能达到预期，要把注册的window集中起来，而非分散在不同的pipe中
+            if (portal != pipe.getPortal()) {
+                pipe = new PipeImpl(portal, executorService, portalListener, pipe.getFireResponse());
+                portal.getRequest().setAttribute("$$paoding-rose-portal.pipe", pipe);
+            }
+        }
+        return pipe;
     }
 }

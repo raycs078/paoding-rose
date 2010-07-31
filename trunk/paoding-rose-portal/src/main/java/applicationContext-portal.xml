@@ -17,6 +17,9 @@ http://www.springframework.org/schema/aop http://www.springframework.org/schema/
 	<bean id="rose.portalResolver" class="net.paoding.rose.web.portal.impl.PortalResolver">
 		<property name="portalFactory" ref="rose.portalFactory" />
 	</bean>
+	<bean id="rose.pipeResolver" class="net.paoding.rose.web.portal.impl.PipeResolver">
+		<property name="portalFactory" ref="rose.portalFactory" />
+	</bean>
 
 	<bean id="rose.windowResolver" class="net.paoding.rose.web.portal.impl.WindowResolver" />
 
@@ -39,7 +42,6 @@ http://www.springframework.org/schema/aop http://www.springframework.org/schema/
 	<bean id="rose.laziedPortalFactoryTaget" class="net.paoding.rose.web.portal.impl.PortalFactoryImpl">
 		<property name="executorService" ref="rose.portalExecutorService" />
 		<property name="portalListener" ref="rose.portalListeners" />
-		<property name="pipeFactory" ref="rose.pipeFactory" />
 	</bean>
 
 	<bean id="rose.portalExecutorService"
@@ -54,16 +56,9 @@ http://www.springframework.org/schema/aop http://www.springframework.org/schema/
 		<property name="listeners" ref="rose.portalListenerList" />
 	</bean>
 
-
 	<util:list id="rose.portalListenerList">
 		<bean class="net.paoding.rose.web.portal.PortalLoggerListener" />
 	</util:list>
-
-
-
-	<!-- pipe -->
-	<bean id="rose.pipeFactory" class="net.paoding.rose.web.portal.impl.PipeFactoryImpl"></bean>
-
 
 
 </beans>

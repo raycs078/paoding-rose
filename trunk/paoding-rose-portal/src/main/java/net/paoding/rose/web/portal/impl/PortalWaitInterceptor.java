@@ -27,11 +27,11 @@ import java.util.concurrent.TimeoutException;
 import net.paoding.rose.RoseConstants;
 import net.paoding.rose.web.ControllerInterceptorAdapter;
 import net.paoding.rose.web.Invocation;
+import net.paoding.rose.web.portal.Pipe;
 import net.paoding.rose.web.portal.Portal;
 import net.paoding.rose.web.portal.PortalListener;
+import net.paoding.rose.web.portal.PortalUtils;
 import net.paoding.rose.web.portal.Window;
-
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * 这个拦截器只拦截 Portal 控制器方法，用于等待所有该 portal 的窗口执行完成或进行超时取消。
@@ -41,45 +41,27 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public class PortalWaitInterceptor extends ControllerInterceptorAdapter {
 
-    @Autowired
-    private PipeFactory pipeFactory;
-
     // 只拦截含有 Portal 的控制器方法
     @Override
     protected boolean isForAction(Method actionMethod, Class<?> controllerClazz) {
-        int portalCount = 0;
         for (Class<?> paramType : actionMethod.getParameterTypes()) {
-            if (paramType == Portal.class) {
-                portalCount++;
+            if (paramType == Portal.class || paramType == Pipe.class) {
+                return true;
             }
         }
-        if (portalCount > 1) {
-            throw new IllegalArgumentException("only one portal parameter is allowed: "
-                    + controllerClazz.getName() + "." + actionMethod.getName());
-        }
-        return portalCount > 0;
+        return false;
     }
 
     @Override
     public Object after(Invocation inv, Object instruction) throws Exception {
-        PortalImpl portal = null;
-        for (Object param : inv.getMethodParameters()) {
-            if (param instanceof Portal) {
-                portal = (PortalImpl) param;
-                break;
-            }
-        }
+        PortalImpl portal = (PortalImpl) PortalUtils.getPortal(inv);
         long begin = System.currentTimeMillis();
         if (logger.isDebugEnabled()) {
             logger.debug(portal + " is going to wait windows.");
         }
         //
-        long start = System.currentTimeMillis();
         waitForWindows(portal, (PortalListener) portal);
-        long cost = System.currentTimeMillis() - start;
-        if (portal.getTimeout() > 0) {
-            portal.setPipeTimeout(portal.getTimeout() - cost);
-        }
+
         //
         if (logger.isDebugEnabled()) {
             logger.debug(portal + ".waitForWindows is done; cost="
@@ -185,8 +167,9 @@ public class PortalWaitInterceptor extends ControllerInterceptorAdapter {
         // codes for fix this exception: "Cannot forward after response has been committed"
         // @see RoseFilter#supportsRosepipe
         // @see PortalImpl#addWindow
-        for (Window window : windows) {
-            if (window.getName().startsWith("pipe:")) {
+        Pipe pipe = PortalUtils.getPipe(portal.getRequest());
+        if (pipe != null) {
+            for (Window window : pipe.getWindows()) {
                 if (window.getRequest().getAttribute(RoseConstants.PIPE_WINDOW_IN) != Boolean.TRUE) {
                     if (debugEnabled) {
                         logger.debug("waitting for window '" + window.getName() + "''s forwarding");
@@ -204,7 +187,7 @@ public class PortalWaitInterceptor extends ControllerInterceptorAdapter {
     @Override
     public void afterCompletion(Invocation inv, Throwable ex) throws Exception {
         //
-        Pipe pipe = pipeFactory.getPipe(inv, false);
+        PipeImpl pipe = (PipeImpl) PortalUtils.getPipe(inv.getRequest());
         if (pipe == null) {
             if (logger.isDebugEnabled()) {
                 logger.debug("there's no pipe windows.");
@@ -218,20 +201,15 @@ public class PortalWaitInterceptor extends ControllerInterceptorAdapter {
             pipe.close();
             return;
         }
+
         pipe.start();
-        PortalImpl portal = null;
-        for (Object param : inv.getMethodParameters()) {
-            if (param instanceof Portal) {
-                portal = (PortalImpl) param;
-                break;
-            }
-        }
-        if (portal.getPipeTimeout() >= 0) {
+
+        if (pipe.getTimeout() >= 0) {
             if (logger.isDebugEnabled()) {
-                logger.debug("waiting for pipe windows up to " + portal.getPipeTimeout() + "ms");
+                logger.debug("waiting for pipe windows up to " + pipe.getTimeout() + "ms");
             }
             long start = System.currentTimeMillis();
-            pipe.await(portal.getPipeTimeout());
+            pipe.await(pipe.getTimeout());
             long cost = System.currentTimeMillis() - start;
 
             if (logger.isDebugEnabled()) {

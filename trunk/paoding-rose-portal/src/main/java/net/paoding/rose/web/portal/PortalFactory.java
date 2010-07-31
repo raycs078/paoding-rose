@@ -15,6 +15,8 @@
  */
 package net.paoding.rose.web.portal;
 
+import java.io.IOException;
+
 import net.paoding.rose.web.Invocation;
 
 /**
@@ -33,5 +35,13 @@ public interface PortalFactory {
      * @return
      */
     public Portal createPortal(Invocation inv);
+
+    /**
+     * 
+     * @param portal
+     * @return
+     * @throws IOException
+     */
+    public Pipe createPipe(Portal portal, boolean create);
 
 }
