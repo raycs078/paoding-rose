@@ -186,13 +186,15 @@ public class PortalWaitInterceptor extends ControllerInterceptorAdapter {
         // @see RoseFilter#supportsRosepipe
         // @see PortalImpl#addWindow
         for (Window window : windows) {
-            if (window.getRequest().getAttribute(RoseConstants.PIPE_WINDOW_IN) != Boolean.TRUE) {
-                if (debugEnabled) {
-                    logger.debug("waitting for window '" + window.getName() + "''s forwarding");
-                }
-                synchronized (window) {
-                    while (window.getRequest().getAttribute(RoseConstants.PIPE_WINDOW_IN) != Boolean.TRUE) {
-                        window.wait();
+            if (window.getName().startsWith("pipe:")) {
+                if (window.getRequest().getAttribute(RoseConstants.PIPE_WINDOW_IN) != Boolean.TRUE) {
+                    if (debugEnabled) {
+                        logger.debug("waitting for window '" + window.getName() + "''s forwarding");
+                    }
+                    synchronized (window) {
+                        while (window.getRequest().getAttribute(RoseConstants.PIPE_WINDOW_IN) != Boolean.TRUE) {
+                            window.wait();
+                        }
                     }
                 }
             }

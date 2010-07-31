@@ -147,7 +147,9 @@ public class PipeImpl implements Pipe {
         render.render(window, out);
         out.flush();
         if (logger.isDebugEnabled()) {
-            logger.debug("firing '" + window.getName() + "' : done");
+            logger
+                    .debug("firing '" + window.getName() + "' : done  content="
+                            + window.getContent());
         }
     }
 
