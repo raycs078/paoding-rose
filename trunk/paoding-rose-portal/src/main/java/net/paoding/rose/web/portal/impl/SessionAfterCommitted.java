@@ -15,10 +15,13 @@
  */
 package net.paoding.rose.web.portal.impl;
 
+import java.util.Collections;
 import java.util.Enumeration;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpSession;
+
+import net.paoding.rose.web.portal.util.Enumerator;
 
 /**
  * 
@@ -35,33 +38,33 @@ class SessionAfterCommitted implements HttpSession {
 
     @Override
     public Object getAttribute(String arg0) {
-        throw new IllegalStateException(exception);
+        return null;
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public Enumeration getAttributeNames() {
-        throw new IllegalStateException(exception);
+        return new Enumerator(Collections.emptyList());
     }
 
     @Override
     public long getCreationTime() {
-        throw new IllegalStateException(exception);
+        return -1;
     }
 
     @Override
     public String getId() {
-        throw new IllegalStateException(exception);
+        return "-1";
     }
 
     @Override
     public long getLastAccessedTime() {
-        throw new IllegalStateException(exception);
+        return -1;
     }
 
     @Override
     public int getMaxInactiveInterval() {
-        throw new IllegalStateException(exception);
+        return -1;
     }
 
     @Override
@@ -77,22 +80,21 @@ class SessionAfterCommitted implements HttpSession {
 
     @Override
     public Object getValue(String arg0) {
-        throw new IllegalStateException(exception);
+        return null;
     }
 
     @Override
     public String[] getValueNames() {
-        throw new IllegalStateException(exception);
+        return new String[0];
     }
 
     @Override
     public void invalidate() {
-        throw new IllegalStateException(exception);
     }
 
     @Override
     public boolean isNew() {
-        throw new IllegalStateException(exception);
+        return false;
     }
 
     @Override
