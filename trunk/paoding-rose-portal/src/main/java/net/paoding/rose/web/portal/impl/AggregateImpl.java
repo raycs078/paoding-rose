@@ -15,7 +15,6 @@
  */
 package net.paoding.rose.web.portal.impl;
 
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -53,7 +52,7 @@ public class AggregateImpl implements Aggregate, PortalListener {
 
     protected Invocation invocation;
 
-    protected List<Window> windows = Collections.emptyList();
+    protected List<Window> windows = new LinkedList<Window>();
 
     protected WindowRender render;
 
@@ -104,11 +103,6 @@ public class AggregateImpl implements Aggregate, PortalListener {
     }
 
     @Override
-    public synchronized List<Window> getWindows() {
-        return windows;
-    }
-
-    @Override
     public Window addWindow(String windowPath) {
         String windowName = windowPath;
         return this.addWindow(windowName, windowPath);
@@ -122,7 +116,7 @@ public class AggregateImpl implements Aggregate, PortalListener {
     @Override
     public Window addWindow(String name, String windowPath, Map<String, Object> attributes) {
         // 创建 窗口对象
-        WindowImpl window = new WindowImpl((AggregateImpl) this, name, windowPath);
+        WindowImpl window = new WindowImpl(this, name, windowPath);
 
         // PortalWaitInterceptor#waitForWindows
         // RoseFilter#supportsRosepipe
@@ -141,10 +135,7 @@ public class AggregateImpl implements Aggregate, PortalListener {
         WindowTask task = new WindowTask(window);
 
         // 注册到相关变量中
-        synchronized (this) {
-            if (this.windows.size() == 0) {
-                this.windows = new LinkedList<Window>();
-            }
+        synchronized (windows) {
             this.windows.add(window);
         }
         this.invocation.addModel(name, window);
@@ -158,6 +149,11 @@ public class AggregateImpl implements Aggregate, PortalListener {
 
         // 返回窗口对象
         return window;
+    }
+
+    @Override
+    public List<Window> getWindows() {
+        return windows;
     }
 
     @Override
@@ -186,10 +182,10 @@ public class AggregateImpl implements Aggregate, PortalListener {
     //------------ 以下代码是PortalListener和Invocation的实现代码 --------------------------------
 
     @Override
-    public void onPortalCreated(Portal portal) {
+    public void onAggregateCreated(Aggregate aggregate) {
         if (portalListeners != null) {
             try {
-                portalListeners.onPortalCreated(portal);
+                portalListeners.onAggregateCreated(aggregate);
             } catch (Exception e) {
                 logger.error("", e);
             }
@@ -197,10 +193,10 @@ public class AggregateImpl implements Aggregate, PortalListener {
     }
 
     @Override
-    public void onPortalReady(Portal portal) {
+    public void onAggregateReady(Aggregate aggregate) {
         if (portalListeners != null) {
             try {
-                portalListeners.onPortalReady(portal);
+                portalListeners.onAggregateReady(aggregate);
             } catch (Exception e) {
                 logger.error("", e);
             }

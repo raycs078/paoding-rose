@@ -16,31 +16,31 @@
 package net.paoding.rose.web.portal;
 
 /**
- * portal以及窗口的状态侦听器
+ * aggregate以及窗口的状态侦听器
  * 
- * @see PortalListenerAdapter
- * @see PortalListeners
+ * @see AggregateListenerAdapter
+ * @see AggregateListeners
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
 public interface PortalListener {
 
     /**
-     * 在portal参数被创建的时候被调用
+     * 在aggregate参数被创建的时候被调用
      * 
-     * @param portal
+     * @param aggregate
      */
-    public void onPortalCreated(Portal portal);
+    public void onAggregateCreated(Aggregate aggregate);
 
     /**
-     * 在portal等待完所有窗口或超时后被调用
+     * 在aggregate等待完所有窗口或超时后被调用
      * 
-     * @param portal
+     * @param aggregate
      */
-    public void onPortalReady(Portal portal);
+    public void onAggregateReady(Aggregate aggregate);
 
     /**
-     * 当添加一个窗口到portal时被调用
+     * 当添加一个窗口到aggregate时被调用
      * 
      * @param window
      */
@@ -75,7 +75,7 @@ public interface PortalListener {
     public void onWindowError(Window window);
 
     /**
-     * 当portal等待窗口超时时被调用
+     * 当aggregate等待窗口超时时被调用
      * 
      * @param window
      */

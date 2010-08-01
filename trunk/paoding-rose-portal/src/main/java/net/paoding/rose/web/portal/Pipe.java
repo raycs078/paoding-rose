@@ -21,4 +21,6 @@ package net.paoding.rose.web.portal;
  * 
  */
 public interface Pipe extends Aggregate {
+
+    public Portal getPortal();
 }

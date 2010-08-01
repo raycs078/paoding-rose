@@ -110,7 +110,7 @@ public class PortalFactoryImpl implements PortalFactory, InitializingBean {
         ((InvocationBean) inv).setResponse(new PortalResponse(portal));
         inv.setAttribute("$$paoding-rose-portal.portal", portal);
 
-        portal.onPortalCreated(portal);
+        portal.onAggregateCreated(portal);
         return portal;
     }
 
@@ -121,13 +121,16 @@ public class PortalFactoryImpl implements PortalFactory, InitializingBean {
             if (create) {
                 pipe = new PipeImpl(portal, executorService, portalListener);
                 portal.getRequest().setAttribute("$$paoding-rose-portal.pipe", pipe);
+                pipe.onAggregateCreated(pipe);
             }
-        } else {
-            // TODO: 内嵌pipe的处理，new PipeImpl不能达到预期，要把注册的window集中起来，而非分散在不同的pipe中
-            if (portal != pipe.getPortal()) {
-                pipe = new PipeImpl(portal, executorService, portalListener, pipe.getFireResponse());
-                portal.getRequest().setAttribute("$$paoding-rose-portal.pipe", pipe);
-            }
+        }
+        if (pipe.getPortal() != portal) {
+            // 因为PortalWaitInterceptor的waitForPipeWindows无法良好处理
+            // 尚不支持portal/pipe转发出去的地址还使用pipe
+            // 否则，waitForPipeWindows的getWindows方法可能会有java.util.ConcurrentModificationException异常
+            throw new UnsupportedOperationException(//
+                    "Pipe is only allowed in one place for a request, "
+                            + "don't forward to path that using pipe. ");
         }
         return pipe;
     }

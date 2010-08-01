@@ -40,7 +40,7 @@ import org.apache.commons.logging.LogFactory;
  * 
  */
 
-public class PipeImpl extends AggregateImpl implements Pipe, NestedPipe {
+public class PipeImpl extends AggregateImpl implements Pipe {
 
     private static final Log logger = LogFactory.getLog(PipeImpl.class);
 
@@ -79,6 +79,7 @@ public class PipeImpl extends AggregateImpl implements Pipe, NestedPipe {
         }
     }
 
+    @Override
     public Portal getPortal() {
         return portal;
     }
@@ -87,7 +88,6 @@ public class PipeImpl extends AggregateImpl implements Pipe, NestedPipe {
         return fireResponse;
     }
 
-    @Override
     public void await(long timeout) throws InterruptedException {
         if (timeout > 0) {
             latch.await(timeout, TimeUnit.MILLISECONDS);
@@ -96,7 +96,6 @@ public class PipeImpl extends AggregateImpl implements Pipe, NestedPipe {
         }
     }
 
-    @Override
     public synchronized void start() throws IOException {
         if (logger.isDebugEnabled()) {
             logger.debug("start pipe " + getInvocation().getRequestPath().getUri());
@@ -112,7 +111,6 @@ public class PipeImpl extends AggregateImpl implements Pipe, NestedPipe {
         }
     }
 
-    @Override
     public synchronized void fire(Window window) throws IOException {
         if (!super.windows.contains(window)) {
             throw new IllegalArgumentException(//
@@ -162,7 +160,6 @@ public class PipeImpl extends AggregateImpl implements Pipe, NestedPipe {
         }
     }
 
-    @Override
     public synchronized void close() {
         if (logger.isDebugEnabled()) {
             logger.debug("close pipe " + getInvocation().getRequestPath().getUri());

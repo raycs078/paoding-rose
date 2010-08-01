@@ -23,6 +23,7 @@ import java.util.concurrent.Future;
 
 import javax.servlet.http.HttpServletResponse;
 
+import net.paoding.rose.web.portal.Aggregate;
 import net.paoding.rose.web.portal.Window;
 import net.paoding.rose.web.portal.WindowRender;
 
@@ -45,7 +46,7 @@ class WindowImpl implements Window {
 
     private String statusMessage = "";
 
-    private AggregateImpl aggregate;
+    private Aggregate aggregate;
 
     private WindowRequest request;
 
@@ -53,7 +54,7 @@ class WindowImpl implements Window {
 
     private Future<?> future;
 
-    public WindowImpl(AggregateImpl aggregate, String name, String windowPath) {
+    public WindowImpl(Aggregate aggregate, String name, String windowPath) {
         this.aggregate = aggregate;
         this.name = name;
         this.path = windowPath;
@@ -63,7 +64,7 @@ class WindowImpl implements Window {
         this.request.setAttribute("$$paoding-rose-portal.window.path", path);
     }
 
-    public AggregateImpl getAggregate() {
+    public Aggregate getAggregate() {
         return aggregate;
     }
 
