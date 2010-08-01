@@ -86,8 +86,9 @@ class WindowImpl implements Window {
     }
 
     @Override
-    public void set(String key, Object value) {
+    public Window set(String key, Object value) {
         request.setAttribute(key, value);
+        return this;
     }
 
     @Override
