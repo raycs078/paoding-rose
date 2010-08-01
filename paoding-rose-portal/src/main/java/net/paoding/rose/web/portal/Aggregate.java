@@ -30,7 +30,7 @@ import net.paoding.rose.web.Invocation;
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
-public interface Aggregate {
+public interface Aggregate extends PortalListener {
 
     /**
      * 返回这个 {@link Portal} 对象邦定的 {@link Invocation} 对象
@@ -125,7 +125,13 @@ public interface Aggregate {
      * 
      * @param timeoutInMillis 毫秒，小于或等于0表示 portal 应等待所有窗口执行完毕或被取消才最终渲染页面给用户
      */
-    public void setTimeout(long timeoutInMillis);
+    public void setTimeout(long timeoutInMills);
+
+    /**
+     * 
+     * @return
+     */
+    public long getTimeout();
 
     /**
      * 为这个portal实例注册一个侦听器

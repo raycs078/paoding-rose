@@ -28,16 +28,16 @@ public class PortalLoggerListener implements PortalListener {
     private Log logger = LogFactory.getLog(PortalLoggerListener.class);
 
     @Override
-    public void onPortalCreated(Portal portal) {
+    public void onAggregateCreated(Aggregate aggregate) {
         if (logger.isDebugEnabled()) {
-            logger.debug("onPortalCreated: " + portal);
+            logger.debug("onAggregateCreated: " + aggregate);
         }
     }
 
     @Override
-    public void onPortalReady(Portal portal) {
+    public void onAggregateReady(Aggregate aggregate) {
         if (logger.isDebugEnabled()) {
-            logger.debug("onPortalReady: " + portal);
+            logger.debug("onAggregateReady: " + aggregate);
         }
     }
 

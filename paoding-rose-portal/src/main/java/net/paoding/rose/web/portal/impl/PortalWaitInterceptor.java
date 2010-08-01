@@ -60,7 +60,9 @@ public class PortalWaitInterceptor extends ControllerInterceptorAdapter {
             logger.debug(portal + " is going to wait windows.");
         }
         //
-        waitForWindows(portal, (PortalListener) portal);
+        waitForWindows(portal);
+
+        waitForPipeWindows(portal);
 
         //
         if (logger.isDebugEnabled()) {
@@ -70,9 +72,9 @@ public class PortalWaitInterceptor extends ControllerInterceptorAdapter {
         return instruction;
     }
 
-    protected void waitForWindows(PortalImpl portal, PortalListener listener)
-            throws InterruptedException {
+    private void waitForWindows(PortalImpl portal) throws InterruptedException {
         boolean debugEnabled = logger.isDebugEnabled();
+        PortalListener listener = portal;
         long deadline;
         long begin = System.currentTimeMillis();
         if (portal.getTimeout() > 0) {
@@ -162,13 +164,17 @@ public class PortalWaitInterceptor extends ControllerInterceptorAdapter {
         if (debugEnabled) {
             logger.debug("[" + winIndex + "/" + winSize + "] size of simple windows = " + winIndex);
         }
-        listener.onPortalReady(portal);
+        listener.onAggregateReady(portal);
 
+    }
+
+    private void waitForPipeWindows(PortalImpl portal) throws InterruptedException {
         // codes for fix this exception: "Cannot forward after response has been committed"
         // @see RoseFilter#supportsRosepipe
         // @see PortalImpl#addWindow
         Pipe pipe = PortalUtils.getPipe(portal.getRequest());
-        if (pipe != null) {
+        if (pipe != null && pipe.getPortal() == portal) {
+            boolean debugEnabled = logger.isDebugEnabled();
             for (Window window : pipe.getWindows()) {
                 if (window.getRequest().getAttribute(RoseConstants.PIPE_WINDOW_IN) != Boolean.TRUE) {
                     if (debugEnabled) {
@@ -194,6 +200,10 @@ public class PortalWaitInterceptor extends ControllerInterceptorAdapter {
             }
             return;
         }
+        Portal portal = PortalUtils.getPortal(inv);
+        if (portal != pipe.getPortal()) {
+            return;
+        }
         if (ex != null) {
             if (logger.isDebugEnabled()) {
                 logger.debug("close the pipe and returen because of exception previous.");
@@ -203,6 +213,7 @@ public class PortalWaitInterceptor extends ControllerInterceptorAdapter {
         }
 
         pipe.start();
+        pipe.onAggregateReady(pipe);
 
         if (pipe.getTimeout() >= 0) {
             if (logger.isDebugEnabled()) {

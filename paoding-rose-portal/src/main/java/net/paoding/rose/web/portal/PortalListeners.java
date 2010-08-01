@@ -45,16 +45,16 @@ public class PortalListeners implements PortalListener {
     }
 
     @Override
-    public void onPortalCreated(Portal portal) {
+    public void onAggregateCreated(Aggregate portal) {
         for (PortalListener l : listeners) {
-            l.onPortalCreated(portal);
+            l.onAggregateCreated(portal);
         }
     }
 
     @Override
-    public void onPortalReady(Portal portal) {
+    public void onAggregateReady(Aggregate portal) {
         for (PortalListener l : listeners) {
-            l.onPortalReady(portal);
+            l.onAggregateReady(portal);
         }
     }
 
@@ -99,5 +99,6 @@ public class PortalListeners implements PortalListener {
             l.onWindowTimeout(window);
         }
     }
+
 
 }
