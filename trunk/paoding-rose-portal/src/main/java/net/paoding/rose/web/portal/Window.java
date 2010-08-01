@@ -1,5 +1,5 @@
 /*
- * Copyright 2007-2009 the original author or authors.
+ * Copyright 2007-2010 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -138,7 +138,7 @@ public interface Window {
      * @param key
      * @param value
      */
-    public void set(String key, Object value);
+    public Window set(String key, Object value);
 
     /**
      * 获取设置到窗口的属性
