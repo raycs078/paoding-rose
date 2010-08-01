@@ -31,6 +31,7 @@ import net.paoding.rose.web.portal.Portal;
 import net.paoding.rose.web.portal.PortalListener;
 import net.paoding.rose.web.portal.PortalListeners;
 import net.paoding.rose.web.portal.Window;
+import net.paoding.rose.web.portal.WindowCallback;
 import net.paoding.rose.web.portal.WindowRender;
 
 import org.apache.commons.logging.Log;
@@ -105,31 +106,41 @@ public class AggregateImpl implements Aggregate, PortalListener {
     @Override
     public Window addWindow(String windowPath) {
         String windowName = windowPath;
-        return this.addWindow(windowName, windowPath);
+        return this.addWindow(windowName, windowPath, (WindowCallback) null);
     }
 
     @Override
     public Window addWindow(String name, String windowPath) {
-        return this.addWindow(name, windowPath, (Map<String, Object>) null);
+        return this.addWindow(name, windowPath, (WindowCallback) null);
     }
 
     @Override
-    public Window addWindow(String name, String windowPath, Map<String, Object> attributes) {
+    public Window addWindow(String name, String windowPath, final Map<String, Object> attributes) {
+        WindowCallback callback = null;
+        if (attributes != null && attributes.size() > 0) {
+            callback = new WindowCallback() {
+
+                @Override
+                public void beforeSubmit(Window window) {
+                    synchronized (attributes) {
+                        for (Map.Entry<String, Object> entry : attributes.entrySet()) {
+                            window.set(entry.getKey(), entry.getValue());
+                        }
+                    }
+                }
+            };
+        }
+        return this.addWindow(name, windowPath, callback);
+    }
+
+    @Override
+    public Window addWindow(String name, String windowPath, WindowCallback callback) {
         // 创建 窗口对象
         WindowImpl window = new WindowImpl(this, name, windowPath);
 
         // PortalWaitInterceptor#waitForWindows
         // RoseFilter#supportsRosepipe
         window.getRequest().removeAttribute(RoseConstants.PIPE_WINDOW_IN);
-
-        //
-        if (attributes != null) {
-            synchronized (attributes) {
-                for (Map.Entry<String, Object> entry : attributes.entrySet()) {
-                    window.set(entry.getKey(), entry.getValue());
-                }
-            }
-        }
 
         // 定义窗口任务
         WindowTask task = new WindowTask(window);
@@ -139,6 +150,10 @@ public class AggregateImpl implements Aggregate, PortalListener {
             this.windows.add(window);
         }
         this.invocation.addModel(name, window);
+
+        if (callback != null) {
+            callback.beforeSubmit(window);
+        }
 
         // 事件侦听回调
         onWindowAdded(window);

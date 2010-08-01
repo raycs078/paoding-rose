@@ -102,6 +102,15 @@ public interface Aggregate extends PortalListener {
     public Window addWindow(String name, String windowPath, Map<String, Object> attributes);
 
     /**
+     * 
+     * @param name
+     * @param windowPath
+     * @param callback
+     * @return
+     */
+    public Window addWindow(String name, String windowPath, WindowCallback callback);
+
+    /**
      * 返回添加到这个 {@link Portal} 上的窗口，包含普通窗口和pipe窗口等
      * 
      * @return
