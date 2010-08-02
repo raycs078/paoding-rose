@@ -15,8 +15,6 @@
  */
 package net.paoding.rose.web.portal;
 
-import javax.servlet.http.HttpServletRequest;
-
 import net.paoding.rose.RoseConstants;
 import net.paoding.rose.web.Invocation;
 
@@ -33,14 +31,14 @@ public class PortalUtils {
         return (Window) inv.getRequest().getAttribute(RoseConstants.WINDOW_ATTR);
     }
 
-    public static Portal getPortal(Invocation inv) {
+    public static ServerPortal getPortal(Invocation inv) {
         // get from invocation attributes
         // @see PortalResolver#resolve
-        return (Portal) inv.getAttribute("$$paoding-rose-portal.portal");
+        return (ServerPortal) inv.getAttribute("$$paoding-rose-portal.portal");
     }
 
-    public static Pipe getPipe(HttpServletRequest request) {
-        // get from request attributes
-        return (Pipe) request.getAttribute("$$paoding-rose-portal.pipe");
+    public static Pipe getPipe(Invocation inv) {
+        // get from head invocation attributes
+        return (Pipe) inv.getHeadInvocation().getAttribute("$$paoding-rose-portal.pipe");
     }
 }

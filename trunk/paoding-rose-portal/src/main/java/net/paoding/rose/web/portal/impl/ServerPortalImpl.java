@@ -18,18 +18,18 @@ package net.paoding.rose.web.portal.impl;
 import java.util.concurrent.ExecutorService;
 
 import net.paoding.rose.web.Invocation;
-import net.paoding.rose.web.portal.Portal;
+import net.paoding.rose.web.portal.ServerPortal;
 import net.paoding.rose.web.portal.PortalListener;
 
 /**
- * {@link Portal} 的实现类，Portal 框架的核心类。
+ * {@link ServerPortal} 的实现类，Portal 框架的核心类。
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
-public class PortalImpl extends AggregateImpl implements Portal, PortalListener {
+public class ServerPortalImpl extends AbstractPortal implements ServerPortal, PortalListener {
 
-    public PortalImpl(Invocation inv, ExecutorService executorService, PortalListener portalListener) {
+    public ServerPortalImpl(Invocation inv, ExecutorService executorService, PortalListener portalListener) {
         super(inv, executorService, portalListener);
     }
 

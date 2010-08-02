@@ -45,16 +45,16 @@ public class PortalListeners implements PortalListener {
     }
 
     @Override
-    public void onAggregateCreated(Aggregate portal) {
+    public void onPortalCreated(Portal portal) {
         for (PortalListener l : listeners) {
-            l.onAggregateCreated(portal);
+            l.onPortalCreated(portal);
         }
     }
 
     @Override
-    public void onAggregateReady(Aggregate portal) {
+    public void onPortalReady(Portal portal) {
         for (PortalListener l : listeners) {
-            l.onAggregateReady(portal);
+            l.onPortalReady(portal);
         }
     }
 

@@ -16,14 +16,12 @@
 package net.paoding.rose.web.portal.impl;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Map;
 import java.util.concurrent.Future;
 
 import javax.servlet.http.HttpServletResponse;
 
-import net.paoding.rose.web.portal.Aggregate;
 import net.paoding.rose.web.portal.Window;
 import net.paoding.rose.web.portal.WindowRender;
 
@@ -46,7 +44,7 @@ class WindowImpl implements Window {
 
     private String statusMessage = "";
 
-    private Aggregate aggregate;
+    private AbstractPortal portal;
 
     private WindowRequest request;
 
@@ -54,18 +52,18 @@ class WindowImpl implements Window {
 
     private Future<?> future;
 
-    public WindowImpl(Aggregate aggregate, String name, String windowPath) {
-        this.aggregate = aggregate;
+    public WindowImpl(AbstractPortal portal, String name, String windowPath) {
+        this.portal = portal;
         this.name = name;
         this.path = windowPath;
-        this.request = new WindowRequest(this, aggregate.getRequest());
+        this.request = new WindowRequest(this, portal.getRequest());
         this.response = new WindowResponse(this);
         this.request.setAttribute("$$paoding-rose-portal.window.name", name);
         this.request.setAttribute("$$paoding-rose-portal.window.path", path);
     }
 
-    public Aggregate getAggregate() {
-        return aggregate;
+    public AbstractPortal getPortal() {
+        return portal;
     }
 
     public WindowRequest getRequest() {
@@ -121,13 +119,13 @@ class WindowImpl implements Window {
     }
 
     public String getOutputContent() {
-        WindowRender render = aggregate.getWindowRender();
+        WindowRender render = portal.getWindowRender();
         if (render == null) {
             return getContent();
         }
         StringWriter stringWriter = new StringWriter(getContent().length() << 1);
         try {
-            render.render(this, new PrintWriter(stringWriter));
+            render.render(this, stringWriter);
         } catch (IOException e) {
             throw new IllegalArgumentException(e);
         }

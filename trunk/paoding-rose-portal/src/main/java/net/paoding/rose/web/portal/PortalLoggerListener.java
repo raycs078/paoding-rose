@@ -28,59 +28,59 @@ public class PortalLoggerListener implements PortalListener {
     private Log logger = LogFactory.getLog(PortalLoggerListener.class);
 
     @Override
-    public void onAggregateCreated(Aggregate aggregate) {
+    public void onPortalCreated(Portal portal) {
         if (logger.isDebugEnabled()) {
-            logger.debug("onAggregateCreated: " + aggregate);
+            logger.debug("onPortalCreated: " + portal);
         }
     }
 
     @Override
-    public void onAggregateReady(Aggregate aggregate) {
+    public void onPortalReady(Portal portal) {
         if (logger.isDebugEnabled()) {
-            logger.debug("onAggregateReady: " + aggregate);
+            logger.debug("onPortalReady: " + portal);
         }
     }
 
     @Override
     public void onWindowAdded(Window window) {
         if (logger.isDebugEnabled()) {
-            logger.debug("onWindowAdded: [" + window.getName() + "]@" + window.getAggregate());
+            logger.debug("onWindowAdded: [" + window.getName() + "]@" + window.getPortal());
         }
     }
 
     @Override
     public void onWindowCanceled(Window window) {
         if (logger.isDebugEnabled()) {
-            logger.debug("onWindowCanceled: [" + window.getName() + "]@" + window.getAggregate());
+            logger.debug("onWindowCanceled: [" + window.getName() + "]@" + window.getPortal());
         }
     }
 
     @Override
     public void onWindowDone(Window window) {
         if (logger.isDebugEnabled()) {
-            logger.debug("onWindowDone: [" + window.getName() + "]@" + window.getAggregate());
+            logger.debug("onWindowDone: [" + window.getName() + "]@" + window.getPortal());
         }
     }
 
     @Override
     public void onWindowError(Window window) {
         if (logger.isDebugEnabled()) {
-            logger.debug("onWindowError: [" + window.getName() + "]@" + window.getAggregate(),
-                    window.getThrowable());
+            logger.debug("onWindowError: [" + window.getName() + "]@" + window.getPortal(), window
+                    .getThrowable());
         }
     }
 
     @Override
     public void onWindowStarted(Window window) {
         if (logger.isDebugEnabled()) {
-            logger.debug("onWindowStarted: [" + window.getName() + "]@" + window.getAggregate());
+            logger.debug("onWindowStarted: [" + window.getName() + "]@" + window.getPortal());
         }
     }
 
     @Override
     public void onWindowTimeout(Window window) {
         if (logger.isDebugEnabled()) {
-            logger.debug("onWindowTimeout: [" + window.getName() + "]@" + window.getAggregate());
+            logger.debug("onWindowTimeout: [" + window.getName() + "]@" + window.getPortal());
         }
     }
 }

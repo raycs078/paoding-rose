@@ -51,7 +51,7 @@ public interface Window {
      * 
      * @return
      */
-    public Aggregate getAggregate();
+    public Portal getPortal();
 
     /**
      * 返回该window所使用的request对象
@@ -103,7 +103,7 @@ public interface Window {
     /**
      * 返回创建该窗口时所设置的名字，这个窗口对象将以这个名字设置在所在portal的model中
      * 
-     * @see Portal#addWindow(String, String)
+     * @see ServerPortal#addWindow(String, String)
      * @return
      */
     public String getName();
@@ -111,7 +111,7 @@ public interface Window {
     /**
      * 返回创建该窗口时所设置的地址，这个窗口将代表这个地址的资源/动作。
      * 
-     * @see Portal#addWindow(String, String)
+     * @see ServerPortal#addWindow(String, String)
      * @return
      */
     public String getPath();

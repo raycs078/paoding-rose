@@ -15,9 +15,13 @@
  */
 package net.paoding.rose.web.portal.impl;
 
+import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
 
-import net.paoding.rose.web.portal.Portal;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import net.paoding.rose.web.portal.ServerPortal;
 
 /**
  * 
@@ -26,15 +30,25 @@ import net.paoding.rose.web.portal.Portal;
  */
 class PortalResponse extends HttpServletResponseWrapper {
 
-    private Portal portal;
+    private static final Log logger = LogFactory.getLog(PortalResponse.class);
 
-    public PortalResponse(Portal portal) {
+    private ServerPortal portal;
+
+    public PortalResponse(ServerPortal portal) {
         super(portal.getResponse());
         this.portal = portal;
     }
 
-    public Portal getPortal() {
+    public ServerPortal getPortal() {
         return portal;
+    }
+
+    @Override
+    public void setResponse(ServletResponse response) {
+        if (logger.isDebugEnabled()) {
+            logger.debug(String.format("set response: %s", response));
+        }
+        super.setResponse(response);
     }
 
     // header设置可能因并发而冲突，故作同步化

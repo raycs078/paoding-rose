@@ -160,7 +160,7 @@ class WindowRequest extends HttpServletRequestWrapper {
     public HttpSession getSession() {
         HttpSession session = super.getSession(false);
         if (session == null) {
-            if (!window.getAggregate().getInvocation().getResponse().isCommitted()) {
+            if (!window.getPortal().getInvocation().getResponse().isCommitted()) {
                 try {
                     session = super.getSession();
                 } catch (IllegalStateException e) {

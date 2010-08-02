@@ -20,6 +20,7 @@ import net.paoding.rose.web.paramresolver.ParamMetaData;
 import net.paoding.rose.web.paramresolver.ParamResolver;
 import net.paoding.rose.web.portal.Portal;
 import net.paoding.rose.web.portal.PortalFactory;
+import net.paoding.rose.web.portal.ServerPortal;
 
 /**
  * 
@@ -43,11 +44,12 @@ public class PortalResolver implements ParamResolver {
         if (portalFactory == null) {
             return false;
         }
-        return paramMetaData.getParamType() == Portal.class;
+        return paramMetaData.getParamType() == Portal.class
+                || paramMetaData.getParamType() == ServerPortal.class;
     }
 
     @Override
-    public Portal resolve(Invocation inv, ParamMetaData paramMetaData) throws Exception {
+    public ServerPortal resolve(Invocation inv, ParamMetaData paramMetaData) throws Exception {
         return portalFactory.createPortal(inv);
     }
 

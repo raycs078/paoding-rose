@@ -28,16 +28,16 @@ public interface PortalListener {
     /**
      * 在aggregate参数被创建的时候被调用
      * 
-     * @param aggregate
+     * @param portal
      */
-    public void onAggregateCreated(Aggregate aggregate);
+    public void onPortalCreated(Portal portal);
 
     /**
      * 在aggregate等待完所有窗口或超时后被调用
      * 
-     * @param aggregate
+     * @param portal
      */
-    public void onAggregateReady(Aggregate aggregate);
+    public void onPortalReady(Portal portal);
 
     /**
      * 当添加一个窗口到aggregate时被调用

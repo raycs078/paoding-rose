@@ -17,8 +17,8 @@ package net.paoding.rose.web.portal.impl;
 
 import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.portal.Pipe;
-import net.paoding.rose.web.portal.Portal;
 import net.paoding.rose.web.portal.PortalFactory;
+import net.paoding.rose.web.portal.ServerPortal;
 
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
@@ -47,13 +47,13 @@ public class PortalFactoryDelegate implements PortalFactory, ApplicationContextA
     }
 
     @Override
-    public Portal createPortal(Invocation inv) {
+    public ServerPortal createPortal(Invocation inv) {
         return getPortalFactory().createPortal(inv);
     }
 
     @Override
-    public Pipe createPipe(Portal portal, boolean create) {
-        return getPortalFactory().createPipe(portal, create);
+    public Pipe createPipe(Invocation inv, boolean create) {
+        return getPortalFactory().createPipe(inv, create);
     }
 
     protected PortalFactory getPortalFactory() {

@@ -49,7 +49,7 @@ final class WindowTask implements Runnable {
     public void run() {
         try {
             // started
-            window.getAggregate().onWindowStarted(window);
+            window.getPortal().onWindowStarted(window);
 
             // doRequest
             final WindowRequest request = window.getRequest();
@@ -58,19 +58,19 @@ final class WindowTask implements Runnable {
             if (window.getResponse().isCommitted()) {
                 if (logger.isDebugEnabled()) {
                     logger.debug("onWindowTimeout: response has committed. [" + window.getName()
-                            + "]@" + window.getAggregate());
+                            + "]@" + window.getPortal());
                 }
-                window.getAggregate().onWindowTimeout(window);
+                window.getPortal().onWindowTimeout(window);
                 return;
             }
             rd.forward(request, window.getResponse());
 
             // done!
-            window.getAggregate().onWindowDone(window);
+            window.getPortal().onWindowDone(window);
         } catch (Throwable e) {
             logger.error("", e);
             window.setThrowable(e);
-            window.getAggregate().onWindowError(window);
+            window.getPortal().onWindowError(window);
         }
     }
 
