@@ -23,12 +23,12 @@ package net.paoding.rose.web.portal;
 public abstract class PortalListenerAdapter implements PortalListener {
 
     @Override
-    public void onAggregateCreated(Aggregate aggreate) {
+    public void onPortalCreated(Portal portal) {
 
     }
 
     @Override
-    public void onAggregateReady(Aggregate aggreate) {
+    public void onPortalReady(Portal portal) {
 
     }
 

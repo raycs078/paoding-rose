@@ -44,7 +44,7 @@ class WindowResponse extends HttpServletResponseWrapper {
     private String charset;
 
     public WindowResponse(WindowImpl window) {
-        super(window.getAggregate().getResponse());
+        super(window.getPortal().getResponse());
         this.window = window;
     }
 
@@ -110,14 +110,14 @@ class WindowResponse extends HttpServletResponseWrapper {
 
     @Override
     public void setHeader(String name, String value) {
-        synchronized (window.getAggregate()) {
+        synchronized (window.getPortal()) {
             super.setHeader(name, value);
         }
     }
 
     @Override
     public void addHeader(String name, String value) {
-        synchronized (window.getAggregate()) {
+        synchronized (window.getPortal()) {
             super.addHeader(name, value);
         }
     }

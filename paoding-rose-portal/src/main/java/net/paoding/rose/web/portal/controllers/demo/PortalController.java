@@ -15,7 +15,7 @@
  */
 package net.paoding.rose.web.portal.controllers.demo;
 
-import net.paoding.rose.web.portal.Portal;
+import net.paoding.rose.web.portal.ServerPortal;
 import net.paoding.rose.web.portal.PortalSetting;
 
 /**
@@ -26,7 +26,7 @@ import net.paoding.rose.web.portal.PortalSetting;
 public class PortalController {
 
     @PortalSetting(timeout = 100)
-    public String home(Portal portal) throws Exception {
+    public String home(ServerPortal portal) throws Exception {
         portal.addWindow("content1", "/test/uri?abc=asd");
         portal.addWindow("content2", "/test/uri?abc=asd");
         portal.addWindow("content3", "/test/uri?abc=asd");

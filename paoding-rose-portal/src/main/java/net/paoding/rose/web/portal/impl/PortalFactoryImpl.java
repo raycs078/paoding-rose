@@ -20,10 +20,10 @@ import java.util.concurrent.ExecutorService;
 import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.impl.thread.InvocationBean;
 import net.paoding.rose.web.portal.Pipe;
-import net.paoding.rose.web.portal.Portal;
 import net.paoding.rose.web.portal.PortalFactory;
 import net.paoding.rose.web.portal.PortalListener;
 import net.paoding.rose.web.portal.PortalSetting;
+import net.paoding.rose.web.portal.ServerPortal;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -43,7 +43,7 @@ import org.springframework.util.Assert;
  * 
  * 可选设置 {@link PortalListener} 来获知portal的创建以及窗口的创建、执行等状态信息。
  * 
- * @see PortalImpl
+ * @see ServerPortalImpl
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
@@ -82,12 +82,13 @@ public class PortalFactoryImpl implements PortalFactory, InitializingBean {
     }
 
     @Override
-    public Portal createPortal(Invocation inv) {
-        PortalImpl portal = (PortalImpl) inv.getAttribute("$$paoding-rose-portal.portal");
+    public ServerPortal createPortal(Invocation inv) {
+        ServerPortalImpl portal = (ServerPortalImpl) inv
+                .getAttribute("$$paoding-rose-portal.portal");
         if (portal != null) {
             return portal;
         }
-        portal = new PortalImpl(inv, executorService, portalListener);
+        portal = new ServerPortalImpl(inv, executorService, portalListener);
         //
         long timeout = 0;
         PortalSetting portalSetting = inv.getMethod().getAnnotation(PortalSetting.class);
@@ -110,21 +111,20 @@ public class PortalFactoryImpl implements PortalFactory, InitializingBean {
         ((InvocationBean) inv).setResponse(new PortalResponse(portal));
         inv.setAttribute("$$paoding-rose-portal.portal", portal);
 
-        portal.onAggregateCreated(portal);
+        portal.onPortalCreated(portal);
         return portal;
     }
 
     @Override
-    public Pipe createPipe(Portal portal, boolean create) {
-        PipeImpl pipe = (PipeImpl) portal.getRequest().getAttribute("$$paoding-rose-portal.pipe");
+    public Pipe createPipe(Invocation inv, boolean create) {
+        PipeImpl pipe = (PipeImpl) inv.getHeadInvocation().getAttribute("$$paoding-rose-portal.pipe");
         if (pipe == null) {
             if (create) {
-                pipe = new PipeImpl(portal, executorService, portalListener);
-                portal.getRequest().setAttribute("$$paoding-rose-portal.pipe", pipe);
-                pipe.onAggregateCreated(pipe);
+                pipe = new PipeImpl(inv, executorService, portalListener);
+                inv.getHeadInvocation().setAttribute("$$paoding-rose-portal.pipe", pipe);
+                pipe.onPortalCreated(pipe);
             }
-        }
-        if (pipe.getPortal() != portal) {
+        } else if (pipe.getInvocation() != inv) {
             // 因为PortalWaitInterceptor的waitForPipeWindows无法良好处理
             // 尚不支持portal/pipe转发出去的地址还使用pipe
             // 否则，waitForPipeWindows的getWindows方法可能会有java.util.ConcurrentModificationException异常

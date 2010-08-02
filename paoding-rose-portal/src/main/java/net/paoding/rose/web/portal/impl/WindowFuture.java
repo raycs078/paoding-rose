@@ -57,7 +57,7 @@ class WindowFuture<T> implements Future<T> {
             }
         }
         if (future.cancel(mayInterruptIfRunning)) {
-            ((PortalListener) window.getAggregate()).onWindowCanceled(window);
+            ((PortalListener) window.getPortal()).onWindowCanceled(window);
             return true;
         }
         return false;

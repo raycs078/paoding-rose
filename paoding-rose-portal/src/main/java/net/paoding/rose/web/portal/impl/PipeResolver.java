@@ -48,7 +48,7 @@ public class PipeResolver implements ParamResolver {
 
     @Override
     public Pipe resolve(Invocation inv, ParamMetaData paramMetaData) throws Exception {
-        return portalFactory.createPipe(portalFactory.createPortal(inv), true);
+        return portalFactory.createPipe(inv, true);
     }
 
 }

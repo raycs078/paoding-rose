@@ -16,17 +16,15 @@
 package net.paoding.rose.web.portal.impl;
 
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import javax.servlet.http.HttpServletResponse;
-
+import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.portal.Pipe;
-import net.paoding.rose.web.portal.Portal;
 import net.paoding.rose.web.portal.PortalListener;
 import net.paoding.rose.web.portal.PortalListenerAdapter;
 import net.paoding.rose.web.portal.Window;
@@ -40,7 +38,7 @@ import org.apache.commons.logging.LogFactory;
  * 
  */
 
-public class PipeImpl extends AggregateImpl implements Pipe {
+public class PipeImpl extends AbstractPortal implements Pipe {
 
     private static final Log logger = LogFactory.getLog(PipeImpl.class);
 
@@ -48,22 +46,13 @@ public class PipeImpl extends AggregateImpl implements Pipe {
 
     private CountDownLatch latch;
 
-    private final HttpServletResponse fireResponse;
-
     // 暂时阻塞的窗口
     private List<Window> blocking;
 
-    private Portal portal;
+    private Writer out;
 
-    public PipeImpl(Portal portal, ExecutorService executorService, PortalListener portalListener) {
-        this(portal, executorService, portalListener, portal.getResponse());
-    }
-
-    public PipeImpl(Portal portal, ExecutorService executorService, PortalListener portalListener,
-            HttpServletResponse fireResponse) {
-        super(portal.getInvocation(), executorService, portalListener);
-        this.fireResponse = fireResponse;
-        this.portal = portal;
+    public PipeImpl(Invocation inv, ExecutorService executorService, PortalListener portalListener) {
+        super(inv, executorService, portalListener);
         addListener(new FireListener());
     }
 
@@ -72,37 +61,59 @@ public class PipeImpl extends AggregateImpl implements Pipe {
         @Override
         public void onWindowDone(Window window) {
             try {
-                fire(window);
+                PipeImpl.this.fire(window);
             } catch (IOException e) {
                 logger.error("", e);
             }
         }
     }
 
-    @Override
-    public Portal getPortal() {
-        return portal;
+    public synchronized boolean isStarted() {
+        return out != null;
     }
 
-    public HttpServletResponse getFireResponse() {
-        return fireResponse;
-    }
+    public void write(Writer out) throws IOException {
+        if (isStarted()) {
+            if (logger.isDebugEnabled()) {
+                logger.debug(this + " has been started yet.");
+            }
+            return;
+        }
+        doStart(out);
+        onPortalReady(this);;
+        if (getTimeout() >= 0) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("waiting for pipe windows up to " + getTimeout() + "ms");
+            }
+            long start = System.currentTimeMillis();
+            try {
+                await(getTimeout());
+            } catch (InterruptedException e) {
+                logger.error("pipe was interrupted", e);
+            }
+            long cost = System.currentTimeMillis() - start;
 
-    public void await(long timeout) throws InterruptedException {
-        if (timeout > 0) {
-            latch.await(timeout, TimeUnit.MILLISECONDS);
+            if (logger.isDebugEnabled()) {
+                logger.debug("it takes " + cost + "ms for pipe windows.");
+            }
         } else {
-            latch.await();
+            if (logger.isDebugEnabled()) {
+                logger.debug("there's no time to wait pipe windows.");
+            }
         }
     }
 
-    public synchronized void start() throws IOException {
+    private synchronized void doStart(Writer writer) throws IOException {
+        if (this.out != null) {
+            throw new IllegalStateException("has been started.");
+        }
+        this.out = writer;
         if (logger.isDebugEnabled()) {
             logger.debug("start pipe " + getInvocation().getRequestPath().getUri());
         }
-        state = 1;
-        fireResponse.flushBuffer();
+        writer.flush();
         latch = new CountDownLatch(windows.size());
+        state = 1;
         if (blocking != null) {
             for (Window window : blocking) {
                 doFire(window);
@@ -111,7 +122,15 @@ public class PipeImpl extends AggregateImpl implements Pipe {
         }
     }
 
-    public synchronized void fire(Window window) throws IOException {
+    private void await(long timeout) throws InterruptedException {
+        if (timeout > 0) {
+            latch.await(timeout, TimeUnit.MILLISECONDS);
+        } else {
+            latch.await();
+        }
+    }
+
+    private synchronized void fire(Window window) throws IOException {
         if (!super.windows.contains(window)) {
             throw new IllegalArgumentException(//
                     "not a register piped window '" + window.getName() + "'");
@@ -142,14 +161,13 @@ public class PipeImpl extends AggregateImpl implements Pipe {
         }
     }
 
-    protected synchronized void doFire(Window window) throws IOException {
+    private synchronized void doFire(Window window) throws IOException {
         if (state != 1) {
             throw new IllegalStateException("only avalabled when started.");
         }
         try {
             // 这里不用设置response的encoding，即使用和主控一致的encoding
-            PrintWriter out = fireResponse.getWriter();
-            out.println(window.getOutputContent());
+            out.append(window.getOutputContent());
             out.flush();
         } finally {
             latch.countDown();
@@ -158,13 +176,6 @@ public class PipeImpl extends AggregateImpl implements Pipe {
             logger.debug(//
                     "firing '" + window.getName() + "' : done  content=" + window.getContent());
         }
-    }
-
-    public synchronized void close() {
-        if (logger.isDebugEnabled()) {
-            logger.debug("close pipe " + getInvocation().getRequestPath().getUri());
-        }
-        this.state = -1;
     }
 
     //-------------实现toString()---------------F

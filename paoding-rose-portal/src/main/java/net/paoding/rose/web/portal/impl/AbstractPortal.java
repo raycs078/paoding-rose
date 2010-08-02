@@ -26,8 +26,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import net.paoding.rose.RoseConstants;
 import net.paoding.rose.web.Invocation;
-import net.paoding.rose.web.portal.Aggregate;
 import net.paoding.rose.web.portal.Portal;
+import net.paoding.rose.web.portal.ServerPortal;
 import net.paoding.rose.web.portal.PortalListener;
 import net.paoding.rose.web.portal.PortalListeners;
 import net.paoding.rose.web.portal.Window;
@@ -38,14 +38,14 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * {@link Portal} 的实现类，Portal 框架的核心类。
+ * {@link ServerPortal} 的实现类，Portal 框架的核心类。
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
-public class AggregateImpl implements Aggregate, PortalListener {
+public abstract class AbstractPortal implements Portal, PortalListener {
 
-    private static final Log logger = LogFactory.getLog(AggregateImpl.class);
+    private static final Log logger = LogFactory.getLog(AbstractPortal.class);
 
     protected ExecutorService executorService;
 
@@ -59,7 +59,7 @@ public class AggregateImpl implements Aggregate, PortalListener {
 
     protected long timeout;
 
-    public AggregateImpl(Invocation inv, ExecutorService executorService,
+    public AbstractPortal(Invocation inv, ExecutorService executorService,
             PortalListener portalListener) {
         this.invocation = inv;
         this.executorService = executorService;
@@ -197,10 +197,10 @@ public class AggregateImpl implements Aggregate, PortalListener {
     //------------ 以下代码是PortalListener和Invocation的实现代码 --------------------------------
 
     @Override
-    public void onAggregateCreated(Aggregate aggregate) {
+    public void onPortalCreated(Portal portal) {
         if (portalListeners != null) {
             try {
-                portalListeners.onAggregateCreated(aggregate);
+                portalListeners.onPortalCreated(portal);
             } catch (Exception e) {
                 logger.error("", e);
             }
@@ -208,10 +208,10 @@ public class AggregateImpl implements Aggregate, PortalListener {
     }
 
     @Override
-    public void onAggregateReady(Aggregate aggregate) {
+    public void onPortalReady(Portal portal) {
         if (portalListeners != null) {
             try {
-                portalListeners.onAggregateReady(aggregate);
+                portalListeners.onPortalReady(portal);
             } catch (Exception e) {
                 logger.error("", e);
             }

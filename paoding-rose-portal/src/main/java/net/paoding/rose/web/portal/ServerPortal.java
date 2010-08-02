@@ -1,5 +1,5 @@
 /*
- * Copyright 2007-2010 the original author or authors.
+ * Copyright 2007-2009 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,24 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.paoding.rose.web.portal.impl;
+package net.paoding.rose.web.portal;
 
-import java.io.IOException;
-import java.io.Writer;
-
-import net.paoding.rose.web.portal.Window;
-import net.paoding.rose.web.portal.WindowRender;
+import javax.servlet.http.HttpServletRequest;
 
 /**
+ * 一个 {@link ServerPortal} 对象邦定在 {@link HttpServletRequest} 之上，提供了 portal
+ * 框架的编程接口。通过多次调用 {@link #addWindow(String, String)} 接口来为一个 portal 增加窗口。
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
-public class SimpleWindowRender implements WindowRender {
-
-    @Override
-    public void render(Window window, Writer out) throws IOException {
-        out.append(window.getContent());
-    }
+public interface ServerPortal extends Portal {
 
 }
