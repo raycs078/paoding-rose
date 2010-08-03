@@ -15,7 +15,6 @@
  */
 package net.paoding.rose.web.portal;
 
-
 /**
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
@@ -23,4 +22,35 @@ package net.paoding.rose.web.portal;
  */
 public interface Pipe extends Portal {
 
+    public static final String WINDIW_JS = "$$paoding-rose-portal.pipe.js";
+
+    public static final String WINDOW_CSS = "$$paoding-rose-portal.pipe.css";
+
+    /**
+     * 
+     * @param window
+     * @param cssStringOrObjectOrCollection
+     */
+    public void addCssTo(Window window, Object cssStringOrObjectOrCollection);
+
+    /**
+     * 
+     * @param window
+     * @param cssStringOrObjectOrCollection
+     */
+    public void addCssTo(String windowName, Object cssStringOrObjectOrCollection);
+
+    /**
+     * 
+     * @param windowName
+     * @param jsStringOrObjectOrCollection
+     */
+    public void addJsTo(String windowName, Object jsStringOrObjectOrCollection);
+
+    /**
+     * 
+     * @param window
+     * @param jsStringOrObjectOrCollection
+     */
+    public void addJsTo(Window window, Object jsStringOrObjectOrCollection);
 }
