@@ -18,6 +18,7 @@ package net.paoding.rose.web.portal.impl;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -42,6 +43,8 @@ public class PipeImpl extends AbstractPortal implements Pipe {
 
     private static final Log logger = LogFactory.getLog(PipeImpl.class);
 
+    private static final DefaultPipeRender defaultPipeRender = new DefaultPipeRender();
+
     private int state = 0;
 
     private CountDownLatch latch;
@@ -53,6 +56,7 @@ public class PipeImpl extends AbstractPortal implements Pipe {
 
     public PipeImpl(Invocation inv, ExecutorService executorService, PortalListener portalListener) {
         super(inv, executorService, portalListener);
+        setWindowRender(defaultPipeRender);
         addListener(new FireListener());
     }
 
@@ -65,6 +69,56 @@ public class PipeImpl extends AbstractPortal implements Pipe {
             } catch (IOException e) {
                 logger.error("", e);
             }
+        }
+    }
+
+    @Override
+    public void addCssTo(String windowName, Object cssStringOrObjectOrCollection) {
+        for (Window window : windows) {
+            if (window.getName().equals(windowName)) {
+                addCssTo(window, cssStringOrObjectOrCollection);
+                return;
+            }
+        }
+    }
+
+    @Override
+    public void addCssTo(Window window, Object cssStringOrObjectOrCollection) {
+        @SuppressWarnings("unchecked")
+        List<Object> list = (List<Object>) window.get(WINDOW_CSS);
+        if (list == null) {
+            list = new ArrayList<Object>(4);
+            window.set(WINDOW_CSS, list);
+        }
+        if (cssStringOrObjectOrCollection instanceof Collection<?>) {
+            list.addAll((Collection<?>) cssStringOrObjectOrCollection);
+        } else {
+            list.add(cssStringOrObjectOrCollection);
+        }
+    }
+
+    @Override
+    public void addJsTo(String windowName, Object jsStringOrObjectOrCollection) {
+        for (Window window : windows) {
+            if (window.getName().equals(windowName)) {
+                addJsTo(window, jsStringOrObjectOrCollection);
+                return;
+            }
+        }
+    }
+
+    @Override
+    public void addJsTo(Window window, Object jsStringOrObjectOrCollection) {
+        @SuppressWarnings("unchecked")
+        List<Object> list = (List<Object>) window.get(WINDIW_JS);
+        if (list == null) {
+            list = new ArrayList<Object>(4);
+            window.set(WINDIW_JS, list);
+        }
+        if (jsStringOrObjectOrCollection instanceof Collection<?>) {
+            list.addAll((Collection<?>) jsStringOrObjectOrCollection);
+        } else {
+            list.add(jsStringOrObjectOrCollection);
         }
     }
 
