@@ -17,6 +17,7 @@ package net.paoding.rose.web.portal.taglibs;
 
 import java.io.IOException;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.TagSupport;
 
@@ -43,21 +44,33 @@ public class PipeWriteTag extends TagSupport {
     @Override
     public int doStartTag() throws JspException {
         Invocation inv = InvocationUtils.getCurrentThreadInvocation();
-        PipeImpl pipe = (PipeImpl) PortalUtils.getPipe(inv);
-        if (pipe != null) {
-            try {
-                if (logger.isDebugEnabled()) {
-                    logger.debug("writing " + pipe + "...");
-                }
-                pipe.write(pageContext.getOut());
-
-                if (logger.isDebugEnabled()) {
-                    logger.debug("writing " + pipe + "... done");
-                }
-            } catch (IOException e) {
-                throw new JspException(e);
+        if (inv == null) {
+            if (logger.isWarnEnabled()) {
+                logger.warn("it is not in a rose request: '"
+                        + ((HttpServletRequest) pageContext.getRequest()).getRequestURI() + "'");
             }
+            return SKIP_BODY;
         }
-        return super.doStartTag();
+        PipeImpl pipe = (PipeImpl) PortalUtils.getPipe(inv);
+        if (pipe == null) {
+            if (logger.isWarnEnabled()) {
+                logger.warn("there is not pipe for this jsp: '"
+                        + ((HttpServletRequest) pageContext.getRequest()).getRequestURI() + "'");
+            }
+            return SKIP_BODY;
+        }
+        try {
+            if (logger.isDebugEnabled()) {
+                logger.debug("writing " + pipe + "...");
+            }
+            pipe.write(pageContext.getOut());
+
+            if (logger.isDebugEnabled()) {
+                logger.debug("writing " + pipe + "... done");
+            }
+        } catch (IOException e) {
+            throw new JspException(e);
+        }
+        return SKIP_BODY;
     }
 }

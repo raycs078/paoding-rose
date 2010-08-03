@@ -47,7 +47,7 @@ public class PipeInterceptor extends ControllerInterceptorAdapter {
     }
 
     @Override
-    public Object after(Invocation inv, Object instruction) throws Exception {
+    public Object after(Invocation inv, Object instruction) {
 
         // codes for fix this exception: "Cannot forward after response has been committed"
         // @see RoseFilter#supportsRosepipe
@@ -56,25 +56,55 @@ public class PipeInterceptor extends ControllerInterceptorAdapter {
         if (pipe != null && pipe.getInvocation() == inv) {
             boolean debugEnabled = logger.isDebugEnabled();
             if (debugEnabled) {
-                logger.debug(pipe + " is going to wait pipe windows.");
+                logger.debug(pipe + " is going to wait pipe windows' ins.");
             }
-            long begin = System.currentTimeMillis();
+            final long begin = System.currentTimeMillis();
+            final long deadline;
+            if (pipe.getTimeout() > 0) {
+                deadline = begin + pipe.getTimeout();
+            } else {
+                deadline = -1;
+            }
 
-            for (Window window : pipe.getWindows()) {
-                if (window.getRequest().getAttribute(RoseConstants.PIPE_WINDOW_IN) != Boolean.TRUE) {
-                    if (debugEnabled) {
-                        logger.debug("waitting for window '" + window.getName() + "''s forwarding");
-                    }
-                    synchronized (window) {
-                        while (window.getRequest().getAttribute(RoseConstants.PIPE_WINDOW_IN) != Boolean.TRUE) {
-                            window.wait();
+            try {
+                for (Window window : pipe.getWindows()) {
+                    if (window.getRequest().getAttribute(RoseConstants.PIPE_WINDOW_IN) != Boolean.TRUE) {
+                        synchronized (window) {
+                            while (window.getRequest().getAttribute(RoseConstants.PIPE_WINDOW_IN) != Boolean.TRUE) {
+                                long now = System.currentTimeMillis();
+                                if (deadline <= 0) {
+                                    if (debugEnabled) {
+                                        logger.debug("waitting for window '" + window.getName()
+                                                + "''s in; timetou=never");
+                                    }
+                                    window.wait();
+                                } else if (deadline > now) {
+                                    if (debugEnabled) {
+                                        logger.debug("waitting for window '" + window.getName()
+                                                + "''s in; timetou=" + (deadline - now));
+                                    }
+                                    window.wait(deadline - now);
+                                } else {
+                                    if (logger.isInfoEnabled()) {
+                                        logger.info("break waiting for this window's in '"
+                                                + window.getName()
+                                                + "@"
+                                                + window.getPortal().getInvocation()
+                                                        .getRequestPath() + "'");
+                                    }
+                                    break;
+                                }
+
+                            }
                         }
                     }
                 }
+            } catch (InterruptedException e) {
+                logger.error("window-in waiting is interruptted.", e);
             }
             //
             if (logger.isDebugEnabled()) {
-                logger.debug(pipe + ".waitForPipeWindows is done; cost="
+                logger.debug(pipe + ".window-in is done; cost="
                         + (System.currentTimeMillis() - begin));
             }
         }
