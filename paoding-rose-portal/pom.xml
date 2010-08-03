@@ -20,16 +20,20 @@
 			<email>qieqie.wang@gmail.com</email>
 		</developer>
 	</developers>
-	<!--
 
-		<distributionManagement> <repository> <id>archiva.internal</id>
-		<name>Internal Release Repository</name>
-		<url>http://repos.d.xiaonei.com/nexus/content/repositories/releases/</url>
-		</repository> <snapshotRepository> <id>archiva.snapshots</id>
-		<name>Internal Snapshot Repository</name>
-		<url>http://repos.d.xiaonei.com/nexus/content/repositories/snapshots/</url>
-		</snapshotRepository> </distributionManagement>
-	--><!-- 构建配置 -->
+	<distributionManagement>
+		<repository>
+			<id>archiva.internal</id>
+			<name>Internal Release Repository</name>
+			<url>http://repos.d.xiaonei.com/nexus/content/repositories/releases/</url>
+		</repository>
+		<snapshotRepository>
+			<id>archiva.snapshots</id>
+			<name>Internal Snapshot Repository</name>
+			<url>http://repos.d.xiaonei.com/nexus/content/repositories/snapshots/</url>
+		</snapshotRepository>
+	</distributionManagement>
+	<!-- 构建配置 -->
 	<build>
 		<resources>
 			<resource>
@@ -114,9 +118,9 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.json</groupId>
-			<artifactId>jsonrpc</artifactId>
-			<version>1.0.0</version>
+			<groupId>com.metaparadigm</groupId>
+			<artifactId>json-rpc</artifactId>
+			<version>1.0</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
