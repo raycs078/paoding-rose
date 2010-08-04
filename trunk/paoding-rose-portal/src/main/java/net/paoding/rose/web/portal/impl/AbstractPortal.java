@@ -79,6 +79,16 @@ public abstract class AbstractPortal implements Portal, PortalListener {
         return invocation;
     }
 
+    /**
+     * 为一致概念，这里麻烦一点，请您调用: {@link #getInvocation()#addModel(String, Object)}
+     * 来完成 现在是2010-08-04，正常情况下2010国庆后将去掉此代码
+     */
+    @Deprecated
+    @Override
+    public void addModel(String name, Object value) {
+        getInvocation().addModel(name, value);
+    }
+
     @Override
     public HttpServletRequest getRequest() {
         return invocation.getRequest();
