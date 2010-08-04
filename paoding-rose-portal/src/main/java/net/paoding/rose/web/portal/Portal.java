@@ -40,6 +40,13 @@ public interface Portal {
     public Invocation getInvocation();
 
     /**
+     * 为一致概念，这里麻烦一点，请您调用: {@link #getInvocation()#addModel(String, Object)}
+     * 来完成 现在是2010-08-04，正常情况下2010国庆后将去掉此代码
+     */
+    @Deprecated
+    public void addModel(String name, Object value);
+
+    /**
      * 返回本次调用的 {@link HttpServletRequest}对象
      * 
      * @return
