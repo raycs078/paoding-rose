@@ -126,7 +126,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
             new ModelResolver(), //
             new FlashResolver(), //
             new ModuleResolver(), //
-            new XResolver(new StringResolver()), //
+            new IndexAliasResolver(new StringResolver()), //
             new RequestResolver(), //
             new ResponseResolver(), //
             new HttpSessionResolver(), //
@@ -134,22 +134,23 @@ public class ResolverFactoryImpl implements ResolverFactory {
             new MultipartRequestResolver(), //
             new MultipartHttpServletRequestResolver(), //
             new ServletContextResolver(), //
-            new XResolver(new ArrayResolver()),//
-            new XResolver(new ListResolver()), //
-            new XResolver(new SetResolver()), //
-            new XResolver(new MapResolver()), //
+            new IndexAliasResolver(new ArrayResolver()),//
+            new IndexAliasResolver(new ListResolver()), //
+            new IndexAliasResolver(new SetResolver()), //
+            new IndexAliasResolver(new MapResolver()), //
             new BindingResultResolver(), //
-            new XResolver(new DateResolver()), //
-            new XResolver(new EditorResolver()), //
+            new IndexAliasResolver(new DateResolver()), //
+            new IndexAliasResolver(new EditorResolver()), //
+            new IndexAliasResolver(new EnumResolver()), //
             new BeanResolver(), //
-            new XResolver(new MultipartResolverResolver()), //
+            new IndexAliasResolver(new MultipartResolverResolver()), //
     };
 
-    private static class XResolver implements ParamResolver {
+    private static class IndexAliasResolver implements ParamResolver {
 
         ParamResolver inner;
 
-        public XResolver(ParamResolver inner) {
+        public IndexAliasResolver(ParamResolver inner) {
             this.inner = inner;
         }
 
@@ -180,7 +181,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
     private final List<ParamResolver> customerResolvers = new ArrayList<ParamResolver>();
 
     public void addCustomerResolver(ParamResolver resolver) {
-        customerResolvers.add(new XResolver(resolver));
+        customerResolvers.add(new IndexAliasResolver(resolver));
     }
 
     @Override
@@ -478,6 +479,29 @@ public class ResolverFactoryImpl implements ResolverFactory {
         @Override
         public Object resolve(Invocation inv, ParamMetaData metaData) throws Exception {
             return ((InvocationBean) inv).getRose();
+        }
+    }
+
+    public static final class EnumResolver implements ParamResolver {
+
+        @Override
+        public boolean supports(ParamMetaData metaData) {
+            return metaData.getParamType().isEnum();
+
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public Object resolve(Invocation inv, ParamMetaData metaData) {
+            for (String paramName : metaData.getParamNames()) {
+                if (paramName != null) {
+                    String value = inv.getParameter(paramName);
+                    if (value != null) {
+                        return Enum.valueOf((Class<? extends Enum>) metaData.getParamType(), value);
+                    }
+                }
+            }
+            return null;
         }
     }
 
