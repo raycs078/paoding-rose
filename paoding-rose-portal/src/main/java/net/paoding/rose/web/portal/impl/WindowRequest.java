@@ -158,29 +158,28 @@ class WindowRequest extends HttpServletRequestWrapper {
 
     @Override
     public HttpSession getSession() {
+        return getSession(true);
+    }
+
+    @Override
+    public HttpSession getSession(boolean create) {
         HttpSession session = super.getSession(false);
-        if (session == null) {
-            if (!window.getPortal().getInvocation().getResponse().isCommitted()) {
+        if (session != null) {
+            return session;
+        }
+        if (create) {
+            if (window.getPortal().getInvocation().getResponse().isCommitted()) {
+                session = new SessionAfterCommitted(new IllegalStateException(
+                        "Cannot create a session after the response has been committed"));
+            } else {
                 try {
-                    session = super.getSession();
+                    session = super.getSession(true);
                 } catch (IllegalStateException e) {
                     session = new SessionAfterCommitted(e);
                 }
-            } else {
-                session = new SessionAfterCommitted(new IllegalStateException(
-                        "Cannot create a session after the response has been committed"));
             }
         }
         return session;
     }
 
-    @Override
-    public HttpSession getSession(boolean create) {
-        if (create == true) {
-            return getSession();
-        }
-        return super.getSession(false);
-    }
-
-   
 }
