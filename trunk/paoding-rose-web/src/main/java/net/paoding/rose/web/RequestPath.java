@@ -123,7 +123,7 @@ public class RequestPath {
             if (queryString != null) {
                 int start = queryString.indexOf("_method=");
                 if (start >= 0) {
-                    if (start == 0 || queryString.indexOf(start - 1) == '&') {
+                    if (start == 0 || queryString.charAt(start - 1) == '&') {
                         int end = queryString.indexOf('&', start);
                         String method = queryString.substring(start + "_method=".length(),//
                                 end > 0 ? end : queryString.length());
