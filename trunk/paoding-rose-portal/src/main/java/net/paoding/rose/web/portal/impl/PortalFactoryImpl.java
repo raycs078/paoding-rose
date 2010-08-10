@@ -18,6 +18,7 @@ package net.paoding.rose.web.portal.impl;
 import java.util.concurrent.ExecutorService;
 
 import net.paoding.rose.web.Invocation;
+import net.paoding.rose.web.impl.thread.AfterCompletion;
 import net.paoding.rose.web.impl.thread.InvocationBean;
 import net.paoding.rose.web.portal.Pipe;
 import net.paoding.rose.web.portal.PortalFactory;
@@ -105,9 +106,19 @@ public class PortalFactoryImpl implements PortalFactory, InitializingBean {
         if (timeout > 0) {
             portal.setTimeout(timeout);
         }
-
+        
+        
         // 换request对象
-        inv.setRequest(new PortalRequest(inv.getRequest()));
+        final PortalRequest portalRequest = new PortalRequest(inv.getRequest());
+        inv.setRequest(portalRequest);
+        
+        //afterCompletion时取消对request的绑定，防止双层Portal+ThreadLocal造成的内存泄漏
+        inv.addAfterCompletion(new AfterCompletion() {
+			@Override
+			public void afterCompletion(Invocation inv, Throwable ex) throws Exception {
+				portalRequest.destroy();
+			}
+		});
         ((InvocationBean) inv).setResponse(new PortalResponse(portal));
         inv.setAttribute("$$paoding-rose-portal.portal", portal);
 
