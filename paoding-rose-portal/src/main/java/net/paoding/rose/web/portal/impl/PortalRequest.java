@@ -47,12 +47,12 @@ final class PortalRequest extends HttpServletRequestWrapper implements HttpServl
      * 即 RequestWrapper 通过不实现 HttpServletRequestWrapper 使得
      * PortalRequest的setRequest方法能够被容器调用到
      */
-    private final PrivateRequestWrapper privateRequestWrapper;
+    private PrivateRequestWrapper privateRequestWrapper;
 
     /**
      * 保存本次 portal 请求的窗口请求对象 (由容器调用setRequest设置进来)
      */
-    private final ThreadLocal<HttpServletRequest> threadLocalRequests = new ThreadLocal<HttpServletRequest>();
+    private ThreadLocal<HttpServletRequest> threadLocalRequests = new ThreadLocal<HttpServletRequest>();
 
     /**
      * 构造子
@@ -71,12 +71,25 @@ final class PortalRequest extends HttpServletRequestWrapper implements HttpServl
      * 这个方法将由web容器(tomcat/resin等)调用
      */
     public void setRequest(ServletRequest request) {
-        if (logger.isDebugEnabled()) {
-            logger.debug(String.format("set request: %s", request));
-        }
-        this.threadLocalRequests.set((HttpServletRequest) request);
+    	if (request != null) {
+    		if (logger.isDebugEnabled()) {
+                logger.debug(String.format("set request: %s", request));
+            }
+            this.threadLocalRequests.set((HttpServletRequest) request);
+    	} else {	//if null, remove from ThreadLocal
+    		if (logger.isDebugEnabled()) {
+    			HttpServletRequest tmpRequest = this.threadLocalRequests.get();
+                logger.debug(String.format("remove request: %s", tmpRequest));
+            }
+    		this.threadLocalRequests.remove();
+    	}
     }
 
+    public void destroy() {
+    	this.threadLocalRequests = null;
+    	this.privateRequestWrapper = null;
+    }
+    
     /**
      * 返回当前邦定到当前线程的请求对象，如果没有则返回 portalNotWrapperRequest 请求对象
      */
