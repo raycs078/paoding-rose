@@ -106,21 +106,15 @@ public class PortalFactoryImpl implements PortalFactory, InitializingBean {
         if (timeout > 0) {
             portal.setTimeout(timeout);
         }
-        
-        
+
         // 换request对象
         final PortalRequest portalRequest = new PortalRequest(inv.getRequest());
         inv.setRequest(portalRequest);
-        
-        //afterCompletion时取消对request的绑定，防止双层Portal+ThreadLocal造成的内存泄漏
-        inv.addAfterCompletion(new AfterCompletion() {
-			@Override
-			public void afterCompletion(Invocation inv, Throwable ex) throws Exception {
-				portalRequest.destroy();
-			}
-		});
         ((InvocationBean) inv).setResponse(new PortalResponse(portal));
         inv.setAttribute("$$paoding-rose-portal.portal", portal);
+
+        //afterCompletion时取消对request的绑定，防止双层Portal+ThreadLocal造成的内存泄漏
+        inv.addAfterCompletion(portalRequestDestroyer);
 
         portal.onPortalCreated(portal);
         return portal;
@@ -128,7 +122,8 @@ public class PortalFactoryImpl implements PortalFactory, InitializingBean {
 
     @Override
     public Pipe createPipe(Invocation inv, boolean create) {
-        PipeImpl pipe = (PipeImpl) inv.getHeadInvocation().getAttribute("$$paoding-rose-portal.pipe");
+        PipeImpl pipe = (PipeImpl) inv.getHeadInvocation().getAttribute(
+                "$$paoding-rose-portal.pipe");
         if (pipe == null) {
             if (create) {
                 pipe = new PipeImpl(inv, executorService, portalListener);
@@ -144,5 +139,25 @@ public class PortalFactoryImpl implements PortalFactory, InitializingBean {
                             + "don't forward to path that using pipe. ");
         }
         return pipe;
+    }
+
+    /**
+     * afterCompletion时取消对request的绑定，防止双层Portal+ThreadLocal造成的内存泄漏
+     * 
+     */
+
+    private static final AfterCompletion portalRequestDestroyer = new PortalRequestDestroyer();
+
+    /**
+     * afterCompletion时取消对request的绑定，防止双层Portal+ThreadLocal造成的内存泄漏
+     * 
+     */
+    private static class PortalRequestDestroyer implements AfterCompletion {
+
+        @Override
+        public void afterCompletion(Invocation inv, Throwable ex) throws Exception {
+            PortalRequest portalRequest = PortalRequest.unwrapPortalRequest(inv.getRequest());
+            portalRequest.destroy();
+        }
     }
 }

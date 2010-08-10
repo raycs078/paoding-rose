@@ -43,6 +43,24 @@ final class PortalRequest extends HttpServletRequestWrapper implements HttpServl
     private static final Log logger = LogFactory.getLog(PortalRequest.class);
 
     /**
+     * 取出包装在里面的PortalRequest
+     * 
+     * @param request
+     * @return
+     */
+    public static PortalRequest unwrapPortalRequest(HttpServletRequest request) {
+        do {
+            if (request instanceof PortalRequest) {
+                return (PortalRequest) request;
+            } else if (request instanceof HttpServletRequestWrapper) {
+                request = (HttpServletRequest) ((HttpServletRequestWrapper) request).getRequest();
+            } else {
+                return null;
+            }
+        } while (true);
+    }
+
+    /**
      * 封装了原始的 portal 请求对象， 组织了容器的 HttpServletRequestWrapper 链<br>
      * 即 RequestWrapper 通过不实现 HttpServletRequestWrapper 使得
      * PortalRequest的setRequest方法能够被容器调用到
@@ -71,25 +89,25 @@ final class PortalRequest extends HttpServletRequestWrapper implements HttpServl
      * 这个方法将由web容器(tomcat/resin等)调用
      */
     public void setRequest(ServletRequest request) {
-    	if (request != null) {
-    		if (logger.isDebugEnabled()) {
+        if (request != null) {
+            if (logger.isDebugEnabled()) {
                 logger.debug(String.format("set request: %s", request));
             }
             this.threadLocalRequests.set((HttpServletRequest) request);
-    	} else {	//if null, remove from ThreadLocal
-    		if (logger.isDebugEnabled()) {
-    			HttpServletRequest tmpRequest = this.threadLocalRequests.get();
+        } else { //if null, remove from ThreadLocal
+            if (logger.isDebugEnabled()) {
+                HttpServletRequest tmpRequest = this.threadLocalRequests.get();
                 logger.debug(String.format("remove request: %s", tmpRequest));
             }
-    		this.threadLocalRequests.remove();
-    	}
+            this.threadLocalRequests.remove();
+        }
     }
 
     public void destroy() {
-    	this.threadLocalRequests = null;
-    	this.privateRequestWrapper = null;
+        this.threadLocalRequests = null;
+        this.privateRequestWrapper = null;
     }
-    
+
     /**
      * 返回当前邦定到当前线程的请求对象，如果没有则返回 portalNotWrapperRequest 请求对象
      */
