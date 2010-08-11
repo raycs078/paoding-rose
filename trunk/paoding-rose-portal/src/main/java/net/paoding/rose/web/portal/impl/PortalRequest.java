@@ -29,6 +29,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpSession;
 
+import net.paoding.rose.web.portal.Portal;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -60,6 +62,9 @@ final class PortalRequest extends HttpServletRequestWrapper implements HttpServl
         } while (true);
     }
 
+    /** 本次 portal */
+    private Portal portal;
+
     /**
      * 封装了原始的 portal 请求对象， 组织了容器的 HttpServletRequestWrapper 链<br>
      * 即 RequestWrapper 通过不实现 HttpServletRequestWrapper 使得
@@ -77,9 +82,10 @@ final class PortalRequest extends HttpServletRequestWrapper implements HttpServl
      * 
      * @param orginRequest 封装之前访问该 portal 的请求对象
      */
-    public PortalRequest(HttpServletRequest orginRequest) {
-        super(new PrivateRequestWrapper(orginRequest));
-        privateRequestWrapper = (PrivateRequestWrapper) super.getRequest();
+    public PortalRequest(Portal portal) {
+        super(new PrivateRequestWrapper(portal.getRequest()));
+        this.privateRequestWrapper = (PrivateRequestWrapper) super.getRequest();
+        this.portal = portal;
     }
 
     /**
@@ -106,6 +112,7 @@ final class PortalRequest extends HttpServletRequestWrapper implements HttpServl
     public void destroy() {
         this.threadLocalRequests = null;
         this.privateRequestWrapper = null;
+        this.portal = null;
     }
 
     /**
@@ -246,12 +253,16 @@ final class PortalRequest extends HttpServletRequestWrapper implements HttpServl
 
     @Override
     public HttpSession getSession(boolean create) {
-        return getRequest().getSession(create);
+        synchronized (portal) {
+            return getRequest().getSession(create);
+        }
     }
 
     @Override
     public HttpSession getSession() {
-        return getRequest().getSession();
+        synchronized (portal) {
+            return getRequest().getSession();
+        }
     }
 
     @Override
@@ -271,7 +282,7 @@ final class PortalRequest extends HttpServletRequestWrapper implements HttpServl
 
     @SuppressWarnings("deprecation")
     @Override
-    public boolean isRequestedSessionIdFromUrl() {
+    public synchronized boolean isRequestedSessionIdFromUrl() {
         return getRequest().isRequestedSessionIdFromUrl();
     }
 

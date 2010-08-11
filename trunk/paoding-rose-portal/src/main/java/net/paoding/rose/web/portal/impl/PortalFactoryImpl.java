@@ -108,7 +108,7 @@ public class PortalFactoryImpl implements PortalFactory, InitializingBean {
         }
 
         // 换request对象
-        final PortalRequest portalRequest = new PortalRequest(inv.getRequest());
+        final PortalRequest portalRequest = new PortalRequest(portal);
         inv.setRequest(portalRequest);
         ((InvocationBean) inv).setResponse(new PortalResponse(portal));
         inv.setAttribute("$$paoding-rose-portal.portal", portal);
