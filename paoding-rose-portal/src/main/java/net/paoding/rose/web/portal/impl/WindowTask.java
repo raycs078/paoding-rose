@@ -77,31 +77,21 @@ final class WindowTask implements Runnable {
 
             // done!
             window.getPortal().onWindowDone(window);
-
-            //destroy PortalRequest associated with this window 
-            //to avoid memory leak caused by ThreadLocal
-            destroyWindowTask(window);
         } catch (Throwable e) {
             logger.error("", e);
             window.setThrowable(e);
             window.getPortal().onWindowError(window);
+        } finally {
+
+        	final HttpServletRequest wrapper = window.getPortal().getRequest();
+            final PortalRequest portalRequest = PortalRequest.unwrapPortalRequest(wrapper);
+            // remove request from ThreadLocal in PortalRequest 
+            // 销毁在PortalRequest的ThreadLocal成员变量中保存的与 当前线程相关的request对象，以防内存泄漏。
+            portalRequest.setRequest(null);
+        	
         }
     }
 
-    /**
-     * 销毁掉和当前WindowTask，也即当前线程相关的数据。
-     * 主要是为了销毁在PortalRequest的ThreadLocal成员变量中保存的与 当前线程相关的request对象，以防内存泄漏。
-     * 
-     * @param window
-     */
-    private void destroyWindowTask(WindowImpl window) {
-        final HttpServletRequest wrapper = window.getPortal().getRequest();
-        final PortalRequest portalRequest = PortalRequest.unwrapPortalRequest(wrapper);
-        if (portalRequest != null) {
-            //remove request from ThreadLocal in PortalRequest 
-            portalRequest.setRequest(null);
-        }
-    }
 
     @Override
     public String toString() {
