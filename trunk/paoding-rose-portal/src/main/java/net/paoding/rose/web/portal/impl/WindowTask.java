@@ -75,6 +75,10 @@ final class WindowTask implements Runnable {
             	windowPath += "?" + generateVersionParam();
             }
             
+            if (logger.isDebugEnabled()) {
+            	logger.debug("forward to window path: " + windowPath);
+            }
+            
             final RequestDispatcher rd = request.getRequestDispatcher(windowPath);
             request.setAttribute("$$paoding-rose-portal.window", window);
             if (window.getResponse().isCommitted()) {
