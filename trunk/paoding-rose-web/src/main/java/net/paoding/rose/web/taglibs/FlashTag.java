@@ -68,11 +68,11 @@ public class FlashTag extends TagSupport {
             if (msg != null) {
                 try {
                     if (StringUtils.isNotEmpty(prefix)) {
-                        pageContext.getOut().println(prefix);
+                        pageContext.getOut().print(prefix);
                     }
-                    pageContext.getOut().println(msg);
+                    pageContext.getOut().print(msg);
                     if (StringUtils.isNotEmpty(suffix)) {
-                        pageContext.getOut().println(suffix);
+                        pageContext.getOut().print(suffix);
                     }
                 } catch (IOException e) {
                     throw new JspException("", e);
