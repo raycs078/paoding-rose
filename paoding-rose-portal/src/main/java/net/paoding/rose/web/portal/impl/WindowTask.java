@@ -15,6 +15,7 @@
  */
 package net.paoding.rose.web.portal.impl;
 
+import java.util.Random;
 import java.util.concurrent.ExecutorService;
 
 import javax.servlet.RequestDispatcher;
@@ -31,10 +32,14 @@ import org.apache.commons.logging.LogFactory;
  */
 final class WindowTask implements Runnable {
 
+	private static final String VERSION_PARAM_NAME = "__ver";
+	
     private static final Log logger = LogFactory.getLog(WindowTask.class);
 
     private final WindowImpl window;
-
+    
+    private Random random = new Random();
+    
     public WindowTask(WindowImpl window) {
         if (window == null) {
             throw new NullPointerException("window");
@@ -63,6 +68,13 @@ final class WindowTask implements Runnable {
                 windowPath = requestUri + windowPath;
             }
 
+            //考虑window在forward的过程中可能遇到304的问题，所以在path中加入版本号
+            if (windowPath.indexOf('?') >= 0) {
+            	windowPath += "&" + generateVersionParam();
+            } else {
+            	windowPath += "?" + generateVersionParam();
+            }
+            
             final RequestDispatcher rd = request.getRequestDispatcher(windowPath);
             request.setAttribute("$$paoding-rose-portal.window", window);
             if (window.getResponse().isCommitted()) {
@@ -92,10 +104,17 @@ final class WindowTask implements Runnable {
         }
     }
 
+	/**
+	 * 生成version参数
+	 * @return
+	 */
+	private String generateVersionParam() {
+		return VERSION_PARAM_NAME + "=" + Integer.toHexString(random.nextInt());
+	}
 
     @Override
     public String toString() {
         return "window [name=" + window.getName() + ", path=" + window.getPath() + "]";
     }
-
+    
 }
