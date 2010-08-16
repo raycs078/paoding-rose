@@ -18,6 +18,7 @@ package net.paoding.rose.web.portal.impl;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
@@ -66,25 +67,17 @@ final class PortalRequest extends HttpServletRequestWrapper implements HttpServl
     private Portal portal;
 
     /**
-     * 封装了原始的 portal 请求对象， 组织了容器的 HttpServletRequestWrapper 链<br>
-     * 即 RequestWrapper 通过不实现 HttpServletRequestWrapper 使得
-     * PortalRequest的setRequest方法能够被容器调用到
+     ** 保存本次 portal 请求的窗口请求对象 (由容器调用setRequest设置进来)
      */
-    private PrivateRequestWrapper privateRequestWrapper;
-
-    /**
-     * 保存本次 portal 请求的窗口请求对象 (由容器调用setRequest设置进来)
-     */
-    private ThreadLocal<HttpServletRequest> threadLocalRequests = new ThreadLocal<HttpServletRequest>();
+    private HashMap<Long, HttpServletRequest> threadLocalRequests = new HashMap<Long, HttpServletRequest>();
 
     /**
      * 构造子
      * 
-     * @param orginRequest 封装之前访问该 portal 的请求对象
      */
     public PortalRequest(Portal portal) {
         super(new PrivateRequestWrapper(portal.getRequest()));
-        this.privateRequestWrapper = (PrivateRequestWrapper) super.getRequest();
+        this.setRequest(super.getRequest());
         this.portal = portal;
     }
 
@@ -99,19 +92,20 @@ final class PortalRequest extends HttpServletRequestWrapper implements HttpServl
             if (logger.isDebugEnabled()) {
                 logger.debug(String.format("set request: %s", request));
             }
-            this.threadLocalRequests.set((HttpServletRequest) request);
-        } else { //if null, remove from ThreadLocal
+            this.threadLocalRequests.put(Thread.currentThread().getId(),
+                    (HttpServletRequest) request);
+        } else { //if null, remove from threadLocalRequests
             if (logger.isDebugEnabled()) {
-                HttpServletRequest tmpRequest = this.threadLocalRequests.get();
+                HttpServletRequest tmpRequest = this.threadLocalRequests.get(Thread.currentThread()
+                        .getId());
                 logger.debug(String.format("remove request: %s", tmpRequest));
             }
-            this.threadLocalRequests.remove();
+            this.threadLocalRequests.remove(Thread.currentThread().getId());
         }
     }
 
     public void destroy() {
         this.threadLocalRequests = null;
-        this.privateRequestWrapper = null;
         this.portal = null;
     }
 
@@ -119,11 +113,7 @@ final class PortalRequest extends HttpServletRequestWrapper implements HttpServl
      * 返回当前邦定到当前线程的请求对象，如果没有则返回 portalNotWrapperRequest 请求对象
      */
     public HttpServletRequest getRequest() {
-        HttpServletRequest request = (HttpServletRequest) threadLocalRequests.get();
-        if (request == null) {
-            request = privateRequestWrapper;
-        }
-        return request;
+        return threadLocalRequests.get(Thread.currentThread().getId());
     }
 
     // ----- HttpServletRequestWrapper的每个方法都得重新覆盖，不解时请看ServletRequestWrapper的代码即知 ----
@@ -414,7 +404,7 @@ final class PortalRequest extends HttpServletRequestWrapper implements HttpServl
 
     @Override
     public String toString() {
-        return "PortalRequest for " + privateRequestWrapper.getRequestURI();
+        return "PortalRequest for " + this.portal.getRequest().getRequestURI();
     }
 
 }
