@@ -37,7 +37,11 @@ import net.paoding.rose.web.portal.util.Enumerator;
  */
 class WindowRequest extends HttpServletRequestWrapper {
 
-    private final Window window;
+	private static final String HEAER_IF_MODIFIED_SINCE = "If-Modified-Since";
+	
+	private static final String HEAER_IF_NONE_MATHC = "If-None-Match";
+	
+	private final Window window;
 
     /**
      * 窗口请求对象私有的、有别于其他窗口的属性
@@ -80,6 +84,37 @@ class WindowRequest extends HttpServletRequestWrapper {
         return value;
     }
 
+    @Override
+    public String getHeader(String name) {
+    	if (isDisabledHeader(name)) {
+    		return null;
+    	}
+    	return super.getHeader(name);
+    }
+    
+    @SuppressWarnings("unchecked")
+	@Override
+	public Enumeration getHeaders(String name) {
+    	if (isDisabledHeader(name)) {
+    		return null;
+    	}
+		return super.getHeaders(name);
+	}
+
+	/**
+	 * 判断指定header是否被屏蔽掉了。
+	 * 为了window能够正确执行，可能会屏蔽掉一些header，
+	 * 例如，通过屏蔽If-Modified-Since和If-None-Match来解决
+	 * Window返回304的问题。
+	 * 
+	 * @param headerName
+	 * @return
+	 */
+	private boolean isDisabledHeader(String headerName) {
+    	return HEAER_IF_MODIFIED_SINCE.equals(headerName)
+    		|| HEAER_IF_NONE_MATHC.equals(headerName);
+    }
+    
     /**
      * 返回这个窗口的私有属性名加portal主控请求对象共同属性的属性名
      */
