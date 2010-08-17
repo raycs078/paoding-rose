@@ -21,6 +21,7 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
+import net.paoding.rose.jade.annotation.ShardBy;
 import net.paoding.rose.jade.core.GenericUtils;
 
 /**
@@ -40,6 +41,8 @@ public class Modifier {
     private final Map<Class<? extends Annotation>, Annotation[]> parameterAnnotations = new HashMap<Class<? extends Annotation>, Annotation[]>(
             8, 1.0f);
 
+    private String shardBy;
+
     private final int parameterCount;
 
     public Modifier(Definition definition, Method method) {
@@ -52,6 +55,12 @@ public class Modifier {
         parameterCount = annotations.length;
         for (int index = 0; index < annotations.length; index++) {
             for (Annotation annotation : annotations[index]) {
+                if (annotation instanceof ShardBy) {
+                    if (shardBy != null) {
+                        throw new IllegalArgumentException("duplicated ShardBy");
+                    }
+                    shardBy = ":" + index;
+                }
 
                 Class<? extends Annotation> annotationType = annotation.annotationType();
                 Annotation[] annotationArray = parameterAnnotations.get(annotationType);
@@ -64,6 +73,10 @@ public class Modifier {
                 annotationArray[index] = annotation;
             }
         }
+    }
+
+    public String getShardBy() {
+        return shardBy;
     }
 
     public String getName() {
