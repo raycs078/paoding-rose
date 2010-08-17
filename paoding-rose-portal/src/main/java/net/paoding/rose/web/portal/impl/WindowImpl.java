@@ -17,6 +17,8 @@ package net.paoding.rose.web.portal.impl;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Future;
 
@@ -46,32 +48,16 @@ class WindowImpl implements Window {
 
     private AbstractPortal portal;
 
-    private WindowRequest request;
-
-    private WindowResponse response;
-
     private Future<?> future;
 
     public WindowImpl(AbstractPortal portal, String name, String windowPath) {
         this.portal = portal;
         this.name = name;
         this.path = windowPath;
-        this.request = new WindowRequest(this, portal.getRequest());
-        this.response = new WindowResponse(this);
-        this.request.setAttribute("$$paoding-rose-portal.window.name", name);
-        this.request.setAttribute("$$paoding-rose-portal.window.path", path);
     }
 
     public AbstractPortal getPortal() {
         return portal;
-    }
-
-    public WindowRequest getRequest() {
-        return request;
-    }
-
-    public WindowResponse getResponse() {
-        return response;
     }
 
     @Override
@@ -83,20 +69,39 @@ class WindowImpl implements Window {
         this.future = future;
     }
 
+    /**
+     * 窗口请求对象私有的、有别于其他窗口的属性
+     */
+    private Map<String, Object> privateAttributes;
+
     @Override
     public Window set(String key, Object value) {
-        request.setAttribute(key, value);
+        if (privateAttributes == null) {
+            privateAttributes = new HashMap<String, Object>();
+        }
+        privateAttributes.put(key, value);
         return this;
     }
 
     @Override
     public Object get(String key) {
-        return request.getAttribute(key);
+        return privateAttributes == null ? null : privateAttributes.get(key);
+    }
+
+    @Override
+    public void remove(String key) {
+        if (privateAttributes != null) {
+            privateAttributes.remove(key);
+        }
     }
 
     @Override
     public Map<String, Object> getAttributes() {
-        return request.getPrivateAttributes();
+        if (privateAttributes == null) {
+            return Collections.emptyMap();
+        } else {
+            return Collections.unmodifiableMap(privateAttributes);
+        }
     }
 
     @Override

@@ -34,12 +34,18 @@ final class WindowTask implements Runnable {
     private static final Log logger = LogFactory.getLog(WindowTask.class);
 
     private final WindowImpl window;
-    
-    public WindowTask(WindowImpl window) {
+
+    private final WindowRequest request;
+
+    private final WindowResponse response;
+
+    public WindowTask(WindowImpl window, WindowRequest request, WindowResponse response) {
         if (window == null) {
             throw new NullPointerException("window");
         }
         this.window = window;
+        this.request = request;
+        this.response = response;
     }
 
     public WindowImpl getWindow() {
@@ -53,7 +59,6 @@ final class WindowTask implements Runnable {
             window.getPortal().onWindowStarted(window);
 
             // doRequest
-            final WindowRequest request = window.getRequest();
             String windowPath = window.getPath();
             if (windowPath.length() == 0 || windowPath.charAt(0) != '/') {
                 String requestUri = request.getRequestURI();
@@ -62,10 +67,10 @@ final class WindowTask implements Runnable {
                 }
                 windowPath = requestUri + windowPath;
             }
-            
+
             final RequestDispatcher rd = request.getRequestDispatcher(windowPath);
             request.setAttribute("$$paoding-rose-portal.window", window);
-            if (window.getResponse().isCommitted()) {
+            if (this.response.isCommitted()) {
                 if (logger.isDebugEnabled()) {
                     logger.debug("onWindowTimeout: response has committed. [" + window.getName()
                             + "]@" + window.getPortal());
@@ -73,7 +78,7 @@ final class WindowTask implements Runnable {
                 window.getPortal().onWindowTimeout(window);
                 return;
             }
-            rd.forward(request, window.getResponse());
+            rd.forward(request, this.response);
 
             // done!
             window.getPortal().onWindowDone(window);
@@ -83,12 +88,12 @@ final class WindowTask implements Runnable {
             window.getPortal().onWindowError(window);
         } finally {
 
-        	final HttpServletRequest wrapper = window.getPortal().getRequest();
+            final HttpServletRequest wrapper = window.getPortal().getRequest();
             final PortalRequest portalRequest = PortalRequest.unwrapPortalRequest(wrapper);
             // remove request from ThreadLocal in PortalRequest 
             // 销毁在PortalRequest的ThreadLocal成员变量中保存的与 当前线程相关的request对象，以防内存泄漏。
             portalRequest.setRequest(null);
-        	
+
         }
     }
 
@@ -96,5 +101,5 @@ final class WindowTask implements Runnable {
     public String toString() {
         return "window [name=" + window.getName() + ", path=" + window.getPath() + "]";
     }
-    
+
 }

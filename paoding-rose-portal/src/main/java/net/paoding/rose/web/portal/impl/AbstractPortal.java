@@ -147,13 +147,18 @@ public abstract class AbstractPortal implements Portal, PortalListener {
     public Window addWindow(String name, String windowPath, WindowCallback callback) {
         // 创建 窗口对象
         WindowImpl window = new WindowImpl(this, name, windowPath);
+        
+        WindowRequest request = new WindowRequest(window, getRequest());
+        WindowResponse response = new WindowResponse(window);
+        request.setAttribute("$$paoding-rose-portal.window.name", name);
+        request.setAttribute("$$paoding-rose-portal.window.path", windowPath);
 
         // PortalWaitInterceptor#waitForWindows
         // RoseFilter#supportsRosepipe
-        window.getRequest().removeAttribute(RoseConstants.PIPE_WINDOW_IN);
+        request.removeAttribute(RoseConstants.PIPE_WINDOW_IN);
 
         // 定义窗口任务
-        WindowTask task = new WindowTask(window);
+        WindowTask task = new WindowTask(window, request, response);
 
         // 注册到相关变量中
         synchronized (windows) {

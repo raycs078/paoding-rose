@@ -15,9 +15,7 @@
  */
 package net.paoding.rose.web.portal.impl;
 
-import java.util.Collections;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -37,16 +35,11 @@ import net.paoding.rose.web.portal.util.Enumerator;
  */
 class WindowRequest extends HttpServletRequestWrapper {
 
-	private static final String HEAER_IF_MODIFIED_SINCE = "If-Modified-Since";
-	
-	private static final String HEAER_IF_NONE_MATHC = "If-None-Match";
-	
-	private final Window window;
+    private static final String HEAER_IF_MODIFIED_SINCE = "If-Modified-Since";
 
-    /**
-     * 窗口请求对象私有的、有别于其他窗口的属性
-     */
-    private Map<String, Object> privateAttributes;
+    private static final String HEAER_IF_NONE_MATHC = "If-None-Match";
+
+    private final Window window;
 
     /**
      * 那些属性是这个窗口所不要的，在此标志
@@ -74,9 +67,7 @@ class WindowRequest extends HttpServletRequestWrapper {
             if (deleteAttributes != null && deleteAttributes.contains(name)) {
                 return null;
             }
-            if (privateAttributes != null) {
-                value = privateAttributes.get(name);
-            }
+            value = window.get(name);
             if (value == null) {
                 value = super.getAttribute(name);
             }
@@ -86,35 +77,32 @@ class WindowRequest extends HttpServletRequestWrapper {
 
     @Override
     public String getHeader(String name) {
-    	if (isDisabledHeader(name)) {
-    		return null;
-    	}
-    	return super.getHeader(name);
+        if (isDisabledHeader(name)) {
+            return null;
+        }
+        return super.getHeader(name);
     }
-    
-    @SuppressWarnings("unchecked")
-	@Override
-	public Enumeration getHeaders(String name) {
-    	if (isDisabledHeader(name)) {
-    		return null;
-    	}
-		return super.getHeaders(name);
-	}
 
-	/**
-	 * 判断指定header是否被屏蔽掉了。
-	 * 为了window能够正确执行，可能会屏蔽掉一些header，
-	 * 例如，通过屏蔽If-Modified-Since和If-None-Match来解决
-	 * Window返回304的问题。
-	 * 
-	 * @param headerName
-	 * @return
-	 */
-	private boolean isDisabledHeader(String headerName) {
-    	return HEAER_IF_MODIFIED_SINCE.equals(headerName)
-    		|| HEAER_IF_NONE_MATHC.equals(headerName);
+    @SuppressWarnings("unchecked")
+    @Override
+    public Enumeration getHeaders(String name) {
+        if (isDisabledHeader(name)) {
+            return null;
+        }
+        return super.getHeaders(name);
     }
-    
+
+    /**
+     * 判断指定header是否被屏蔽掉了。 为了window能够正确执行，可能会屏蔽掉一些header，
+     * 例如，通过屏蔽If-Modified-Since和If-None-Match来解决 Window返回304的问题。
+     * 
+     * @param headerName
+     * @return
+     */
+    private boolean isDisabledHeader(String headerName) {
+        return HEAER_IF_MODIFIED_SINCE.equals(headerName) || HEAER_IF_NONE_MATHC.equals(headerName);
+    }
+
     /**
      * 返回这个窗口的私有属性名加portal主控请求对象共同属性的属性名
      */
@@ -122,11 +110,7 @@ class WindowRequest extends HttpServletRequestWrapper {
     public Enumeration getAttributeNames() {
         HashSet<String> keys;
         synchronized (mutex) {
-            if (privateAttributes == null) {
-                keys = new HashSet<String>();
-            } else {
-                keys = new HashSet<String>(privateAttributes.keySet());
-            }
+            keys = new HashSet<String>(window.getAttributes().keySet());
             Enumeration<String> names = super.getAttributeNames();
             while (names.hasMoreElements()) {
                 String name = (String) names.nextElement();
@@ -148,15 +132,14 @@ class WindowRequest extends HttpServletRequestWrapper {
             throw new NullPointerException("don't set a NULL named attribute");
         }
         synchronized (mutex) {
-            if (privateAttributes != null) {
-                privateAttributes.remove(name);
-            }
+            window.remove(name);
             if (deleteAttributes == null) {
                 deleteAttributes = new HashSet<String>(4);
                 deleteAttributes.add(name);
             }
         }
     }
+    
 
     /**
      * 
@@ -174,10 +157,7 @@ class WindowRequest extends HttpServletRequestWrapper {
             return;
         }
         synchronized (mutex) {
-            if (privateAttributes == null) {
-                privateAttributes = new HashMap<String, Object>();
-            }
-            privateAttributes.put(name, value);
+            window.set(name, value);
             if (deleteAttributes != null) {
                 deleteAttributes.remove(name);
             }
@@ -185,10 +165,7 @@ class WindowRequest extends HttpServletRequestWrapper {
     }
 
     public Map<String, Object> getPrivateAttributes() {
-        if (privateAttributes == null || privateAttributes.size() == 0) {
-            return Collections.emptyMap();
-        }
-        return Collections.unmodifiableMap(privateAttributes);
+        return window.getAttributes();
     }
 
     @Override
