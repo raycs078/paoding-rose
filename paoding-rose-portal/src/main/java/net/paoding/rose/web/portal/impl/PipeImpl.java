@@ -1,5 +1,5 @@
 /*
- * Copyright 2007-2010 the original author or authors.
+ * Copyright 2007-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -221,14 +221,14 @@ public class PipeImpl extends AbstractPortal implements Pipe {
         }
         try {
             // 这里不用设置response的encoding，即使用和主控一致的encoding
-            out.append(window.getOutputContent());
+            out.append(render(window));
             out.flush();
         } finally {
             latch.countDown();
         }
         if (logger.isDebugEnabled()) {
             logger.debug(//
-                    "firing '" + window.getName() + "' : done  content=" + window.getContent());
+            "firing '" + window.getName() + "' : done  content=" + window.getContent());
         }
     }
 

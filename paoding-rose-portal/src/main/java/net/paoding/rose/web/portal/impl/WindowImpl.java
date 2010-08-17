@@ -1,5 +1,5 @@
 /*
- * Copyright 2007-2009 the original author or authors.
+ * Copyright 2007-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,6 @@
  */
 package net.paoding.rose.web.portal.impl;
 
-import java.io.IOException;
-import java.io.StringWriter;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -25,7 +23,6 @@ import java.util.concurrent.Future;
 import javax.servlet.http.HttpServletResponse;
 
 import net.paoding.rose.web.portal.Window;
-import net.paoding.rose.web.portal.WindowRender;
 
 /**
  * 
@@ -119,25 +116,30 @@ class WindowImpl implements Window {
     }
 
     @Override
+    public int getContextLength() {
+        return buffer == null ? -1 : buffer.length();
+    }
+
+    @Override
     public String getContent() {
         return buffer == null ? "" : buffer.toString();
     }
 
-    public String getOutputContent() {
-        WindowRender render = portal.getWindowRender();
-        if (render == null) {
-            return getContent();
+    @Override
+    public void clearContent() {
+        if (buffer != null) {
+            buffer.setLength(0);
         }
-        StringWriter stringWriter = new StringWriter(getContent().length() << 1);
-        try {
-            render.render(this, stringWriter);
-        } catch (IOException e) {
-            throw new IllegalArgumentException(e);
-        }
-        return stringWriter.getBuffer().toString();
     }
 
     void appendContent(String content) {
+        if (buffer == null) {
+            buffer = new StringBuilder();
+        }
+        this.buffer.append(content);
+    }
+
+    void appendContent(CharSequence content) {
         if (buffer == null) {
             buffer = new StringBuilder();
         }
@@ -185,6 +187,10 @@ class WindowImpl implements Window {
     @Override
     public void setThrowable(Throwable throwable) {
         this.throwable = throwable;
+        this.statusMessage = throwable.getMessage();
+        if (statusCode < 500 || statusCode >= 600) {
+            statusCode = 500;
+        }
     }
 
     public void setStatus(int sc) {
@@ -209,7 +215,7 @@ class WindowImpl implements Window {
 
     @Override
     public String toString() {
-        return getOutputContent();
+        return this.portal.render(this);
     }
 
     @Override
@@ -224,4 +230,5 @@ class WindowImpl implements Window {
     public int hashCode() {
         return this.name.hashCode();
     }
+
 }

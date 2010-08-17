@@ -100,6 +100,12 @@ public interface Window {
     public String getPath();
 
     /**
+     * 
+     * @return
+     */
+    public int getContextLength();
+
+    /**
      * 返回该窗口的渲染结果文本，如果没有被渲染将返回长度为0的串
      * 
      * @return
@@ -107,13 +113,9 @@ public interface Window {
     public String getContent();
 
     /**
-     * 返回该窗口在portal或pipe中的输出，如果没有被渲染将返回长度为0的串
      * 
-     * @see WindowRender
-     * @return
-     * @throws IOException
      */
-    public String getOutputContent();
+    public void clearContent();
 
     /**
      * 设置窗口属性，使 {@link Window#get(String)}方法能够获取他
