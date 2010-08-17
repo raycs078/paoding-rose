@@ -79,9 +79,6 @@ public class PortalWaitInterceptor extends ControllerInterceptorAdapter {
         int winIndex = 0;
         List<Window> windows = portal.getWindows();
         for (Window window : windows) {
-            if (window.getName().indexOf(':') >= 0) {
-                continue;
-            }
             winIndex++;
             Future<?> future = window.getFuture();
             if (future.isDone()) {
