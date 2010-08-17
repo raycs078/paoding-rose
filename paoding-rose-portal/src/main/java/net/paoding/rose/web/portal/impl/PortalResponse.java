@@ -16,6 +16,7 @@
 package net.paoding.rose.web.portal.impl;
 
 import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
 
 import org.apache.commons.logging.Log;
@@ -34,8 +35,8 @@ class PortalResponse extends HttpServletResponseWrapper {
 
     private ServerPortal portal;
 
-    public PortalResponse(ServerPortal portal) {
-        super(portal.getResponse());
+    public PortalResponse(ServerPortal portal, HttpServletResponse response) {
+        super(response);
         this.portal = portal;
     }
 
