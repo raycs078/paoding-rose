@@ -1,5 +1,5 @@
 /*
- * Copyright 2007-2010 the original author or authors.
+ * Copyright 2007-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,9 +15,6 @@
  */
 package net.paoding.rose.web.portal.impl;
 
-import java.io.IOException;
-import java.io.Writer;
-
 import net.paoding.rose.web.portal.Window;
 import net.paoding.rose.web.portal.WindowRender;
 
@@ -29,8 +26,8 @@ import net.paoding.rose.web.portal.WindowRender;
 public class SimpleWindowRender implements WindowRender {
 
     @Override
-    public void render(Window window, Writer out) throws IOException {
-        out.append(window.getContent());
+    public String render(Window window) {
+        return window.getContent();
     }
 
 }

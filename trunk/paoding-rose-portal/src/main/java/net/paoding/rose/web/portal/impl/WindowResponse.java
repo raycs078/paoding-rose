@@ -104,11 +104,6 @@ class WindowResponse extends HttpServletResponseWrapper {
     }
 
     @Override
-    public void sendError(int sc) throws IOException {
-        sendError(sc, "error" + sc + ": " + window.getPath());
-    }
-
-    @Override
     public void setHeader(String name, String value) {
         synchronized (window.getPortal()) {
             super.setHeader(name, value);
@@ -133,9 +128,13 @@ class WindowResponse extends HttpServletResponseWrapper {
     }
 
     @Override
+    public void sendError(int sc) throws IOException {
+        window.setStatus(sc);
+    }
+
+    @Override
     public void sendError(int sc, String msg) throws IOException {
         window.setStatus(sc, msg);
-        getWriter().append(msg);
     }
 
     @Override

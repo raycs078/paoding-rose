@@ -27,9 +27,9 @@ import javax.servlet.http.HttpServletResponse;
 import net.paoding.rose.RoseConstants;
 import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.portal.Portal;
-import net.paoding.rose.web.portal.ServerPortal;
 import net.paoding.rose.web.portal.PortalListener;
 import net.paoding.rose.web.portal.PortalListeners;
+import net.paoding.rose.web.portal.ServerPortal;
 import net.paoding.rose.web.portal.Window;
 import net.paoding.rose.web.portal.WindowCallback;
 import net.paoding.rose.web.portal.WindowRender;
@@ -43,9 +43,13 @@ import org.apache.commons.logging.LogFactory;
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
-public abstract class AbstractPortal implements Portal, PortalListener {
+public abstract class AbstractPortal implements WindowRender, Portal, PortalListener {
 
     private static final Log logger = LogFactory.getLog(AbstractPortal.class);
+
+    protected static final NestedWindowRender singletonRender = new NestedWindowRender();
+
+    protected NestedWindowRender render = singletonRender;
 
     protected ExecutorService executorService;
 
@@ -54,8 +58,6 @@ public abstract class AbstractPortal implements Portal, PortalListener {
     protected Invocation invocation;
 
     protected List<Window> windows = new LinkedList<Window>();
-
-    protected WindowRender render;
 
     protected long timeout;
 
@@ -147,7 +149,7 @@ public abstract class AbstractPortal implements Portal, PortalListener {
     public Window addWindow(String name, String windowPath, WindowCallback callback) {
         // 创建 窗口对象
         WindowImpl window = new WindowImpl(this, name, windowPath);
-        
+
         WindowRequest request = new WindowRequest(window, getRequest());
         WindowResponse response = new WindowResponse(window);
         request.setAttribute("$$paoding-rose-portal.window.name", name);
@@ -188,18 +190,31 @@ public abstract class AbstractPortal implements Portal, PortalListener {
 
     @Override
     public WindowRender getWindowRender() {
-        return render;
+        return render.getInnerRender();
     }
 
     @Override
     public void setWindowRender(WindowRender render) {
-        this.render = render;
+        if (render == null) {
+            this.render = singletonRender;
+        } else {
+            if (this.render == singletonRender) {
+                this.render = new NestedWindowRender(render);
+            } else {
+                this.render.setInnerRender(render);
+            }
+        }
     }
 
     @SuppressWarnings("unchecked")
     protected Future<?> submitWindow(ExecutorService executor, WindowTask task) {
         Future<?> future = executor.submit(task);
         return new WindowFuture(future, task.getWindow());
+    }
+
+    @Override
+    public String render(Window window) {
+        return render.render(window);
     }
 
     //-------------实现toString()---------------F

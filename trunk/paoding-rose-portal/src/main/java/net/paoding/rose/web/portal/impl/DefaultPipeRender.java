@@ -15,8 +15,6 @@
  */
 package net.paoding.rose.web.portal.impl;
 
-import java.io.IOException;
-import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -36,7 +34,7 @@ import org.json.JSONObject;
 public class DefaultPipeRender implements WindowRender {
 
     @Override
-    public void render(Window window, Writer out) throws IOException {
+    public String render(Window window) {
 
         JSONObject json = new JSONObject();
         json.put("content", window.getContent());
@@ -52,13 +50,14 @@ public class DefaultPipeRender implements WindowRender {
         if (css != null && css.length() > 0) {
             json.put("css", css);
         }
-
+        StringBuilder out = new StringBuilder(2048);
         out.append("<script type=\"text/javascript\">");
         out.append("rosepipe.addWindow(");
         out.append(json.toString());
         out.append(");");
         out.append("</script>");
         out.append('\n');
+        return out.toString();
     }
 
     public static JSONArray getAttributeAsArray(Window window, String key) {
