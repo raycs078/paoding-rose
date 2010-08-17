@@ -23,7 +23,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
 
 import net.paoding.rose.web.Invocation;
-import net.paoding.rose.web.impl.thread.AfterCompletion;
 import net.paoding.rose.web.impl.thread.InvocationBean;
 import net.paoding.rose.web.portal.Pipe;
 import net.paoding.rose.web.portal.PortalFactory;
@@ -145,9 +144,6 @@ public class PortalFactoryImpl implements PortalFactory, InitializingBean {
         //
         inv.setAttribute("$$paoding-rose-portal.portal", portal);
 
-        //afterCompletion时取消对request的绑定，防止双层Portal+ThreadLocal造成的内存泄漏
-        inv.addAfterCompletion(portalRequestDestroyer);
-
         portal.onPortalCreated(portal);
         return portal;
     }
@@ -173,23 +169,4 @@ public class PortalFactoryImpl implements PortalFactory, InitializingBean {
         return pipe;
     }
 
-    /**
-     * afterCompletion时取消对request的绑定，防止双层Portal+ThreadLocal造成的内存泄漏
-     * 
-     */
-
-    private static final AfterCompletion portalRequestDestroyer = new PortalRequestDestroyer();
-
-    /**
-     * afterCompletion时取消对request的绑定，防止双层Portal+ThreadLocal造成的内存泄漏
-     * 
-     */
-    private static class PortalRequestDestroyer implements AfterCompletion {
-
-        @Override
-        public void afterCompletion(Invocation inv, Throwable ex) throws Exception {
-            PortalRequest portalRequest = PortalRequest.unwrapPortalRequest(inv.getRequest());
-            portalRequest.destroy();
-        }
-    }
 }
