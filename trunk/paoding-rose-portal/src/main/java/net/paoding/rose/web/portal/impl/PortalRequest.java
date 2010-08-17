@@ -94,7 +94,9 @@ final class PortalRequest extends HttpServletRequestWrapper implements HttpServl
                 logger.debug(String.format("set request: %s", request));
             }
             this.threadLocalRequests.set((HttpServletRequest) request);
-        } else { //if null, remove from threadLocalRequests
+        } else { 
+            //if null, remove from threadLocalRequests
+            // @see WindowTask#run 's finally
             if (logger.isDebugEnabled()) {
                 HttpServletRequest tmpRequest = this.threadLocalRequests.get();
                 logger.debug(String.format("remove request: %s", tmpRequest));
@@ -102,12 +104,7 @@ final class PortalRequest extends HttpServletRequestWrapper implements HttpServl
             this.threadLocalRequests.remove();
         }
     }
-
-    public void destroy() {
-        this.threadLocalRequests = null;
-        this.portal = null;
-    }
-
+    
     /**
      * 返回当前邦定到当前线程的请求对象，如果没有则返回 portalNotWrapperRequest 请求对象
      */

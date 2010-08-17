@@ -87,11 +87,10 @@ final class WindowTask implements Runnable {
             window.setThrowable(e);
             window.getPortal().onWindowError(window);
         } finally {
-
-            final HttpServletRequest wrapper = window.getPortal().getRequest();
-            final PortalRequest portalRequest = PortalRequest.unwrapPortalRequest(wrapper);
             // remove request from ThreadLocal in PortalRequest 
             // 销毁在PortalRequest的ThreadLocal成员变量中保存的与 当前线程相关的request对象，以防内存泄漏。
+            final HttpServletRequest wrapper = window.getPortal().getRequest();
+            final PortalRequest portalRequest = PortalRequest.unwrapPortalRequest(wrapper);
             portalRequest.setRequest(null);
 
         }
