@@ -68,9 +68,9 @@ public class PipeInterceptor extends ControllerInterceptorAdapter {
 
             try {
                 for (Window window : pipe.getWindows()) {
-                    if (window.getRequest().getAttribute(RoseConstants.PIPE_WINDOW_IN) != Boolean.TRUE) {
+                    if (window.get(RoseConstants.PIPE_WINDOW_IN) != Boolean.TRUE) {
                         synchronized (window) {
-                            while (window.getRequest().getAttribute(RoseConstants.PIPE_WINDOW_IN) != Boolean.TRUE) {
+                            while (window.get(RoseConstants.PIPE_WINDOW_IN) != Boolean.TRUE) {
                                 long now = System.currentTimeMillis();
                                 if (deadline <= 0) {
                                     if (debugEnabled) {

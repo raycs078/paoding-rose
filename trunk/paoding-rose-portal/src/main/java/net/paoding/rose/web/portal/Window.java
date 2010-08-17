@@ -19,9 +19,6 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.Future;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 /**
  * {@link Window}封装了一个portal下的窗口信息，包括该窗口的名字、请求地址以及处理完后最终的响应状态和页面文本内容。
  * <p>
@@ -52,20 +49,6 @@ public interface Window {
      * @return
      */
     public Portal getPortal();
-
-    /**
-     * 返回该window所使用的request对象
-     * 
-     * @return
-     */
-    public HttpServletRequest getRequest();
-
-    /**
-     * 返回该window所使用的response对象
-     * 
-     * @return
-     */
-    public HttpServletResponse getResponse();
 
     /**
      * 返回该窗口请求任务的future对象，通常Portal控制器应该不需要主动使用这个方法，但在必要的情况下，
@@ -147,6 +130,13 @@ public interface Window {
      * @return
      */
     public Object get(String key);
+
+    /**
+     * 删除属性
+     * 
+     * @param key
+     */
+    public void remove(String key);
 
     /**
      * 获取设置到该窗口的所有属性
