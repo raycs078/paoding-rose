@@ -76,11 +76,10 @@ final class PortalRequest extends HttpServletRequestWrapper implements HttpServl
      * 构造子
      * 
      */
-    public PortalRequest(Portal portal) {
-        super(new PrivateRequestWrapper(portal.getRequest()));
-        orginal = (HttpServletRequest) super.getRequest();
-        this.setRequest(orginal);
+    public PortalRequest(Portal portal, HttpServletRequest orginal) {
+        super(new PrivateRequestWrapper(orginal));
         this.portal = portal;
+        this.orginal = orginal;
     }
 
     /**

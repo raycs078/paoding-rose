@@ -17,6 +17,11 @@ package net.paoding.rose.web.portal.impl;
 
 import java.util.concurrent.ExecutorService;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequestWrapper;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpServletResponseWrapper;
+
 import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.impl.thread.AfterCompletion;
 import net.paoding.rose.web.impl.thread.InvocationBean;
@@ -108,9 +113,36 @@ public class PortalFactoryImpl implements PortalFactory, InitializingBean {
         }
 
         // 换request对象
-        final PortalRequest portalRequest = new PortalRequest(portal);
-        inv.setRequest(portalRequest);
-        ((InvocationBean) inv).setResponse(new PortalResponse(portal));
+        HttpServletRequest innerRequest = inv.getRequest();
+        HttpServletRequestWrapper requestWrapper = null;
+        while (innerRequest instanceof HttpServletRequestWrapper) {
+            requestWrapper = (HttpServletRequestWrapper) innerRequest;
+            innerRequest = (HttpServletRequest) ((HttpServletRequestWrapper) innerRequest)
+                    .getRequest();
+        }
+        final PortalRequest portalRequest = new PortalRequest(portal, innerRequest);
+        if (requestWrapper == null) {
+            inv.setRequest(portalRequest);
+        } else {
+            requestWrapper.setRequest(portalRequest);
+        }
+
+        // 换response对象
+        HttpServletResponse innerResponse = inv.getResponse();
+        HttpServletResponseWrapper responseWrapper = null;
+        while (innerResponse instanceof HttpServletResponseWrapper) {
+            responseWrapper = (HttpServletResponseWrapper) innerResponse;
+            innerResponse = (HttpServletResponse) ((HttpServletResponseWrapper) innerResponse)
+                    .getResponse();
+        }
+        final PortalResponse portalResponse = new PortalResponse(portal, innerResponse);
+        if (responseWrapper == null) {
+            ((InvocationBean) inv).setResponse(portalResponse);
+        } else {
+            responseWrapper.setResponse(portalResponse);
+        }
+
+        //
         inv.setAttribute("$$paoding-rose-portal.portal", portal);
 
         //afterCompletion时取消对request的绑定，防止双层Portal+ThreadLocal造成的内存泄漏
