@@ -59,7 +59,7 @@ public class Modifier {
                     if (shardBy != null) {
                         throw new IllegalArgumentException("duplicated ShardBy");
                     }
-                    shardBy = ":" + index;
+                    shardBy = ":" + (index + 1);
                 }
 
                 Class<? extends Annotation> annotationType = annotation.annotationType();
