@@ -94,7 +94,7 @@ final class PortalRequest extends HttpServletRequestWrapper implements HttpServl
                 logger.debug(String.format("set request: %s", request));
             }
             this.threadLocalRequests.set((HttpServletRequest) request);
-        } else { 
+        } else {
             //if null, remove from threadLocalRequests
             // @see WindowTask#run 's finally
             if (logger.isDebugEnabled()) {
@@ -104,7 +104,7 @@ final class PortalRequest extends HttpServletRequestWrapper implements HttpServl
             this.threadLocalRequests.remove();
         }
     }
-    
+
     /**
      * 返回当前邦定到当前线程的请求对象，如果没有则返回 portalNotWrapperRequest 请求对象
      */
@@ -295,29 +295,39 @@ final class PortalRequest extends HttpServletRequestWrapper implements HttpServl
 
     @Override
     public ServletInputStream getInputStream() throws IOException {
-        return getRequest().getInputStream();
+        synchronized (portal) {
+            return getRequest().getInputStream();
+        }
     }
 
     @Override
     public String getParameter(String name) {
-        return getRequest().getParameter(name);
+        synchronized (portal) {
+            return getRequest().getParameter(name);
+        }
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public Map getParameterMap() {
-        return getRequest().getParameterMap();
+        synchronized (portal) {
+            return getRequest().getParameterMap();
+        }
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public Enumeration getParameterNames() {
-        return getRequest().getParameterNames();
+        synchronized (portal) {
+            return getRequest().getParameterNames();
+        }
     }
 
     @Override
     public String[] getParameterValues(String name) {
-        return getRequest().getParameterValues(name);
+        synchronized (portal) {
+            return getRequest().getParameterValues(name);
+        }
     }
 
     @Override
@@ -342,7 +352,9 @@ final class PortalRequest extends HttpServletRequestWrapper implements HttpServl
 
     @Override
     public BufferedReader getReader() throws IOException {
-        return getRequest().getReader();
+        synchronized (portal) {
+            return getRequest().getReader();
+        }
     }
 
     @Override
@@ -357,13 +369,17 @@ final class PortalRequest extends HttpServletRequestWrapper implements HttpServl
 
     @Override
     public Locale getLocale() {
-        return getRequest().getLocale();
+        synchronized (portal) {
+            return getRequest().getLocale();
+        }
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public Enumeration getLocales() {
-        return getRequest().getLocales();
+        synchronized (portal) {
+            return getRequest().getLocales();
+        }
     }
 
     @Override
