@@ -130,7 +130,16 @@ public class ViewInstruction extends AbstractInstruction {
             globalViewPathCaches.put(viewRelativePath, viewPathCache);
         }
         //
-        String viewPath = getViewPathFromCache(inv, viewPathCache, viewName);
+        String viewPath;
+        int queryStringIndex = viewName.indexOf('?');
+        if (queryStringIndex < 0) {
+            viewPath = getViewPathFromCache(inv, viewPathCache, viewName);
+        } else {
+            viewPath = getViewPathFromCache(inv, viewPathCache, viewName.substring(0,
+                    queryStringIndex))
+                    + viewName.substring(queryStringIndex);
+        }
+
         if (viewPath != null) {
             if (logger.isDebugEnabled()) {
                 logger.debug("found '" + viewPath + "' for viewName '" + viewName + "'");
@@ -205,11 +214,12 @@ public class ViewInstruction extends AbstractInstruction {
                 viewFileName = searchViewFile(directoryFile, notDirectoryViewName, true);
             }
             if (viewFileName == null) {
+                String msg = "not found view file '" + notDirectoryViewName + "' in "
+                        + directoryPath;
                 if (logger.isWarnEnabled()) {
-                    logger.warn("not found directoryPath '" + directoryPath + "'");
+                    logger.warn(msg);
                 }
-                inv.getResponse().sendError(404,
-                        "not found view file '" + notDirectoryViewName + "' in " + directoryPath);
+                inv.getResponse().sendError(404, msg);
                 return null;
             } else {
                 viewPath = directoryPath + "/" + viewFileName;
