@@ -241,7 +241,7 @@ SELECT name WHERE id IN (?, ?, ?)
 注意，IN语句的查询不能这样处理：
 
 {{{
-@SQL("SELECT name WHRE id IN (?)")
+@SQL("SELECT name WHRE id IN (:1)")
 public String[] findNames(String idList)；
 userDAO.findNames("1,2,3"); 
 }}}
