@@ -1,5 +1,5 @@
 /*
- * Copyright 2007-2009 the original author or authors.
+ * Copyright 2007-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ package net.paoding.rose.web.portal.impl;
 import java.util.Arrays;
 import java.util.List;
 
-import net.paoding.rose.web.portal.PortalListener;
+import net.paoding.rose.web.portal.WindowListener;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -94,7 +94,7 @@ public class PortalBeanPostProcessor implements BeanPostProcessor, ApplicationCo
                 String paramListeners = webApplicationContext.getServletContext().getInitParameter(
                         PORTAL_LISTENERS);
                 @SuppressWarnings("unchecked")
-                List<PortalListener> list = (List<PortalListener>) bean;
+                List<WindowListener> list = (List<WindowListener>) bean;
                 if (StringUtils.isNotBlank(paramListeners)) {
                     String[] splits = paramListeners.split(",| ");
                     if (logger.isInfoEnabled()) {
@@ -105,7 +105,7 @@ public class PortalBeanPostProcessor implements BeanPostProcessor, ApplicationCo
                         if (className.length() > 0) {
                             try {
                                 Class<?> clazz = Class.forName(className);
-                                PortalListener l = (PortalListener) BeanUtils
+                                WindowListener l = (WindowListener) BeanUtils
                                         .instantiateClass(clazz);
                                 list.add(l);
                                 if (logger.isInfoEnabled()) {

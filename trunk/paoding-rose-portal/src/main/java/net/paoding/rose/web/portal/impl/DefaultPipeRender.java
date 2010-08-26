@@ -1,5 +1,5 @@
 /*
- * Copyright 2007-2010 the original author or authors.
+ * Copyright 2007-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 
-import net.paoding.rose.web.portal.Pipe;
 import net.paoding.rose.web.portal.Window;
 import net.paoding.rose.web.portal.WindowRender;
 
@@ -41,12 +40,12 @@ public class DefaultPipeRender implements WindowRender {
         json.put("id", window.getName());
 
         // javascript
-        JSONArray js = getAttributeAsArray(window, Pipe.WINDIW_JS);
+        JSONArray js = getAttributeAsArray(window, PipeImpl.WINDIW_JS);
         if (js != null && js.length() > 0) {
             json.put("js", js);
         }
         // css
-        JSONArray css = getAttributeAsArray(window, Pipe.WINDOW_CSS);
+        JSONArray css = getAttributeAsArray(window, PipeImpl.WINDOW_CSS);
         if (css != null && css.length() > 0) {
             json.put("css", css);
         }

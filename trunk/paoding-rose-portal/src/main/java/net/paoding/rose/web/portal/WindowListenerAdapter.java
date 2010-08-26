@@ -15,15 +15,41 @@
  */
 package net.paoding.rose.web.portal;
 
-import javax.servlet.http.HttpServletRequest;
-
 /**
- * 一个 {@link ServerPortal} 对象邦定在 {@link HttpServletRequest} 之上，提供了 portal
- * 框架的编程接口。通过多次调用 {@link #addWindow(String, String)} 接口来为一个 portal 增加窗口。
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
-public interface ServerPortal extends Portal {
+public abstract class WindowListenerAdapter implements WindowListener {
+
+    @Override
+    public void onWindowAdded(Window window) {
+
+    }
+
+    @Override
+    public void onWindowCanceled(Window window) {
+
+    }
+
+    @Override
+    public void onWindowDone(Window window) {
+
+    }
+
+    @Override
+    public void onWindowError(Window window) {
+
+    }
+
+    @Override
+    public void onWindowStarted(Window window) {
+
+    }
+
+    @Override
+    public void onWindowTimeout(Window window) {
+
+    }
 
 }

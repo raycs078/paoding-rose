@@ -1,5 +1,5 @@
 /*
- * Copyright 2007-2009 the original author or authors.
+ * Copyright 2007-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,18 +18,18 @@ package net.paoding.rose.web.portal.impl;
 import java.util.concurrent.ExecutorService;
 
 import net.paoding.rose.web.Invocation;
-import net.paoding.rose.web.portal.ServerPortal;
-import net.paoding.rose.web.portal.PortalListener;
+import net.paoding.rose.web.portal.Portal;
+import net.paoding.rose.web.portal.WindowListener;
 
 /**
- * {@link ServerPortal} 的实现类，Portal 框架的核心类。
+ * {@link Portal} 的实现类，Portal 框架的核心类。
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
-public class ServerPortalImpl extends AbstractPortal implements ServerPortal, PortalListener {
+public class PortalImpl extends GenericWindowContainer implements Portal, WindowListener {
 
-    public ServerPortalImpl(Invocation inv, ExecutorService executorService, PortalListener portalListener) {
+    public PortalImpl(Invocation inv, ExecutorService executorService, WindowListener portalListener) {
         super(inv, executorService, portalListener);
     }
 

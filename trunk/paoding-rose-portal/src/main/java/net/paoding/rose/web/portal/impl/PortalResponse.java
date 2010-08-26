@@ -19,10 +19,10 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
 
+import net.paoding.rose.web.portal.Portal;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import net.paoding.rose.web.portal.ServerPortal;
 
 /**
  * 
@@ -33,14 +33,14 @@ class PortalResponse extends HttpServletResponseWrapper {
 
     private static final Log logger = LogFactory.getLog(PortalResponse.class);
 
-    private ServerPortal portal;
+    private Portal portal;
 
-    public PortalResponse(ServerPortal portal, HttpServletResponse response) {
+    public PortalResponse(Portal portal, HttpServletResponse response) {
         super(response);
         this.portal = portal;
     }
 
-    public ServerPortal getPortal() {
+    public Portal getPortal() {
         return portal;
     }
 

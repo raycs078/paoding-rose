@@ -15,7 +15,6 @@
  */
 package net.paoding.rose.web.portal;
 
-import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.Future;
 
@@ -44,11 +43,19 @@ public interface Window {
     public static final String TYPE_PIPE = "pipe";
 
     /**
+     * 请改为 {@link #getContainer()}
      * 该窗口所属的portal对象，如果一个窗口要把自己的数据“透露”给其他窗口，必须通过 Portal 对象实现
      * 
      * @return
      */
-    public Portal getPortal();
+    @Deprecated
+    public WindowContainer getPortal();
+
+    /**
+     * 
+     * @return
+     */
+    public WindowContainer getContainer();
 
     /**
      * 返回该窗口请求任务的future对象，通常Portal控制器应该不需要主动使用这个方法，但在必要的情况下，

@@ -43,17 +43,23 @@ class WindowImpl implements Window {
 
     private String statusMessage = "";
 
-    private AbstractPortal portal;
+    private GenericWindowContainer portal;
 
     private Future<?> future;
 
-    public WindowImpl(AbstractPortal portal, String name, String windowPath) {
+    public WindowImpl(GenericWindowContainer portal, String name, String windowPath) {
         this.portal = portal;
         this.name = name;
         this.path = windowPath;
     }
 
-    public AbstractPortal getPortal() {
+    @Override
+    public GenericWindowContainer getPortal() {
+        return portal;
+    }
+
+    @Override
+    public GenericWindowContainer getContainer() {
         return portal;
     }
 

@@ -18,7 +18,6 @@ package net.paoding.rose.web.portal.impl;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -26,8 +25,8 @@ import java.util.concurrent.TimeUnit;
 
 import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.portal.Pipe;
-import net.paoding.rose.web.portal.PortalListener;
-import net.paoding.rose.web.portal.PortalListenerAdapter;
+import net.paoding.rose.web.portal.WindowListener;
+import net.paoding.rose.web.portal.WindowListenerAdapter;
 import net.paoding.rose.web.portal.Window;
 
 import org.apache.commons.logging.Log;
@@ -39,7 +38,11 @@ import org.apache.commons.logging.LogFactory;
  * 
  */
 
-public class PipeImpl extends AbstractPortal implements Pipe {
+public class PipeImpl extends GenericWindowContainer implements Pipe {
+
+    public static final String WINDIW_JS = "$$paoding-rose-portal.pipe.js";
+
+    public static final String WINDOW_CSS = "$$paoding-rose-portal.pipe.css";
 
     private static final Log logger = LogFactory.getLog(PipeImpl.class);
 
@@ -54,13 +57,13 @@ public class PipeImpl extends AbstractPortal implements Pipe {
 
     private Writer out;
 
-    public PipeImpl(Invocation inv, ExecutorService executorService, PortalListener portalListener) {
+    public PipeImpl(Invocation inv, ExecutorService executorService, WindowListener portalListener) {
         super(inv, executorService, portalListener);
         setWindowRender(defaultPipeRender);
         addListener(new FireListener());
     }
 
-    private class FireListener extends PortalListenerAdapter {
+    private class FireListener extends WindowListenerAdapter {
 
         @Override
         public void onWindowDone(Window window) {
@@ -73,53 +76,43 @@ public class PipeImpl extends AbstractPortal implements Pipe {
     }
 
     @Override
-    public void addCssTo(String windowName, Object cssStringOrObjectOrCollection) {
+    public void addCssTo(String windowName, String css) {
         for (Window window : windows) {
             if (window.getName().equals(windowName)) {
-                addCssTo(window, cssStringOrObjectOrCollection);
+                addCssTo(window, css);
                 return;
             }
         }
     }
 
-    @Override
-    public void addCssTo(Window window, Object cssStringOrObjectOrCollection) {
+    protected void addCssTo(Window window, String css) {
         @SuppressWarnings("unchecked")
         List<Object> list = (List<Object>) window.get(WINDOW_CSS);
         if (list == null) {
             list = new ArrayList<Object>(4);
             window.set(WINDOW_CSS, list);
         }
-        if (cssStringOrObjectOrCollection instanceof Collection<?>) {
-            list.addAll((Collection<?>) cssStringOrObjectOrCollection);
-        } else {
-            list.add(cssStringOrObjectOrCollection);
-        }
+        list.add(css);
     }
 
     @Override
-    public void addJsTo(String windowName, Object jsStringOrObjectOrCollection) {
+    public void addJsTo(String windowName, String js) {
         for (Window window : windows) {
             if (window.getName().equals(windowName)) {
-                addJsTo(window, jsStringOrObjectOrCollection);
+                addJsTo(window, js);
                 return;
             }
         }
     }
 
-    @Override
-    public void addJsTo(Window window, Object jsStringOrObjectOrCollection) {
+    protected void addJsTo(Window window, String js) {
         @SuppressWarnings("unchecked")
         List<Object> list = (List<Object>) window.get(WINDIW_JS);
         if (list == null) {
             list = new ArrayList<Object>(4);
             window.set(WINDIW_JS, list);
         }
-        if (jsStringOrObjectOrCollection instanceof Collection<?>) {
-            list.addAll((Collection<?>) jsStringOrObjectOrCollection);
-        } else {
-            list.add(jsStringOrObjectOrCollection);
-        }
+        list.add(js);
     }
 
     public synchronized boolean isStarted() {
@@ -134,7 +127,6 @@ public class PipeImpl extends AbstractPortal implements Pipe {
             return;
         }
         doStart(out);
-        onPortalReady(this);;
         if (getTimeout() >= 0) {
             if (logger.isDebugEnabled()) {
                 logger.debug("waiting for pipe windows up to " + getTimeout() + "ms");

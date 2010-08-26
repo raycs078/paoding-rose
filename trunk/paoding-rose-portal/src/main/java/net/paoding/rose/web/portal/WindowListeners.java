@@ -1,5 +1,5 @@
 /*
- * Copyright 2007-2009 the original author or authors.
+ * Copyright 2007-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,13 +23,13 @@ import java.util.List;
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
-public class PortalListeners implements PortalListener {
+public class WindowListeners implements WindowListener {
 
-    private List<PortalListener> listeners = new ArrayList<PortalListener>();
+    private List<WindowListener> listeners = new ArrayList<WindowListener>();
 
-    public void setListeners(List<PortalListener> listeners) {
-        List<PortalListener> copied = new ArrayList<PortalListener>(listeners);
-        for (PortalListener portalListener : copied) {
+    public void setListeners(List<WindowListener> listeners) {
+        List<WindowListener> copied = new ArrayList<WindowListener>(listeners);
+        for (WindowListener portalListener : copied) {
             if (portalListener == null) {
                 throw new NullPointerException("PortalListener");
             }
@@ -37,7 +37,7 @@ public class PortalListeners implements PortalListener {
         this.listeners = copied;
     }
 
-    public void addListener(PortalListener l) {
+    public void addListener(WindowListener l) {
         if (l == null) {
             throw new NullPointerException("PortalListener");
         }
@@ -45,60 +45,45 @@ public class PortalListeners implements PortalListener {
     }
 
     @Override
-    public void onPortalCreated(Portal portal) {
-        for (PortalListener l : listeners) {
-            l.onPortalCreated(portal);
-        }
-    }
-
-    @Override
-    public void onPortalReady(Portal portal) {
-        for (PortalListener l : listeners) {
-            l.onPortalReady(portal);
-        }
-    }
-
-    @Override
     public void onWindowAdded(Window window) {
-        for (PortalListener l : listeners) {
+        for (WindowListener l : listeners) {
             l.onWindowAdded(window);
         }
     }
 
     @Override
     public void onWindowCanceled(Window window) {
-        for (PortalListener l : listeners) {
+        for (WindowListener l : listeners) {
             l.onWindowCanceled(window);
         }
     }
 
     @Override
     public void onWindowDone(Window window) {
-        for (PortalListener l : listeners) {
+        for (WindowListener l : listeners) {
             l.onWindowDone(window);
         }
     }
 
     @Override
     public void onWindowError(Window window) {
-        for (PortalListener l : listeners) {
+        for (WindowListener l : listeners) {
             l.onWindowError(window);
         }
     }
 
     @Override
     public void onWindowStarted(Window window) {
-        for (PortalListener l : listeners) {
+        for (WindowListener l : listeners) {
             l.onWindowStarted(window);
         }
     }
 
     @Override
     public void onWindowTimeout(Window window) {
-        for (PortalListener l : listeners) {
+        for (WindowListener l : listeners) {
             l.onWindowTimeout(window);
         }
     }
-
 
 }
