@@ -1,5 +1,5 @@
 /*
- * Copyright 2007-2009 the original author or authors.
+ * Copyright 2007-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,12 +26,11 @@ import javax.servlet.http.HttpServletResponse;
 
 import net.paoding.rose.RoseConstants;
 import net.paoding.rose.web.Invocation;
-import net.paoding.rose.web.portal.Portal;
-import net.paoding.rose.web.portal.PortalListener;
-import net.paoding.rose.web.portal.PortalListeners;
-import net.paoding.rose.web.portal.ServerPortal;
+import net.paoding.rose.web.portal.WindowListener;
+import net.paoding.rose.web.portal.WindowListeners;
 import net.paoding.rose.web.portal.Window;
 import net.paoding.rose.web.portal.WindowCallback;
+import net.paoding.rose.web.portal.WindowContainer;
 import net.paoding.rose.web.portal.WindowRender;
 
 import org.apache.commons.logging.Log;
@@ -43,9 +42,10 @@ import org.apache.commons.logging.LogFactory;
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
-public abstract class AbstractPortal implements WindowRender, Portal, PortalListener {
+public abstract class GenericWindowContainer implements WindowRender, WindowContainer,
+        WindowListener {
 
-    private static final Log logger = LogFactory.getLog(AbstractPortal.class);
+    private static final Log logger = LogFactory.getLog(GenericWindowContainer.class);
 
     protected static final NestedWindowRender singletonRender = new NestedWindowRender();
 
@@ -53,7 +53,7 @@ public abstract class AbstractPortal implements WindowRender, Portal, PortalList
 
     protected ExecutorService executorService;
 
-    protected PortalListeners portalListeners;
+    protected WindowListeners portalListeners;
 
     protected Invocation invocation;
 
@@ -61,8 +61,8 @@ public abstract class AbstractPortal implements WindowRender, Portal, PortalList
 
     protected long timeout;
 
-    public AbstractPortal(Invocation inv, ExecutorService executorService,
-            PortalListener portalListener) {
+    public GenericWindowContainer(Invocation inv, ExecutorService executorService,
+            WindowListener portalListener) {
         this.invocation = inv;
         this.executorService = executorService;
         addListener(portalListener);
@@ -102,23 +102,17 @@ public abstract class AbstractPortal implements WindowRender, Portal, PortalList
     }
 
     @Override
-    public void addListener(PortalListener l) {
+    public void addListener(WindowListener l) {
         if (l == null) {
             return;
         } else {
             synchronized (this) {
                 if (portalListeners == null) {
-                    portalListeners = new PortalListeners();
+                    portalListeners = new WindowListeners();
                 }
                 portalListeners.addListener(l);
             }
         }
-    }
-
-    @Override
-    public Window addWindow(String windowPath) {
-        String windowName = windowPath;
-        return this.addWindow(windowName, windowPath, (WindowCallback) null);
     }
 
     @Override
@@ -206,7 +200,7 @@ public abstract class AbstractPortal implements WindowRender, Portal, PortalList
         }
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     protected Future<?> submitWindow(ExecutorService executor, WindowTask task) {
         Future<?> future = executor.submit(task);
         return new WindowFuture(future, task.getWindow());
@@ -225,28 +219,6 @@ public abstract class AbstractPortal implements WindowRender, Portal, PortalList
     }
 
     //------------ 以下代码是PortalListener和Invocation的实现代码 --------------------------------
-
-    @Override
-    public void onPortalCreated(Portal portal) {
-        if (portalListeners != null) {
-            try {
-                portalListeners.onPortalCreated(portal);
-            } catch (Exception e) {
-                logger.error("", e);
-            }
-        }
-    }
-
-    @Override
-    public void onPortalReady(Portal portal) {
-        if (portalListeners != null) {
-            try {
-                portalListeners.onPortalReady(portal);
-            } catch (Exception e) {
-                logger.error("", e);
-            }
-        }
-    }
 
     @Override
     public void onWindowAdded(Window window) {

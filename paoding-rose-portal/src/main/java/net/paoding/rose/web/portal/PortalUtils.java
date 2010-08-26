@@ -31,10 +31,10 @@ public class PortalUtils {
         return (Window) inv.getRequest().getAttribute(RoseConstants.WINDOW_ATTR);
     }
 
-    public static ServerPortal getPortal(Invocation inv) {
+    public static Portal getPortal(Invocation inv) {
         // get from invocation attributes
         // @see PortalResolver#resolve
-        return (ServerPortal) inv.getAttribute("$$paoding-rose-portal.portal");
+        return (Portal) inv.getAttribute("$$paoding-rose-portal.portal");
     }
 
     public static Pipe getPipe(Invocation inv) {

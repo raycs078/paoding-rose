@@ -1,5 +1,5 @@
 /*
- * Copyright 2007-2009 the original author or authors.
+ * Copyright 2007-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,28 +16,12 @@
 package net.paoding.rose.web.portal;
 
 /**
- * aggregate以及窗口的状态侦听器
+ * 窗口的状态侦听器
  * 
- * @see AggregateListenerAdapter
- * @see AggregateListeners
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
-public interface PortalListener {
-
-    /**
-     * 在aggregate参数被创建的时候被调用
-     * 
-     * @param portal
-     */
-    public void onPortalCreated(Portal portal);
-
-    /**
-     * 在aggregate等待完所有窗口或超时后被调用
-     * 
-     * @param portal
-     */
-    public void onPortalReady(Portal portal);
+public interface WindowListener {
 
     /**
      * 当添加一个窗口到aggregate时被调用

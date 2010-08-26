@@ -1,5 +1,5 @@
 /*
- * Copyright 2007-2010 the original author or authors.
+ * Copyright 2007-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,8 +17,8 @@ package net.paoding.rose.web.portal.impl;
 
 import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.portal.Pipe;
+import net.paoding.rose.web.portal.Portal;
 import net.paoding.rose.web.portal.PortalFactory;
-import net.paoding.rose.web.portal.ServerPortal;
 
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
@@ -47,7 +47,7 @@ public class PortalFactoryDelegate implements PortalFactory, ApplicationContextA
     }
 
     @Override
-    public ServerPortal createPortal(Invocation inv) {
+    public Portal createPortal(Invocation inv) {
         return getPortalFactory().createPortal(inv);
     }
 

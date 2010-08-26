@@ -1,5 +1,5 @@
 /*
- * Copyright 2007-2009 the original author or authors.
+ * Copyright 2007-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ import java.util.concurrent.TimeoutException;
 import net.paoding.rose.web.ControllerInterceptorAdapter;
 import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.portal.Portal;
-import net.paoding.rose.web.portal.PortalListener;
+import net.paoding.rose.web.portal.WindowListener;
 import net.paoding.rose.web.portal.PortalUtils;
 import net.paoding.rose.web.portal.Window;
 
@@ -53,13 +53,13 @@ public class PortalWaitInterceptor extends ControllerInterceptorAdapter {
     @Override
     public Object after(Invocation inv, Object instruction) throws Exception {
 
-        ServerPortalImpl portal = (ServerPortalImpl) PortalUtils.getPortal(inv);
+        PortalImpl portal = (PortalImpl) PortalUtils.getPortal(inv);
         boolean debugEnabled = logger.isDebugEnabled();
         if (debugEnabled) {
             logger.debug(portal + " is going to wait windows.");
         }
 
-        PortalListener listener = portal;
+        WindowListener listener = portal;
         long deadline;
         long begin = System.currentTimeMillis();
         if (portal.getTimeout() > 0) {
@@ -132,13 +132,15 @@ public class PortalWaitInterceptor extends ControllerInterceptorAdapter {
                 logger.error("x[" + winIndex + "/" + winSize + "] waiting[interrupted]: "
                         + window.getName());
             } catch (ExecutionException e) {
-                logger.error("x[" + winIndex + "/" + winSize + "] waiting[error]: "
-                        + window.getName(), e);
+                logger.error(
+                        "x[" + winIndex + "/" + winSize + "] waiting[error]: " + window.getName(),
+                        e);
                 window.setThrowable(e);
                 listener.onWindowError(window);
             } catch (TimeoutException e) {
-                logger.error("x[" + winIndex + "/" + winSize + "] waiting[timeout]: "
-                        + window.getName(), e);
+                logger.error(
+                        "x[" + winIndex + "/" + winSize + "] waiting[timeout]: " + window.getName(),
+                        e);
                 listener.onWindowTimeout(window);
                 future.cancel(true);
             }
@@ -146,7 +148,6 @@ public class PortalWaitInterceptor extends ControllerInterceptorAdapter {
         if (debugEnabled) {
             logger.debug("[" + winIndex + "/" + winSize + "] size of simple windows = " + winIndex);
         }
-        listener.onPortalReady(portal);
 
         //
         if (logger.isDebugEnabled()) {

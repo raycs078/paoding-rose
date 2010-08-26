@@ -1,5 +1,5 @@
 /*
- * Copyright 2007-2009 the original author or authors.
+ * Copyright 2007-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,8 +20,8 @@ import java.io.IOException;
 import net.paoding.rose.web.Invocation;
 
 /**
- * {@link PortalFactory} 是 Portal 框架的核心，它负责创建 {@link ServerPortal}
- * 对象，使开发者能够通过 {@link ServerPortal} 对象实现 Portal 功能。
+ * {@link PortalFactory} 是 portal/pipe 框架的核心，它负责创建 {@link Portal} /
+ * {@link Pipe} 对象.
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
@@ -29,14 +29,15 @@ import net.paoding.rose.web.Invocation;
 public interface PortalFactory {
 
     /**
-     * 创建给定请求的 {@link ServerPortal} 实例
+     * 创建给定请求的 {@link Portal} 实例
      * 
      * @param inv
      * @return
      */
-    public ServerPortal createPortal(Invocation inv);
+    public Portal createPortal(Invocation inv);
 
     /**
+     * 创建给定请求的 {@link Pipe} 实例
      * 
      * @param portal
      * @return
