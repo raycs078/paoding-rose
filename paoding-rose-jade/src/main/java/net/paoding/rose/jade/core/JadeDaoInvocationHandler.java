@@ -116,7 +116,7 @@ public class JadeDaoInvocationHandler implements InvocationHandler {
             sb.append("\toperation: ").append(operation.getClass().getSimpleName()).append("\n");
             sb.append("\tsql: ").append(operation.getModifier().getAnnotation(SQL.class).value())
                     .append("\n");
-            sb.append("params: ");
+            sb.append("\tparams: ");
             ArrayList<String> keys = new ArrayList<String>(parameters.keySet());
             Collections.sort(keys);
             for (String key : keys) {
