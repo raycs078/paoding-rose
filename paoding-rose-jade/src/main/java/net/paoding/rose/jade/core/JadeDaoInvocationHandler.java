@@ -17,10 +17,13 @@ package net.paoding.rose.jade.core;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 import net.paoding.rose.jade.annotation.DAO;
+import net.paoding.rose.jade.annotation.SQL;
 import net.paoding.rose.jade.annotation.SQLParam;
 import net.paoding.rose.jade.provider.DataAccess;
 import net.paoding.rose.jade.provider.Definition;
@@ -36,7 +39,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class JadeDaoInvocationHandler implements InvocationHandler {
 
-    private static final Log logger = LogFactory.getLog(JadeDaoFactoryBean.class);
+    private static final Log logger = LogFactory.getLog(JadeDaoInvocationHandler.class);
 
     private static JadeOperationFactory jdbcOperationFactory = new JadeOperationFactoryImpl();
 
@@ -55,7 +58,9 @@ public class JadeDaoInvocationHandler implements InvocationHandler {
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 
         if (logger.isDebugEnabled()) {
-            logger.debug("invoke: " + definition.getDAOClazz().getName() + "#" + method.getName());
+            logger
+                    .debug("invoking  " + definition.getDAOClazz().getName() + "#"
+                            + method.getName());
         }
 
         if (Object.class == method.getDeclaringClass()) {
@@ -104,6 +109,21 @@ public class JadeDaoInvocationHandler implements InvocationHandler {
             }
         }
         //
+        if (logger.isDebugEnabled()) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("invoking ").append(definition.getDAOClazz().getName()).append("#").append(
+                    method.getName()).append("\n");
+            sb.append("\toperation: ").append(operation.getClass().getSimpleName()).append("\n");
+            sb.append("\tsql: ").append(operation.getModifier().getAnnotation(SQL.class).value())
+                    .append("\n");
+            sb.append("params: ");
+            ArrayList<String> keys = new ArrayList<String>(parameters.keySet());
+            Collections.sort(keys);
+            for (String key : keys) {
+                sb.append(key).append("='").append(parameters.get(key)).append("'  ");
+            }
+            logger.debug(sb.toString());
+        }
 
         return operation.execute(parameters);
     }
