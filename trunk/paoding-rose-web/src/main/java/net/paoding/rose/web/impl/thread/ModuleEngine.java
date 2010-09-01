@@ -18,11 +18,13 @@ package net.paoding.rose.web.impl.thread;
 import java.lang.reflect.InvocationTargetException;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequestWrapper;
 
 import net.paoding.rose.RoseConstants;
 import net.paoding.rose.util.SpringUtils;
 import net.paoding.rose.web.ControllerErrorHandler;
 import net.paoding.rose.web.Invocation;
+import net.paoding.rose.web.annotation.MultipartCleanup;
 import net.paoding.rose.web.annotation.NotForSubModules;
 import net.paoding.rose.web.annotation.SuppressMultipartResolver;
 import net.paoding.rose.web.impl.module.Module;
@@ -189,20 +191,19 @@ public class ModuleEngine implements Engine {
     //------------------------------------------------------
 
     protected boolean checkMultipart(Invocation inv) throws MultipartException {
-        if (inv.getMethod().isAnnotationPresent(SuppressMultipartResolver.class)) {
-            return false;
-        }
         if (inv.getRequest().getMethod() == null) {
-            System.out.println("---inv.getRequest().getClass=" + inv.getRequest().getClass().getName());
-            throw new NullPointerException();
+            throw new NullPointerException("request.method");
         }
         if (this.multipartResolver.isMultipart(inv.getRequest())) {
             if (inv.getRequest() instanceof MultipartHttpServletRequest) {
                 logger.debug("Request is already a MultipartHttpServletRequest");
+                return true;
             } else {
-                inv.setRequest(this.multipartResolver.resolveMultipart(inv.getRequest()));
+                if (!inv.getMethod().isAnnotationPresent(SuppressMultipartResolver.class)) {
+                    inv.setRequest(this.multipartResolver.resolveMultipart(inv.getRequest()));
+                    return true;
+                }
             }
-            return true;
         }
         return false;
     }
@@ -213,9 +214,29 @@ public class ModuleEngine implements Engine {
      * @see MultipartResolver#cleanupMultipart
      */
     protected void cleanupMultipart(Invocation inv) {
-        if (inv.getRequest() instanceof MultipartHttpServletRequest) {
-            this.multipartResolver.cleanupMultipart((MultipartHttpServletRequest) inv.getRequest());
+        HttpServletRequest src = inv.getRequest();
+        while (src != null && !(src instanceof MultipartHttpServletRequest)
+                && src instanceof HttpServletRequestWrapper) {
+            src = (HttpServletRequest) ((HttpServletRequestWrapper) src).getRequest();
         }
+        if (src instanceof MultipartHttpServletRequest) {
+            final MultipartHttpServletRequest request = (MultipartHttpServletRequest) src;
+            MultipartCleanup multipartCleaner = inv.getMethod().getAnnotation(
+                    MultipartCleanup.class);
+            if (multipartCleaner == null
+                    || multipartCleaner.after() == MultipartCleanup.After.CONTROLLER_INVOCATION) {
+                multipartResolver.cleanupMultipart(request);
+            } else {
+                inv.addAfterCompletion(new AfterCompletion() {
+
+                    @Override
+                    public void afterCompletion(Invocation inv, Throwable ex) throws Exception {
+                        ModuleEngine.this.multipartResolver.cleanupMultipart(request);
+                    }
+                });
+            }
+        }
+
     }
 
     private static MultipartResolver initMultipartResolver(ApplicationContext context) {
