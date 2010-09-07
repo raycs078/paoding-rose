@@ -25,7 +25,6 @@ import net.paoding.rose.jade.provider.DataAccess;
 import net.paoding.rose.jade.provider.Modifier;
 
 import org.apache.commons.lang.ClassUtils;
-import org.springframework.util.NumberUtils;
 
 /**
  * 实现 INSERT / UPDATE / DELETE / REPLACE等更新类型语句。
@@ -155,21 +154,30 @@ public class UpdateOperation implements JadeOperation {
             // 执行 UPDATE / DELETE 查询
             int updated = dataAccess.update(sql, modifier, parameters);
 
+            if (returnType == void.class) {
+                return null;
+            }
+
             // 转换基本类型
             if (returnType.isPrimitive()) {
                 returnType = ClassUtils.primitiveToWrapper(returnType);
             }
 
             // 将结果转成方法的返回类型
-            if (returnType == Boolean.class) {
+            if (returnType == Integer.class) {
+                return Integer.valueOf(updated);
+            } else if (returnType == Long.class) {
+                return Long.valueOf(updated);
+            } else if (returnType == Boolean.class) {
                 return Boolean.valueOf(updated > 0);
             } else if (returnType == Long.class) {
                 return Long.valueOf(updated);
-            } else if (returnType == Integer.class) {
-                return Integer.valueOf(updated);
+            } else if (returnType == Double.class) {
+                return Double.valueOf(updated);
+            } else if (returnType == Float.class) {
+                return Float.valueOf(updated);
             } else if (Number.class.isAssignableFrom(returnType)) {
-                return NumberUtils.convertNumberToTargetClass( // NL
-                        Integer.valueOf(updated), returnType);
+                return updated;
             }
         }
 
