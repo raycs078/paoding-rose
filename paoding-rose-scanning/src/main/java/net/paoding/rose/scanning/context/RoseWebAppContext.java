@@ -23,7 +23,6 @@ import javax.servlet.ServletContext;
 import net.paoding.rose.scanning.LoadScope;
 import net.paoding.rose.scanning.context.core.RoseResources;
 
-import org.apache.commons.lang.ArrayUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.MutablePropertyValues;
 import org.springframework.beans.factory.BeanFactoryUtils;
@@ -127,7 +126,13 @@ public class RoseWebAppContext extends XmlWebApplicationContext {
 
         String[] messageBaseNames = getMessageBaseNames();
         if (messageBaseNames != null && messageBaseNames.length > 0) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("[roseWebApp/messages] starting registerMessageSourceIfNecessary");
+            }
             registerMessageSourceIfNecessary(registry, messageBaseNames);
+            if (logger.isDebugEnabled()) {
+                logger.debug("[roseWebApp/messages] finished registerMessageSourceIfNecessary");
+            }
         }
     }
 
@@ -154,7 +159,7 @@ public class RoseWebAppContext extends XmlWebApplicationContext {
     /** 如果配置文件没有自定义的messageSource定义，则由Rose根据最佳实践进行预设 */
     public static void registerMessageSourceIfNecessary(BeanDefinitionRegistry registry,
             String[] messageBaseNames) {
-        if (!ArrayUtils.contains(registry.getBeanDefinitionNames(), MESSAGE_SOURCE_BEAN_NAME)) {
+        if (!registry.containsBeanDefinition(MESSAGE_SOURCE_BEAN_NAME)) {
             GenericBeanDefinition messageSource = new GenericBeanDefinition();
             messageSource.setBeanClass(ReloadableResourceBundleMessageSource.class);
             MutablePropertyValues propertyValues = new MutablePropertyValues();
