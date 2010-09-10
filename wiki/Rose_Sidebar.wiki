@@ -55,6 +55,7 @@
 
 =jade=
   # [Jade_DAO_Spec Jade DAO规范]
+  # [Jade_DataSource 数据源配置]
 
 =help=
   # [With_Other_Web_Frameworks  和其它框架的集成]
