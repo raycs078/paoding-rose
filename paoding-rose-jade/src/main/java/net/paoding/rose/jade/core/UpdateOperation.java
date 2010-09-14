@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import net.paoding.rose.jade.annotation.ReturnGeneratedKeys;
 import net.paoding.rose.jade.annotation.SQLParam;
 import net.paoding.rose.jade.provider.DataAccess;
 import net.paoding.rose.jade.provider.Modifier;
@@ -44,12 +45,17 @@ public class UpdateOperation implements JadeOperation {
 
     private final DataAccess dataAccess;
 
+    private boolean returnGeneratedKeys;
+
     public UpdateOperation(DataAccess dataAccess, String sql, Modifier modifier) {
         this.dataAccess = dataAccess;
         this.sql = sql;
         this.modifier = modifier;
         this.returnType = modifier.getReturnType();
         this.sqlParamAnnotations = modifier.getParameterAnnotations(SQLParam.class);
+        if (this.modifier.getMethod().isAnnotationPresent(ReturnGeneratedKeys.class)) {
+            returnGeneratedKeys = true;
+        }
     }
 
     @Override
@@ -141,7 +147,9 @@ public class UpdateOperation implements JadeOperation {
     private Object executeSignle(DataAccess dataAccess, Map<String, Object> parameters,
             Class<?> returnType) {
 
-        if (returnType == Identity.class) {
+        if (returnGeneratedKeys) {
+            return dataAccess.insertReturnId(sql, modifier, parameters);
+        } else if (returnType == Identity.class) {
 
             // 执行 INSERT 查询
             Number number = dataAccess.insertReturnId(sql, modifier, parameters);

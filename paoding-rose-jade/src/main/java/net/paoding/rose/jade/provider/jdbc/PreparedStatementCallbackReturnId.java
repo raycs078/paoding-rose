@@ -38,11 +38,11 @@ public class PreparedStatementCallbackReturnId implements PreparedStatementCallb
 
     private PreparedStatementSetter setter;
 
-    public PreparedStatementCallbackReturnId() {
-    }
+    private Class<?> returnType;
 
-    public PreparedStatementCallbackReturnId(PreparedStatementSetter setter) {
+    public PreparedStatementCallbackReturnId(PreparedStatementSetter setter, Class<?> returnType) {
         this.setter = setter;
+        this.returnType = returnType;
     }
 
     @Override
@@ -60,7 +60,7 @@ public class PreparedStatementCallbackReturnId implements PreparedStatementCallb
 
             try {
                 RowMapperResultSetExtractor extractor = new RowMapperResultSetExtractor(
-                        new SingleColumnRowMapper(Number.class), 1);
+                        new SingleColumnRowMapper(returnType), 1);
                 return DataAccessUtils.requiredSingleResult((List<?>) extractor.extractData(keys));
             } finally {
                 JdbcUtils.closeResultSet(keys);

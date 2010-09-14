@@ -23,6 +23,7 @@ import java.util.List;
 
 import javax.sql.DataSource;
 
+import net.paoding.rose.jade.core.Identity;
 import net.paoding.rose.jade.provider.Modifier;
 
 import org.springframework.dao.DataAccessException;
@@ -80,16 +81,18 @@ public class JdbcImpl implements Jdbc {
      */
     @Override
     public Number insertAndReturnId(Modifier modifier, String sql, Object[] parameters) {
+        ArgPreparedStatementSetter setter = null;
         if (parameters != null && parameters.length > 0) {
-            PreparedStatementCallbackReturnId callbackReturnId = new PreparedStatementCallbackReturnId(
-                    new ArgPreparedStatementSetter(parameters));
-            return (Number) spring.execute(new GenerateKeysPreparedStatementCreator(sql),
-                    callbackReturnId);
-        } else {
-            PreparedStatementCallbackReturnId callbackReturnId = new PreparedStatementCallbackReturnId();
-            return (Number) spring.execute(new GenerateKeysPreparedStatementCreator(sql),
-                    callbackReturnId);
+            setter = new ArgPreparedStatementSetter(parameters);
         }
+        Class<?> returnType = modifier.getReturnType();
+        if (returnType == Identity.class) {
+            returnType = Long.class;
+        }
+        PreparedStatementCallbackReturnId callbackReturnId = new PreparedStatementCallbackReturnId(
+                setter, returnType);
+        return (Number) spring.execute(new GenerateKeysPreparedStatementCreator(sql),
+                callbackReturnId);
     }
 
     //-----------------------------------------------------------------------------

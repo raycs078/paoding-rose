@@ -16,11 +16,24 @@
 package net.paoding.rose.jade.core;
 
 /**
+ * 请改成这样使用：
+ * 
+ * <pre>
+ * 1、在@SQL上声明注解@ReturnGeneratedKeys
+ * 2、方法返回值改为欲返回的数值类型，比如long、int等
+ * 例子：
+ * 
+ * &#064;ReturnGeneratedKeys
+ * &#064;SQL(&quot;insert into role(id, name) values(myseq.nextal, :1)&quot;)
+ * public long save(String name);
+ * </pre>
+ * 
  * 在Jade DAO方法声明其返回类型为 {@link Identity}表示，在执行插入语句后返回数据库设置的ID（自增ID等）
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  * @author 廖涵 [in355hz@gmail.com]
  */
+@Deprecated
 public class Identity extends Number {
 
     /**
