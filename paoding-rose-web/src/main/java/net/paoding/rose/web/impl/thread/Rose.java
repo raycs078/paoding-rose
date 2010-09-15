@@ -134,39 +134,38 @@ public class Rose implements EngineChain {
 
         final MatchResult lastMatched = matchResults.get(matchResults.size() - 1);
         final EngineGroup leafEngineGroup = lastMatched.getMappingNode().getLeafEngines();
+        if (leafEngineGroup.size() == 0) {
+            // not rose uri
+            if (debugEnabled) {
+                logger.debug("not rose uri, not exits leaf engines for it: '" + this.path.getUri()
+                        + "'");
+            }
+            return false;
+
+        }
         final LinkedEngine leafEngine = select(leafEngineGroup.getEngines(path.getMethod()));
         if (leafEngine == null) {
-            if (leafEngineGroup.size() == 0) {
-                // not rose uri
-                if (debugEnabled) {
-                    logger.debug("not rose uri, not exits leaf engines for it: '"
-                            + this.path.getUri() + "'");
-                }
-                return false;
+            // 405 Method Not Allowed
+            /* 
+             * The method specified in the Request-Line is not allowed for the
+             * resource identified by the Request-URI. The response MUST include an
+             * Allow header containing a list of valid methods for the requested
+             * resource.
+             */
+            StringBuilder allow = new StringBuilder();
+            final String gap = ", ";
 
-            } else {
-                // 405 Method Not Allowed
-                /* 
-                 * The method specified in the Request-Line is not allowed for the
-                 * resource identified by the Request-URI. The response MUST include an
-                 * Allow header containing a list of valid methods for the requested
-                 * resource.
-                 */
-                StringBuilder allow = new StringBuilder();
-                final String gap = ", ";
-
-                for (ReqMethod method : leafEngineGroup.getAllowedMethods()) {
-                    allow.append(method.toString()).append(gap);
-                }
-                if (allow.length() > 0) {
-                    allow.setLength(allow.length() - gap.length());
-                }
-                originalHttpResponse.addHeader("Allow", allow.toString());
-                originalHttpResponse.sendError(405, this.path.getUri());
-
-                // true: don't forward to next filter or servlet
-                return true;
+            for (ReqMethod method : leafEngineGroup.getAllowedMethods()) {
+                allow.append(method.toString()).append(gap);
             }
+            if (allow.length() > 0) {
+                allow.setLength(allow.length() - gap.length());
+            }
+            originalHttpResponse.addHeader("Allow", allow.toString());
+            originalHttpResponse.sendError(405, this.path.getUri());
+
+            // true: don't forward to next filter or servlet
+            return true;
 
         }
 
