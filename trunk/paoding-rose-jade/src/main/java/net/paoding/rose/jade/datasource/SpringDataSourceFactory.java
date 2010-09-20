@@ -80,9 +80,6 @@ public class SpringDataSourceFactory implements DataSourceFactory, ApplicationCo
             }
             return (DataSource) applicationContext.getBean(key, DataSource.class);
         }
-        throw new IllegalArgumentException("not found dataSource for catalog: '" + catalog
-                + "'; you should set a dataSource bean"
-                + " (with id='jade.dataSource[.daopackage[.daosimpleclassname]]' or 'dataSource' )"
-                + "in applicationContext for this catalog.");
+        return null;
     }
 }
