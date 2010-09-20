@@ -50,7 +50,7 @@ public abstract class AbstractDataAccessProvider implements DataAccessProvider {
 
         DataSource dataSource = dataSourceFactory.getDataSource(daoClass);
         if (dataSource == null) {
-            throw new NullPointerException("not found dataSource for dao: '" + daoClass.getName()
+            throw new NullPointerException("not found dataSource for DAO: '" + daoClass.getName()
                     + "'.");
         }
 
