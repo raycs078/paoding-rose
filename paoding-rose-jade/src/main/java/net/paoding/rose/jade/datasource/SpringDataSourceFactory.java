@@ -4,7 +4,6 @@ import javax.sql.DataSource;
 
 import net.paoding.rose.jade.annotation.DAO;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeansException;
@@ -29,34 +28,31 @@ public class SpringDataSourceFactory implements DataSourceFactory, ApplicationCo
 
     @Override
     public DataSource getDataSource(Class<?> daoClass) {
+        DataSource dataSource = null;
         String catalog = daoClass.getAnnotation(DAO.class).catalog();
-        if (StringUtils.isBlank(catalog)) {
-            catalog = daoClass.getName();
+        if (catalog.length() > 0) {
+            dataSource = getDataSourceByDirectory(daoClass, catalog);
         }
-        return getDataSourceByClassName(catalog);
+        if (dataSource != null) {
+            return dataSource;
+        }
+        dataSource = getDataSourceByDirectory(daoClass, daoClass.getName());
+        if (dataSource != null) {
+            return dataSource;
+        }
+        dataSource = getDataSourceByKey(daoClass, "jade.dataSource");
+        if (dataSource != null) {
+            return dataSource;
+        }
+        return getDataSourceByKey(daoClass, "dataSource");
     }
 
-    public DataSource getDataSource(String nameSuffix) {
-        String key = "jade.dataSource." + nameSuffix;
-        if (nameSuffix == null || nameSuffix.length() == 0) {
-            key = "jade.dataSource";
-        }
-        if (applicationContext.containsBean(key)) {
-            return (DataSource) applicationContext.getBean(key, DataSource.class);
-        }
-        return null;
-    }
-
-    private DataSource getDataSourceByClassName(String catalog) {
+    private DataSource getDataSourceByDirectory(Class<?> daoClass, String catalog) {
         String tempCatalog = catalog;
         DataSource dataSource;
-        while (tempCatalog != null) {
-            dataSource = getDataSource(tempCatalog);
+        while (tempCatalog != null && tempCatalog.length() > 0) {
+            dataSource = getDataSourceByKey(daoClass, "jade.dataSource." + tempCatalog);
             if (dataSource != null) {
-                if (logger.isDebugEnabled()) {
-                    logger.debug("found dataSource 'jade.dataSource." + tempCatalog
-                            + "' for catalog '" + catalog + "'.");
-                }
                 return dataSource;
             }
             int index = tempCatalog.lastIndexOf('.');
@@ -66,19 +62,16 @@ public class SpringDataSourceFactory implements DataSourceFactory, ApplicationCo
                 tempCatalog = tempCatalog.substring(0, index);
             }
         }
-        dataSource = getDataSource("");
-        if (dataSource != null) {
+        return null;
+    }
+
+    private DataSource getDataSourceByKey(Class<?> daoClass, String key) {
+        if (applicationContext.containsBean(key)) {
+            DataSource dataSource = (DataSource) applicationContext.getBean(key, DataSource.class);
             if (logger.isDebugEnabled()) {
-                logger.debug("found dataSource 'jade.dataSource' for catalog '" + catalog + "'.");
+                logger.debug("found dataSource: " + key + " for DAO " + daoClass.getName());
             }
             return dataSource;
-        }
-        String key = "dataSource";
-        if (applicationContext.containsBean(key)) {
-            if (logger.isDebugEnabled()) {
-                logger.debug("found dataSource '" + key + "' for catalog '" + catalog + "'.");
-            }
-            return (DataSource) applicationContext.getBean(key, DataSource.class);
         }
         return null;
     }
