@@ -779,6 +779,9 @@ public class ResolverFactoryImpl implements ResolverFactory {
 
         @Override
         public void setAsText(String text) throws IllegalArgumentException {
+            if (text == null || (text = text.trim()).length() == 0) {
+                return;
+            }
             try {
                 setValue(DatePatterns.changeType(DatePatterns.parse(text), targetType));
             } catch (ParseException e) {
@@ -871,7 +874,7 @@ public class ResolverFactoryImpl implements ResolverFactory {
             for (String paramName : metaData.getParamNames()) {
                 if (paramName != null) {
                     text = inv.getParameter(paramName);
-                    if (text != null) {
+                    if (text != null && (text = text.trim()).length() > 0) {
                         break;
                     }
                 }
