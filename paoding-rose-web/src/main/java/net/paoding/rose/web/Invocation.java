@@ -26,6 +26,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import net.paoding.rose.web.annotation.Param;
 import net.paoding.rose.web.impl.thread.AfterCompletion;
+import net.paoding.rose.web.paramresolver.ParamMetaData;
 import net.paoding.rose.web.paramresolver.ParamResolver;
 import net.paoding.rose.web.var.Flash;
 import net.paoding.rose.web.var.Model;
@@ -206,17 +207,24 @@ public interface Invocation {
      * 改变调用的方法参数值
      * 
      * @param index
-     * @param value
+     * @param newValue
      */
-    public void changeMethodParameter(int index, Object value);
+    public void changeMethodParameter(int index, Object newValue);
 
     /**
      * 改变调用的方法参数值
      * 
      * @param name
-     * @param value
+     * @param newValue
      */
-    public void changeMethodParameter(String name, Object value);
+    public void changeMethodParameter(String name, Object newValue);
+
+    /**
+     * 
+     * @param paramMeta
+     * @param newValue
+     */
+    public void changeMethodParameter(ParamMetaData paramMeta, Object newValue);
 
     /**
      * 将对象(object,array,collection等)加入到MVC中的Model中作为一个属性，通过它传递给View

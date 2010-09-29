@@ -406,12 +406,6 @@ public final class ActionEngine implements Engine {
         Object[] methodParameters = methodParameterResolver.resolve(inv, paramBindingResult);
         ((InvocationBean) inv).setMethodParameters(methodParameters);
         String[] parameterNames = methodParameterResolver.getParameterNames();
-        for (int i = 0; i < parameterNames.length; i++) {
-            if (parameterNames[i] != null && methodParameters[i] != null
-                    && inv.getModel().get(parameterNames[i]) != methodParameters[i]) {
-                inv.addModel(parameterNames[i], methodParameters[i]);
-            }
-        }
 
         Object instruction = null;
 
@@ -436,6 +430,14 @@ public final class ActionEngine implements Engine {
                     }
                     return instruction;
                 }
+            }
+        }
+        
+        //
+        for (int i = 0; i < parameterNames.length; i++) {
+            if (parameterNames[i] != null && methodParameters[i] != null
+                    && inv.getModel().get(parameterNames[i]) != methodParameters[i]) {
+                inv.addModel(parameterNames[i], methodParameters[i]);
             }
         }
 

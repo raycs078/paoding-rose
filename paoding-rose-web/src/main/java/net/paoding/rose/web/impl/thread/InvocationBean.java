@@ -34,6 +34,7 @@ import net.paoding.rose.web.RequestPath;
 import net.paoding.rose.web.impl.mapping.MatchResult;
 import net.paoding.rose.web.impl.module.Module;
 import net.paoding.rose.web.impl.validation.ParameterBindingResult;
+import net.paoding.rose.web.paramresolver.ParamMetaData;
 import net.paoding.rose.web.var.Flash;
 import net.paoding.rose.web.var.FlashImpl;
 import net.paoding.rose.web.var.Model;
@@ -222,26 +223,26 @@ public final class InvocationBean implements Invocation {
     }
 
     @Override
-    public void changeMethodParameter(int index, Object value) {
+    public void changeMethodParameter(int index, Object newValue) {
         if (!isMethodParametersInitiated()) {
             throw new IllegalStateException();
         }
-        if (value != this.methodParameters[index]) {
+        if (newValue != this.methodParameters[index]) {
             if (logger.isDebugEnabled()) {
                 String[] names = getActionEngine().getParameterNames();
                 logger.debug("change method parameter " + names[index] + " (index=" + index
-                        + ") from '" + this.methodParameters[index] + "' to '" + value + "'");
+                        + ") from '" + this.methodParameters[index] + "' to '" + newValue + "'");
             }
             Object oldValue = this.methodParameters[index];
-            this.methodParameters[index] = value;
+            this.methodParameters[index] = newValue;
             if (logger.isDebugEnabled()) {
                 logger.debug("change method parameter at " + index//
-                        + ": " + oldValue + "->" + value);
+                        + ": " + oldValue + "->" + newValue);
             }
         }
     }
 
-    public void changeMethodParameter(String name, Object value) {
+    public void changeMethodParameter(String name, Object newValue) {
         if (!isMethodParametersInitiated()) {
             throw new IllegalStateException();
         }
@@ -251,10 +252,15 @@ public final class InvocationBean implements Invocation {
         String[] names = getActionEngine().getParameterNames();
         for (int i = 0; i < names.length; i++) {
             if (name.equals(names[i])) {
-                changeMethodParameter(i, value);
+                changeMethodParameter(i, newValue);
                 return;
             }
         }
+    }
+
+    @Override
+    public void changeMethodParameter(ParamMetaData paramMeta, Object newValue) {
+        changeMethodParameter(paramMeta.getIndex(), newValue);
     }
 
     @Override
