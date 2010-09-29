@@ -59,7 +59,7 @@ public class PortalFactoryImpl implements PortalFactory, InitializingBean {
 
     private ExecutorService executorService;
 
-    private WindowListener portalListener;
+    private WindowListener windowListener;
 
     public void setExecutorService(ExecutorService executor) {
         if (logger.isInfoEnabled()) {
@@ -72,17 +72,17 @@ public class PortalFactoryImpl implements PortalFactory, InitializingBean {
         return executorService;
     }
 
-    public void setPortalListener(WindowListener portalListener) {
-        this.portalListener = portalListener;
+    public void setWindowListener(WindowListener portalListener) {
+        this.windowListener = portalListener;
     }
 
-    public WindowListener getPortalListener() {
-        return portalListener;
+    public WindowListener getWindowListener() {
+        return windowListener;
     }
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        Assert.notNull(portalListener);
+        Assert.notNull(windowListener);
         Assert.notNull(executorService);
     }
 
@@ -93,7 +93,7 @@ public class PortalFactoryImpl implements PortalFactory, InitializingBean {
         if (portal != null) {
             return portal;
         }
-        portal = new PortalImpl(inv, executorService, portalListener);
+        portal = new PortalImpl(inv, executorService, windowListener);
         //
         long timeout = 0;
         PortalSetting portalSetting = inv.getMethod().getAnnotation(PortalSetting.class);
@@ -153,7 +153,7 @@ public class PortalFactoryImpl implements PortalFactory, InitializingBean {
                 "$$paoding-rose-portal.pipe");
         if (pipe == null) {
             if (create) {
-                pipe = new PipeImpl(inv, executorService, portalListener);
+                pipe = new PipeImpl(inv, executorService, windowListener);
                 inv.getHeadInvocation().setAttribute("$$paoding-rose-portal.pipe", pipe);
             }
         } else if (pipe.getInvocation() != inv) {
