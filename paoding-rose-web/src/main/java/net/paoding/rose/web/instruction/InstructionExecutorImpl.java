@@ -42,7 +42,7 @@ public class InstructionExecutorImpl implements InstructionExecutor {
     public Object render(Invocation inv, Object instruction) throws IOException, ServletException,
             Exception {
         instruction = translatesToInstructionObject((InvocationBean) inv, instruction);
-        if (instruction != null && !Thread.interrupted()) {
+        if (instruction != null && !Thread.currentThread().isInterrupted()) {
             ((Instruction) instruction).render(inv);
         }
         return instruction;
