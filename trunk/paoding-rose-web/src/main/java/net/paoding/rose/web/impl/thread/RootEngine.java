@@ -125,16 +125,20 @@ public class RootEngine implements Engine {
         // instruction是控制器action方法的返回结果或其对应的Instruction对象(也可能是拦截器、错误处理器返回的)
         Object instruction = rose.doNext();
 
-        // 写flash消息到Cookie (被include的请求不会有功能)
-        if (!requestPath.isIncludeRequest()) {
-            FlashImpl flash = (FlashImpl) inv.getFlash(false);
-            if (flash != null) {
-                flash.writeNewMessages();
+        if (Thread.currentThread().isInterrupted()) {
+            logger.info("stop to render: thread is interrupted");
+        } else {
+            // 写flash消息到Cookie (被include的请求不会有功能)
+            if (!requestPath.isIncludeRequest()) {
+                FlashImpl flash = (FlashImpl) inv.getFlash(false);
+                if (flash != null) {
+                    flash.writeNewMessages();
+                }
             }
-        }
 
-        // 渲染页面
-        instructionExecutor.render(inv, instruction);
+            // 渲染页面
+            instructionExecutor.render(inv, instruction);
+        }
         return instruction;
     }
 

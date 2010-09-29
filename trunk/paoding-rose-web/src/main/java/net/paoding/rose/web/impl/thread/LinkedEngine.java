@@ -17,6 +17,9 @@ package net.paoding.rose.web.impl.thread;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import net.paoding.rose.web.impl.mapping.MappingNode;
 
 /**
@@ -25,6 +28,8 @@ import net.paoding.rose.web.impl.mapping.MappingNode;
  * 
  */
 public final class LinkedEngine implements Engine {
+
+    protected final Log logger = LogFactory.getLog(getClass());
 
     private LinkedEngine parent;
 
@@ -57,6 +62,10 @@ public final class LinkedEngine implements Engine {
 
     @Override
     public Object execute(Rose rose) throws Throwable {
+        if (Thread.currentThread().isInterrupted()) {
+            logger.info("stop to call the next engine: thread is interrupted");
+            return null;
+        }
         return target.execute(rose);
     }
 
