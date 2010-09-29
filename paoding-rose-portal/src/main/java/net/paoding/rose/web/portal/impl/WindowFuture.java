@@ -21,7 +21,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import net.paoding.rose.web.portal.WindowListener;
-import net.paoding.rose.web.portal.Window;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -39,22 +38,30 @@ class WindowFuture<T> implements Future<T> {
 
     private final WindowImpl window;
 
+    private boolean canclableSupport = true;
+
+    private Boolean cancleRequest;
+
     public WindowFuture(Future<T> future, WindowImpl window) {
         this.future = future;
         this.window = window;
     }
 
+    public void setCanclableSupport(boolean canclableSupport) {
+        this.canclableSupport = canclableSupport;
+        if (canclableSupport && cancleRequest != null) {
+            this.cancel(cancleRequest);
+        }
+    }
+
     @Override
     public boolean cancel(boolean mayInterruptIfRunning) {
-        if (mayInterruptIfRunning) {
-            Object value = this.window.get(Window.FUTURE_CANCEL_ENABLE_ATTR);
-            if (value != null && (Boolean.FALSE.equals(value) || "false".equals(value))) {
-                mayInterruptIfRunning = false;
-                if (logger.isDebugEnabled()) {
-                    logger.debug("can't interrupt window when running , window['"
-                            + window.getPath() + "'].cancel.enable=" + value);
-                }
+        if (!canclableSupport) {
+            cancleRequest = mayInterruptIfRunning;
+            if (logger.isDebugEnabled()) {
+                logger.debug("delay the cancle operation.");
             }
+            return false;
         }
         if (future.cancel(mayInterruptIfRunning)) {
             ((WindowListener) window.getPortal()).onWindowCanceled(window);
@@ -82,6 +89,10 @@ class WindowFuture<T> implements Future<T> {
     @Override
     public boolean isDone() {
         return future.isDone();
+    }
+
+    public Future<T> getInnerFuture() {
+        return future;
     }
 
 }

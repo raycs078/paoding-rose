@@ -37,7 +37,7 @@ import org.apache.commons.logging.LogFactory;
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
-
+// TODO: pipe的超时window cancle的工作还没有完成
 public class PipeImpl extends GenericWindowContainer implements Pipe {
 
     public static final String WINDIW_JS = "$$paoding-rose-portal.pipe.js";

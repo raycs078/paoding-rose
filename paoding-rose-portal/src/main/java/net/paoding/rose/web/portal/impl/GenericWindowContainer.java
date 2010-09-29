@@ -26,11 +26,11 @@ import javax.servlet.http.HttpServletResponse;
 
 import net.paoding.rose.RoseConstants;
 import net.paoding.rose.web.Invocation;
-import net.paoding.rose.web.portal.WindowListener;
-import net.paoding.rose.web.portal.WindowListeners;
 import net.paoding.rose.web.portal.Window;
 import net.paoding.rose.web.portal.WindowCallback;
 import net.paoding.rose.web.portal.WindowContainer;
+import net.paoding.rose.web.portal.WindowListener;
+import net.paoding.rose.web.portal.WindowListeners;
 import net.paoding.rose.web.portal.WindowRender;
 
 import org.apache.commons.logging.Log;
@@ -53,7 +53,7 @@ public abstract class GenericWindowContainer implements WindowRender, WindowCont
 
     protected ExecutorService executorService;
 
-    protected WindowListeners portalListeners;
+    protected WindowListeners windowListeners;
 
     protected Invocation invocation;
 
@@ -107,10 +107,10 @@ public abstract class GenericWindowContainer implements WindowRender, WindowCont
             return;
         } else {
             synchronized (this) {
-                if (portalListeners == null) {
-                    portalListeners = new WindowListeners();
+                if (windowListeners == null) {
+                    windowListeners = new WindowListeners();
                 }
-                portalListeners.addListener(l);
+                windowListeners.addListener(l);
             }
         }
     }
@@ -146,6 +146,7 @@ public abstract class GenericWindowContainer implements WindowRender, WindowCont
 
         WindowRequest request = new WindowRequest(window, getRequest());
         WindowResponse response = new WindowResponse(window);
+
         request.setAttribute("$$paoding-rose-portal.window.name", name);
         request.setAttribute("$$paoding-rose-portal.window.path", windowPath);
 
@@ -200,7 +201,7 @@ public abstract class GenericWindowContainer implements WindowRender, WindowCont
         }
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @SuppressWarnings( { "unchecked", "rawtypes" })
     protected Future<?> submitWindow(ExecutorService executor, WindowTask task) {
         Future<?> future = executor.submit(task);
         return new WindowFuture(future, task.getWindow());
@@ -222,9 +223,9 @@ public abstract class GenericWindowContainer implements WindowRender, WindowCont
 
     @Override
     public void onWindowAdded(Window window) {
-        if (portalListeners != null) {
+        if (windowListeners != null) {
             try {
-                portalListeners.onWindowAdded(window);
+                windowListeners.onWindowAdded(window);
             } catch (Exception e) {
                 logger.error("", e);
             }
@@ -233,9 +234,9 @@ public abstract class GenericWindowContainer implements WindowRender, WindowCont
 
     @Override
     public void onWindowStarted(Window window) {
-        if (portalListeners != null) {
+        if (windowListeners != null) {
             try {
-                portalListeners.onWindowStarted(window);
+                windowListeners.onWindowStarted(window);
             } catch (Exception e) {
                 logger.error("", e);
             }
@@ -244,9 +245,9 @@ public abstract class GenericWindowContainer implements WindowRender, WindowCont
 
     @Override
     public void onWindowCanceled(Window window) {
-        if (portalListeners != null) {
+        if (windowListeners != null) {
             try {
-                portalListeners.onWindowCanceled(window);
+                windowListeners.onWindowCanceled(window);
             } catch (Exception e) {
                 logger.error("", e);
             }
@@ -255,9 +256,9 @@ public abstract class GenericWindowContainer implements WindowRender, WindowCont
 
     @Override
     public void onWindowDone(Window window) {
-        if (portalListeners != null) {
+        if (windowListeners != null) {
             try {
-                portalListeners.onWindowDone(window);
+                windowListeners.onWindowDone(window);
             } catch (Exception e) {
                 logger.error("", e);
             }
@@ -266,9 +267,9 @@ public abstract class GenericWindowContainer implements WindowRender, WindowCont
 
     @Override
     public void onWindowError(Window window) {
-        if (portalListeners != null) {
+        if (windowListeners != null) {
             try {
-                portalListeners.onWindowError(window);
+                windowListeners.onWindowError(window);
             } catch (Exception e) {
                 logger.error("", e);
             }
@@ -277,9 +278,9 @@ public abstract class GenericWindowContainer implements WindowRender, WindowCont
 
     @Override
     public void onWindowTimeout(Window window) {
-        if (portalListeners != null) {
+        if (windowListeners != null) {
             try {
-                portalListeners.onWindowTimeout(window);
+                windowListeners.onWindowTimeout(window);
             } catch (Exception e) {
                 logger.error("", e);
             }

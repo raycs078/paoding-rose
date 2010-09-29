@@ -27,9 +27,9 @@ import java.util.concurrent.TimeoutException;
 import net.paoding.rose.web.ControllerInterceptorAdapter;
 import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.portal.Portal;
-import net.paoding.rose.web.portal.WindowListener;
 import net.paoding.rose.web.portal.PortalUtils;
 import net.paoding.rose.web.portal.Window;
+import net.paoding.rose.web.portal.WindowListener;
 
 /**
  * 这个拦截器只拦截 Portal 控制器方法，用于等待所有该 portal 的窗口执行完成或进行超时取消。
@@ -132,15 +132,13 @@ public class PortalWaitInterceptor extends ControllerInterceptorAdapter {
                 logger.error("x[" + winIndex + "/" + winSize + "] waiting[interrupted]: "
                         + window.getName());
             } catch (ExecutionException e) {
-                logger.error(
-                        "x[" + winIndex + "/" + winSize + "] waiting[error]: " + window.getName(),
-                        e);
+                logger.error("x[" + winIndex + "/" + winSize + "] waiting[error]: "
+                        + window.getName(), e);
                 window.setThrowable(e);
                 listener.onWindowError(window);
             } catch (TimeoutException e) {
-                logger.error(
-                        "x[" + winIndex + "/" + winSize + "] waiting[timeout]: " + window.getName(),
-                        e);
+                logger.error("x[" + winIndex + "/" + winSize + "] waiting[timeout]: "
+                        + window.getName(), e);
                 listener.onWindowTimeout(window);
                 future.cancel(true);
             }
