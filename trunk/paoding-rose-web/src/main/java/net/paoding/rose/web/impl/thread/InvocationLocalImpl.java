@@ -28,6 +28,7 @@ import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.InvocationLocal;
 import net.paoding.rose.web.InvocationUtils;
 import net.paoding.rose.web.RequestPath;
+import net.paoding.rose.web.paramresolver.ParamMetaData;
 import net.paoding.rose.web.var.Flash;
 import net.paoding.rose.web.var.Model;
 
@@ -65,15 +66,20 @@ public class InvocationLocalImpl implements InvocationLocal {
     }
 
     @Override
-    public void changeMethodParameter(int index, Object value) {
-        required().changeMethodParameter(index, value);
+    public void changeMethodParameter(int index, Object newValue) {
+        required().changeMethodParameter(index, newValue);
 
     }
 
     @Override
-    public void changeMethodParameter(String name, Object value) {
-        required().changeMethodParameter(name, value);
+    public void changeMethodParameter(String name, Object newValue) {
+        required().changeMethodParameter(name, newValue);
 
+    }
+    
+    @Override
+    public void changeMethodParameter(ParamMetaData paramMeta, Object newValue) {
+        required().changeMethodParameter(paramMeta, newValue);
     }
 
     @Override
