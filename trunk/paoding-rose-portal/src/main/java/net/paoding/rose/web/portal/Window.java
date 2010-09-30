@@ -49,7 +49,7 @@ public interface Window {
      * @return
      */
     @Deprecated
-    public WindowContainer getPortal();
+    public Portal getPortal();
 
     /**
      * 
@@ -130,7 +130,7 @@ public interface Window {
      * @param key
      * @param value
      */
-    public Window set(String key, Object value);
+    public void set(String key, Object value);
 
     /**
      * 获取设置到窗口的属性
