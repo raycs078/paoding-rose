@@ -18,14 +18,11 @@ package net.paoding.rose.jade.provider.jdbc;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.List;
 
 import org.apache.commons.lang.ClassUtils;
 import org.springframework.dao.DataAccessException;
-import org.springframework.dao.support.DataAccessUtils;
 import org.springframework.jdbc.core.PreparedStatementCallback;
 import org.springframework.jdbc.core.PreparedStatementSetter;
-import org.springframework.jdbc.core.RowMapperResultSetExtractor;
 import org.springframework.jdbc.core.SingleColumnRowMapper;
 import org.springframework.jdbc.support.JdbcUtils;
 
@@ -47,6 +44,9 @@ public class PreparedStatementCallbackReturnId implements PreparedStatementCallb
             returnType = ClassUtils.primitiveToWrapper(returnType);
         }
         this.returnType = returnType;
+        if (!Number.class.isAssignableFrom(returnType)) {
+            throw new IllegalArgumentException("wrong return type(number type only): " + returnType);
+        }
     }
 
     @Override
@@ -61,11 +61,11 @@ public class PreparedStatementCallbackReturnId implements PreparedStatementCallb
 
         ResultSet keys = ps.getGeneratedKeys();
         if (keys != null) {
-
             try {
-                RowMapperResultSetExtractor extractor = new RowMapperResultSetExtractor(
-                        new SingleColumnRowMapper(returnType), 1);
-                return DataAccessUtils.requiredSingleResult((List<?>) extractor.extractData(keys));
+                if (!keys.next()) {
+                    return null;
+                }
+                return new SingleColumnRowMapper(returnType).mapRow(keys, 0);
             } finally {
                 JdbcUtils.closeResultSet(keys);
             }
