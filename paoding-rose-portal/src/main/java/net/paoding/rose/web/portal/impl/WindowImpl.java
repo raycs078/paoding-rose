@@ -22,6 +22,7 @@ import java.util.concurrent.Future;
 
 import javax.servlet.http.HttpServletResponse;
 
+import net.paoding.rose.web.portal.Portal;
 import net.paoding.rose.web.portal.Window;
 
 /**
@@ -43,24 +44,25 @@ class WindowImpl implements Window {
 
     private String statusMessage = "";
 
-    private GenericWindowContainer portal;
+    private GenericWindowContainer container;
 
     private Future<?> future;
 
-    public WindowImpl(GenericWindowContainer portal, String name, String windowPath) {
-        this.portal = portal;
+    public WindowImpl(GenericWindowContainer container, String name, String windowPath) {
+        this.container = container;
         this.name = name;
         this.path = windowPath;
     }
 
     @Override
-    public GenericWindowContainer getPortal() {
-        return portal;
+    @Deprecated
+    public Portal getPortal() {
+        return (Portal) container;
     }
 
     @Override
     public GenericWindowContainer getContainer() {
-        return portal;
+        return container;
     }
 
     @Override
@@ -78,12 +80,11 @@ class WindowImpl implements Window {
     private Map<String, Object> privateAttributes;
 
     @Override
-    public Window set(String key, Object value) {
+    public void set(String key, Object value) {
         if (privateAttributes == null) {
             privateAttributes = new HashMap<String, Object>();
         }
         privateAttributes.put(key, value);
-        return this;
     }
 
     @Override
@@ -221,7 +222,7 @@ class WindowImpl implements Window {
 
     @Override
     public String toString() {
-        return this.portal.render(this);
+        return this.container.render(this);
     }
 
     @Override
