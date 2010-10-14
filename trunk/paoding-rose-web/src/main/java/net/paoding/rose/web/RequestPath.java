@@ -51,8 +51,6 @@ public class RequestPath {
 
     private Dispatcher dispatcher;
 
-    private HttpServletRequest request;
-
     public RequestPath(ReqMethod method, String uri, String ctxpath, Dispatcher dispatcher) {
         this.setMethod(method);
         setUri(uri);
@@ -62,9 +60,8 @@ public class RequestPath {
     }
 
     public RequestPath(HttpServletRequest request) {
-        this.request = request;
         // method
-        // setMethod(parseMethod(request));
+        setMethod(parseMethod(request));
 
         // ctxpath
         setCtxpath(request.getContextPath());
@@ -119,27 +116,40 @@ public class RequestPath {
     private ReqMethod parseMethod(HttpServletRequest request) {
         ReqMethod reqMethod = ReqMethod.parse(request.getMethod());
         if (reqMethod != null && reqMethod.equals(ReqMethod.POST)) {
-            //
-            if (request.getCharacterEncoding() == null) {
-                try {
-                    request.setCharacterEncoding("UTF-8");
-                } catch (UnsupportedEncodingException e) {
-                    throw new Error(e);
-                }
-                if (logger.isDebugEnabled()) {
-                    logger.debug("set request.characterEncoding by default(requestPath):"
-                            + request.getCharacterEncoding());
-                }
-            }
-            //
-            String method = request.getParameter("_method");
-            if (method != null) {
-                ReqMethod _reqMethod = ReqMethod.parse(method);
-                if (_reqMethod != null) {
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("override http method from POST to " + _reqMethod);
+            // 为什么不用getParameter：
+            // 1、使_method只能在queryString中，不能在body中
+            // 2、getParameter会导致encoding，使用UTF-8? 尽量不做这个假设
+            String queryString = request.getQueryString();
+            if (queryString != null) {
+                boolean methodChanged = false;
+                int start = queryString.indexOf("_method=");
+                if (start == 0 || (start > 0 && queryString.charAt(start - 1) == '&')) {
+                    int end = queryString.indexOf('&', start);
+                    String method = queryString.substring(start + "_method=".length(),//
+                            end > 0 ? end : queryString.length());
+                    ReqMethod _reqMethod = ReqMethod.parse(method);
+                    if (_reqMethod != null) {
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("override http method from POST to " + _reqMethod);
+                        }
+                        reqMethod = _reqMethod;
+                        methodChanged = true;
                     }
-                    reqMethod = _reqMethod;
+                }
+                if (!methodChanged) {
+                    int inBodyStart = queryString.indexOf("_method_in_body=1");
+                    if (inBodyStart == 0
+                            || (inBodyStart > 0 && queryString.charAt(inBodyStart - 1) == '&')) {
+                        String method = request.getParameter("_method");
+                        ReqMethod _reqMethod = ReqMethod.parse(method);
+                        if (_reqMethod != null) {
+                            if (logger.isDebugEnabled()) {
+                                logger.debug("override http method from POST to " + _reqMethod);
+                            }
+                            reqMethod = _reqMethod;
+                            methodChanged = true;
+                        }
+                    }
                 }
             }
         }
@@ -163,9 +173,6 @@ public class RequestPath {
     }
 
     public ReqMethod getMethod() {
-        if (method == null) {
-            method = parseMethod(request);
-        }
         return method;
     }
 
