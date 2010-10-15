@@ -21,7 +21,7 @@ public @interface Cache {
      * 
      * @return 缓存 Pool
      */
-    String pool();
+    String pool() default "default";
 
     /**
      * 标注 DAO 方法的缓存 Key.
