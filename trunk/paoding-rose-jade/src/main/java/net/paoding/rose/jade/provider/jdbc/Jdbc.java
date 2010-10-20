@@ -21,6 +21,7 @@ import javax.sql.DataSource;
 
 import net.paoding.rose.jade.provider.Modifier;
 
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.RowMapper;
 
 /**
@@ -55,6 +56,17 @@ public interface Jdbc {
      * @return
      */
     public int update(Modifier modifier, String sql, Object[] args);
+
+    /**
+     * 
+     * @param modifier
+     * @param sql
+     * @param args
+     * @return
+     * @throws DataAccessException
+     */
+    public int[] batchUpdate(Modifier modifier, String sql, List<Object[]> args)
+            throws DataAccessException;
 
     /**
      * 根据给定的标准sql以及所带的参数执行插入数据到数据库，并返回自增列值
