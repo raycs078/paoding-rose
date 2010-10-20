@@ -15,6 +15,8 @@
  */
 package net.paoding.rose.jade.provider.jdbc;
 
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -90,7 +92,19 @@ public class JdbcDataAccess implements DataAccess {
         return jdbc.insertAndReturnId(modifier, result.getSQL(), result.getParameters());
     }
 
+    @Override
     public int[] batchUpdate(String sql, Modifier modifier, List<Map<String, Object>> parametersList) {
+        // 以com.xiaonei.in.dao为试点测试真正的批量插入、更新，不支持返回可能的自增主键
+        // 2010-10-20
+        if (modifier.getDefinition().getDAOClazz().getName().startsWith("com.xiaonei.in.dao")) {
+            return batchUpdate2(sql, modifier, parametersList);
+        } else {
+            return batchUpdate1(sql, modifier, parametersList);
+        }
+    }
+
+    private int[] batchUpdate1(String sql, Modifier modifier,
+            List<Map<String, Object>> parametersList) {
         int[] updated = new int[parametersList.size()];
         for (int i = 0; i < updated.length; i++) {
             Map<String, Object> parameters = parametersList.get(i);
@@ -99,83 +113,61 @@ public class JdbcDataAccess implements DataAccess {
             SQLThreadLocal.remove();
         }
         return updated;
-
-        /*
-         * if (parametersList.size() == 0) { return new int[0]; }
-         * HashMap<String, List<Object[]>> batches = new HashMap<String,
-         * List<Object[]>>(); Map<String, int[]> positions = new HashMap<String,
-         * int[]>(); for (int i = 0; i < parametersList.size(); i++) { Object[]
-         * statemenetParameters = null; String sqlString = sql;
-         * SQLInterpreterResult ir = null; for (SQLInterpreter interpreter :
-         * interpreters) { ir =
-         * interpreter.interpret(jdbcTemplate.getDataSource(), sql, modifier,
-         * parametersList.get(i), statemenetParameters); if (ir != null) { // if
-         * (sqlString != null && !sqlString.equals(ir.getSQL())) { // throw new
-         * IllegalArgumentException("batchUpdate"); // } sqlString =
-         * ir.getSQL(); statemenetParameters = ir.getParameters(); } } // if
-         * (sqlString == null) { // sqlString = sql; // } List<Object[]>
-         * batchParameters = batches.get(sqlString); if (batchParameters ==
-         * null) { batchParameters = new
-         * ArrayList<Object[]>(parametersList.size()); batches.put(sqlString,
-         * batchParameters); } int[] subPositions = positions.get(sqlString); if
-         * (subPositions == null) { subPositions = new int[parametersList.size()
-         * + 1]; positions.put(sqlString, subPositions); }
-         * subPositions[subPositions[parametersList.size()]] = i;
-         * subPositions[parametersList.size()] =
-         * subPositions[parametersList.size()] + 1;
-         * batchParameters.add(statemenetParameters); } int[] updated = new
-         * int[parametersList.size()]; batchUpdateByJdbcTemplate(batches,
-         * updated, positions); return updated;
-         */
     }
 
-    // ------------------------------------------------
+    private int[] batchUpdate2(String sql, Modifier modifier,
+            List<Map<String, Object>> parametersList) {
+        if (parametersList.size() == 0) {
+            return new int[0];
+        }
+        // sql --> args[]
+        HashMap<String, List<Object[]>> batches = new HashMap<String, List<Object[]>>();
+        // sql --> named args
+        HashMap<String, List<Map<String, Object>>> batches2 = new HashMap<String, List<Map<String, Object>>>();
+        // sql --> [2,3,6,9] positions of parametersList
+        Map<String, List<Integer>> positions = new HashMap<String, List<Integer>>();
 
-    /**
-     * 执行 UPDATE / DELETE 语句。
-     * 
-     * @param sql - 执行的语句
-     * @param parameters - 参数
-     * 
-     * @return 更新的记录数目
-     */
-    /*-   protected void xxxxbatchUpdateByJdbcTemplate(Map<String, List<Object[]>> ps, int[] updated,
-               Map<String, int[]> positions) {
-           for (Map.Entry<String, List<Object[]>> batch : ps.entrySet()) {
-               String sql = batch.getKey();
-               final List<Object[]> parametersList = batch.getValue();
-               int[] subUpdated = jdbc.batchUpdate(sql, new BatchPreparedStatementSetter() {
+        for (int i = 0; i < parametersList.size(); i++) {
+            SQLInterpreterResult ir = interpret(sql, modifier, parametersList.get(i));
+            List<Object[]> args = batches.get(ir.getSQL());
+            List<Integer> position = positions.get(ir.getSQL());
+            List<Map<String, Object>> maplist = batches2.get(ir.getSQL());
+            if (args == null) {
+                args = new LinkedList<Object[]>();
+                batches.put(ir.getSQL(), args);
+                position = new LinkedList<Integer>();
+                positions.put(ir.getSQL(), position);
+                maplist = new LinkedList<Map<String, Object>>();
+            }
+            position.add(i);
+            args.add(ir.getParameters());
+            maplist.add(parametersList.get(i));
+        }
+        if (batches.size() == 1) {
+            SQLThreadLocal.set(SQLType.WRITE, sql, modifier, parametersList);
+            int[] updated = jdbc.batchUpdate(modifier, batches.keySet().iterator().next(), batches
+                    .values().iterator().next());
+            SQLThreadLocal.remove();
+            return updated;
+        }
+        int[] batchUpdated = new int[parametersList.size()];
+        for (Map.Entry<String, List<Object[]>> batch : batches.entrySet()) {
+            String batchSQL = batch.getKey();
+            List<Object[]> values = batch.getValue();
+            List<Map<String, Object>> map = batches2.get(batchSQL);
+            SQLThreadLocal.set(SQLType.WRITE, sql, modifier, map);
+            int[] updated = jdbc.batchUpdate(modifier, batchSQL, values);
+            SQLThreadLocal.remove();
+            List<Integer> position = positions.get(batchSQL);
+            int i = 0;
+            for (Integer p : position) {
+                batchUpdated[p] = updated[i++];
+            }
+        }
+        return batchUpdated;
 
-                   @Override
-                   public int getBatchSize() {
-                       return parametersList.size();
-                   }
+    }
 
-                   @Override
-                   public void setValues(PreparedStatement ps, int i) throws SQLException {
-                       Object[] args = parametersList.get(i);
-                       for (int j = 0; j < args.length; j++) {
-                           Object arg = args[j];
-                           if (arg instanceof SqlParameterValue) {
-                               SqlParameterValue paramValue = (SqlParameterValue) arg;
-                               StatementCreatorUtils.setParameterValue(ps, j + 1, paramValue,
-                                       paramValue.getValue());
-                           } else {
-                               StatementCreatorUtils.setParameterValue(ps, j + 1,
-                                       SqlTypeValue.TYPE_UNKNOWN, arg);
-                           }
-                       }
-                   }
-               });
-
-               int[] subPositions = positions.get(sql);
-               for (int i = 0; i < subUpdated.length; i++) {
-                   updated[subPositions[i]] = subUpdated[i];
-               }
-           }
-
-       }
-    */
     protected SQLInterpreterResult interpret(String jadeSQL, Modifier modifier,
             Map<String, Object> parametersAsMap) {
         SQLInterpreterResult result = null;

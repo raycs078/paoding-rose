@@ -27,10 +27,14 @@ import net.paoding.rose.jade.core.Identity;
 import net.paoding.rose.jade.provider.Modifier;
 
 import org.springframework.dao.DataAccessException;
+import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreator;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.SqlParameterValue;
 import org.springframework.jdbc.core.SqlProvider;
+import org.springframework.jdbc.core.SqlTypeValue;
+import org.springframework.jdbc.core.StatementCreatorUtils;
 import org.springframework.util.Assert;
 
 /**
@@ -93,6 +97,34 @@ public class JdbcImpl implements Jdbc {
                 setter, returnType);
         return (Number) spring.execute(new GenerateKeysPreparedStatementCreator(sql),
                 callbackReturnId);
+    }
+
+    @Override
+    public int[] batchUpdate(Modifier modifier, String sql, final List<Object[]> args)
+            throws DataAccessException {
+        return spring.batchUpdate(sql, new BatchPreparedStatementSetter() {
+
+            @Override
+            public void setValues(PreparedStatement ps, int i) throws SQLException {
+                Object[] values = args.get(i);
+                for (int j = 0; j < values.length; j++) {
+                    Object arg = values[j];
+                    if (arg instanceof SqlParameterValue) {
+                        SqlParameterValue paramValue = (SqlParameterValue) arg;
+                        StatementCreatorUtils.setParameterValue(ps, j + 1, paramValue,
+                                paramValue.getValue());
+                    } else {
+                        StatementCreatorUtils.setParameterValue(ps, j + 1,
+                                SqlTypeValue.TYPE_UNKNOWN, arg);
+                    }
+                }
+            }
+
+            @Override
+            public int getBatchSize() {
+                return args.size();
+            }
+        });
     }
 
     //-----------------------------------------------------------------------------

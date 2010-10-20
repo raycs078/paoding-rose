@@ -15,6 +15,7 @@
  */
 package net.paoding.rose.jade.core;
 
+import java.util.List;
 import java.util.Map;
 
 import net.paoding.rose.jade.annotation.SQLType;
@@ -35,7 +36,14 @@ public class SQLThreadLocal {
     }
 
     public static SQLThreadLocal set(SQLType sqlType, String sql, Modifier modifier,
-            Map<String, ?> parameters) {
+            Map<String, Object> parameters) {
+        SQLThreadLocal local = new SQLThreadLocal(sqlType, sql, modifier, parameters);
+        locals.set(local);
+        return local;
+    }
+
+    public static SQLThreadLocal set(SQLType sqlType, String sql, Modifier modifier,
+            List<Map<String, Object>> parameters) {
         SQLThreadLocal local = new SQLThreadLocal(sqlType, sql, modifier, parameters);
         locals.set(local);
         return local;
@@ -51,13 +59,23 @@ public class SQLThreadLocal {
 
     private Modifier modifier;
 
-    private Map<String, ?> parameters;
+    private Map<String, Object> parameters;
 
-    private SQLThreadLocal(SQLType sqlType, String sql, Modifier modifier, Map<String, ?> parameters) {
+    private List<Map<String, Object>> parametersList;
+
+    private SQLThreadLocal(SQLType sqlType, String sql, Modifier modifier, Map<String, Object> parameters) {
         this.sqlType = sqlType;
         this.sql = sql;
         this.modifier = modifier;
         this.parameters = parameters;
+    }
+
+    private SQLThreadLocal(SQLType sqlType, String sql, Modifier modifier,
+            List<Map<String, Object>> parameters) {
+        this.sqlType = sqlType;
+        this.sql = sql;
+        this.modifier = modifier;
+        this.parametersList = parameters;
     }
 
     public SQLType getSqlType() {
@@ -80,8 +98,15 @@ public class SQLThreadLocal {
         return modifier;
     }
 
-    public Map<String, ?> getParameters() {
+    public Map<String, Object> getParameters() {
+        if (parameters == null) {
+            parameters = parametersList.get(0);
+        }
         return parameters;
+    }
+
+    public List<Map<String, Object>> getParametersList() {
+        return parametersList;
     }
 
 }
