@@ -66,6 +66,12 @@ public interface Window {
     public Future<?> getFuture();
 
     /**
+     * 
+     * @return
+     */
+    boolean isCancelled();
+
+    /**
      * 判断该窗口请求是否被处理完成了，无论是否发生了异常或因超时被取消。
      * 
      * @see Future#isDone()
@@ -194,5 +200,19 @@ public interface Window {
      * @return
      */
     public String toString();
+
+    /**
+     * 如果当前window正处于running状态，是否支持中断？
+     * 
+     * @return
+     */
+    public boolean mayInterruptIfRunning();
+
+    /**
+     * 如果该window正处于running状态，是否可以进行中断
+     * 
+     * @param mayInterruptIfRunning
+     */
+    public void setMayInterruptIfRunning(boolean mayInterruptIfRunning);
 
 }

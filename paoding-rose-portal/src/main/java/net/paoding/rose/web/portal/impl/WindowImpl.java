@@ -32,6 +32,26 @@ import net.paoding.rose.web.portal.Window;
  */
 class WindowImpl implements Window {
 
+    private static boolean defaultMayInterruptIfRunning = false;
+    static {
+        String pv;
+        try {
+            pv = System.getProperty("rose.portal.may_interrupt_if_running");
+            if (pv == null) {
+                pv = (String) System.getenv("rose.portal.may_interrupt_if_running");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            pv = "false";
+        }
+        if (pv == null) {
+            pv = "false";
+        }
+        defaultMayInterruptIfRunning = Boolean.valueOf(pv);
+    }
+
+    //--------------------
+
     private String name;
 
     private String path;
@@ -46,7 +66,14 @@ class WindowImpl implements Window {
 
     private GenericWindowContainer container;
 
-    private Future<?> future;
+    private WindowFuture<?> future;
+
+    private boolean mayInterruptIfRunning = defaultMayInterruptIfRunning;
+
+    /**
+     * 窗口请求对象私有的、有别于其他窗口的属性
+     */
+    private Map<String, Object> privateAttributes;
 
     public WindowImpl(GenericWindowContainer container, String name, String windowPath) {
         this.container = container;
@@ -54,6 +81,9 @@ class WindowImpl implements Window {
         this.path = windowPath;
     }
 
+    /**
+     * 请使用 {@link #getContainer()}代替
+     */
     @Override
     @Deprecated
     public Portal getPortal() {
@@ -70,30 +100,45 @@ class WindowImpl implements Window {
         return future;
     }
 
-    public void setFuture(Future<?> future) {
+    public void setFuture(WindowFuture<?> future) {
         this.future = future;
     }
 
-    /**
-     * 窗口请求对象私有的、有别于其他窗口的属性
-     */
-    private Map<String, Object> privateAttributes;
+    @Override
+    public boolean isCancelled() {
+        return future.isCancelRequested() || future.isCancelled();
+    }
 
     @Override
     public void set(String key, Object value) {
-        if (privateAttributes == null) {
-            privateAttributes = new HashMap<String, Object>();
+        if (FUTURE_CANCEL_ENABLE_ATTR.equals(key)) {
+            if (value == null || Boolean.FALSE.equals(value) || "false".equals(value)) {
+                setMayInterruptIfRunning(false);
+            } else {
+                setMayInterruptIfRunning(true);
+            }
+        } else {
+            if (privateAttributes == null) {
+                privateAttributes = new HashMap<String, Object>();
+            }
+            privateAttributes.put(key, value);
         }
-        privateAttributes.put(key, value);
     }
 
     @Override
     public Object get(String key) {
+        if (FUTURE_CANCEL_ENABLE_ATTR.equals(key)) {
+            return mayInterruptIfRunning();
+        }
         return privateAttributes == null ? null : privateAttributes.get(key);
     }
 
     @Override
     public void remove(String key) {
+        if (FUTURE_CANCEL_ENABLE_ATTR.equals(key)) {
+            setMayInterruptIfRunning(defaultMayInterruptIfRunning);
+            return;
+        }
         if (privateAttributes != null) {
             privateAttributes.remove(key);
         }
@@ -236,6 +281,16 @@ class WindowImpl implements Window {
     @Override
     public int hashCode() {
         return this.name.hashCode();
+    }
+
+    @Override
+    public void setMayInterruptIfRunning(boolean mayInterruptIfRunning) {
+        this.mayInterruptIfRunning = mayInterruptIfRunning;
+    }
+
+    @Override
+    public boolean mayInterruptIfRunning() {
+        return mayInterruptIfRunning;
     }
 
 }

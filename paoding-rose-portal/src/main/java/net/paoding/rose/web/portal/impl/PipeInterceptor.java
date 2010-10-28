@@ -89,7 +89,7 @@ public class PipeInterceptor extends ControllerInterceptorAdapter {
                                         logger.info("break waiting for this window's in '"
                                                 + window.getName()
                                                 + "@"
-                                                + window.getPortal().getInvocation()
+                                                + window.getContainer().getInvocation()
                                                         .getRequestPath() + "'");
                                     }
                                     break;
