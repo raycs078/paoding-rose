@@ -180,7 +180,7 @@ class WindowRequest extends HttpServletRequestWrapper {
             return session;
         }
         if (create) {
-            if (window.getPortal().getInvocation().getResponse().isCommitted()) {
+            if (window.getContainer().getInvocation().getResponse().isCommitted()) {
                 session = new SessionAfterCommitted(new IllegalStateException(
                         "Cannot create a session after the response has been committed"));
             } else {

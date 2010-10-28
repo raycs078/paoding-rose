@@ -125,8 +125,8 @@ final class PortalRequest extends HttpServletRequestWrapper implements HttpServl
         return getRequest().getAttribute(name);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    @SuppressWarnings("rawtypes")
     public Enumeration getAttributeNames() {
         return getRequest().getAttributeNames();
     }

@@ -38,36 +38,44 @@ class WindowFuture<T> implements Future<T> {
 
     private final WindowImpl window;
 
-    private boolean canclableSupport = true;
-
-    private Boolean cancleRequest;
+    private boolean cancelRequested = false;
 
     public WindowFuture(Future<T> future, WindowImpl window) {
         this.future = future;
         this.window = window;
     }
 
-    public void setCanclableSupport(boolean canclableSupport) {
-        this.canclableSupport = canclableSupport;
-        if (canclableSupport && cancleRequest != null) {
-            this.cancel(cancleRequest);
-        }
+    public boolean isCancelRequested() {
+        return cancelRequested;
     }
 
     @Override
-    public boolean cancel(boolean mayInterruptIfRunning) {
-        if (!canclableSupport) {
-            cancleRequest = mayInterruptIfRunning;
-            if (logger.isDebugEnabled()) {
-                logger.debug("delay the cancle operation.");
+    public boolean cancel(final boolean mayInterruptIfRunning) {
+        this.cancelRequested = true;
+        // when mayInterruptIfRunning is false
+        if (!mayInterruptIfRunning) {
+            return cancel0(mayInterruptIfRunning);
+        } else {
+            // when mayInterruptIfRunning is true
+            if (this.window.mayInterruptIfRunning()) {
+                return cancel0(mayInterruptIfRunning);
+            } else {
+                return cancel0(false);
             }
-            return false;
+        }
+    }
+
+    private boolean cancel0(boolean mayInterruptIfRunning) {
+        if (logger.isDebugEnabled()) {
+            logger.debug("canceling inner future: " + window.getName() + "  mayInterruptIfRunning="
+                    + mayInterruptIfRunning);
         }
         if (future.cancel(mayInterruptIfRunning)) {
-            ((WindowListener) window.getPortal()).onWindowCanceled(window);
+            ((WindowListener) window.getContainer()).onWindowCanceled(window);
             return true;
+        } else {
+            return false;
         }
-        return false;
     }
 
     @Override

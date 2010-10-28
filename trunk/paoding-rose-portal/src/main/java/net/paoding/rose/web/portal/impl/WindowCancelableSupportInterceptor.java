@@ -19,7 +19,6 @@ import net.paoding.rose.web.ControllerInterceptorAdapter;
 import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.InvocationChain;
 import net.paoding.rose.web.portal.PortalUtils;
-import net.paoding.rose.web.portal.Window;
 
 /**
  * 
@@ -36,33 +35,20 @@ public class WindowCancelableSupportInterceptor extends ControllerInterceptorAda
     @Override
     protected Object round(Invocation inv, InvocationChain chain) throws Exception {
         WindowImpl win = (WindowImpl) PortalUtils.getWindow(inv);
-        if (win == null) {
+        if (win == null || win.mayInterruptIfRunning()) {
             return super.round(inv, chain);
         }
         //
-        boolean cancelableSupport = true;
-        Object value = win.get(Window.FUTURE_CANCEL_ENABLE_ATTR);
-        if (value != null && (Boolean.FALSE.equals(value) || "false".equals(value))) {
-            cancelableSupport = false;
-            if (logger.isDebugEnabled()) {
-                logger.debug("set window's cancelableSupport=false");
-            }
+        if (Thread.currentThread().isInterrupted()) {
+            Thread.interrupted(); // clear the interruption
+            return "@interrupted " + win.getPath();
         }
-        if (cancelableSupport || !Thread.currentThread().isInterrupted()) {
+        try {
             return super.round(inv, chain);
-        } //
-        else {
-            WindowFuture<?> future = (WindowFuture<?>) win.getFuture();
-            try {
-                future.setCanclableSupport(false);
-                Thread.interrupted();// clear the interruption
-                return super.round(inv, chain);
-            } finally {
-                future.setCanclableSupport(true);
-                Thread.currentThread().interrupt();// recover
-                if (logger.isDebugEnabled()) {
-                    logger.debug("recover currentThread's interrupted");
-                }
+        } finally {
+            if (win.isCancelled()) {
+                Thread.interrupted(); // clear the interruption
+                return "@interrupted " + win.getPath();
             }
         }
     }

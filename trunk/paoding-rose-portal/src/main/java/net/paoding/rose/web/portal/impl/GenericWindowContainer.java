@@ -171,7 +171,7 @@ public abstract class GenericWindowContainer implements WindowRender, WindowCont
         onWindowAdded(window);
 
         // 提交到执行服务中执行
-        Future<?> future = submitWindow(this.executorService, task);
+        WindowFuture<?> future = submitWindow(this.executorService, task);
         window.setFuture(future);
 
         // 返回窗口对象
@@ -201,8 +201,8 @@ public abstract class GenericWindowContainer implements WindowRender, WindowCont
         }
     }
 
-    @SuppressWarnings( { "unchecked", "rawtypes" })
-    protected Future<?> submitWindow(ExecutorService executor, WindowTask task) {
+    @SuppressWarnings( { "unchecked" })
+    protected WindowFuture<?> submitWindow(ExecutorService executor, WindowTask task) {
         Future<?> future = executor.submit(task);
         return new WindowFuture(future, task.getWindow());
     }
