@@ -138,6 +138,7 @@ public class JdbcDataAccess implements DataAccess {
                 position = new LinkedList<Integer>();
                 positions.put(ir.getSQL(), position);
                 maplist = new LinkedList<Map<String, Object>>();
+                batches2.put(ir.getSQL(), maplist);
             }
             position.add(i);
             args.add(ir.getParameters());

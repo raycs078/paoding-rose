@@ -73,11 +73,15 @@ public class SelectOperation implements JadeOperation {
             return listResult;
 
         } else if (returnType.isArray() && byte[].class != returnType) {
-
             Object array = Array.newInstance(returnType.getComponentType(), sizeResult);
-
-            listResult.toArray((Object[]) array);
-
+            if (returnType.getComponentType().isPrimitive()) {
+                int len = listResult.size();
+                for (int i = 0; i < len; i++) {
+                    Array.set(array, i, listResult.get(i));
+                }
+            } else {
+                listResult.toArray((Object[]) array);
+            }
             return array;
 
         } else if (Map.class.isAssignableFrom(returnType)) {
