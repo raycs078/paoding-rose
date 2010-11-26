@@ -15,6 +15,9 @@
  */
 package net.paoding.rose.web.portal.impl;
 
+import java.io.IOException;
+import java.io.Writer;
+
 import net.paoding.rose.web.portal.Window;
 import net.paoding.rose.web.portal.WindowRender;
 
@@ -26,8 +29,8 @@ import net.paoding.rose.web.portal.WindowRender;
 public class SimpleWindowRender implements WindowRender {
 
     @Override
-    public String render(Window window) {
-        return window.getContent();
+    public void render(Writer out, Window window) throws IOException {
+        out.write(window.getContent());
     }
 
 }

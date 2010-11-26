@@ -15,6 +15,8 @@
  */
 package net.paoding.rose.web.portal.impl;
 
+import java.io.IOException;
+import java.io.Writer;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -158,10 +160,12 @@ public abstract class GenericWindowContainer implements WindowRender, WindowCont
         WindowTask task = new WindowTask(window, request, response);
 
         // 注册到相关变量中
+        Window windowInView = new WindowForView(window);
         synchronized (windows) {
-            this.windows.add(window);
+            this.windows.add(windowInView);
         }
-        this.invocation.addModel(name, window);
+        // for render
+        this.invocation.addModel(name, windowInView);
 
         if (callback != null) {
             callback.beforeSubmit(window);
@@ -208,8 +212,8 @@ public abstract class GenericWindowContainer implements WindowRender, WindowCont
     }
 
     @Override
-    public String render(Window window) {
-        return render.render(window);
+    public void render(Writer out, Window window) throws IOException {
+        render.render(out, window);
     }
 
     //-------------实现toString()---------------F

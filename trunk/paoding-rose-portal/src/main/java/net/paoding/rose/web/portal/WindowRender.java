@@ -16,6 +16,7 @@
 package net.paoding.rose.web.portal;
 
 import java.io.IOException;
+import java.io.Writer;
 
 /**
  * 
@@ -28,7 +29,8 @@ public interface WindowRender {
      * 
      * @param window
      * @param out
+     * @throws IOException 
      * @throws IOException
      */
-    public String render(Window window);
+    public void render(Writer out,Window window) throws IOException;
 }
