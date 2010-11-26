@@ -15,6 +15,8 @@
  */
 package net.paoding.rose.web.portal.impl;
 
+import java.io.IOException;
+import java.io.Writer;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -60,7 +62,7 @@ class WindowImpl implements Window {
 
     private Throwable throwable;
 
-    private int statusCode = -1;
+    private int statusCode = 200;
 
     private String statusMessage = "";
 
@@ -168,7 +170,7 @@ class WindowImpl implements Window {
     }
 
     @Override
-    public int getContextLength() {
+    public int getContentLength() {
         return buffer == null ? -1 : buffer.length();
     }
 
@@ -218,7 +220,7 @@ class WindowImpl implements Window {
 
     @Override
     public boolean isSuccess() {
-        return future.isDone() && getStatusCode() == HttpServletResponse.SC_OK;
+        return future.isDone() && getStatusCode() == HttpServletResponse.SC_OK && throwable == null;
     }
 
     @Override
@@ -267,7 +269,12 @@ class WindowImpl implements Window {
 
     @Override
     public String toString() {
-        return this.container.render(this);
+        return "window[" + path + "]";
+    }
+
+    @Override
+    public void render(Writer out) throws IOException {
+        getContainer().render(out, this);
     }
 
     @Override

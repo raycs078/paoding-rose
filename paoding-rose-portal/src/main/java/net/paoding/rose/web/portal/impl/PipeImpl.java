@@ -213,14 +213,14 @@ public class PipeImpl extends GenericWindowContainer implements Pipe {
         }
         try {
             // 这里不用设置response的encoding，即使用和主控一致的encoding
-            out.append(render(window));
+            render(out, window);
             out.flush();
         } finally {
             latch.countDown();
         }
         if (logger.isDebugEnabled()) {
             logger.debug(//
-            "firing '" + window.getName() + "' : done  content=" + window.getContent());
+                    "firing '" + window.getName() + "' : done  content=" + window.getContent());
         }
     }
 

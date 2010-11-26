@@ -15,6 +15,8 @@
  */
 package net.paoding.rose.web.portal;
 
+import java.io.IOException;
+import java.io.Writer;
 import java.util.Map;
 import java.util.concurrent.Future;
 
@@ -116,7 +118,7 @@ public interface Window {
      * 
      * @return
      */
-    public int getContextLength();
+    public int getContentLength();
 
     /**
      * 返回该窗口的渲染结果文本，如果没有被渲染将返回长度为0的串
@@ -124,6 +126,13 @@ public interface Window {
      * @return
      */
     public String getContent();
+
+    /**
+     * 
+     * @param out
+     * @throws IOException
+     */
+    public void render(Writer out) throws IOException;
 
     /**
      * 

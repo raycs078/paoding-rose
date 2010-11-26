@@ -15,11 +15,15 @@
  */
 package net.paoding.rose.web.portal.impl;
 
+import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.StringWriter;
+import java.io.Writer;
 
 import net.paoding.rose.web.portal.Window;
 import net.paoding.rose.web.portal.WindowRender;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * 
@@ -27,6 +31,8 @@ import net.paoding.rose.web.portal.WindowRender;
  * 
  */
 public final class NestedWindowRender implements WindowRender {
+
+    private static Log logger = LogFactory.getLog(NestedWindowRender.class);
 
     private static WindowRender simpleRender = new SimpleWindowRender();
 
@@ -48,46 +54,54 @@ public final class NestedWindowRender implements WindowRender {
     }
 
     @Override
-    public String render(Window w) {
+    public void render(Writer out, Window w) throws IOException {
         WindowRender render = this.innerRender;
         if (render == null) {
             render = simpleRender;
         }
+        if (w instanceof WindowForView) {
+            w = ((WindowForView) w).getInner();
+        }
         WindowImpl window = (WindowImpl) w;
-        if (window.getContextLength() >= 0) {
-            return render.render(window);
+        if (window.getContentLength() >= 0) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("rendering window: " + window.getPath() + "; contentLength="
+                        + window.getContentLength());
+            }
+            render.render(out, window);
+            return;
+        }
+        if (logger.isInfoEnabled()) {
+            logger.info("rendering a unsuccess window: " + window.getPath() + "; contentLength="
+                    + window.getContentLength() + "; sc=" + window.getStatusCode());
         }
         if (window.getThrowable() != null) {
-            writeExceptionAsContent(window);
-        } else if (window.getStatusCode() > 299 || window.getStatusCode() < 200) {
-            window.appendContent(window.getPath());
-            window.appendContent("<br>");
-            window.appendContent(String.valueOf(window.getStatusCode()));
+            writeExceptionAsContent(out, window);
+        } else if (window.getStatusCode() < 200 || window.getStatusCode() >= 300) {
+            out.write(window.getPath());
+            out.write("<br>sc=");
+            out.write(String.valueOf(window.getStatusCode()));
             if (window.getStatusMessage() != null) {
-                window.appendContent(" ");
-                window.appendContent(window.getStatusMessage());
+                out.write(" ");
+                out.write(window.getStatusMessage());
             }
         }
-        return render.render(window);
     }
 
-    private void writeExceptionAsContent(WindowImpl window) {
-        window.appendContent(window.getPath());
-        window.appendContent("<br>");
-        window.appendContent(String.valueOf(window.getStatusCode()));
+    private void writeExceptionAsContent(Writer out, WindowImpl window) throws IOException {
+        out.write(window.getPath());
+        out.write("<br>");
+        out.write(String.valueOf(window.getStatusCode()));
         if (window.getStatusMessage() != null) {
-            window.appendContent(" ");
-            window.appendContent(window.getStatusMessage());
+            out.write(" ");
+            out.write(window.getStatusMessage());
         }
-        window.appendContent("<br>");
-        window.appendContent("<pre>");
+        out.write("<br>");
+        out.write("<pre>");
         Throwable ex = window.getThrowable();
-        StringWriter stringWriter = new StringWriter();
-        PrintWriter printWriter = new PrintWriter(stringWriter);
+        PrintWriter printWriter = new PrintWriter(out);
         ex.printStackTrace(printWriter);
-        window.appendContent(stringWriter.getBuffer());
-        window.appendContent("</pre>");
-
+        out.write("</pre>");
     }
 
 }
