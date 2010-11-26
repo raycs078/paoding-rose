@@ -53,7 +53,7 @@ public class WindowForView implements Window {
 
     @Override
     public void render(Writer out) throws IOException {
-        getContainer().render(out, this.inner);
+        this.inner.render(out);
     }
 
     @Override
@@ -98,7 +98,7 @@ public class WindowForView implements Window {
 
     @Override
     public String getPath() {
-        return getPath();
+        return inner.getPath();
     }
 
     @Override
