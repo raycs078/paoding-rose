@@ -126,7 +126,6 @@ public class TextInstruction extends AbstractInstruction {
         if (StringUtils.isNotEmpty(text)) {
             PrintWriter out = response.getWriter();
             out.print(text);
-            out.flush();
         }
     }
 
