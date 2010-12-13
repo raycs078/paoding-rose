@@ -17,8 +17,8 @@ public class StackTraceSimplifier {
 	protected static Log logger = LogFactory.getLog(StackTraceSimplifier.class);
 
 	private static final Pattern EXCLUDED_STACK_TRACE = Pattern
-			.compile("^net\\.paoding\\.rose\\.web\\.(((ControllerInterceptorAdapter|InterceptorDelegate|OncePerRequestInterceptorDelegate)\\.round.*)"
-					+ "|(impl\\.thread\\.ActionEngine\\$InvocationChainImpl\\.doNext.*))");
+			.compile("^net\\.paoding\\.rose\\.web\\.(((ControllerInterceptorAdapter|InterceptorDelegate|OncePerRequestInterceptorDelegate).*)"
+					+ "|(impl\\.thread\\.ActionEngine\\$InvocationChainImpl.*))");
 
 	/**
 	 * 对指定异常的栈进行简化
@@ -34,6 +34,7 @@ public class StackTraceSimplifier {
 		}
 
 		StackTraceElement[] trace = e.getStackTrace();
+		
 		if (trace == null || trace.length == 0) {
 			return;
 		}
@@ -49,6 +50,7 @@ public class StackTraceSimplifier {
 			}
 			simpleTrace.add(trace[i]);
 		}
+		
 		e.setStackTrace(simpleTrace.toArray(new StackTraceElement[simpleTrace
 				.size()]));
 	}
