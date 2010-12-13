@@ -22,6 +22,7 @@ import javax.servlet.http.HttpServletRequestWrapper;
 
 import net.paoding.rose.RoseConstants;
 import net.paoding.rose.util.SpringUtils;
+import net.paoding.rose.util.StackTraceSimplifier;
 import net.paoding.rose.web.ControllerErrorHandler;
 import net.paoding.rose.web.Invocation;
 import net.paoding.rose.web.annotation.MultipartCleanup;
@@ -152,6 +153,7 @@ public class ModuleEngine implements Engine {
                 // 
                 HttpServletRequest request = rose.getInvocation().getRequest();
                 WebUtils.exposeErrorRequestAttributes(request, cause, null);
+                StackTraceSimplifier.simplify(cause);	//对栈进行简化
                 instruction = errorHandler.onError(rose.getInvocation(), cause);
             }
 
