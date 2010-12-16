@@ -23,7 +23,7 @@ import org.apache.commons.lang.StringUtils;
 /**
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
- * 
+ * @author Li Weibo[weibo.leo@gmail.com]
  */
 public class HttpErrorInstruction extends AbstractInstruction {
 

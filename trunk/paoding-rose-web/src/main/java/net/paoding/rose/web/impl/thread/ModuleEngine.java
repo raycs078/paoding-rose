@@ -51,6 +51,7 @@ import org.springframework.web.util.WebUtils;
  * <p>
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
+ * @author Li Weibo[weibo.leo@gmail.com]
  */
 public class ModuleEngine implements Engine {
 

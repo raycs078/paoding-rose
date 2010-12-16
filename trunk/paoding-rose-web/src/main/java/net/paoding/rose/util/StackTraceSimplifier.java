@@ -10,14 +10,15 @@ import org.apache.commons.logging.LogFactory;
 /**
  * 对栈进行简化的工具，去掉递归调用时循环出现的那部分栈。
  * 
- * @author Li Weibo (weibo.leo@gmail.com)
+ * @author Li Weibo[weibo.leo@gmail.com]
  */
 public class StackTraceSimplifier {
 
 	protected static Log logger = LogFactory.getLog(StackTraceSimplifier.class);
 
 	private static final Pattern EXCLUDED_STACK_TRACE = Pattern
-			.compile("^net\\.paoding\\.rose\\.web\\.(((ControllerInterceptorAdapter|InterceptorDelegate|OncePerRequestInterceptorDelegate).*)"
+			.compile("^net\\.paoding\\.rose\\.web\\.(((ControllerInterceptorAdapter" +
+					"|InterceptorDelegate|OncePerRequestInterceptorDelegate).*)"
 					+ "|(impl\\.thread\\.ActionEngine\\$InvocationChainImpl.*))");
 
 	/**
