@@ -71,6 +71,9 @@ public class PortalBeanPostProcessor implements BeanPostProcessor, ApplicationCo
                                 + paramCorePoolSize);
                     }
                     executor.setCorePoolSize(Integer.parseInt(paramCorePoolSize));
+                } else {
+                    throw new IllegalArgumentException(
+                            "please add '<context-param><param-name>portalExecutorCorePoolSize</param-name><param-value>a number here</param-value></context-param>' in your web.xml");
                 }
                 String paramMaxPoolSize = webApplicationContext.getServletContext()
                         .getInitParameter(PORTAL_EXECUTOR_MAX_POOL_SIZE);

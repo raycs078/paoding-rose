@@ -41,6 +41,7 @@ public class WindowCancelableSupportInterceptor extends ControllerInterceptorAda
         //
         if (Thread.currentThread().isInterrupted()) {
             Thread.interrupted(); // clear the interruption
+            win.setInterrupted(true);
             return "@interrupted " + win.getPath();
         }
         try {

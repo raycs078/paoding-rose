@@ -72,6 +72,8 @@ class WindowImpl implements Window {
 
     private boolean mayInterruptIfRunning = defaultMayInterruptIfRunning;
 
+    private boolean interrupted = false;
+
     /**
      * 窗口请求对象私有的、有别于其他窗口的属性
      */
@@ -106,9 +108,13 @@ class WindowImpl implements Window {
         this.future = future;
     }
 
+    public void setInterrupted(boolean interrupted) {
+        this.interrupted = interrupted;
+    }
+
     @Override
     public boolean isCancelled() {
-        return future.isCancelRequested() || future.isCancelled();
+        return interrupted || future.isCancelRequested() || future.isCancelled();
     }
 
     @Override
@@ -220,7 +226,8 @@ class WindowImpl implements Window {
 
     @Override
     public boolean isSuccess() {
-        return future.isDone() && getStatusCode() == HttpServletResponse.SC_OK && throwable == null;
+        return !isCancelled() && isDone() && getStatusCode() == HttpServletResponse.SC_OK
+                && throwable == null;
     }
 
     @Override
