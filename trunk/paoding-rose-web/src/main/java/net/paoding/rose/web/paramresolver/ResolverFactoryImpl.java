@@ -77,6 +77,7 @@ import org.springframework.web.util.WebUtils;
 
 /**
  * @author 王志亮 [qieqie.wang@gmail.com]
+ * @author Weibo Li[weibo.leo@gmail.com]
  */
 public class ResolverFactoryImpl implements ResolverFactory {
 
@@ -583,9 +584,14 @@ public class ResolverFactoryImpl implements ResolverFactory {
                 }
             }
             if (toConvert != null) {
+                /*
+                 * 这个额外的操作可能会产生使用上的混淆，去掉之。
+                 * 
+                 * 但需要留意这个变更对应用程序产生的影响。
+                 * 
                 if (((String[]) toConvert).length == 1) {
                     toConvert = ((String[]) toConvert)[0].split(",");
-                }
+                }*/
                 Class<?> arrayType;
                 if (metaData.getParamType().isArray()) {
                     arrayType = metaData.getParamType();
