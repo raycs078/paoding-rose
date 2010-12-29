@@ -11,7 +11,10 @@ public class CollectionControllerTest extends AbstractControllerTest {
         request.addParameter("int", "2");
         request.addParameter("int", "3");
 
-        request.addParameter("integer", "4, 5, 6");
+        request.addParameter("integer", "4");
+        request.addParameter("integer", "5");
+        request.addParameter("integer", "6");
+        
         request.addParameter("name", "wang");
         request.addParameter("name", "zhi");
 
@@ -32,7 +35,10 @@ public class CollectionControllerTest extends AbstractControllerTest {
         request.addParameter("int", "2");
         request.addParameter("int", "3");
 
-        request.addParameter("integer", "4, 5, 6");
+        request.addParameter("integer", "4");
+        request.addParameter("integer", "5");
+        request.addParameter("integer", "6");
+        
         request.addParameter("name", "wang");
         request.addParameter("name", "zhi");
 

@@ -164,8 +164,10 @@ public class MethodParameterResolverTest extends AbstractControllerTest {
         request.addParameter("int", "2");
         request.addParameter("int", "3");
 
-        request.addParameter("integer", "4, 5, 6");
-
+        request.addParameter("integer", "4");
+        request.addParameter("integer", "5");
+        request.addParameter("integer", "6");
+        
         request.addParameter("bool", "true");
         request.addParameter("bool", "false");
 
@@ -195,7 +197,9 @@ public class MethodParameterResolverTest extends AbstractControllerTest {
         request.addParameter("int", "2");
         request.addParameter("int", "3");
 
-        request.addParameter("integer", "4, 5, 6");
+        request.addParameter("integer", "4");
+        request.addParameter("integer", "5");
+        request.addParameter("integer", "6");
 
         request.addParameter("bool", "true");
         request.addParameter("bool", "false");
@@ -229,7 +233,9 @@ public class MethodParameterResolverTest extends AbstractControllerTest {
         request.addParameter("int", "2");
         request.addParameter("int", "3");
 
-        request.addParameter("integer", "4, 5, 6");
+        request.addParameter("integer", "4");
+        request.addParameter("integer", "5");
+        request.addParameter("integer", "6");
 
         request.addParameter("bool", "true");
         request.addParameter("bool", "false");
