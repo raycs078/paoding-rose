@@ -24,8 +24,11 @@
   # [Rose_Code_Fragment_Controller 控制器类代码]
   # [Rose_Code_Fragment_Controller2 控制器类代码2]
   # [Rose_Code_Fragment_Controller3 控制器类代码3]
+  # [Rose_Code_Fragment_Controller4_upload 上传的写法]
   # [Rose_Code_Fragment_ErrorHandler 错误处理器代码]
   # [Rose_Code_Fragment_Interceptor 拦截器代码]
+
+
 
  * 【API】
   # [Rose_Guide_Invocation Invocation对象]
