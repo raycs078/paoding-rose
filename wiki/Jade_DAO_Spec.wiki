@@ -210,7 +210,16 @@ public Object mapRow(ResultSet rs, int rowNum) throws SQLException {
 
 方法参数可以是和数据库列类型相对应Java类型，比如String、int、Integer、long、Long、java.util.Date、java.sql.Date等，也支持以下类型：数组、List、Set、Map、Java Bean。
 
-==数组或集合类型作为参数的(for IN)==
+==批量操作：使用List作为方法的第一个参数==
+
+{{{
+@SQL("UPDATE XXX_TABLE set name=:1.name WHERE id=:1.id")
+public void changeNames(List<User> userList)；
+userDAO.changeNames(aUserListHere); 
+}}}
+
+
+==in语句的写法：使用数组或集合类型作为参数的==
 
 集合类型指实现Collection接口的一些类型，比如List、Set等。集合类型、数组 参数用于处理 in 的情况，而且这个数组或集合类型的元素应该是一些数据库列相对应的Java类型：
 
@@ -241,11 +250,10 @@ SELECT name WHERE id IN (?, ?, ?)
 注意，IN语句的查询不能这样处理：
 
 {{{
-@SQL("SELECT name WHRE id IN (:1)")
+@SQL("SELECT name FROM XXX_TABLE WHERE id IN (:1)")
 public String[] findNames(String idList)；
 userDAO.findNames("1,2,3"); 
 }}}
-
 
 ==Bean作为参数的==
 通过 ’.’ 号来使用Bean 的属性，将其作为 SQL 参数。<br>
