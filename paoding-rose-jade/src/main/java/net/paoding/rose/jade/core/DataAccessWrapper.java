@@ -57,7 +57,7 @@ public class DataAccessWrapper implements DataAccess {
     }
 
     @Override
-    public Number insertReturnId(String sql, Modifier modifier, Map<String, Object> parameters) {
+    public Object insertReturnId(String sql, Modifier modifier, Map<String, Object> parameters) {
         return targetDataAccess.insertReturnId(sql, modifier, parameters);
     }
 

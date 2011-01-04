@@ -71,5 +71,5 @@ public interface DataAccess {
      * 
      * @return 插入对象的 ID
      */
-    public Number insertReturnId(String jadeSQL, Modifier modifier, Map<String, Object> parameters);
+    public Object insertReturnId(String jadeSQL, Modifier modifier, Map<String, Object> parameters);
 }

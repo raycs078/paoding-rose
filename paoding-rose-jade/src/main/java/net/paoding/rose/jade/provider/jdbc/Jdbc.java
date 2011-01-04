@@ -75,6 +75,6 @@ public interface Jdbc {
      * @param parameters
      * @return
      */
-    public Number insertAndReturnId(Modifier modifier, String sql, Object[] parameters);
+    public Object insertAndReturnId(Modifier modifier, String sql, Object[] parameters);
 
 }

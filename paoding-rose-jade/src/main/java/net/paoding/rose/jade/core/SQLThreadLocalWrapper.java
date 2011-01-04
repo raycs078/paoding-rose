@@ -62,7 +62,7 @@ class SQLThreadLocalWrapper extends DataAccessWrapper {
     }
 
     @Override
-    public Number insertReturnId(String sql, Modifier modifier, Map<String, Object> parameters) {
+    public Object insertReturnId(String sql, Modifier modifier, Map<String, Object> parameters) {
         SQLThreadLocal.set(SQLType.WRITE, sql, modifier, parameters);
         try {
             return targetDataAccess.insertReturnId(sql, modifier, parameters);

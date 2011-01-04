@@ -47,13 +47,16 @@ public class UpdateOperation implements JadeOperation {
 
     private boolean returnGeneratedKeys;
 
+    @SuppressWarnings("deprecation")
     public UpdateOperation(DataAccess dataAccess, String sql, Modifier modifier) {
         this.dataAccess = dataAccess;
         this.sql = sql;
         this.modifier = modifier;
         this.returnType = modifier.getReturnType();
         this.sqlParamAnnotations = modifier.getParameterAnnotations(SQLParam.class);
-        if (this.modifier.getMethod().isAnnotationPresent(ReturnGeneratedKeys.class)) {
+        if (returnType != void.class
+                && (this.returnType == Identity.class || this.modifier.getMethod()
+                        .isAnnotationPresent(ReturnGeneratedKeys.class))) {
             returnGeneratedKeys = true;
         }
     }
@@ -149,14 +152,6 @@ public class UpdateOperation implements JadeOperation {
 
         if (returnGeneratedKeys) {
             return dataAccess.insertReturnId(sql, modifier, parameters);
-        } else if (returnType == Identity.class) {
-
-            // 执行 INSERT 查询
-            Number number = dataAccess.insertReturnId(sql, modifier, parameters);
-
-            // 将结果转成方法的返回类型
-            return new Identity(number);
-
         } else {
 
             // 执行 UPDATE / DELETE 查询
