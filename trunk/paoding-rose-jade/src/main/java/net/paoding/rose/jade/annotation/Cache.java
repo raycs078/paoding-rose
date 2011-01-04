@@ -36,4 +36,7 @@ public @interface Cache {
      * @return 缓存过期时间
      */
     int expiry() default 0;
+    
+    
+    Class<?> cl() default Object.class;
 }

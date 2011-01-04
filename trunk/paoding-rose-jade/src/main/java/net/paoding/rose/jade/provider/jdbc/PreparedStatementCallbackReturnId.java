@@ -15,6 +15,7 @@
  */
 package net.paoding.rose.jade.provider.jdbc;
 
+import java.lang.reflect.Array;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -38,14 +39,31 @@ public class PreparedStatementCallbackReturnId implements PreparedStatementCallb
 
     private final Class<?> returnType;
 
+    private final Class<?> idType;
+
+    private final Class<?> wrappedIdType;
+
+    private final SingleColumnRowMapper mapper;
+
     public PreparedStatementCallbackReturnId(PreparedStatementSetter setter, Class<?> returnType) {
         this.setter = setter;
         if (returnType.isPrimitive()) {
             returnType = ClassUtils.primitiveToWrapper(returnType);
         }
         this.returnType = returnType;
-        if (!Number.class.isAssignableFrom(returnType)) {
-            throw new IllegalArgumentException("wrong return type(number type only): " + returnType);
+        Class<?> idType = returnType;
+        if (returnType.isArray()) {
+            idType = returnType.getComponentType();
+        }
+        this.idType = idType;
+        if (idType.isPrimitive()) {
+            idType = ClassUtils.primitiveToWrapper(idType);
+        }
+        this.wrappedIdType = idType;
+        this.mapper = new SingleColumnRowMapper(idType);
+        if (wrappedIdType != Integer.class && wrappedIdType != Long.class) {
+            throw new IllegalArgumentException(
+                    "wrong return type(int/long type or its array type only): " + returnType);
         }
     }
 
@@ -62,15 +80,51 @@ public class PreparedStatementCallbackReturnId implements PreparedStatementCallb
         ResultSet keys = ps.getGeneratedKeys();
         if (keys != null) {
             try {
-                if (!keys.next()) {
-                    return null;
+                Object ret = null;
+                if (returnType.isArray()) {
+                    keys.last();
+                    int length = keys.getRow();
+                    keys.beforeFirst();
+                    ret = Array.newInstance(wrappedIdType, length);
                 }
-                return new SingleColumnRowMapper(returnType).mapRow(keys, 0);
+
+                for (int i = 0; keys.next(); i++) {
+                    Object value = mapper.mapRow(keys, i);
+                    if (value == null && idType.isPrimitive()) {
+                        // 如果本不是primitive的，保持null的语义不变
+                        value = defaultValueOf(wrappedIdType);
+                    }
+                    if (ret != null) {
+                        Array.set(ret, i + 1, value);
+                    } else {
+                        ret = value;
+                        break;
+                    }
+                }
+                return ret;
             } finally {
                 JdbcUtils.closeResultSet(keys);
             }
+        } else {
+            if (returnType.isArray()) {
+                return Array.newInstance(wrappedIdType, 0);
+            } else {
+                return defaultValueOf(wrappedIdType);
+            }
         }
+    }
 
-        return null;
+    private static Object defaultValueOf(Class<?> numberType) {
+        if (numberType == Integer.class) {
+            return new Integer(-1);
+        } else if (numberType == Long.class) {
+            return new Long(-1);
+        }
+        throw new Error("wrong number type: " + numberType);
+    }
+    
+    public static void main(String[] args) throws SecurityException, NoSuchMethodException {
+        System.out.println(
+        PreparedStatementCallbackReturnId.class.getMethod("main", String[].class).getReturnType().getName());
     }
 }

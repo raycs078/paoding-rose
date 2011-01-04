@@ -79,24 +79,29 @@ public class JdbcImpl implements Jdbc {
      * 执行 INSERT 语句，并返回插入对象的 ID.
      * 
      * @param sql - 执行的语句
-     * @param parameters - 参数
+     * @param args - 参数
      * 
      * @return 插入对象的 ID
      */
+    @SuppressWarnings("deprecation")
     @Override
-    public Number insertAndReturnId(Modifier modifier, String sql, Object[] parameters) {
-        ArgPreparedStatementSetter setter = null;
-        if (parameters != null && parameters.length > 0) {
-            setter = new ArgPreparedStatementSetter(parameters);
-        }
+    public Object insertAndReturnId(Modifier modifier, String sql, Object[] args) {
         Class<?> returnType = modifier.getReturnType();
         if (returnType == Identity.class) {
             returnType = Long.class;
         }
+        ArgPreparedStatementSetter setter = null;
+        if (args != null && args.length > 0) {
+            setter = new ArgPreparedStatementSetter(args);
+        }
         PreparedStatementCallbackReturnId callbackReturnId = new PreparedStatementCallbackReturnId(
                 setter, returnType);
-        return (Number) spring.execute(new GenerateKeysPreparedStatementCreator(sql),
+        Object keys = spring.execute(new GenerateKeysPreparedStatementCreator(sql),
                 callbackReturnId);
+        if (modifier.getReturnType() == Identity.class) {
+            keys = new Identity((Long) keys);
+        }
+        return keys;
     }
 
     @Override
@@ -111,8 +116,8 @@ public class JdbcImpl implements Jdbc {
                     Object arg = values[j];
                     if (arg instanceof SqlParameterValue) {
                         SqlParameterValue paramValue = (SqlParameterValue) arg;
-                        StatementCreatorUtils.setParameterValue(ps, j + 1, paramValue,
-                                paramValue.getValue());
+                        StatementCreatorUtils.setParameterValue(ps, j + 1, paramValue, paramValue
+                                .getValue());
                     } else {
                         StatementCreatorUtils.setParameterValue(ps, j + 1,
                                 SqlTypeValue.TYPE_UNKNOWN, arg);

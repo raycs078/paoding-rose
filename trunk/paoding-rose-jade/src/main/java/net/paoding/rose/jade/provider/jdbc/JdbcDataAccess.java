@@ -86,7 +86,7 @@ public class JdbcDataAccess implements DataAccess {
     }
 
     @Override
-    public Number insertReturnId(String jadeSQL, Modifier modifier,
+    public Object insertReturnId(String jadeSQL, Modifier modifier,
             Map<String, Object> parametersAsMap) {
         SQLInterpreterResult result = interpret(jadeSQL, modifier, parametersAsMap);
         return jdbc.insertAndReturnId(modifier, result.getSQL(), result.getParameters());

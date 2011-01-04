@@ -114,10 +114,10 @@ public class CacheDataAccess implements DataAccess {
     }
 
     @Override
-    public Number insertReturnId(String sql, Modifier modifier, Map<String, Object> parameters) {
+    public Object insertReturnId(String sql, Modifier modifier, Map<String, Object> parameters) {
 
         // 先执行原有的语句
-        Number number = dataAccess.insertReturnId(sql, modifier, parameters);
+        Object number = dataAccess.insertReturnId(sql, modifier, parameters);
 
         net.paoding.rose.jade.annotation.CacheDelete cacheDelete = modifier
                 .getAnnotation(net.paoding.rose.jade.annotation.CacheDelete.class);
