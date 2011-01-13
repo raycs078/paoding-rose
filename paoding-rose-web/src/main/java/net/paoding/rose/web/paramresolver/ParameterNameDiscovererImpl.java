@@ -86,10 +86,10 @@ public class ParameterNameDiscovererImpl {
                 counts.put(rawName, count + 1);
                 if (count == 1) {
                     for (int j = 0; j < i; j++) {
-                        if (names[j].equals(rawName)) {
-                            names[j] = rawName + "1";
-                            break;
-                        }
+						if (names[j] != null && names[j].equals(rawName)) {
+							names[j] = rawName + "1";
+							break;
+						}
                     }
                 }
                 if (names[i] == rawName) {
