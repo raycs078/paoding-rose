@@ -200,9 +200,8 @@ public class ViewInstruction extends AbstractInstruction {
             directoryFile = new File(inv.getServletContext().getRealPath(directoryPath));
         }
         if (directoryFile == null || !directoryFile.exists()) {
-            if (logger.isWarnEnabled()) {
-                logger.warn("not found directoryPath '" + directoryPath + "'");
-            }
+            logger.error("not found directoryPath '" + directoryPath + "' for directoryFile '"
+                    + directoryFile + "' of view named '" + viewName + "'");
             inv.getResponse().sendError(404, "not found directoryPath '" + directoryPath + "'");
             return null;
         } else {
