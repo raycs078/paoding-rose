@@ -43,6 +43,7 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationContextException;
 import org.springframework.context.annotation.ScannedGenericBeanDefinition;
 import org.springframework.core.io.Resource;
+import org.springframework.core.type.filter.TypeFilter;
 import org.springframework.util.ResourceUtils;
 
 /**
@@ -60,9 +61,19 @@ public class JadeDaoProcessor implements BeanFactoryPostProcessor, ApplicationCo
     @Autowired(required = false)
     private CacheProvider cacheProvider;
 
+    private List<TypeFilter> filters;
+
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         this.applicationContext = applicationContext;
+    }
+
+    /**
+     * 
+     * @param filters
+     */
+    public void setExcludeFilters(List<TypeFilter> filters) {
+        this.filters = filters;
     }
 
     @Override
@@ -101,6 +112,9 @@ public class JadeDaoProcessor implements BeanFactoryPostProcessor, ApplicationCo
         }
         if (urls.size() > 0) {
             JadeDaoComponentProvider provider = new JadeDaoComponentProvider(true);
+            for (TypeFilter excludeFilter : filters) {
+                provider.addExcludeFilter(excludeFilter);
+            }
 
             final DataAccessProvider dataAccessProvider = new DataAccessProvider() {
 
