@@ -14,7 +14,11 @@ http://www.springframework.org/schema/aop http://www.springframework.org/schema/
 
 	<bean id="jade.daoProcessor" class="net.paoding.rose.jade.core.JadeDaoProcessor" />
 
-	<bean id="jada.dataAccessProvider"
+	<bean id="jada.dataAccessProvider" class="net.paoding.rose.jade.core.JadeDataAccessProvider">
+		<property name="targetAccessProvider" ref="jada.jdbcDataAccessProvider" />
+	</bean>
+
+	<bean id="jada.jdbcDataAccessProvider"
 		class="net.paoding.rose.jade.provider.jdbc.JdbcDataAccessProvider" />
 
 	<bean id="jade.simpleSQLInterpreter"
