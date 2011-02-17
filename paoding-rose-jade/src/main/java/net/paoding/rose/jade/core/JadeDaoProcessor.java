@@ -105,8 +105,10 @@ public class JadeDaoProcessor implements BeanFactoryPostProcessor, ApplicationCo
         }
         if (urls.size() > 0) {
             JadeDaoComponentProvider provider = new JadeDaoComponentProvider(true);
-            for (TypeFilter excludeFilter : filters) {
-                provider.addExcludeFilter(excludeFilter);
+            if (filters != null) {
+                for (TypeFilter excludeFilter : filters) {
+                    provider.addExcludeFilter(excludeFilter);
+                }
             }
 
             final DataAccessProvider dataAccessProvider = createJdbcTemplateDataAccessProvider();
