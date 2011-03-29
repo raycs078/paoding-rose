@@ -53,7 +53,7 @@ public class RoseAppContext extends AbstractXmlApplicationContext {
     }
 
     public RoseAppContext(LoadScope scope, boolean refresh) {
-        this.scopeValues = scope.getScope("applicatonContext");
+        this.scopeValues = scope.getScope("applicationContext");
         logger.info("create a RoseAppContext, with scope='" + scope + "'");
         if (refresh) {
             refresh();
