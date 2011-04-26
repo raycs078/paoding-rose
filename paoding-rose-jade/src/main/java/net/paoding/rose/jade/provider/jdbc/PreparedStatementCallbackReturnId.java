@@ -75,7 +75,14 @@ public class PreparedStatementCallbackReturnId implements PreparedStatementCallb
             setter.setValues(ps);
         }
 
-        ps.executeUpdate();
+        int updated = ps.executeUpdate();
+        if (updated == 0) {
+            if (returnType.isArray()) {
+                return Array.newInstance(wrappedIdType, 0);
+            } else {
+                return defaultValueOf(wrappedIdType);
+            }
+        }
 
         ResultSet keys = ps.getGeneratedKeys();
         if (keys != null) {
