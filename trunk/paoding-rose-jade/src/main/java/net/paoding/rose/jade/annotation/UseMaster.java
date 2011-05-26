@@ -11,7 +11,7 @@ import java.lang.annotation.Target;
  * 
  * @author han.liao
  */
-@Target( { ElementType.METHOD })
+@Target({ ElementType.METHOD })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface UseMaster {

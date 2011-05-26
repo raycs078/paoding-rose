@@ -23,14 +23,17 @@ import java.util.List;
 
 import javax.sql.DataSource;
 
-import net.paoding.rose.jade.core.Identity;
 import net.paoding.rose.jade.provider.Modifier;
+import net.paoding.rose.jade.provider.SQLInterpreterResult;
 
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.ParameterDisposer;
+import org.springframework.jdbc.core.PreparedStatementCallback;
 import org.springframework.jdbc.core.PreparedStatementCreator;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.RowMapperResultSetExtractor;
 import org.springframework.jdbc.core.SqlParameterValue;
 import org.springframework.jdbc.core.SqlProvider;
 import org.springframework.jdbc.core.SqlTypeValue;
@@ -57,22 +60,73 @@ public class JdbcImpl implements Jdbc {
     }
 
     @Override
-    public List<?> query(Modifier modifier, String sql, Object[] args, RowMapper rowMapper)
-            throws DataAccessException {
-        if (args != null && args.length > 0) {
-            return spring.query(sql, args, rowMapper);
-        } else {
-            return spring.query(sql, rowMapper);
+    public List<?> query(Modifier modifier, SQLInterpreterResult interpreted, RowMapper rowMapper) {
+        PreparedStatementCreator csc = getPreparedStatementCreator(interpreted);
+        ArgPreparedStatementSetter pss = getArgPreparedStatementSetter(interpreted);
+        return (List<?>) spring.query(csc, pss, new RowMapperResultSetExtractor(rowMapper));
+    }
+
+    private ArgPreparedStatementSetter getArgPreparedStatementSetter(
+            final SQLInterpreterResult interpreted) {
+        ArgPreparedStatementSetter pss = null;
+        if (interpreted.getParameters() != null && interpreted.getParameters().length > 0) {
+            pss = new ArgPreparedStatementSetter(interpreted.getParameters());
         }
+        return pss;
+    }
+
+    private PreparedStatementCreator getPreparedStatementCreator(
+            final SQLInterpreterResult interpreted) {
+        PreparedStatementCreator creator = new PreparedStatementCreator() {
+
+            @Override
+            public PreparedStatement createPreparedStatement(Connection con) throws SQLException {
+                if (interpreted.getClientInfo() != null) {
+                    con.setClientInfo(interpreted.getClientInfo());
+                }
+                return con.prepareStatement(interpreted.getSQL());
+            }
+        };
+        return creator;
+    }
+
+    private PreparedStatementCreator getPreparedStatementCreatorReturnId(
+            final SQLInterpreterResult interpreted) {
+        PreparedStatementCreator creator = new PreparedStatementCreator() {
+
+            @Override
+            public PreparedStatement createPreparedStatement(Connection con) throws SQLException {
+                if (interpreted.getClientInfo() != null) {
+                    con.setClientInfo(interpreted.getClientInfo());
+                }
+                return con.prepareStatement(interpreted.getSQL(), Statement.RETURN_GENERATED_KEYS);
+            }
+        };
+        return creator;
     }
 
     @Override
-    public int update(Modifier modifier, String sql, Object[] args) throws DataAccessException {
-        if (args != null && args.length > 0) {
-            return spring.update(sql, args);
-        } else {
-            return spring.update(sql);
-        }
+    public int update(Modifier modifier, SQLInterpreterResult interpreted) {
+        PreparedStatementCreator psc = getPreparedStatementCreator(interpreted);
+        final ArgPreparedStatementSetter pss = getArgPreparedStatementSetter(interpreted);
+        // :-( 这个方法spring末有public：spring.update(psc, pss);
+        return (Integer) spring.execute(psc, new PreparedStatementCallback() {
+
+            public Object doInPreparedStatement(PreparedStatement ps) throws SQLException {
+                try {
+                    if (pss != null) {
+                        pss.setValues(ps);
+                    }
+                    int rows = ps.executeUpdate();
+                    return new Integer(rows);
+                } finally {
+                    if (pss instanceof ParameterDisposer) {
+                        ((ParameterDisposer) pss).cleanupParameters();
+                    }
+                }
+            }
+        });
+
     }
 
     /**
@@ -85,73 +139,43 @@ public class JdbcImpl implements Jdbc {
      */
     @SuppressWarnings("deprecation")
     @Override
-    public Object insertAndReturnId(Modifier modifier, String sql, Object[] args) {
-        Class<?> returnType = modifier.getReturnType();
-        if (returnType == Identity.class) {
-            returnType = Long.class;
-        }
-        ArgPreparedStatementSetter setter = null;
-        if (args != null && args.length > 0) {
-            setter = new ArgPreparedStatementSetter(args);
-        }
-        PreparedStatementCallbackReturnId callbackReturnId = new PreparedStatementCallbackReturnId(
-                setter, returnType);
-        Object keys = spring.execute(new GenerateKeysPreparedStatementCreator(sql),
-                callbackReturnId);
-        if (modifier.getReturnType() == Identity.class) {
-            keys = new Identity((Long) keys);
-        }
-        return keys;
+    public Object insertAndReturnId(Modifier modifier, SQLInterpreterResult interpreted) {
+        PreparedStatementCreator psc = getPreparedStatementCreatorReturnId(interpreted);
+        ArgPreparedStatementSetter pss = getArgPreparedStatementSetter(interpreted);
+        PreparedStatementCallback callbackReturnId = new PreparedStatementCallbackReturnId(pss,
+                modifier.getReturnType());
+        return spring.execute(psc, callbackReturnId);
     }
 
     @Override
-    public int[] batchUpdate(Modifier modifier, String sql, final List<Object[]> args)
+    public int[] batchUpdate(Modifier modifier, List<SQLInterpreterResult> interpreteds)
             throws DataAccessException {
-        return spring.batchUpdate(sql, new BatchPreparedStatementSetter() {
-
-            @Override
-            public void setValues(PreparedStatement ps, int i) throws SQLException {
-                Object[] values = args.get(i);
-                for (int j = 0; j < values.length; j++) {
-                    Object arg = values[j];
-                    if (arg instanceof SqlParameterValue) {
-                        SqlParameterValue paramValue = (SqlParameterValue) arg;
-                        StatementCreatorUtils.setParameterValue(ps, j + 1, paramValue, paramValue
-                                .getValue());
-                    } else {
-                        StatementCreatorUtils.setParameterValue(ps, j + 1,
-                                SqlTypeValue.TYPE_UNKNOWN, arg);
-                    }
-                }
-            }
-
-            @Override
-            public int getBatchSize() {
-                return args.size();
-            }
-        });
+        throw new UnsupportedOperationException("unsupported temporary");
+//        return spring.batchUpdate(sql, new BatchPreparedStatementSetter() {
+//
+//            @Override
+//            public void setValues(PreparedStatement ps, int i) throws SQLException {
+//                Object[] values = args.get(i);
+//                for (int j = 0; j < values.length; j++) {
+//                    Object arg = values[j];
+//                    if (arg instanceof SqlParameterValue) {
+//                        SqlParameterValue paramValue = (SqlParameterValue) arg;
+//                        StatementCreatorUtils.setParameterValue(ps, j + 1, paramValue,
+//                                paramValue.getValue());
+//                    } else {
+//                        StatementCreatorUtils.setParameterValue(ps, j + 1,
+//                                SqlTypeValue.TYPE_UNKNOWN, arg);
+//                    }
+//                }
+//            }
+//
+//            @Override
+//            public int getBatchSize() {
+//                return args.size();
+//            }
+//        });
     }
 
     //-----------------------------------------------------------------------------
-
-    // 创建 PreparedStatement 时指定 Statement.RETURN_GENERATED_KEYS 属性
-    private static class GenerateKeysPreparedStatementCreator implements PreparedStatementCreator,
-            SqlProvider {
-
-        private final String sql;
-
-        public GenerateKeysPreparedStatementCreator(String sql) {
-            Assert.notNull(sql, "SQL must not be null");
-            this.sql = sql;
-        }
-
-        public PreparedStatement createPreparedStatement(Connection con) throws SQLException {
-            return con.prepareStatement(this.sql, Statement.RETURN_GENERATED_KEYS);
-        }
-
-        public String getSql() {
-            return this.sql;
-        }
-    }
 
 }

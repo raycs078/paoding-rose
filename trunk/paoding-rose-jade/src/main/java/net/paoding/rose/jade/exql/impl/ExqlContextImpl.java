@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.Properties;
 
 import net.paoding.rose.jade.exql.ExqlContext;
 import net.paoding.rose.jade.exql.util.ExqlUtils;
@@ -146,6 +147,11 @@ public class ExqlContextImpl implements ExqlContext, SQLInterpreterResult {
     @Override
     public String getSQL() {
         return flushOut();
+    }
+    
+    @Override
+    public Properties getClientInfo() {
+        return null;
     }
 
     //--------------
