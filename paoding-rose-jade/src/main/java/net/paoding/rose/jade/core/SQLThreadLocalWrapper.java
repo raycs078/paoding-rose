@@ -31,7 +31,7 @@ import org.springframework.jdbc.core.RowMapper;
  * 
  */
 
-class SQLThreadLocalWrapper extends DataAccessWrapper {
+public class SQLThreadLocalWrapper extends DataAccessWrapper {
 
     public SQLThreadLocalWrapper() {
     }

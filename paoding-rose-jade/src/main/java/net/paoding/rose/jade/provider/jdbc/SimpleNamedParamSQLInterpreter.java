@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -123,6 +124,12 @@ public class SimpleNamedParamSQLInterpreter implements SQLInterpreter {
             @Override
             public Object[] getParameters() {
                 return parametersAsList.toArray();
+            }
+            
+            @Override
+            public Properties getClientInfo() {
+                // TODO Auto-generated method stub
+                return null;
             }
         };
 

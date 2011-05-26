@@ -20,6 +20,7 @@ import java.util.List;
 import javax.sql.DataSource;
 
 import net.paoding.rose.jade.provider.Modifier;
+import net.paoding.rose.jade.provider.SQLInterpreterResult;
 
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.RowMapper;
@@ -46,7 +47,7 @@ public interface Jdbc {
      * @param rowMapper
      * @return
      */
-    public List<?> query(Modifier modifier, String sql, Object[] args, RowMapper rowMapper);
+    public List<?> query(Modifier modifier, SQLInterpreterResult interpreted, RowMapper rowMapper);
 
     /**
      * 根据给定的标准sql以及所带的参数更新数据库(包含插入数据)
@@ -55,7 +56,7 @@ public interface Jdbc {
      * @param args
      * @return
      */
-    public int update(Modifier modifier, String sql, Object[] args);
+    public int update(Modifier modifier, SQLInterpreterResult interpreted);
 
     /**
      * 
@@ -65,7 +66,7 @@ public interface Jdbc {
      * @return
      * @throws DataAccessException
      */
-    public int[] batchUpdate(Modifier modifier, String sql, List<Object[]> args)
+    public int[] batchUpdate(Modifier modifier, List<SQLInterpreterResult> interpreteds)
             throws DataAccessException;
 
     /**
@@ -75,6 +76,6 @@ public interface Jdbc {
      * @param parameters
      * @return
      */
-    public Object insertAndReturnId(Modifier modifier, String sql, Object[] parameters);
+    public Object insertAndReturnId(Modifier modifier, SQLInterpreterResult interpreted);
 
 }

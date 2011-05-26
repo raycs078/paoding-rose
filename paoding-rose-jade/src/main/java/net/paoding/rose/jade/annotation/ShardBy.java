@@ -17,7 +17,7 @@ import java.lang.annotation.Target;
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  */
-@Target( { ElementType.PARAMETER })
+@Target({ ElementType.PARAMETER })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface ShardBy {

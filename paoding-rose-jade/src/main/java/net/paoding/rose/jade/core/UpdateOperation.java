@@ -55,8 +55,7 @@ public class UpdateOperation implements JadeOperation {
         this.returnType = modifier.getReturnType();
         this.sqlParamAnnotations = modifier.getParameterAnnotations(SQLParam.class);
         if (returnType != void.class
-                && (this.returnType == Identity.class || this.modifier.getMethod()
-                        .isAnnotationPresent(ReturnGeneratedKeys.class))) {
+                && (this.modifier.getMethod().isAnnotationPresent(ReturnGeneratedKeys.class))) {
             returnGeneratedKeys = true;
         }
     }
@@ -90,8 +89,8 @@ public class UpdateOperation implements JadeOperation {
         int[] updatedArray;
 
         if (true) {
-            List<Map<String, Object>> parametersList = new ArrayList<Map<String, Object>>(list
-                    .size());
+            List<Map<String, Object>> parametersList = new ArrayList<Map<String, Object>>(
+                    list.size());
             for (Object arg : list) {
 
                 HashMap<String, Object> clone = new HashMap<String, Object>(parameters);
