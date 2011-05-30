@@ -42,10 +42,10 @@ import javax.sql.DataSource;
  * </ul>
  * <p>
  * 
- * {@link RoutingDataSource} 包含了一个 {@link ConnectionLocator}，通过传递相关的决策因素
- * {@link RoutingActors}， 委托它提供实际的数据库连接。因此，从某种角度，我们也可以将
- * {@link RoutingDataSource} 理解为 {@link ConnectionLocator} 服务的适配器，它将
- * {@link ConnectionLocator} 适配成为一个 {@link DataSource}对象<br>
+ * {@link RoutingDataSource} 包含了一个 {@link ConnectionLocator}
+ * ，委托它提供实际的数据库连接。因此，从某种角度，我们也可以将 {@link RoutingDataSource} 理解为
+ * {@link ConnectionLocator} 服务的适配器，它将 {@link ConnectionLocator} 适配成为一个
+ * {@link DataSource}对象<br>
  * 同时您可以给 {@link RoutingDataSource} 设置一些相关的属性，在需要的时侯可以由
  * {@link ConnectionLocator}进行读取，从而做相关的决策。当然，具体地，这些取决于
  * {@link ConnectionLocator} 的实现。
@@ -165,7 +165,7 @@ public class RoutingDataSource implements DataSource {
      */
     @Override
     public RoutingConnection getConnection() throws SQLException {
-        return new RoutingConnection(this);
+        return new RoutingConnectionImpl(this);
     }
 
     /**
@@ -175,7 +175,7 @@ public class RoutingDataSource implements DataSource {
      */
     @Override
     public Connection getConnection(String username, String password) throws SQLException {
-        return new RoutingConnection(this, username, password);
+        return new RoutingConnectionImpl(this, username, password);
     }
 
     //-----------------

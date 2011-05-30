@@ -15,13 +15,17 @@
  */
 package net.paoding.rose.jade.provider.jdbc;
 
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
 
 import javax.sql.DataSource;
 
+import net.paoding.rose.jade.annotation.DAO;
 import net.paoding.rose.jade.annotation.SQLType;
+import net.paoding.rose.jade.annotation.UseMaster;
 import net.paoding.rose.jade.core.SQLThreadLocal;
+import net.paoding.rose.jade.datasource.routing.RoutingConnection;
 import net.paoding.rose.jade.provider.DataAccess;
 import net.paoding.rose.jade.provider.Modifier;
 import net.paoding.rose.jade.provider.SQLInterpreter;
@@ -170,6 +174,8 @@ public class JdbcDataAccess implements DataAccess {
 
     protected SQLInterpreterResult interpret(String jadeSQL, Modifier modifier,
             Map<String, Object> parametersAsMap) {
+
+        //
         SQLInterpreterResultImpl result = null;
         // 
         for (SQLInterpreter interpreter : interpreters) {
@@ -179,7 +185,7 @@ public class JdbcDataAccess implements DataAccess {
                     parametersAsMap, parameters);
             if (t != null) {
                 if (result == null) {
-                   result  = new SQLInterpreterResultImpl();
+                    result = new SQLInterpreterResultImpl();
                 }
                 if (t.getSQL() != null) {
                     result.setSQL(t.getSQL());
@@ -189,6 +195,31 @@ public class JdbcDataAccess implements DataAccess {
                 }
                 if (t.getClientInfo() != null) {
                     result.setClientInfo(t.getClientInfo());
+                }
+            }
+        }
+        // path、catalog、node
+        Method daoMethod = modifier.getMethod();
+        Class<?> daoClass = daoMethod.getClass();
+        DAO dao = daoClass.getAnnotation(DAO.class);
+
+        result.setClientInfo(RoutingConnection.PATH, daoClass.getName());
+
+        // catalog
+        if (result.getClientInfo(RoutingConnection.CATALOG) == null) {
+            if (dao.catalog() != null && dao.catalog().length() > 0) {
+                result.setClientInfo(RoutingConnection.CATALOG, dao.catalog());
+            }
+        }
+        
+        // node
+        if (result.getClientInfo(RoutingConnection.NODE) == null) {
+            UseMaster useMaster = daoMethod.getAnnotation(UseMaster.class);
+            if (useMaster != null) {
+                if (useMaster.value()) {
+                    result.setClientInfo(RoutingConnection.NODE, "master");
+                } else {
+                    result.setClientInfo(RoutingConnection.NODE, "slave");
                 }
             }
         }
