@@ -30,13 +30,13 @@ import java.sql.SQLException;
 public interface ConnectionLocator {
 
     /**
-     * 按照 {@link RoutingActors} 所提供的信息返回一个对应的正确的数据库链接
+     * 按照 {@link RoutingConnection} 所提供的信息返回一个对应的正确的数据库链接
      * 
      * @param dataSource
      * @param actors
      * @return
      * @throws SQLException
      */
-    Connection getConnection(RoutingActors actors) throws SQLException;
+    Connection getConnection(RoutingConnection proxy) throws SQLException;
 
 }

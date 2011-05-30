@@ -12,7 +12,7 @@
 	<properties>
 		<Implementation-Version>1.0-20100729</Implementation-Version>
 	</properties>
-	
+
 	<!-- 开发人员说明 -->
 	<developers>
 		<developer>
@@ -67,6 +67,12 @@
 			<groupId>net.paoding</groupId>
 			<artifactId>paoding-rose-scanning</artifactId>
 			<version>1.0-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>org.hsqldb</groupId>
+			<artifactId>hsqldb</artifactId>
+			<version>2.0.0</version>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 
