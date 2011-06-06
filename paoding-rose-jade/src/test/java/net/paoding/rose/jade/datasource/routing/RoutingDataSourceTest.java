@@ -8,6 +8,9 @@ import java.util.List;
 
 import junit.framework.Assert;
 
+import net.paoding.rose.jade.dataaccess.routing.RoutingConnection;
+import net.paoding.rose.jade.dataaccess.routing.RoutingDataSource;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.springframework.jdbc.core.JdbcTemplate;

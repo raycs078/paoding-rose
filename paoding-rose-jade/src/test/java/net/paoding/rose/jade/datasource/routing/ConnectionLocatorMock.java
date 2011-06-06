@@ -6,6 +6,9 @@ import java.sql.Statement;
 
 import javax.sql.DataSource;
 
+import net.paoding.rose.jade.dataaccess.routing.ConnectionLocator;
+import net.paoding.rose.jade.dataaccess.routing.RoutingConnection;
+
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 public class ConnectionLocatorMock implements ConnectionLocator {

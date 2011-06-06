@@ -7,7 +7,8 @@ import java.util.Map;
 
 import junit.framework.Assert;
 import junit.framework.TestCase;
-import net.paoding.rose.jade.exql.impl.ExprResolverImpl;
+import net.paoding.rose.jade.statement.expression.ExprResolver;
+import net.paoding.rose.jade.statement.expression.impl.ExprResolverImpl;
 
 public class ExprResolverTests extends TestCase {
 

@@ -4,8 +4,10 @@ import java.util.HashMap;
 
 import junit.framework.Assert;
 import junit.framework.TestCase;
-import net.paoding.rose.jade.exql.impl.ExqlContextImpl;
-import net.paoding.rose.jade.exql.impl.ExqlPatternImpl;
+import net.paoding.rose.jade.statement.expression.ExqlContext;
+import net.paoding.rose.jade.statement.expression.ExqlPattern;
+import net.paoding.rose.jade.statement.expression.impl.ExqlContextImpl;
+import net.paoding.rose.jade.statement.expression.impl.ExqlPatternImpl;
 
 public class ExqlPatternTests extends TestCase {
 

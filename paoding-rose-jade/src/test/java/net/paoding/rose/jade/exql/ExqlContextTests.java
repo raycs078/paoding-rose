@@ -4,7 +4,8 @@ import java.util.Date;
 
 import junit.framework.Assert;
 import junit.framework.TestCase;
-import net.paoding.rose.jade.exql.impl.ExqlContextImpl;
+import net.paoding.rose.jade.statement.expression.ExqlContext;
+import net.paoding.rose.jade.statement.expression.impl.ExqlContextImpl;
 
 public class ExqlContextTests extends TestCase {
 

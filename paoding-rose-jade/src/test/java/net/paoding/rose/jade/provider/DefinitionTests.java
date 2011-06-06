@@ -2,6 +2,8 @@ package net.paoding.rose.jade.provider;
 
 import java.util.Map;
 
+import net.paoding.rose.jade.statement.DAOMetaData;
+
 import junit.framework.Assert;
 import junit.framework.TestCase;
 
@@ -9,7 +11,7 @@ public class DefinitionTests extends TestCase {
 
     public void testDefinition() {
 
-        Definition definition = new Definition(Character.class);
+        DAOMetaData definition = new DAOMetaData(Character.class);
         Assert.assertEquals("java.lang.Character", definition.toString());
 
         // 输出所有常量

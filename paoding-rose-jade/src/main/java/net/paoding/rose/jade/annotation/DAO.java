@@ -23,7 +23,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.sql.Connection;
 
-import net.paoding.rose.jade.datasource.routing.RoutingConnection;
+import net.paoding.rose.jade.dataaccess.routing.RoutingConnection;
 
 /**
  * 
