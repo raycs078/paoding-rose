@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 the original author or authors.
+ * Copyright 2009-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.paoding.rose.jade.springcontext;
+package net.paoding.rose.jade.application.springcontext;
 
 import java.io.IOException;
 import java.util.LinkedHashSet;
@@ -56,12 +56,12 @@ import org.springframework.util.Assert;
  * @author 王志亮 [qieqie.wang@gmail.com]
  * @author 廖涵 [in355hz@gmail.com]
  * 
- * @see JadeDaoComponentProvider
+ * @see DAOComponentProvider
  * @see org.springframework.core.type.classreading.MetadataReaderFactory
  * @see org.springframework.core.type.AnnotationMetadata
  * @see ScannedGenericBeanDefinition
  */
-public class JadeDaoComponentProvider implements ResourceLoaderAware {
+public class DAOComponentProvider implements ResourceLoaderAware {
 
     protected static final String DEFAULT_RESOURCE_PATTERN = "**/*DAO.class";
 
@@ -78,16 +78,18 @@ public class JadeDaoComponentProvider implements ResourceLoaderAware {
 
     private final List<TypeFilter> excludeFilters = new LinkedList<TypeFilter>();
 
-/**
+    /**
      * Create a JadeDaoComponentProvider.
      * 
-     * @param useDefaultFilters whether to register the default filters for
-     *        the {@link Component @Component}, {@link Repository
-     *        @Repository}, {@link Service @Service}, and
-     *        {@link Controller @Controller} stereotype annotations
+     * @param useDefaultFilters <br>
+     *        whether to register the default filters for the
+     *        {@link Component @Component}, {@link Repository @Repository},
+     *        {@link Service @Service}, and {@link Controller @Controller}
+     *        stereotype annotations
      * @see #registerDefaultFilters()
+     * @param useDefaultFilters
      */
-    public JadeDaoComponentProvider(boolean useDefaultFilters) {
+    public DAOComponentProvider(boolean useDefaultFilters) {
         if (useDefaultFilters) {
             registerDefaultFilters();
         }

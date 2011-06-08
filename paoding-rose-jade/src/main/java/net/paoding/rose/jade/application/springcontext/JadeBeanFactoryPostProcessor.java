@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2011 the original author or authors.
+ * Copyright 2009-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.paoding.rose.jade.springcontext;
+package net.paoding.rose.jade.application.springcontext;
 
 import java.io.File;
 import java.io.IOException;
@@ -22,7 +22,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import net.paoding.rose.jade.dataaccess.DataAccessFactory;
 import net.paoding.rose.scanning.ResourceRef;
 import net.paoding.rose.scanning.RoseScanner;
 
@@ -34,8 +33,6 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationContextException;
 import org.springframework.context.annotation.ScannedGenericBeanDefinition;
 import org.springframework.core.io.Resource;
@@ -48,18 +45,11 @@ import org.springframework.util.ResourceUtils;
  * @author 王志亮 [qieqie.wang@gmail.com]
  * @author 廖涵 [in355hz@gmail.com]
  */
-public class JadeDaoProcessor implements BeanFactoryPostProcessor, ApplicationContextAware {
+public class JadeBeanFactoryPostProcessor implements BeanFactoryPostProcessor {
 
-    protected static final Log logger = LogFactory.getLog(JadeDaoProcessor.class);
-
-    private ApplicationContext applicationContext;
+    protected static final Log logger = LogFactory.getLog(JadeBeanFactoryPostProcessor.class);
 
     private List<TypeFilter> filters;
-
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        this.applicationContext = applicationContext;
-    }
 
     /**
      * 
@@ -77,16 +67,17 @@ public class JadeDaoProcessor implements BeanFactoryPostProcessor, ApplicationCo
         }
         final List<ResourceRef> resources;
         try {
+            // 怎么传入scope呢？
             resources = RoseScanner.getInstance().getJarOrClassesFolderResources();
         } catch (IOException e) {
             throw new ApplicationContextException(
                     "error on getJarResources/getClassesFolderResources", e);
         }
         List<String> urls = new LinkedList<String>();
-        for (ResourceRef resourceInfo : resources) {
-            if (resourceInfo.hasModifier("dao") || resourceInfo.hasModifier("DAO")) {
+        for (ResourceRef ref : resources) {
+            if (ref.hasModifier("dao") || ref.hasModifier("DAO")) {
                 try {
-                    Resource resource = resourceInfo.getResource();
+                    Resource resource = ref.getResource();
                     File resourceFile = resource.getFile();
                     if (resourceFile.isFile()) {
                         urls.add("jar:file:" + resourceFile.toURI().getPath()
@@ -104,14 +95,12 @@ public class JadeDaoProcessor implements BeanFactoryPostProcessor, ApplicationCo
             logger.info("[jade] found " + urls.size() + " jade urls: " + urls);
         }
         if (urls.size() > 0) {
-            JadeDaoComponentProvider provider = new JadeDaoComponentProvider(true);
+            DAOComponentProvider provider = new DAOComponentProvider(true);
             if (filters != null) {
                 for (TypeFilter excludeFilter : filters) {
                     provider.addExcludeFilter(excludeFilter);
                 }
             }
-
-            final DataAccessFactory dataAccessProvider = createJdbcTemplateDataAccessProvider();
 
             Set<String> daoClassNames = new HashSet<String>();
 
@@ -121,8 +110,7 @@ public class JadeDaoProcessor implements BeanFactoryPostProcessor, ApplicationCo
                 }
                 Set<BeanDefinition> dfs = provider.findCandidateComponents(url);
                 if (logger.isInfoEnabled()) {
-                    logger.info("[jade] found " + dfs.size()//
-                            + " beanDefinition from '" + url + "'");
+                    logger.info("[jade] found " + dfs.size() + " beanDefinition from '" + url + "'");
                 }
                 for (BeanDefinition beanDefinition : dfs) {
                     String daoClassName = beanDefinition.getBeanClassName();
@@ -137,17 +125,16 @@ public class JadeDaoProcessor implements BeanFactoryPostProcessor, ApplicationCo
                     daoClassNames.add(daoClassName);
 
                     MutablePropertyValues propertyValues = beanDefinition.getPropertyValues();
-                    propertyValues.addPropertyValue("dataAccessProvider", dataAccessProvider);
-                    propertyValues.addPropertyValue("daoClass", daoClassName);
+                    propertyValues.addPropertyValue("DAOClass", daoClassName);
                     ScannedGenericBeanDefinition scannedBeanDefinition = (ScannedGenericBeanDefinition) beanDefinition;
                     scannedBeanDefinition.setPropertyValues(propertyValues);
-                    scannedBeanDefinition.setBeanClass(JadeDaoFactoryBean.class);
+                    scannedBeanDefinition.setBeanClass(DAOFactoryBean.class);
 
                     DefaultListableBeanFactory defaultBeanFactory = (DefaultListableBeanFactory) beanFactory;
                     defaultBeanFactory.registerBeanDefinition(daoClassName, beanDefinition);
 
                     if (logger.isDebugEnabled()) {
-                        logger.debug("[jade] register jade dao bean: " + daoClassName);
+                        logger.debug("[jade] register DAO: " + daoClassName);
                     }
                 }
             }
@@ -157,8 +144,4 @@ public class JadeDaoProcessor implements BeanFactoryPostProcessor, ApplicationCo
         }
     }
 
-    protected DataAccessFactory createJdbcTemplateDataAccessProvider() {
-        return (DataAccessFactory) applicationContext.getBean("jada.dataAccessProvider",
-                DataAccessFactory.class);
-    }
 }

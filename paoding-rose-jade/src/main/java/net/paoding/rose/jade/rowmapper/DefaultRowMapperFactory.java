@@ -54,7 +54,7 @@ import org.springframework.jdbc.core.SingleColumnRowMapper;
  * @author 王志亮 [qieqie.wang@gmail.com]
  * @author 廖涵 [in355hz@gmail.com]
  */
-public class RowMapperFactoryImpl implements RowMapperFactory {
+public class DefaultRowMapperFactory implements RowMapperFactory {
 
     private static Log logger = LogFactory.getLog(RowMapperFactory.class);
 

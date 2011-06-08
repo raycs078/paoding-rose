@@ -12,16 +12,9 @@ http://www.springframework.org/schema/tx http://www.springframework.org/schema/t
 http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.5.xsd"
 	default-autowire="no" default-lazy-init="true">
 
-	<bean id="jade.daoProcessor" class="net.paoding.rose.jade.core.JadeDaoProcessor" />
+	<bean id="jade.beanFactoryProcessor"
+		class="net.paoding.rose.jade.application.springcontext.JadeBeanFactoryPostProcessor" />
 
-	<bean id="jada.dataAccessProvider" class="net.paoding.rose.jade.core.JadeDataAccessProvider">
-		<property name="targetAccessProvider" ref="jada.jdbcDataAccessProvider" />
-	</bean>
-
-	<bean id="jada.jdbcDataAccessProvider"
-		class="net.paoding.rose.jade.provider.jdbc.JdbcDataAccessProvider" />
-
-	<bean id="jade.simpleSQLInterpreter"
-		class="net.paoding.rose.jade.provider.jdbc.SimpleSQLInterpreter" />
+	<bean id="jade.interpreter.tosql" class="net.paoding.rose.jade.statement.SQLInterpreter" />
 
 </beans>
