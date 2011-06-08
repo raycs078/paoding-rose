@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.paoding.rose.jade.dataaccess;
+package net.paoding.rose.jade.application.springcontext;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -21,11 +21,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.sql.DataSource;
 
 import net.paoding.rose.jade.annotation.DAO;
+import net.paoding.rose.jade.dataaccess.DataSourceFactory;
 import net.paoding.rose.jade.statement.StatementMetaData;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
@@ -33,16 +34,23 @@ import org.springframework.context.ApplicationContextAware;
  * 
  * @author qieqie.wang
  */
-public class SpringDataSourceFactory implements DataSourceFactory, ApplicationContextAware {
+public class DefaultDataSourceFactory implements DataSourceFactory, ApplicationContextAware {
 
     private Log logger = LogFactory.getLog(getClass());
 
-    private ApplicationContext applicationContext;
+    private ListableBeanFactory applicationContext;
 
     private ConcurrentHashMap<Class<?>, DataSource> cached = new ConcurrentHashMap<Class<?>, DataSource>();
 
+    public DefaultDataSourceFactory() {
+    }
+
+    public DefaultDataSourceFactory(ListableBeanFactory applicationContext) {
+        this.applicationContext = applicationContext;
+    }
+
     @Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+    public void setApplicationContext(ApplicationContext applicationContext) {
         this.applicationContext = applicationContext;
     }
 
