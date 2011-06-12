@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.paoding.rose.jade.application.springcontext;
+package net.paoding.rose.jade.context.spring;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -34,7 +34,7 @@ import org.springframework.context.ApplicationContextAware;
  * 
  * @author qieqie.wang
  */
-public class DefaultDataSourceFactory implements DataSourceFactory, ApplicationContextAware {
+public class SpringDataSourceFactory implements DataSourceFactory, ApplicationContextAware {
 
     private Log logger = LogFactory.getLog(getClass());
 
@@ -42,10 +42,10 @@ public class DefaultDataSourceFactory implements DataSourceFactory, ApplicationC
 
     private ConcurrentHashMap<Class<?>, DataSource> cached = new ConcurrentHashMap<Class<?>, DataSource>();
 
-    public DefaultDataSourceFactory() {
+    public SpringDataSourceFactory() {
     }
 
-    public DefaultDataSourceFactory(ListableBeanFactory applicationContext) {
+    public SpringDataSourceFactory(ListableBeanFactory applicationContext) {
         this.applicationContext = applicationContext;
     }
 

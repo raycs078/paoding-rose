@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.paoding.rose.jade.application.springcontext;
+package net.paoding.rose.jade.context.spring;
 
 import java.io.File;
 import java.io.IOException;

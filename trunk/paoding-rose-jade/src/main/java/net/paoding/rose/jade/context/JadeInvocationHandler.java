@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.paoding.rose.jade.application;
+package net.paoding.rose.jade.context;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -47,9 +47,9 @@ import org.springframework.jdbc.core.RowMapper;
  * @author 王志亮 [qieqie.wang@gmail.com]
  * 
  */
-public class InvocationHandlerImpl implements InvocationHandler {
+public class JadeInvocationHandler implements InvocationHandler {
 
-    private static final Log logger = LogFactory.getLog(InvocationHandlerImpl.class);
+    private static final Log logger = LogFactory.getLog(JadeInvocationHandler.class);
 
     private final ConcurrentHashMap<Method, Statement> statements = new ConcurrentHashMap<Method, Statement>();
 
@@ -61,7 +61,7 @@ public class InvocationHandlerImpl implements InvocationHandler {
 
     private final InterpreterFactory interpreterFactory;
 
-    public InvocationHandlerImpl(//
+    public JadeInvocationHandler(//
             DAOMetaData daoMetaData,//
             InterpreterFactory interpreterFactory, //
             RowMapperFactory rowMapperFactory,//
@@ -169,7 +169,7 @@ public class InvocationHandlerImpl implements InvocationHandler {
             throws CloneNotSupportedException {
         String methodName = method.getName();
         if (methodName.equals("toString")) {
-            return InvocationHandlerImpl.this.toString();
+            return JadeInvocationHandler.this.toString();
         }
         if (methodName.equals("hashCode")) {
             return daoMetaData.getDAOClass().hashCode() * 13 + this.hashCode();

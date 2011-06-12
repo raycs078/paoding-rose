@@ -29,7 +29,7 @@ import org.springframework.jdbc.BadSqlGrammarException;
  * 
  * @author 廖涵 [in355hz@gmail.com]
  */
-public class SQLInterpreter implements Interpreter {
+public class SystemInterpreter implements Interpreter {
 
     @Override
     public void interpret(StatementRuntime runtime) {

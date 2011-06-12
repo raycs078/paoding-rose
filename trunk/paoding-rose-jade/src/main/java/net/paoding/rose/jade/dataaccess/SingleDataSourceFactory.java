@@ -21,29 +21,30 @@ import javax.sql.DataSource;
 
 import net.paoding.rose.jade.statement.StatementMetaData;
 
-import org.springframework.jdbc.core.JdbcTemplate;
-
 /**
  * 
  * @author qieqie
  * 
  */
-public class DataAccessFactoryImpl implements DataAccessFactory {
+public class SingleDataSourceFactory implements DataSourceFactory {
 
-    protected final DataSourceFactory dataSourceFactory;
+    private DataSource dataSource;
 
-    public DataAccessFactoryImpl(DataSourceFactory dataSourceFactory) {
-        this.dataSourceFactory = dataSourceFactory;
+    public SingleDataSourceFactory() {
+    }
+
+    public SingleDataSourceFactory(DataSource dataSource) {
+        this.dataSource = dataSource;
+    }
+
+    public void setDataSource(DataSource dataSource) {
+        this.dataSource = dataSource;
     }
 
     @Override
-    public DataAccess getDataAccess(StatementMetaData metaData,
+    public DataSource getDataSource(StatementMetaData metaData,
             Map<String, Object> runtimeProperties) {
-        DataSource dataSource = dataSourceFactory.getDataSource(metaData, runtimeProperties);
-        if (dataSource == null) {
-            throw new NullPointerException("not found dataSource for: " + metaData);
-        }
-        return new DataAccessImpl(new JdbcTemplate(dataSource));
+        return dataSource;
     }
 
 }

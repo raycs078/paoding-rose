@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.paoding.rose.jade.application.springcontext;
+package net.paoding.rose.jade.context.spring;
 
 import java.lang.reflect.Proxy;
 
-import net.paoding.rose.jade.application.InvocationHandlerImpl;
+import net.paoding.rose.jade.context.JadeInvocationHandler;
 import net.paoding.rose.jade.dataaccess.DataAccessFactory;
-import net.paoding.rose.jade.dataaccess.DataAccessFactoryImpl;
+import net.paoding.rose.jade.dataaccess.DefaultDataAccessFactory;
 import net.paoding.rose.jade.dataaccess.DataSourceFactory;
 import net.paoding.rose.jade.rowmapper.DefaultRowMapperFactory;
 import net.paoding.rose.jade.rowmapper.RowMapperFactory;
@@ -108,15 +108,15 @@ public class DAOFactoryBean implements FactoryBean, InitializingBean, Applicatio
         Assert.isTrue(daoClass.isInterface(), "not a interface class: " + daoClass.getName());
         if (dataAccessFactory == null) {
             if (dataSourceFactory == null) {
-                dataSourceFactory = new LaziedDataSourceFactory(applicationContext);
+                dataSourceFactory = new LazySpringDataSourceFactory(applicationContext);
             }
-            dataAccessFactory = new DataAccessFactoryImpl(dataSourceFactory);
+            dataAccessFactory = new DefaultDataAccessFactory(dataSourceFactory);
         }
         if (rowMapperFactory == null) {
             rowMapperFactory = new DefaultRowMapperFactory();
         }
         if (interpreterFactory == null) {
-            interpreterFactory = new InterpreterFactoryImpl(this.applicationContext);
+            interpreterFactory = new SpringInterpreterFactory(this.applicationContext);
         }
     }
 
@@ -135,7 +135,7 @@ public class DAOFactoryBean implements FactoryBean, InitializingBean, Applicatio
 
     protected Object createDAO(Class<?> daoClass) {
         DAOMetaData daoMetaData = new DAOMetaData(daoClass);
-        InvocationHandlerImpl handler = new InvocationHandlerImpl(//
+        JadeInvocationHandler handler = new JadeInvocationHandler(//
                 daoMetaData, interpreterFactory, rowMapperFactory, dataAccessFactory);
         return Proxy.newProxyInstance(ClassUtils.getDefaultClassLoader(), new Class[] { daoClass },
                 handler);

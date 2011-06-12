@@ -1,4 +1,4 @@
-package net.paoding.rose.jade.application.springcontext;
+package net.paoding.rose.jade.context.spring;
 
 import java.util.Map;
 
@@ -14,13 +14,13 @@ import org.springframework.beans.factory.ListableBeanFactory;
  * @author qieqie
  * 
  */
-public class LaziedDataSourceFactory implements DataSourceFactory {
+public class LazySpringDataSourceFactory implements DataSourceFactory {
 
     private ListableBeanFactory beanFactory;
 
     private DataSourceFactory dataSourceFactory;
 
-    public LaziedDataSourceFactory(ListableBeanFactory beanFactory) {
+    public LazySpringDataSourceFactory(ListableBeanFactory beanFactory) {
         this.beanFactory = beanFactory;
     }
 
@@ -36,7 +36,7 @@ public class LaziedDataSourceFactory implements DataSourceFactory {
                 if (beansOfType.size() > 0) {
                     dataSourceFactory = (DataSourceFactory) beansOfType.values().iterator().next();
                 } else {
-                    dataSourceFactory = new DefaultDataSourceFactory(beanFactory);
+                    dataSourceFactory = new SpringDataSourceFactory(beanFactory);
                 }
                 this.beanFactory = null;
             }
