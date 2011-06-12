@@ -12,9 +12,7 @@ http://www.springframework.org/schema/tx http://www.springframework.org/schema/t
 http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.5.xsd"
 	default-autowire="no" default-lazy-init="true">
 
-	<bean id="jade.beanFactoryProcessor"
-		class="net.paoding.rose.jade.application.springcontext.JadeBeanFactoryPostProcessor" />
-
-	<bean id="jade.interpreter.tosql" class="net.paoding.rose.jade.statement.SQLInterpreter" />
+	<bean
+		class="net.paoding.rose.jade.context.spring.JadeBeanFactoryPostProcessor" />
 
 </beans>
