@@ -40,7 +40,15 @@ import org.springframework.core.type.filter.TypeFilter;
 import org.springframework.util.ResourceUtils;
 
 /**
- * 
+ * 如果要禁用JadeBeanFactoryPostProcessorPostProcessor，请设置系统属性jade.spring.
+ * postProcessor为disable或enable。
+ * 也可以通过设置jade.spring.postProcessor.包名或类名单独为各个package或类做定制
+ * (也是设置disable或enable）， 如果给定的类或package没有设置，则逐级使用父级的设置，
+ * jade.spring.postProcessor.com.yourcompany.dao.UserDAO 的父级是
+ * jade.spring.postProcessor.com.yourcompany.dao;
+ * jade.spring.postProcessor.com 的父级是 jade.spring.postProcessor.*;
+ * jade.spring.postProcessor.* 是根，没有父级别（嗯，因此您可以将
+ * jade.spring.postProcessor.* 的设置看成整个系统的默认值)
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  * @author 廖涵 [in355hz@gmail.com]
@@ -62,6 +70,16 @@ public class JadeBeanFactoryPostProcessor implements BeanFactoryPostProcessor {
     @Override
     public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory)
             throws BeansException {
+        String postProcessor = System.getProperty("jade.spring.postProcessor");
+        if ("disable".equals(postProcessor)) {
+            logger.info("jade.spring.postProcessor: disable");
+            return;
+        } else if (postProcessor == null || "enable".equals(postProcessor)) {
+            logger.info("jade.spring.postProcessor: enable");
+        } else {
+            throw new IllegalArgumentException(//
+                    "illegal property of 'jade.spring.postProcessor': " + postProcessor);
+        }
         if (logger.isInfoEnabled()) {
             logger.info("[jade] starting ...");
         }
@@ -115,6 +133,14 @@ public class JadeBeanFactoryPostProcessor implements BeanFactoryPostProcessor {
                 for (BeanDefinition beanDefinition : dfs) {
                     String daoClassName = beanDefinition.getBeanClassName();
 
+                    if (isDisable(daoClassName)) {
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("[jade] ignored disabled jade dao class: " + daoClassName
+                                    + "  [" + url + "]");
+                        }
+                        continue;
+                    }
+
                     if (daoClassNames.contains(daoClassName)) {
                         if (logger.isDebugEnabled()) {
                             logger.debug("[jade] ignored replicated jade dao class: "
@@ -144,4 +170,44 @@ public class JadeBeanFactoryPostProcessor implements BeanFactoryPostProcessor {
         }
     }
 
+    /**
+     * 
+     * @param daoClassName
+     * @return
+     */
+    private boolean isDisable(String daoClassName) {
+        String name = daoClassName;
+        while (true) {
+            String flag;
+            if (name.length() == 0) {
+                flag = System.getProperty("jade.spring.postProcessor.*");
+            } else {
+                flag = System.getProperty("jade.spring.postProcessor." + name);
+            }
+            if (flag == null || flag.length() == 0) {
+                int index = name.lastIndexOf('.');
+                if (index == -1) {
+                    if (name.length() == 0) {
+                        return false;
+                    } else {
+                        name = "";
+                    }
+                } else {
+                    name = name.substring(0, index);
+                }
+                continue;
+            }
+            if ("disable".equals(flag)) {
+                return true;
+            } else if ("enable".equals(flag)) {
+                return false;
+            } else {
+                if (name.length() == 0) {
+                    name = "*";
+                }
+                throw new IllegalArgumentException(//
+                        "illegal property of 'jade.spring.postProcessor." + name + "': " + flag);
+            }
+        }
+    }
 }
