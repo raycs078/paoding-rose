@@ -56,6 +56,11 @@ public class TextInstruction extends AbstractInstruction {
         if (StringUtils.isEmpty(text)) {
             return;
         }
+        
+        if (logger.isDebugEnabled()) {
+        	logger.debug("trying to render text:" + text);
+        }
+        
         HttpServletResponse response = inv.getResponse();
         String oldEncoding = response.getCharacterEncoding();
         if (StringUtils.isBlank(oldEncoding) || oldEncoding.startsWith("ISO-")) {
@@ -67,64 +72,23 @@ public class TextInstruction extends AbstractInstruction {
                         + response.getCharacterEncoding());
             }
         }
-
-        //
-        String mainContentType = null; // text中说明的mainContentType，分号之前的部分(如有分号的话）
-        final int contentTypeIndex = text.indexOf(':');
-        int mainContentTypeIndex = -1;
-        if (contentTypeIndex > 0) {
-            mainContentTypeIndex = text.indexOf(";");
-            if (mainContentTypeIndex < 0 || mainContentTypeIndex > contentTypeIndex) {
-                mainContentTypeIndex = contentTypeIndex;
-            }
-            mainContentType = text.substring(0, mainContentTypeIndex);
-            if (mainContentType.length() == 0) {
-                mainContentType = "text/html";
-            } else if (mainContentType.equals("json")) {
-                mainContentType = "application/json";
-            } else if (mainContentType.equals("html")) {
-                mainContentType = "text/html";
-            } else if (mainContentType.equals("xml")) {
-                mainContentType = "text/xml";
-            } else if (mainContentType.equals("text") || mainContentType.equals("plain")) {
-                mainContentType = "text/plain";
-            } else if (!mainContentType.startsWith("text/")
-                    && !mainContentType.startsWith("application/")) {
-                if (logger.isDebugEnabled()) {
-                    logger.debug("'" + mainContentType + "' is not a content-type, skip it! ");
-                }
-                mainContentType = null;
-            }
-        }
-        if (mainContentType != null) {
-            Assert.isTrue(contentTypeIndex > 0);
-            final String contentType;
-            if (contentTypeIndex != mainContentTypeIndex) {
-                contentType = mainContentType
-                        + text.substring(mainContentTypeIndex, contentTypeIndex);
-            } else {
-                contentType = mainContentType;
-            }
-            response.setContentType(contentType);
+        
+        if (response.getContentType() == null) {
+            response.setContentType("text/html");
             if (logger.isDebugEnabled()) {
-                logger.debug("set response content-type: " + response.getContentType());
+                logger.debug("set response content-type by default: "
+                        + response.getContentType());
             }
-            sendResponse(response, text.substring(contentTypeIndex + 1));
-        } else {
-            if (response.getContentType() == null) {
-                response.setContentType("text/html");
-                if (logger.isDebugEnabled()) {
-                    logger.debug("set response content-type by default: "
-                            + response.getContentType());
-                }
-            }
-            sendResponse(response, text);
         }
+        sendResponse(response, text);
     }
 
     private void sendResponse(HttpServletResponse response, String text) throws IOException {
         if (StringUtils.isNotEmpty(text)) {
             PrintWriter out = response.getWriter();
+            if (logger.isDebugEnabled()) {
+            	logger.debug("write text to response:" + text);
+            }
             out.print(text);
         }
     }
