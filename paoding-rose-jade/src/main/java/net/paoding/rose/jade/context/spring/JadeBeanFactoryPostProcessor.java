@@ -40,6 +40,8 @@ import org.springframework.core.type.filter.TypeFilter;
 import org.springframework.util.ResourceUtils;
 
 /**
+ * {@link JadeBeanFactoryPostProcessor} 将扫描符合规范的DAO接口，并作为spring容器的bean
+ * <p>
  * 如果要禁用JadeBeanFactoryPostProcessorPostProcessor，请设置系统属性jade.spring.
  * postProcessor为disable或enable。
  * 也可以通过设置jade.spring.postProcessor.包名或类名单独为各个package或类做定制

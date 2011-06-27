@@ -12,6 +12,10 @@ http://www.springframework.org/schema/tx http://www.springframework.org/schema/t
 http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.5.xsd"
 	default-autowire="no" default-lazy-init="true">
 
+
+
+	<!-- JadeBeanFactoryPostProcessorPostProcessor 将扫描符合规范的DAO接口，并作为spring容器的bean -->
+
 	<!-- 如果要禁用JadeBeanFactoryPostProcessorPostProcessor，请设置系统属性jade.spring.postProcessor为disable或enable。 
 		也可以通过设置jade.spring.postProcessor.包名或类名单独为各个package或类做定制(也是设置disable或enable）， 
 		如果给定的类或package没有设置，则逐级使用父级的设置， jade.spring.postProcessor.com.yourcompany.dao.UserDAO 
