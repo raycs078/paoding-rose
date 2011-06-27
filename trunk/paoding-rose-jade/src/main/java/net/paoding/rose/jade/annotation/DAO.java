@@ -23,7 +23,6 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.sql.Connection;
 
-import net.paoding.rose.jade.dataaccess.routing.RoutingConnection;
 
 /**
  * 
@@ -65,7 +64,6 @@ public @interface DAO {
      * <p>
      * 
      * @see Connection#setCatalog(String)
-     * @see RoutingConnection#CATALOG
      * @return
      */
     String catalog() default "";

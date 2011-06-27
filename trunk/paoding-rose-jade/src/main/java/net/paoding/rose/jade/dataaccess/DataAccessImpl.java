@@ -20,7 +20,6 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.List;
 
-
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreator;
 import org.springframework.jdbc.core.RowMapper;
@@ -44,6 +43,10 @@ public class DataAccessImpl implements DataAccess {
     }
 
     // ------------------------------------------------
+
+    public javax.sql.DataSource getDataSource() {
+        return this.jdbcTemplate.getDataSource();
+    }
 
     @Override
     public List<?> select(String sql, Object[] args, RowMapper rowMapper) {

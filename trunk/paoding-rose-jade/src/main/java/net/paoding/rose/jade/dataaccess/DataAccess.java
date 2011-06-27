@@ -17,6 +17,8 @@ package net.paoding.rose.jade.dataaccess;
 
 import java.util.List;
 
+import javax.sql.DataSource;
+
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.KeyHolder;
 
@@ -29,6 +31,13 @@ import org.springframework.jdbc.support.KeyHolder;
  * @author 廖涵 [in355hz@gmail.com]
  */
 public interface DataAccess {
+
+    /**
+     * 返回所使用的DataSource
+     * 
+     * @return
+     */
+    DataSource getDataSource();
 
     /**
      * 读访问
