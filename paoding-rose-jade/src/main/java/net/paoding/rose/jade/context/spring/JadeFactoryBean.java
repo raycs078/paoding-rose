@@ -22,6 +22,7 @@ import net.paoding.rose.jade.dataaccess.DataAccessFactory;
 import net.paoding.rose.jade.rowmapper.RowMapperFactory;
 import net.paoding.rose.jade.statement.DAOMetaData;
 import net.paoding.rose.jade.statement.InterpreterFactory;
+import net.paoding.rose.jade.statement.cached.CacheProvider;
 
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
@@ -44,6 +45,8 @@ public class JadeFactoryBean implements FactoryBean, InitializingBean {
     protected RowMapperFactory rowMapperFactory;
 
     protected InterpreterFactory interpreterFactory;
+
+    protected CacheProvider cacheProvider;
 
     protected Object daoObject;
 
@@ -95,6 +98,14 @@ public class JadeFactoryBean implements FactoryBean, InitializingBean {
         return interpreterFactory;
     }
 
+    public void setCacheProvider(CacheProvider cacheProvider) {
+        this.cacheProvider = cacheProvider;
+    }
+
+    public CacheProvider getCacheProvider() {
+        return cacheProvider;
+    }
+
     @Override
     public boolean isSingleton() {
         return true;
@@ -106,6 +117,7 @@ public class JadeFactoryBean implements FactoryBean, InitializingBean {
         Assert.notNull(dataAccessFactory);
         Assert.notNull(rowMapperFactory);
         Assert.notNull(interpreterFactory);
+        // cacheProvider可以null，不做assert.notNull判断
     }
 
     @Override
@@ -120,7 +132,7 @@ public class JadeFactoryBean implements FactoryBean, InitializingBean {
     protected Object createDAO() {
         DAOMetaData daoMetaData = new DAOMetaData(objectType);
         JadeInvocationHandler handler = new JadeInvocationHandler(//
-                daoMetaData, interpreterFactory, rowMapperFactory, dataAccessFactory);
+                daoMetaData, interpreterFactory, rowMapperFactory, dataAccessFactory, cacheProvider);
         return Proxy.newProxyInstance(ClassUtils.getDefaultClassLoader(),
                 new Class[] { objectType }, handler);
     }

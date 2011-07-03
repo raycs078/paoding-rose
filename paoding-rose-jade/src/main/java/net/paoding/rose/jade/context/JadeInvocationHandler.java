@@ -37,6 +37,8 @@ import net.paoding.rose.jade.statement.SelectQuerier;
 import net.paoding.rose.jade.statement.Statement;
 import net.paoding.rose.jade.statement.StatementMetaData;
 import net.paoding.rose.jade.statement.UpdateQuerier;
+import net.paoding.rose.jade.statement.cached.CacheProvider;
+import net.paoding.rose.jade.statement.cached.CachedStatement;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -61,15 +63,19 @@ public class JadeInvocationHandler implements InvocationHandler {
 
     private final InterpreterFactory interpreterFactory;
 
+    private final CacheProvider cacheProvider;
+
     public JadeInvocationHandler(//
             DAOMetaData daoMetaData,//
             InterpreterFactory interpreterFactory, //
             RowMapperFactory rowMapperFactory,//
-            DataAccessFactory dataAccessFactory) {
+            DataAccessFactory dataAccessFactory,//
+            CacheProvider cacheProvider) {
         this.daoMetaData = daoMetaData;
         this.rowMapperFactory = rowMapperFactory;
         this.dataAccessFactory = dataAccessFactory;
         this.interpreterFactory = interpreterFactory;
+        this.cacheProvider = cacheProvider;
     }
 
     private static final String[] INDEX_NAMES = new String[] { ":1", ":2", ":3", ":4", ":5", ":6",
@@ -158,6 +164,9 @@ public class JadeInvocationHandler implements InvocationHandler {
                     }
                     Interpreter[] interpreters = interpreterFactory.getInterpreters(smd);
                     statement = new JdbcStatement(smd, sqlType, interpreters, querier);
+                    if (cacheProvider != null) {
+                        statement = new CachedStatement(cacheProvider, statement);
+                    }
                     statements.put(method, statement);
                 }
             }
