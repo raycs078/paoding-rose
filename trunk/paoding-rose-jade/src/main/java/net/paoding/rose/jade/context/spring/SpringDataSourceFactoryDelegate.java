@@ -14,13 +14,13 @@ import org.springframework.beans.factory.ListableBeanFactory;
  * @author qieqie
  * 
  */
-public class LazySpringDataSourceFactory implements DataSourceFactory {
+public class SpringDataSourceFactoryDelegate implements DataSourceFactory {
 
     private ListableBeanFactory beanFactory;
 
     private DataSourceFactory dataSourceFactory;
 
-    public LazySpringDataSourceFactory(ListableBeanFactory beanFactory) {
+    public SpringDataSourceFactoryDelegate(ListableBeanFactory beanFactory) {
         this.beanFactory = beanFactory;
     }
 
