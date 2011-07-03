@@ -30,13 +30,23 @@ public class SpringDataSourceFactoryDelegate implements DataSourceFactory {
         if (dataSourceFactory == null) {
             ListableBeanFactory beanFactory = this.beanFactory;
             if (beanFactory != null) {
-                @SuppressWarnings("unchecked")
-                Map<String, Object> beansOfType = beanFactory
-                        .getBeansOfType(DataSourceFactory.class);
-                if (beansOfType.size() > 0) {
-                    dataSourceFactory = (DataSourceFactory) beansOfType.values().iterator().next();
+                if (beanFactory.containsBeanDefinition("jade.dataSourceFactory")) {
+                    dataSourceFactory = (DataSourceFactory) beanFactory.getBean(
+                            "jade.dataSourceFactory", DataSourceFactory.class);
                 } else {
-                    dataSourceFactory = new SpringDataSourceFactory(beanFactory);
+                    @SuppressWarnings("rawtypes")
+                    Map beansOfType = beanFactory.getBeansOfType(DataSourceFactory.class);
+                    if (beansOfType.size() > 1) {
+                        throw new IllegalStateException(
+                                "requires 0 or 1 DataSourceFactory, but found "
+                                        + beansOfType.size());
+                    }
+                    if (beansOfType.size() == 1) {
+                        dataSourceFactory = (DataSourceFactory) beansOfType.values().iterator()
+                                .next();
+                    } else {
+                        dataSourceFactory = new SpringDataSourceFactory(beanFactory);
+                    }
                 }
                 this.beanFactory = null;
             }

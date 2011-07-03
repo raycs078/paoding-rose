@@ -22,10 +22,14 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import javax.sql.DataSource;
+
 import net.paoding.rose.jade.dataaccess.DataAccessFactory;
+import net.paoding.rose.jade.dataaccess.DataSourceFactory;
 import net.paoding.rose.jade.dataaccess.DefaultDataAccessFactory;
 import net.paoding.rose.jade.rowmapper.DefaultRowMapperFactory;
 import net.paoding.rose.jade.rowmapper.RowMapperFactory;
+import net.paoding.rose.jade.statement.Interpreter;
 import net.paoding.rose.jade.statement.InterpreterFactory;
 import net.paoding.rose.scanning.ResourceRef;
 import net.paoding.rose.scanning.RoseScanner;
@@ -40,6 +44,7 @@ import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.context.ApplicationContextException;
 import org.springframework.context.annotation.ScannedGenericBeanDefinition;
+import org.springframework.core.annotation.Order;
 import org.springframework.core.io.Resource;
 import org.springframework.util.ResourceUtils;
 
@@ -78,7 +83,7 @@ import org.springframework.util.ResourceUtils;
  * 这样就表示只有那些明确设置了开关属性为1的package或接口的类才由本处理器负责读取并放到Spring容器中。
  * <p>
  * 
- * <h1>=DAO接口的发现=</h1>
+ * <h1>=DAO的发现=</h1>
  * <p>
  * 首先，本处理器会调用 {@link RoseScanner#getJarOrClassesFolderResources()}
  * 获取类路径下的classes目录以及那些设置了rose标帜的jar包地址。
@@ -96,6 +101,50 @@ import org.springframework.util.ResourceUtils;
  * 通过这两个步骤，本处理器完成了对DAO接口的发现，并最后将这些接口封装为 {@link JadeFactoryBean}
  * 的形式注册到Spring容器中。
  * 
+ * <h1>=数据源=</h1>
+ * <p>
+ * 数据源 {@link DataSource} 提供了数据库的访问接口，jade通过{@link DataSourceFactory}
+ * 接口为DAO方法提供数据源，在本处利器所初始化的spring容器中，数据源的设置有两种方式：
+ * 
+ * <h2>==定制方式==</h2><br>
+ * <ul>
+ * <li>当spring容器配置了一个id/name 为 "jade.dataSourceFactory"
+ * 对象，jade将把这个bean取出来，作为 {@link DataSourceFactory}为DAO提供数据源；</li>
+ * <li>当spring容器没有id/name 为 "jade.dataSourceFactory"的对象，但是配置其它名字的
+ * {@link DataSourceFactory}，jade将把这个bean 取出来，为DAO提供数据源；</li>
+ * <li>当spring容器没有id/name 为 "jade.dataSourceFactory"的对象，但其中存在
+ * {@link DataSourceFactory}的个数超过1个，此时系统初始化的时侯不会跑出异常，但一旦开始进行进行DAO操作时，将抛出
+ * IllegalStateException 异常。（参见 {@link SpringDataSourceFactoryDelegate}）</li>
+ * </ul>
+ * 
+ * <h2>==默认方式==</h2><br>
+ * 当spring容器没有配置任何 {@link DataSourceFactory} 时，jade将启用默认方式为DAO配置数据源，即使用
+ * {@link SpringDataSourceFactory}
+ * 为DAO提供数据源，从spring容器中寻找对应的数据源。对于给定的一个DAO接口，如
+ * com.mycompany.myapp.dao.UserDAO, 其规则如下：
+ * <p>
+ * <ul>
+ * <li>如果存在id/name为jade.dataSource.com.mycompany.myapp.dao.
+ * UserDAO的数据源，则使用它作为这个DAO的数据源，否则逐级询问配置，直到顶一级包名：jade.dataSource.com</li>
+ * <li>如果以上仍未能确定UserDAO的数据源，且UserDAO接口上的<code>@DAO</code>
+ * 的catalog属性非空（假设其值为myteam.myapp），则视myteam.myapp等同于package名，执行前一个步骤的问询</li>
+ * <ul>
+ * <li>即按此顺序问询Spring容器的配置：jade.dataSource.myteam.myapp.UserDAO，...，jade.
+ * dataSource.myteam</li>
+ * </ul>
+ * <li>
+ * 如果以上仍未能确定UserDAO的数据源，则判断是否存在id/name为jade.dataSource、dataSource的数据源</li>
+ * <li>
+ * 如果以上仍未能确定UserDAO的数据源，则最终就是没有数据源，运行时将会有异常抛出</li>
+ * </ul> <br>
+ * 
+ * <h1>=SQL解析器=</h1>
+ * <p>
+ * 当DAO方法被调用，执行数据库访问前，jade总是会先调用相应的SQL解析器，解析/改写SQL、设置相应的参数或运行时状态。<br>
+ * Jade使用 {@link InterpreterFactory} 为每个DAO方法配置对应的解析器。 本处理器使用的
+ * {@link InterpreterFactory} 是 {@link SpringInterpreterFactory}。<br>
+ * {@link SpringInterpreterFactory}将获取配置在Spring容器中的 {@link Interpreter}
+ * ，按照标注在其上的{@link Order}排序，设置给各个DAO方法。
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  * @author 廖涵 [in355hz@gmail.com]
