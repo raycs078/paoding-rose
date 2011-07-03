@@ -63,15 +63,16 @@ public class SpringDataSourceFactory implements DataSourceFactory, ApplicationCo
             return dataSource;
         }
 
-        String catalog = daoClass.getAnnotation(DAO.class).catalog();
-        if (catalog.length() > 0) {
-            dataSource = getDataSourceByDirectory(daoClass, catalog);
-        }
+        dataSource = getDataSourceByDirectory(daoClass, daoClass.getName());
         if (dataSource != null) {
             cached.put(daoClass, dataSource);
             return dataSource;
         }
-        dataSource = getDataSourceByDirectory(daoClass, daoClass.getName());
+        String catalog = daoClass.getAnnotation(DAO.class).catalog();
+        if (catalog.length() > 0) {
+            dataSource = getDataSourceByDirectory(daoClass,
+                    catalog + "." + daoClass.getSimpleName());
+        }
         if (dataSource != null) {
             cached.put(daoClass, dataSource);
             return dataSource;
@@ -84,8 +85,9 @@ public class SpringDataSourceFactory implements DataSourceFactory, ApplicationCo
         dataSource = getDataSourceByKey(daoClass, "dataSource");
         if (dataSource != null) {
             cached.put(daoClass, dataSource);
+            return dataSource;
         }
-        return dataSource;
+        return null;
     }
 
     private DataSource getDataSourceByDirectory(Class<?> daoClass, String catalog) {
