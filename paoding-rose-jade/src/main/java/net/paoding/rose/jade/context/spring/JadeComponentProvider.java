@@ -26,7 +26,6 @@ import net.paoding.rose.jade.annotation.DAO;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanDefinitionStoreException;
-import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.ResourceLoaderAware;
 import org.springframework.context.annotation.ScannedGenericBeanDefinition;
@@ -40,59 +39,60 @@ import org.springframework.core.type.classreading.MetadataReader;
 import org.springframework.core.type.classreading.MetadataReaderFactory;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.core.type.filter.TypeFilter;
-import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Controller;
-import org.springframework.stereotype.Repository;
-import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
 /**
- * 
+ * {@link JadeComponentProvider}用于查找一个目录或jar包下符合Jade规范的DAO接口。
  * 
  * @author Mark Fisher
  * @author Juergen Hoeller
  * @author Ramnivas Laddad
- * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  * @author 廖涵 [in355hz@gmail.com]
  * 
- * @see DAOComponentProvider
+ * @see JadeComponentProvider
  * @see org.springframework.core.type.classreading.MetadataReaderFactory
  * @see org.springframework.core.type.AnnotationMetadata
  * @see ScannedGenericBeanDefinition
  */
-public class DAOComponentProvider implements ResourceLoaderAware {
+public class JadeComponentProvider implements ResourceLoaderAware {
 
-    protected static final String DEFAULT_RESOURCE_PATTERN = "**/*DAO.class";
+    /**
+     * 日志记录器
+     */
+    private final Log logger = LogFactory.getLog(JadeComponentProvider.class);
 
-    protected final Log logger = LogFactory.getLog(getClass());
+    /**
+     * 
+     */
+    private String resourcePattern = "**/*DAO.class";
 
+    /**
+     * 
+     */
     private ResourcePatternResolver resourcePatternResolver = new PathMatchingResourcePatternResolver();
 
+    /**
+     * 
+     */
     private MetadataReaderFactory metadataReaderFactory = new CachingMetadataReaderFactory(
-            this.resourcePatternResolver);
+            resourcePatternResolver);
 
-    private String resourcePattern = DEFAULT_RESOURCE_PATTERN;
-
+    /**
+     * 
+     */
     private final List<TypeFilter> includeFilters = new LinkedList<TypeFilter>();
 
+    /**
+     * 
+     */
     private final List<TypeFilter> excludeFilters = new LinkedList<TypeFilter>();
 
     /**
-     * Create a JadeDaoComponentProvider.
      * 
-     * @param useDefaultFilters <br>
-     *        whether to register the default filters for the
-     *        {@link Component @Component}, {@link Repository @Repository},
-     *        {@link Service @Service}, and {@link Controller @Controller}
-     *        stereotype annotations
-     * @see #registerDefaultFilters()
-     * @param useDefaultFilters
      */
-    public DAOComponentProvider(boolean useDefaultFilters) {
-        if (useDefaultFilters) {
-            registerDefaultFilters();
-        }
+    public JadeComponentProvider() {
+        includeFilters.add(new AnnotationTypeFilter(DAO.class));
     }
 
     /**
@@ -124,18 +124,10 @@ public class DAOComponentProvider implements ResourceLoaderAware {
      * value will be appended to each base package name.
      * 
      * @see #findCandidateComponents(String)
-     * @see #DEFAULT_RESOURCE_PATTERN
      */
     public void setResourcePattern(String resourcePattern) {
         Assert.notNull(resourcePattern, "'resourcePattern' must not be null");
         this.resourcePattern = resourcePattern;
-    }
-
-    /**
-     * Add an include type filter to the <i>end</i> of the inclusion list.
-     */
-    private void addIncludeFilter(TypeFilter includeFilter) {
-        this.includeFilters.add(includeFilter);
     }
 
     /**
@@ -147,22 +139,12 @@ public class DAOComponentProvider implements ResourceLoaderAware {
     }
 
     /**
-     * 
-     * @param useDefaultFilters
-     */
-    public void resetFilters(boolean useDefaultFilters) {
-        this.includeFilters.clear();
-        this.excludeFilters.clear();
-        if (useDefaultFilters) {
-            registerDefaultFilters();
-        }
-    }
-
-    /**
-     * Scan the class path for candidate components.
-     * 
-     * @param basePackage the package to check for annotated classes
-     * @return a corresponding Set of autodetected bean definitions
+     * 查找并返回一个目录或jar包下符合Jade规范的DAO接口。
+     * <p>
+     * 所返回的每一个BeanDefinition代表一个符合规范的DAO接口，我们可以通过
+     * {@link BeanDefinition#getBeanClassName()} 得到对应的DAO接口的类名
+     * <p>
+     * 所返回的BeanDefinition代表的是一个接口，不能直接注册到Spring容器中，必须先做额外的转化！
      */
     public Set<BeanDefinition> findCandidateComponents(String uriPrefix) {
         if (!uriPrefix.endsWith("/")) {
@@ -190,14 +172,14 @@ public class DAOComponentProvider implements ResourceLoaderAware {
                         logger.debug("Ignored because not exists:" + resource);
                     }
                 } else if (resource.isReadable()) {
-                    MetadataReader metadataReader = this.metadataReaderFactory
+                    MetadataReader metadataReader = metadataReaderFactory
                             .getMetadataReader(resource);
                     if (isCandidateComponent(metadataReader)) {
                         ScannedGenericBeanDefinition sbd = new ScannedGenericBeanDefinition(
                                 metadataReader);
                         sbd.setResource(resource);
                         sbd.setSource(resource);
-                        if (isCandidateComponent(sbd)) {
+                        if (sbd.getMetadata().isInterface() && sbd.getMetadata().isIndependent()) {
                             if (debugEnabled) {
                                 logger.debug("Identified candidate component class: " + resource);
                             }
@@ -226,17 +208,6 @@ public class DAOComponentProvider implements ResourceLoaderAware {
     }
 
     /**
-     * Register the default filter for {@link Component @Component}. This
-     * will implicitly register all annotations that have the
-     * {@link Component @Component} meta-annotation including the
-     * {@link Repository @Repository}, {@link Service @Service}, and
-     * {@link Controller @Controller} stereotype annotations.
-     */
-    protected void registerDefaultFilters() {
-        addIncludeFilter(new AnnotationTypeFilter(DAO.class));
-    }
-
-    /**
      * Determine whether the given class does not match any exclude filter
      * and does match at least one include filter.
      * 
@@ -255,22 +226,6 @@ public class DAOComponentProvider implements ResourceLoaderAware {
             }
         }
         return false;
-    }
-
-    /**
-     * Determine whether the given bean definition qualifies as candidate.
-     * <p>
-     * The default implementation checks whether the class is concrete
-     * (i.e. not abstract and not an interface). Can be overridden in
-     * subclasses.
-     * 
-     * @param beanDefinition the bean definition to check
-     * @return whether the bean definition qualifies as a candidate
-     *         component
-     */
-    protected boolean isCandidateComponent(AnnotatedBeanDefinition beanDefinition) {
-        return (beanDefinition.getMetadata().isInterface() && beanDefinition.getMetadata()
-                .isIndependent());
     }
 
 }

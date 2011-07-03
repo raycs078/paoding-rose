@@ -26,6 +26,7 @@ import net.paoding.rose.jade.statement.InterpreterFactory;
 import net.paoding.rose.jade.statement.StatementMetaData;
 
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
@@ -38,18 +39,18 @@ public class SpringInterpreterFactory implements InterpreterFactory, Application
 
     private DefaultInterpreterFactory interpreterFactory;
 
-    private ApplicationContext applicationContext;
+    private ListableBeanFactory beanFactory;
 
     public SpringInterpreterFactory() {
     }
 
-    public SpringInterpreterFactory(ApplicationContext applicationContext) {
-        this.applicationContext = applicationContext;
+    public SpringInterpreterFactory(ListableBeanFactory beanFactory) {
+        this.beanFactory = beanFactory;
     }
 
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        this.applicationContext = applicationContext;
+        this.beanFactory = applicationContext;
     }
 
     @Override
@@ -64,7 +65,7 @@ public class SpringInterpreterFactory implements InterpreterFactory, Application
         synchronized (this) {
             if (interpreterFactory == null) {
                 @SuppressWarnings("unchecked")
-                Map<String, Interpreter> map = applicationContext.getBeansOfType(Interpreter.class);
+                Map<String, Interpreter> map = beanFactory.getBeansOfType(Interpreter.class);
                 ArrayList<Interpreter> interpreters = new ArrayList<Interpreter>(map.values());
                 Collections.sort(interpreters, new InterpreterComparator());
                 interpreterFactory = new DefaultInterpreterFactory(interpreters);
