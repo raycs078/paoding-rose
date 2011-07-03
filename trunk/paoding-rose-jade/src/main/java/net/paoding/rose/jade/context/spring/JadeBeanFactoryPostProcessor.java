@@ -31,9 +31,11 @@ import net.paoding.rose.jade.rowmapper.DefaultRowMapperFactory;
 import net.paoding.rose.jade.rowmapper.RowMapperFactory;
 import net.paoding.rose.jade.statement.Interpreter;
 import net.paoding.rose.jade.statement.InterpreterFactory;
+import net.paoding.rose.jade.statement.cached.CacheProvider;
 import net.paoding.rose.scanning.ResourceRef;
 import net.paoding.rose.scanning.RoseScanner;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeansException;
@@ -41,6 +43,7 @@ import org.springframework.beans.MutablePropertyValues;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
+import org.springframework.beans.factory.config.RuntimeBeanReference;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.context.ApplicationContextException;
 import org.springframework.context.annotation.ScannedGenericBeanDefinition;
@@ -185,6 +188,11 @@ public class JadeBeanFactoryPostProcessor implements BeanFactoryPostProcessor {
      */
     private InterpreterFactory interpreterFactory;
 
+    /**
+     * 缓存提供者的bean名称，为“none”等价于null
+     */
+    private String cacheProviderName;
+
     // ------------------------------
 
     public DataAccessFactory getDataAccessFactory(ConfigurableListableBeanFactory beanFactory) {
@@ -207,6 +215,26 @@ public class JadeBeanFactoryPostProcessor implements BeanFactoryPostProcessor {
             rowMapperFactory = new DefaultRowMapperFactory();
         }
         return rowMapperFactory;
+    }
+
+    public String getCacheProviderName(ConfigurableListableBeanFactory beanFactory) {
+        if (cacheProviderName == null) {
+            String[] names = beanFactory.getBeanNamesForType(CacheProvider.class);
+            if (names.length == 0) {
+                cacheProviderName = "none";
+            } else if (names.length == 1) {
+                cacheProviderName = names[0];
+            } else {
+                String topPriority = "jade.cacheProvider";
+                if (ArrayUtils.contains(names, topPriority)) {
+                    cacheProviderName = topPriority;
+                } else {
+                    throw new IllegalStateException(
+                            "required not more than 1 CacheProvider, but found " + names.length);
+                }
+            }
+        }
+        return "none".equals(cacheProviderName) ? null : cacheProviderName;
     }
 
     // ------------------------------
@@ -354,6 +382,11 @@ public class JadeBeanFactoryPostProcessor implements BeanFactoryPostProcessor {
         propertyValues.addPropertyValue("dataAccessFactory", getDataAccessFactory(beanFactory));
         propertyValues.addPropertyValue("rowMapperFactory", getRowMapperFactory());
         propertyValues.addPropertyValue("interpreterFactory", getInterpreterFactory(beanFactory));
+        String cacheProviderName = getCacheProviderName(beanFactory);
+        if (cacheProviderName != null) {
+            RuntimeBeanReference beanRef = new RuntimeBeanReference(cacheProviderName);
+            propertyValues.addPropertyValue("cacheProvider", beanRef);
+        }
         ScannedGenericBeanDefinition scannedBeanDefinition = (ScannedGenericBeanDefinition) beanDefinition;
         scannedBeanDefinition.setPropertyValues(propertyValues);
         scannedBeanDefinition.setBeanClass(JadeFactoryBean.class);

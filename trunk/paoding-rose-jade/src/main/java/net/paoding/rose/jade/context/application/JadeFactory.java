@@ -28,6 +28,7 @@ import net.paoding.rose.jade.rowmapper.RowMapperFactory;
 import net.paoding.rose.jade.statement.DAOMetaData;
 import net.paoding.rose.jade.statement.DefaultInterpreterFactory;
 import net.paoding.rose.jade.statement.Interpreter;
+import net.paoding.rose.jade.statement.cached.CacheProvider;
 
 import org.springframework.util.ClassUtils;
 
@@ -44,6 +45,8 @@ public class JadeFactory {
 
     private DefaultDataAccessFactory dataAccessFactory;
 
+    private CacheProvider cacheProvider;
+
     public JadeFactory() {
     }
 
@@ -57,6 +60,10 @@ public class JadeFactory {
 
     public void setDataSourceFactory(DataSourceFactory dataSourceFactory) {
         this.dataAccessFactory = new DefaultDataAccessFactory(dataSourceFactory);
+    }
+
+    public void setCacheProvider(CacheProvider cacheProvider) {
+        this.cacheProvider = cacheProvider;
     }
 
     public DataSourceFactory getDataSourceFactory() {
@@ -80,7 +87,7 @@ public class JadeFactory {
     public <T> T create(Class<?> daoClass) {
         DAOMetaData daoMetaData = new DAOMetaData(daoClass);
         JadeInvocationHandler handler = new JadeInvocationHandler(//
-                daoMetaData, interpreterFactory, rowMapperFactory, dataAccessFactory);
+                daoMetaData, interpreterFactory, rowMapperFactory, dataAccessFactory, cacheProvider);
         ClassLoader classLoader = ClassUtils.getDefaultClassLoader();
         return (T) Proxy.newProxyInstance(classLoader, new Class[] { daoClass }, handler);
     }
