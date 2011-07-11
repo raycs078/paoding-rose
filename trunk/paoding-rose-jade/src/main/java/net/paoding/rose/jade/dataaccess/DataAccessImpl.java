@@ -57,7 +57,11 @@ public class DataAccessImpl implements DataAccess {
     @Override
     public int update(String sql, Object[] args, KeyHolder generatedKeyHolder) {
         PreparedStatementCreator psc = getPreparedStatementCreator(sql, args);
-        return jdbcTemplate.update(psc, generatedKeyHolder);
+        if (generatedKeyHolder == null) {
+            return jdbcTemplate.update(psc);
+        } else {
+            return jdbcTemplate.update(psc, generatedKeyHolder);
+        }
     }
 
     // TODO: 批量处理
