@@ -15,8 +15,7 @@
  */
 package net.paoding.rose.jade.statement;
 
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.lang.ArrayUtils;
@@ -47,11 +46,11 @@ public class DefaultInterpreterFactory implements InterpreterFactory {
 
     public synchronized void addInterpreter(Interpreter interpreter) {
         if (!ArrayUtils.contains(this.interpreters, interpreter)) {
-            ArrayList<Interpreter> interpreters = new ArrayList<Interpreter>(
+            Interpreter[] interpreters = Arrays.copyOf(this.interpreters,
                     this.interpreters.length + 1);
-            interpreters.add(interpreter);
-            Collections.sort(interpreters, new InterpreterComparator());
-            this.interpreters = interpreters.toArray(new Interpreter[0]);
+            interpreters[this.interpreters.length] = interpreter;
+            Arrays.sort(interpreters, new InterpreterComparator());
+            this.interpreters = interpreters;
         }
     }
 
