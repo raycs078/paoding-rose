@@ -130,11 +130,18 @@ public class JadeFactoryBean implements FactoryBean, InitializingBean {
     }
 
     protected Object createDAO() {
-        DAOMetaData daoMetaData = new DAOMetaData(objectType);
-        JadeInvocationHandler handler = new JadeInvocationHandler(//
-                daoMetaData, interpreterFactory, rowMapperFactory, dataAccessFactory, cacheProvider);
-        return Proxy.newProxyInstance(ClassUtils.getDefaultClassLoader(),
-                new Class[] { objectType }, handler);
+        try {
+            DAOMetaData daoMetaData = new DAOMetaData(objectType);
+            JadeInvocationHandler handler = new JadeInvocationHandler(
+                    //
+                    daoMetaData, interpreterFactory, rowMapperFactory, dataAccessFactory,
+                    cacheProvider);
+            return Proxy.newProxyInstance(ClassUtils.getDefaultClassLoader(),
+                    new Class[] { objectType }, handler);
+        } catch (RuntimeException e) {
+            throw new IllegalStateException("failed to create bean for "
+                    + this.objectType.getName(), e);
+        }
     }
 
 }

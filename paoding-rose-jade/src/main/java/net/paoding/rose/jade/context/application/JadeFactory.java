@@ -85,10 +85,16 @@ public class JadeFactory {
 
     @SuppressWarnings("unchecked")
     public <T> T create(Class<?> daoClass) {
-        DAOMetaData daoMetaData = new DAOMetaData(daoClass);
-        JadeInvocationHandler handler = new JadeInvocationHandler(//
-                daoMetaData, interpreterFactory, rowMapperFactory, dataAccessFactory, cacheProvider);
-        ClassLoader classLoader = ClassUtils.getDefaultClassLoader();
-        return (T) Proxy.newProxyInstance(classLoader, new Class[] { daoClass }, handler);
+        try {
+            DAOMetaData daoMetaData = new DAOMetaData(daoClass);
+            JadeInvocationHandler handler = new JadeInvocationHandler(
+                    //
+                    daoMetaData, interpreterFactory, rowMapperFactory, dataAccessFactory,
+                    cacheProvider);
+            ClassLoader classLoader = ClassUtils.getDefaultClassLoader();
+            return (T) Proxy.newProxyInstance(classLoader, new Class[] { daoClass }, handler);
+        } catch (RuntimeException e) {
+            throw new IllegalStateException("failed to create bean for " + daoClass.getName(), e);
+        }
     }
 }
