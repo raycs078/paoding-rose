@@ -17,9 +17,11 @@ package net.paoding.rose.jade.statement;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Random;
 
 import net.paoding.rose.jade.annotation.ReturnGeneratedKeys;
 import net.paoding.rose.jade.annotation.SQLType;
+import net.paoding.rose.jade.core.Identity;
 import net.paoding.rose.jade.dataaccess.DataAccess;
 import net.paoding.rose.jade.dataaccess.DataAccessFactory;
 
@@ -33,6 +35,7 @@ import org.springframework.jdbc.support.KeyHolder;
  * @author 王志亮 [qieqie.wang@gmail.com]
  * @author 廖涵 [in355hz@gmail.com]
  */
+@SuppressWarnings("deprecation")
 public class UpdateQuerier implements Querier {
 
     private final DataAccessFactory dataAccessProvider;
@@ -50,7 +53,9 @@ public class UpdateQuerier implements Querier {
             returnType = ClassUtils.primitiveToWrapper(returnType);
         }
         this.returnType = returnType;
-        if (returnType != void.class && (method.isAnnotationPresent(ReturnGeneratedKeys.class))) {
+        if (returnType == Identity.class
+                || (returnType != void.class && (method
+                        .isAnnotationPresent(ReturnGeneratedKeys.class)))) {
             returnGeneratedKeys = true;
         } else {
             returnGeneratedKeys = false;
@@ -64,6 +69,14 @@ public class UpdateQuerier implements Querier {
     }
 
     private Object executeSingle(StatementRuntime runtime, Class<?> returnType) {
+        // 请通知相关DAO把Identity类去掉，这里只打开部分1/20
+        if (returnType == Identity.class) {
+            if (new Random().nextInt(20) == 1) {
+                new IllegalArgumentException(
+                        "message by zhiliang.wang: change the deprecated Identity to @ReturnGeneratedKeys please: "
+                                + runtime.getMetaData()).printStackTrace();
+            }
+        }
         Number result;
         DataAccess dataAccess = dataAccessProvider.getDataAccess(//
                 runtime.getMetaData(), runtime.getProperties());
@@ -98,6 +111,8 @@ public class UpdateQuerier implements Querier {
             return result.doubleValue();
         } else if (returnType == Float.class) {
             return result.floatValue();
+        } else if (returnType == Identity.class) {
+            return new Identity((Number) result);
         } else if (Number.class.isAssignableFrom(returnType)) {
             return result;
         } else {
