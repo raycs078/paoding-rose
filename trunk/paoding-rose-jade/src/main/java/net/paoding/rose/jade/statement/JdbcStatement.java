@@ -64,7 +64,7 @@ public class JdbcStatement implements Statement {
                 }
             } else {
                 this.batchUpdate = false;
-                if (Number.class.isAssignableFrom(returnType)) {
+                if (!Number.class.isAssignableFrom(returnType)) {
                     throw new IllegalArgumentException("error return type:"
                             + method.getDeclaringClass().getName() + "#" + method.getName() + "-->"
                             + returnType);
