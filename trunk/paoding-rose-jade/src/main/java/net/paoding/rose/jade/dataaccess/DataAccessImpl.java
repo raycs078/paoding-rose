@@ -18,6 +18,7 @@ package net.paoding.rose.jade.dataaccess;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.List;
 
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -50,13 +51,14 @@ public class DataAccessImpl implements DataAccess {
 
     @Override
     public List<?> select(String sql, Object[] args, RowMapper rowMapper) {
-        PreparedStatementCreator csc = getPreparedStatementCreator(sql, args);
+        PreparedStatementCreator csc = getPreparedStatementCreator(sql, args, false);
         return (List<?>) jdbcTemplate.query(csc, new RowMapperResultSetExtractor(rowMapper));
     }
 
     @Override
     public int update(String sql, Object[] args, KeyHolder generatedKeyHolder) {
-        PreparedStatementCreator psc = getPreparedStatementCreator(sql, args);
+        boolean returnKeys = generatedKeyHolder != null;
+        PreparedStatementCreator psc = getPreparedStatementCreator(sql, args, returnKeys);
         if (generatedKeyHolder == null) {
             return jdbcTemplate.update(psc);
         } else {
@@ -76,12 +78,18 @@ public class DataAccessImpl implements DataAccess {
     }
 
     private PreparedStatementCreator getPreparedStatementCreator(//
-            final String sql, final Object[] args) {
+            final String sql, final Object[] args, final boolean returnKeys) {
         PreparedStatementCreator creator = new PreparedStatementCreator() {
 
             @Override
             public PreparedStatement createPreparedStatement(Connection con) throws SQLException {
                 PreparedStatement ps = con.prepareStatement(sql);
+                if (returnKeys) {
+                    ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+                } else {
+                    ps = con.prepareStatement(sql);
+                }
+
                 if (args != null) {
                     for (int i = 0; i < args.length; i++) {
                         Object arg = args[i];
