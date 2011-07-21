@@ -56,19 +56,21 @@ public class JdbcStatement implements Statement {
             }
             if (types.length > 0 && List.class.isAssignableFrom(types[0])) {
                 this.batchUpdate = true;
-                if (returnType != void.class && returnType != int[].class
-                        && returnType != Integer[].class && returnType != Integer.class) {
-                    throw new IllegalArgumentException("error return type:"
-                            + method.getDeclaringClass().getName() + "#" + method.getName() + "-->"
-                            + returnType);
-                }
+				if (returnType != void.class && returnType != int[].class
+						&& returnType != Integer[].class
+						&& returnType != Integer.class) {
+					throw new IllegalArgumentException("error return type:"
+							+ method.getDeclaringClass().getName() + "#"
+							+ method.getName() + "-->" + returnType);
+				}
             } else {
                 this.batchUpdate = false;
-                if (!Number.class.isAssignableFrom(returnType)) {
-                    throw new IllegalArgumentException("error return type:"
-                            + method.getDeclaringClass().getName() + "#" + method.getName() + "-->"
-                            + returnType);
-                }
+				if (returnType != void.class && returnType != Boolean.class
+						&& !Number.class.isAssignableFrom(returnType)) {
+					throw new IllegalArgumentException("error return type:"
+							+ method.getDeclaringClass().getName() + "#"
+							+ method.getName() + "-->" + returnType);
+				}
             }
         } else {
             this.batchUpdate = false;
