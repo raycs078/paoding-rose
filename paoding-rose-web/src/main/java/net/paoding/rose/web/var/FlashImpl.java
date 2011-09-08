@@ -15,6 +15,14 @@
  */
 package net.paoding.rose.web.var;
 
+import net.paoding.rose.util.Base64;
+import net.paoding.rose.util.PlaceHolderUtils;
+import net.paoding.rose.web.Invocation;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.util.Assert;
+
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -26,14 +34,6 @@ import java.util.StringTokenizer;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
-
-import net.paoding.rose.util.Base64;
-import net.paoding.rose.util.PlaceHolderUtils;
-import net.paoding.rose.web.Invocation;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.springframework.util.Assert;
 
 /**
  * 
@@ -112,6 +112,10 @@ public class FlashImpl implements Flash {
                     last = new LinkedHashMap<String, String>();
                 }
                 this.last.put(name, flashMessage);
+                Cookie cookie = new Cookie(cookies[i].getName(), "");
+                cookie.setPath("/");
+                cookie.setMaxAge(0);
+                invocation.getResponse().addCookie(cookie);
                 if (logger.isDebugEnabled()) {
                     logger.debug("found flash message:" + name + "=" + flashMessage);
                 }
@@ -141,7 +145,7 @@ public class FlashImpl implements Flash {
             }
             Cookie cookie = new Cookie(cookiePrefix + entry.getKey(), cookieValue);
             cookie.setPath("/");
-            cookie.setMaxAge(1);
+            // cookie.setMaxAge(1);
             response.addCookie(cookie);
             responseCookies.add(cookie.getName());
             if (logger.isDebugEnabled()) {
