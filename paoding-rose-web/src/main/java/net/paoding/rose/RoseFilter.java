@@ -246,6 +246,9 @@ public class RoseFilter extends GenericFilterBean {
     @Override
     protected final void initFilterBean() throws ServletException {
         try {
+        	
+        	long startTime = System.currentTimeMillis();
+        	
             if (logger.isInfoEnabled()) {
                 logger.info("[init] call 'init/rootContext'");
             }
@@ -285,8 +288,10 @@ public class RoseFilter extends GenericFilterBean {
                 logger.info("[init] exits from 'init'");
             }
 
+            long endTime = System.currentTimeMillis();
+            
             // 打印启动信息
-            printRoseInfos();
+            printRoseInfos(endTime -  startTime);
 
             //
         } catch (final Throwable e) {
@@ -550,14 +555,14 @@ public class RoseFilter extends GenericFilterBean {
         throw servletException;
     }
 
-    private void printRoseInfos() {
+    private void printRoseInfos(long initTimeCost) {
         if (logger.isDebugEnabled()) {
             logger.debug(PrinteHelper.dumpModules(modules));
             logger.debug("mapping tree:\n" + PrinteHelper.list(mappingTree));
         }
 
-        String msg = String.format("[init] rose initialized, %s modules loaded! (version=%s)",
-                modules.size(), RoseVersion.getVersion());
+        String msg = String.format("[init] rose initialized, %s modules loaded, cost %sms! (version=%s)",
+                modules.size(), initTimeCost, RoseVersion.getVersion());
         logger.info(msg);
         getServletContext().log(msg);
     }
