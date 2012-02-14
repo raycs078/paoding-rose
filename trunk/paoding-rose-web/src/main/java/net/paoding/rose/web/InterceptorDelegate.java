@@ -87,7 +87,7 @@ public class InterceptorDelegate implements Ordered, Named, ControllerIntercepto
 
     @Override
     public boolean isForAction(Class<?> controllerClazz, Method actionMethod) {
-        if (interceptor instanceof Ordered) {
+        if (interceptor instanceof ActionSelector) {
             return ((ActionSelector) interceptor).isForAction(controllerClazz, actionMethod);
         }
         return true;
