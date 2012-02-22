@@ -20,9 +20,9 @@ import java.lang.reflect.Proxy;
 import javax.sql.DataSource;
 
 import net.paoding.rose.jade.context.JadeInvocationHandler;
+import net.paoding.rose.jade.dataaccess.DataAccessFactoryAdapter;
 import net.paoding.rose.jade.dataaccess.DataSourceFactory;
-import net.paoding.rose.jade.dataaccess.DefaultDataAccessFactory;
-import net.paoding.rose.jade.dataaccess.DefaultDataSourceFactory;
+import net.paoding.rose.jade.dataaccess.datasource.SimpleDataSourceFactory;
 import net.paoding.rose.jade.rowmapper.DefaultRowMapperFactory;
 import net.paoding.rose.jade.rowmapper.RowMapperFactory;
 import net.paoding.rose.jade.statement.DAOMetaData;
@@ -43,7 +43,7 @@ public class JadeFactory {
 
     private DefaultInterpreterFactory interpreterFactory = new DefaultInterpreterFactory();
 
-    private DefaultDataAccessFactory dataAccessFactory;
+    private DataAccessFactoryAdapter dataAccessFactory;
 
     private CacheProvider cacheProvider;
 
@@ -51,7 +51,7 @@ public class JadeFactory {
     }
 
     public JadeFactory(DataSource defaultDataSource) {
-        setDataSourceFactory(new DefaultDataSourceFactory(defaultDataSource));
+        setDataSourceFactory(new SimpleDataSourceFactory(defaultDataSource));
     }
 
     public JadeFactory(DataSourceFactory dataSourceFactory) {
@@ -59,7 +59,7 @@ public class JadeFactory {
     }
 
     public void setDataSourceFactory(DataSourceFactory dataSourceFactory) {
-        this.dataAccessFactory = new DefaultDataAccessFactory(dataSourceFactory);
+        this.dataAccessFactory = new DataAccessFactoryAdapter(dataSourceFactory);
     }
 
     public void setCacheProvider(CacheProvider cacheProvider) {

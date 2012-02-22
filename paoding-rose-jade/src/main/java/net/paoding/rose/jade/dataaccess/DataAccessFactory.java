@@ -20,6 +20,7 @@ import java.util.Map;
 import net.paoding.rose.jade.statement.StatementMetaData;
 
 /**
+ * 这是框架的内部接口，{@link DataAccess}的工厂类。
  * 
  * @author 王志亮 [qieqie.wang@gmail.com]
  * @author 廖涵 [in355hz@gmail.com]
@@ -27,7 +28,7 @@ import net.paoding.rose.jade.statement.StatementMetaData;
 public interface DataAccessFactory {
 
     /**
-     * 
+     * 运行时为框架提供一个 {@link DataAccess} 实例
      */
-    DataAccess getDataAccess(StatementMetaData metaData, Map<String, Object> runtimeProperties);
+    DataAccess getDataAccess(StatementMetaData metaData, Map<String, Object> runtime);
 }

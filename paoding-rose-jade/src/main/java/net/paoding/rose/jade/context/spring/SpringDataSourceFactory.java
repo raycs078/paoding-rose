@@ -22,8 +22,10 @@ import javax.sql.DataSource;
 
 import net.paoding.rose.jade.annotation.DAO;
 import net.paoding.rose.jade.dataaccess.DataSourceFactory;
+import net.paoding.rose.jade.dataaccess.DataSourceHolder;
 import net.paoding.rose.jade.statement.StatementMetaData;
 
+import org.apache.commons.lang.IllegalClassException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.ListableBeanFactory;
@@ -40,7 +42,7 @@ public class SpringDataSourceFactory implements DataSourceFactory, ApplicationCo
 
     private ListableBeanFactory applicationContext;
 
-    private ConcurrentHashMap<Class<?>, DataSource> cached = new ConcurrentHashMap<Class<?>, DataSource>();
+    private ConcurrentHashMap<Class<?>, DataSourceHolder> cachedDataSources = new ConcurrentHashMap<Class<?>, DataSourceHolder>();
 
     public SpringDataSourceFactory() {
     }
@@ -55,44 +57,43 @@ public class SpringDataSourceFactory implements DataSourceFactory, ApplicationCo
     }
 
     @Override
-    public DataSource getDataSource(StatementMetaData metaData,
+    public DataSourceHolder getHolder(StatementMetaData metaData,
             Map<String, Object> runtimeProperties) {
         Class<?> daoClass = metaData.getDAOMetaData().getDAOClass();
-        DataSource dataSource = cached.get(daoClass);
-        if (dataSource != null) {
-            return dataSource;
+        DataSourceHolder holder = cachedDataSources.get(daoClass);
+        if (holder != null) {
+            return holder;
         }
 
-        dataSource = getDataSourceByDirectory(daoClass, daoClass.getName());
-        if (dataSource != null) {
-            cached.put(daoClass, dataSource);
-            return dataSource;
+        holder = getDataSourceByDirectory(daoClass, daoClass.getName());
+        if (holder != null) {
+            cachedDataSources.put(daoClass, holder);
+            return holder;
         }
         String catalog = daoClass.getAnnotation(DAO.class).catalog();
         if (catalog.length() > 0) {
-            dataSource = getDataSourceByDirectory(daoClass,
-                    catalog + "." + daoClass.getSimpleName());
+            holder = getDataSourceByDirectory(daoClass, catalog + "." + daoClass.getSimpleName());
         }
-        if (dataSource != null) {
-            cached.put(daoClass, dataSource);
-            return dataSource;
+        if (holder != null) {
+            cachedDataSources.put(daoClass, holder);
+            return holder;
         }
-        dataSource = getDataSourceByKey(daoClass, "jade.dataSource");
-        if (dataSource != null) {
-            cached.put(daoClass, dataSource);
-            return dataSource;
+        holder = getDataSourceByKey(daoClass, "jade.dataSource");
+        if (holder != null) {
+            cachedDataSources.put(daoClass, holder);
+            return holder;
         }
-        dataSource = getDataSourceByKey(daoClass, "dataSource");
-        if (dataSource != null) {
-            cached.put(daoClass, dataSource);
-            return dataSource;
+        holder = getDataSourceByKey(daoClass, "dataSource");
+        if (holder != null) {
+            cachedDataSources.put(daoClass, holder);
+            return holder;
         }
         return null;
     }
 
-    private DataSource getDataSourceByDirectory(Class<?> daoClass, String catalog) {
+    private DataSourceHolder getDataSourceByDirectory(Class<?> daoClass, String catalog) {
         String tempCatalog = catalog;
-        DataSource dataSource;
+        DataSourceHolder dataSource;
         while (tempCatalog != null && tempCatalog.length() > 0) {
             dataSource = getDataSourceByKey(daoClass, "jade.dataSource." + tempCatalog);
             if (dataSource != null) {
@@ -108,13 +109,17 @@ public class SpringDataSourceFactory implements DataSourceFactory, ApplicationCo
         return null;
     }
 
-    private DataSource getDataSourceByKey(Class<?> daoClass, String key) {
+    private DataSourceHolder getDataSourceByKey(Class<?> daoClass, String key) {
         if (applicationContext.containsBean(key)) {
-            DataSource dataSource = (DataSource) applicationContext.getBean(key, DataSource.class);
+            Object dataSource = applicationContext.getBean(key);
+            if (!(dataSource instanceof DataSource) && !(dataSource instanceof DataSourceFactory)) {
+                throw new IllegalClassException("expects DataSource or DataSourceFactory, but a "
+                        + dataSource.getClass().getName());
+            }
             if (logger.isDebugEnabled()) {
                 logger.debug("found dataSource: " + key + " for DAO " + daoClass.getName());
             }
-            return dataSource;
+            return new DataSourceHolder(dataSource);
         }
         return null;
     }
