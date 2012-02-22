@@ -19,14 +19,6 @@
 			<name>wangzhiliang</name>
 			<email>qieqie.wang@gmail.com</email>
 		</developer>
-		<developer>
-			<name>liaohan</name>
-			<email>han.liao@opi-corp.com</email>
-		</developer>
-		<developer>
-			<name>wangtai</name>
-			<email>tai.wang@opi-corp.com</email>
-		</developer>
 	</developers>
 
 	<!-- 依赖配置 -->

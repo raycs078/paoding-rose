@@ -26,7 +26,7 @@ import javax.sql.DataSource;
 
 import net.paoding.rose.jade.dataaccess.DataAccessFactory;
 import net.paoding.rose.jade.dataaccess.DataSourceFactory;
-import net.paoding.rose.jade.dataaccess.DefaultDataAccessFactory;
+import net.paoding.rose.jade.dataaccess.DataAccessFactoryAdapter;
 import net.paoding.rose.jade.rowmapper.DefaultRowMapperFactory;
 import net.paoding.rose.jade.rowmapper.RowMapperFactory;
 import net.paoding.rose.jade.statement.Interpreter;
@@ -197,7 +197,7 @@ public class JadeBeanFactoryPostProcessor implements BeanFactoryPostProcessor {
 
     public DataAccessFactory getDataAccessFactory(ConfigurableListableBeanFactory beanFactory) {
         if (this.dataAccessFactory == null) {
-            dataAccessFactory = new DefaultDataAccessFactory(//
+            dataAccessFactory = new DataAccessFactoryAdapter(//
                     new SpringDataSourceFactoryDelegate(beanFactory));
         }
         return dataAccessFactory;

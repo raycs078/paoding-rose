@@ -17,22 +17,24 @@ package net.paoding.rose.jade.dataaccess;
 
 import java.util.Map;
 
-import javax.sql.DataSource;
-
 import net.paoding.rose.jade.statement.StatementMetaData;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
+ * 框架内部使用的 {@link DataAccessFactory}实现，适配到 {@link DataSourceFactory}
+ * ，由后者提供最终的数据源
+ * 
+ * @see DataSourceFactory
  * 
  * @author qieqie
  * 
  */
-public class DefaultDataAccessFactory implements DataAccessFactory {
+public class DataAccessFactoryAdapter implements DataAccessFactory {
 
     protected final DataSourceFactory dataSourceFactory;
 
-    public DefaultDataAccessFactory(DataSourceFactory dataSourceFactory) {
+    public DataAccessFactoryAdapter(DataSourceFactory dataSourceFactory) {
         this.dataSourceFactory = dataSourceFactory;
     }
 
@@ -41,13 +43,15 @@ public class DefaultDataAccessFactory implements DataAccessFactory {
     }
 
     @Override
-    public DataAccess getDataAccess(StatementMetaData metaData,
-            Map<String, Object> runtimeProperties) {
-        DataSource dataSource = dataSourceFactory.getDataSource(metaData, runtimeProperties);
-        if (dataSource == null) {
-            throw new NullPointerException("not found dataSource for: " + metaData);
+    public DataAccess getDataAccess(StatementMetaData metaData, Map<String, Object> runtime) {
+        DataSourceHolder holder = dataSourceFactory.getHolder(metaData, runtime);
+        while (holder != null && holder.isFactory()) {
+            holder = holder.getFactory().getHolder(metaData, runtime);
         }
-        return new DataAccessImpl(new JdbcTemplate(dataSource));
+        if (holder == null || holder.getDataSource() == null) {
+            throw new NullPointerException("cannot found a dataSource for: " + metaData);
+        }
+        JdbcTemplate jdbcTemplate = new JdbcTemplate(holder.getDataSource());
+        return new DataAccessImpl(jdbcTemplate);
     }
-
 }
