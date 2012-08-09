@@ -172,10 +172,10 @@ public class RoseScanner {
                 }
                 String path = urlObject.getPath();
                 Assert.isTrue(path.endsWith("/"));
-                if (!path.endsWith("/classes/") && !path.endsWith("/bin/")) {
+                if (!path.endsWith("/classes/") && !path.endsWith("/bin/") && !path.endsWith("/cobertura/")) {
                     if (logger.isInfoEnabled()) {
                         logger.info("[classesFolder] Ignored classes folder because "
-                                + "not ends with '/classes/' or '/bin/': " + urlObject);
+                                + "not ends with '/classes/' or '/bin/' or '/cobertura/': " + urlObject);
                     }
                     continue;
                 }
